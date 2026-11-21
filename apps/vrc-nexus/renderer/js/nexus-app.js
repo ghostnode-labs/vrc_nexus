@@ -976,6 +976,7 @@
     }
 
     /** 3.8.4: Bild groß in der App zeigen (Klick/Esc schließt) – mit „im Browser öffnen“ und Speichern */
+    window.NexusBigImage = (u, n) => bigImage(u, n);   // 3.9: auch für Nexus Pulse
     function bigImage(url, name) {
         const src = (UI.pic && UI.pic(url)) || url;
         const box = document.createElement('div');

@@ -22,6 +22,13 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 3.9.0 – Info cards, Nexus Pulse and instance history
+
+- 🪪 **Info cards for links and IDs:** accounts (`usr_…`), groups (`grp_…`, `vrc.group/…`), worlds, instances, avatars and group events posted in the community feed or chat turn into cards with picture, name and details (max. 3 per post, cached for an hour; invalid IDs show a small error card).
+- 📡 **Nexus Pulse – News & Discovery** (new menu item, Windows app): official VRChat announcements from Steam sorted into news, patch notes, developer updates, security notices and creator economy, plus new, popular and top-of-the-week posts from r/VRChat with media previews and comments. ☆ Save posts as favourites (stored locally) and open the original with one click.
+  - **Opt-in:** Pulse is off until you turn it on (page button or Settings → Social → Nexus Pulse). It only reads public feeds, without any login, and sends none of your data.
+- 👥 **"Who was here"** in the instance window: everyone who was in an instance with you – even after it closed – taken from your own game log, friends first (⭐), with time spent, number of visits and a link to the profile.
+
 ### New in 3.8.4 – Modern VR overlay and free HUD placement
 
 - 🥽 **SteamVR overlay redesigned:** glass panels, rounded corners, bigger buttons – and it now follows the app's **theme and accent colour** (Neon, Midnight, Snow, Sakura, Beach). The HUD uses the theme colours too.
