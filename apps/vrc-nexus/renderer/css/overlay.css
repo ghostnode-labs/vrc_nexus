@@ -1,33 +1,55 @@
-/* SteamVR-Overlay: große Schrift, viel Kontrast, große Trefferflächen für den Laser (Seite 1024 × 640) */
+/* SteamVR-Overlay (Seite 1024 × 640): große Schrift, große Trefferflächen für den Laser.
+ * 3.8.4: modernes Aussehen (Glas-Flächen, runde Ecken, Verläufe) und Farben aus dem gewählten Theme (themes.css, html[data-theme]). */
+:root {
+    --o-accent: var(--accent-cyan, #38d5e6);
+    --o-gold: var(--accent-gold, #f3c262);
+    --o-bg: rgb(var(--bg-rgb, 4, 6, 9));
+    --o-panel: rgba(var(--panel-rgb, 10, 16, 24), 0.92);
+    --o-panel2: rgba(var(--panel2-rgb, 18, 28, 42), 0.95);
+    --o-line: rgba(var(--accent-rgb, 56, 213, 230), 0.22);
+    --o-text: var(--text-main, #e8eef5);
+    --o-muted: var(--text-muted, #8b98a8);
+    --o-red: var(--accent-red, #ff5c6c);
+}
 * { box-sizing: border-box; }
-html, body { margin: 0; width: 1024px; height: 640px; overflow: hidden; background: #060a10; color: #e2e8f0; font: 22px/1.3 "Segoe UI", system-ui, sans-serif; user-select: none; }
-.ov-top { display: flex; align-items: center; gap: 18px; height: 56px; padding: 0 18px; border-bottom: 2px solid #38d5e6; background: #0a121c; }
-.ov-logo { color: #f3c262; letter-spacing: 0.12em; font-size: 24px; }
-.ov-clock { font-family: Consolas, monospace; font-size: 26px; color: #38d5e6; }
-.ov-info { margin-left: auto; color: #9aa7b4; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px; }
-.ov-tabs { display: flex; height: 64px; border-bottom: 1px solid #1f3140; }
-.ov-tabs button { flex: 1; background: none; border: 0; border-right: 1px solid #1f3140; color: #b8c4cf; font: inherit; font-size: 21px; cursor: pointer; }
-.ov-tabs button.on { background: #12202d; color: #f3c262; box-shadow: inset 0 -4px 0 #f3c262; }
-.ov-tabs em { font-style: normal; background: #ff5555; color: #fff; border-radius: 12px; padding: 0 8px; font-size: 17px; }
+html, body { margin: 0; width: 1024px; height: 640px; overflow: hidden; color: var(--o-text); font: 22px/1.3 "Segoe UI", system-ui, sans-serif; user-select: none; }
+body { background: radial-gradient(120% 90% at 0% 0%, rgba(var(--accent-rgb, 56, 213, 230), 0.16), transparent 55%), radial-gradient(90% 80% at 100% 100%, rgba(var(--gold-rgb, 243, 194, 98), 0.12), transparent 60%), var(--o-bg); }
+.ov-top { display: flex; align-items: center; gap: 16px; height: 58px; padding: 0 20px; background: linear-gradient(90deg, rgba(var(--accent-rgb, 56, 213, 230), 0.20), rgba(var(--panel-rgb, 10, 16, 24), 0.6)); border-bottom: 1px solid var(--o-line); }
+.ov-logo { font-weight: 800; letter-spacing: 0.14em; font-size: 23px; background: linear-gradient(90deg, var(--o-gold), var(--o-accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ov-clock { font-family: Consolas, monospace; font-size: 26px; color: var(--o-accent); font-weight: 600; }
+.ov-info { margin-left: auto; color: var(--o-muted); font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px; }
+.ov-tabs { display: flex; gap: 6px; height: 66px; padding: 8px 10px; }
+.ov-tabs button { flex: 1; background: var(--o-panel); border: 1px solid var(--o-line); border-radius: 14px; color: var(--o-muted); font: inherit; font-size: 17px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 6px; }
+.ov-tabs button.on { background: linear-gradient(180deg, rgba(var(--accent-rgb, 56, 213, 230), 0.32), rgba(var(--accent-rgb, 56, 213, 230), 0.12)); color: var(--o-text); border-color: var(--o-accent); box-shadow: 0 0 18px rgba(var(--accent-rgb, 56, 213, 230), 0.35); }
+.ov-tabs em { font-style: normal; background: var(--o-red); color: #fff; border-radius: 12px; padding: 0 8px; font-size: 16px; margin-left: 4px; }
 .ov-tabs em:empty { display: none; }
-main { height: 520px; overflow-y: auto; padding: 12px 16px; }
-main::-webkit-scrollbar { width: 14px; } main::-webkit-scrollbar-thumb { background: #2a4256; }
-.ov-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.ov-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #0d1824; border: 1px solid #1f3140; min-height: 62px; }
+main { height: 516px; overflow-y: auto; padding: 6px 14px 14px; }
+main::-webkit-scrollbar { width: 14px; } main::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb, 56, 213, 230), 0.4); border-radius: 7px; }
+.ov-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ov-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--o-panel); border: 1px solid var(--o-line); border-radius: 14px; min-height: 64px; }
 .ov-item b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ov-item small { display: block; color: #8796a5; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-item small { display: block; color: var(--o-muted); font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ov-item > div { flex: 1; min-width: 0; }
-.ov-dot { width: 14px; height: 14px; border-radius: 50%; background: #50fa7b; flex: none; }
+.ov-dot { width: 14px; height: 14px; border-radius: 50%; background: #51e57e; flex: none; box-shadow: 0 0 8px currentColor; }
 .ov-dot.join-me { background: #42a5f5; } .ov-dot.ask-me { background: #ffa726; } .ov-dot.busy { background: #ef5350; }
-.btn { background: #12202d; color: #e2e8f0; border: 2px solid #38d5e6; font: inherit; font-size: 20px; padding: 10px 16px; cursor: pointer; min-height: 56px; }
-.btn:active, .btn.on { background: #38d5e6; color: #060a10; }
-.btn.gold { border-color: #f3c262; color: #f3c262; } .btn.gold:active, .btn.gold.on { background: #f3c262; color: #060a10; }
-.btn.sm { font-size: 17px; padding: 6px 10px; min-height: 46px; }
+.btn { background: var(--o-panel2); color: var(--o-text); border: 1px solid var(--o-line); border-radius: 12px; font: inherit; font-size: 20px; padding: 10px 16px; cursor: pointer; min-height: 56px; transition: background .1s; }
+.btn:hover { border-color: var(--o-accent); }
+.btn:active, .btn.on { background: linear-gradient(180deg, var(--o-accent), rgba(var(--accent-rgb, 56, 213, 230), 0.75)); color: var(--o-bg); border-color: var(--o-accent); }
+.btn.gold { border-color: rgba(var(--gold-rgb, 243, 194, 98), 0.6); color: var(--o-gold); }
+.btn.gold:active, .btn.gold.on { background: var(--o-gold); color: var(--o-bg); }
+.btn.sm { font-size: 17px; padding: 6px 10px; min-height: 48px; }
 .ov-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.ov-grid .btn { min-height: 76px; }
-h3 { margin: 10px 0 8px; color: #38d5e6; font-size: 19px; text-transform: uppercase; letter-spacing: 0.06em; }
-.ov-empty { color: #8796a5; padding: 40px; text-align: center; }
+.ov-grid .btn { min-height: 74px; }
+h3 { margin: 12px 2px 8px; color: var(--o-accent); font-size: 17px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.ov-empty { color: var(--o-muted); padding: 40px; text-align: center; background: var(--o-panel); border: 1px dashed var(--o-line); border-radius: 14px; margin-top: 10px; }
 .ov-chatbox { display: flex; gap: 8px; align-items: stretch; }
-.ov-chatbox .ov-text { flex: 1; background: #0d1824; border: 1px solid #1f3140; padding: 12px; min-height: 56px; font-size: 22px; white-space: pre-wrap; }
-.ov-emojis button { font-size: 30px; background: none; border: 1px solid #1f3140; width: 64px; height: 60px; cursor: pointer; }
-.ov-toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #f3c262; color: #060a10; padding: 12px 22px; font-weight: 600; }
+.ov-chatbox .ov-text { flex: 1; background: var(--o-panel); border: 1px solid var(--o-line); border-radius: 12px; padding: 12px; min-height: 56px; font-size: 22px; white-space: pre-wrap; }
+.ov-emojis { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ov-emojis button { font-size: 30px; background: var(--o-panel); border: 1px solid var(--o-line); border-radius: 12px; width: 66px; height: 60px; cursor: pointer; }
+.ov-toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--o-gold); color: var(--o-bg); padding: 12px 24px; font-weight: 700; border-radius: 14px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); }
+/* 3.8.4 „📐 Lage“: Werte live verstellen */
+.ov-pos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ov-pv { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--o-panel); border: 1px solid var(--o-line); border-radius: 14px; }
+.ov-pv span { flex: 1; font-size: 18px; } .ov-pv b { min-width: 86px; text-align: center; color: var(--o-accent); font-size: 21px; }
+.ov-pv .btn { min-width: 64px; min-height: 52px; padding: 4px 8px; font-size: 22px; }
+.ov-note { color: var(--o-muted); font-size: 17px; margin: 8px 2px; }

@@ -22,6 +22,16 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 3.8.4 – Modern VR overlay and free HUD placement
+
+- 🥽 **SteamVR overlay redesigned:** glass panels, rounded corners, bigger buttons – and it now follows the app's **theme and accent colour** (Neon, Midnight, Snow, Sakura, Beach). The HUD uses the theme colours too.
+- 📐 New overlay tab **"Position":** move, tilt and resize the wrist window, the free window and the HUD right inside VR with +/− buttons; ↺ resets a value.
+- 🎯 **HUD in the headset:** when placed "in view" it can be positioned freely – distance, left/right (X), height (Y) and tilt.
+- ⌚ Wrist window: adjustable tilt and X/Y/Z offset; the free window gets an adjustable height; the HUD next to the arm gets an adjustable gap.
+- 🐞 Fixes: gaze mode no longer flickers when switched off; the overlay no longer breaks when friend or instance data is missing.
+- 🪟 Detail windows (profiles, groups, worlds …) use the full width between the menu and the friends bar.
+- 🖼 "Open profile picture large" now opens an in-app viewer with save and browser buttons (it did nothing before).
+
 ### New in 3.8.3 – New profile layout
 
 - 👤 **Profiles redesigned:** a profile card on the left (banner, round picture, name, pronouns, status, trust/18+/platform, languages with flags, badges, avatar cloning, current avatar, represented group) and the tabs on the right.

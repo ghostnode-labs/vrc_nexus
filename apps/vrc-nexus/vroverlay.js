@@ -140,7 +140,9 @@ class VrOverlay {
         }
         if (!on && this.hudWin) this.closeHud();
         const s = this.cfg;
-        this.cmd({ cmd: 'info', show: on ? 1 : 0, place: s['vr.overlay_hud_place'] || 'wrist', hand: s['vr.overlay_hand'] || 'left', width: (Number(s['vr.overlay_hud_width']) || 28) / 100, alpha: (Number(s['vr.overlay_hud_alpha']) || 90) / 100 });
+        const n = (k, d) => (s[k] === undefined || s[k] === '' || isNaN(Number(s[k])) ? d : Number(s[k]));
+        this.cmd({ cmd: 'info', show: on ? 1 : 0, place: s['vr.overlay_hud_place'] || 'wrist', hand: s['vr.overlay_hand'] || 'left', width: (Number(s['vr.overlay_hud_width']) || 28) / 100, alpha: (Number(s['vr.overlay_hud_alpha']) || 90) / 100,
+            hx: n('vr.overlay_hud_x', 0) / 100, hy: n('vr.overlay_hud_y', -32) / 100, hz: n('vr.overlay_hud_dist', 110) / 100, htilt: n('vr.overlay_hud_tilt', 0), harm: n('vr.overlay_hud_arm', 27) / 100 });
     }
     closeHud() { if (this.hudWin) { try { this.hudWin.destroy(); } catch (e) { /* egal */ } this.hudWin = null; } }
     /** HUD-Bild: Typ 3, sonst wie frame() – höchstens 4× pro Sekunde */
@@ -184,8 +186,10 @@ class VrOverlay {
     }
     sendLayout() {
         const s = this.cfg;
+        const n = (k, d) => (s[k] === undefined || s[k] === '' || isNaN(Number(s[k])) ? d : Number(s[k]));
         this.cmd({ cmd: 'mode', mode: s['vr.overlay_mode'] || 'wrist', hand: s['vr.overlay_hand'] || 'left', width: (Number(s['vr.overlay_width']) || 30) / 100,
-            alpha: (Number(s['vr.overlay_alpha']) || 95) / 100, distance: (Number(s['vr.overlay_distance']) || 120) / 100, gaze: s['vr.overlay_gaze'] === false ? 0 : 1 });
+            alpha: (Number(s['vr.overlay_alpha']) || 95) / 100, distance: (Number(s['vr.overlay_distance']) || 120) / 100, gaze: s['vr.overlay_gaze'] === false ? 0 : 1,
+            tilt: n('vr.overlay_tilt', 60), ox: n('vr.overlay_off_x', 2) / 100, oy: n('vr.overlay_off_y', 3) / 100, oz: n('vr.overlay_off_z', 12) / 100, fy: n('vr.overlay_front_y', -10) / 100 });
     }
     onEvent(line) {
         let m;

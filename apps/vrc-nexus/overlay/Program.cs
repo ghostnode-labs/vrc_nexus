@@ -22,11 +22,15 @@ namespace NexusOverlay
         static byte[] frame; static uint fw, fh; static bool frameNew;
         static byte[] infoFrame; static uint iw, ih; static bool infoNew;
         static ulong info; static bool infoOn; static string infoPlace = "wrist"; static float infoWidth = 0.28f, infoAlpha = 0.9f;
+        // 3.8.4: HUD im Headset frei (Abstand/X/Y/Neigung) und am Arm verschiebbar
+        static float infoX = 0f, infoY = -0.32f, infoZ = 1.1f, infoTilt = 0f, infoArm = 0.27f;
         static string pendingCmd;
         static ulong dash, thumb, hud;
         static bool hudVisible;
         static string mode = "wrist", hand = "left";
         static float width = 0.30f, alpha = 0.96f, distance = 1.2f;
+        // 3.8.4: Lage des Arm-Fensters (Neigung, Versatz) und Höhe „frei vor mir“
+        static float tilt = 60f, offX = 0.02f, offY = 0.03f, offZ = 0.12f, frontY = -0.1f;
         static uint curW = 1024, curH = 640;
         static bool gaze = true, interactive = true;
         static ulong actSet, actToggle;
@@ -227,16 +231,19 @@ namespace NexusOverlay
             ov.SetOverlayAlpha(info, Math.Max(0.1f, Math.Min(1f, infoAlpha)));
             if (infoPlace == "head")
             {
-                var m = M(1, 0, 0, 0, 0, 1, 0, -0.32f, 0, 0, 1, -1.1f);
+                // fest am Headset: X/Y-Versatz, Abstand nach vorn (−Z) und Neigung um die X-Achse
+                double t = infoTilt * Math.PI / 180; float c = (float)Math.Cos(t), s = (float)Math.Sin(t);
+                float dz = Math.Max(0.2f, Math.Min(4f, infoZ));
+                var m = M(1, 0, 0, infoX, 0, c, -s, infoY, 0, s, c, -dz);
                 ov.SetOverlayTransformTrackedDeviceRelative(info, 0, ref m);
             }
             else
             {
                 uint dev = OpenVR.System.GetTrackedDeviceIndexForControllerRole(hand == "right" ? ETrackedControllerRole.RightHand : ETrackedControllerRole.LeftHand);
                 if (dev == OpenVR.k_unTrackedDeviceIndexInvalid) dev = 0;
-                double a = -60 * Math.PI / 180; float c = (float)Math.Cos(a), s = (float)Math.Sin(a);
-                float side = hand == "right" ? -0.02f : 0.02f;
-                var m = M(1, 0, 0, side, 0, c, -s, 0.08f, 0, s, c, 0.27f);
+                double a = -tilt * Math.PI / 180; float c = (float)Math.Cos(a), s = (float)Math.Sin(a);
+                float side = hand == "right" ? -offX : offX;
+                var m = M(1, 0, 0, side, 0, c, -s, offY + 0.05f, 0, s, c, Math.Max(0f, infoArm));
                 ov.SetOverlayTransformTrackedDeviceRelative(info, dev, ref m);
             }
             ov.ShowOverlay(info);
@@ -262,12 +269,15 @@ namespace NexusOverlay
                 mode = Str(json, "mode") ?? mode;
                 hand = Str(json, "hand") ?? hand;
                 width = Num(json, "width") ?? width;
-                if (infoOn) ApplyInfo();
                 alpha = Num(json, "alpha") ?? alpha;
                 distance = Num(json, "distance") ?? distance;
+                tilt = Num(json, "tilt") ?? tilt;
+                offX = Num(json, "ox") ?? offX; offY = Num(json, "oy") ?? offY; offZ = Num(json, "oz") ?? offZ;
+                frontY = Num(json, "fy") ?? frontY;
                 var g = Num(json, "gaze");
-                if (g.HasValue) { gaze = g.Value > 0; if (!gaze) { interactive = !interactive; SetInteractive(true); } }
+                if (g.HasValue) { gaze = g.Value > 0; if (!gaze) SetInteractive(true); }   // 3.8.4: aus = immer bedienbar (vorher wechselte es bei jedem Befehl)
                 ApplyLayout();
+                if (infoOn) ApplyInfo();
             }
             else if (cmd == "show" || (cmd == "toggle" && !hudVisible)) { hudVisible = mode != "off"; ApplyLayout(); if (hudVisible) ov.ShowOverlay(hud); }
             else if (cmd == "hide" || cmd == "toggle") { hudVisible = false; ov.HideOverlay(hud); }
@@ -281,6 +291,8 @@ namespace NexusOverlay
                 hand = Str(json, "hand") ?? hand;
                 infoWidth = Num(json, "width") ?? infoWidth;
                 infoAlpha = Num(json, "alpha") ?? infoAlpha;
+                infoX = Num(json, "hx") ?? infoX; infoY = Num(json, "hy") ?? infoY; infoZ = Num(json, "hz") ?? infoZ;
+                infoTilt = Num(json, "htilt") ?? infoTilt; infoArm = Num(json, "harm") ?? infoArm;
                 ApplyInfo();
                 return;
             }
@@ -588,9 +600,9 @@ namespace NexusOverlay
                 uint dev = OpenVR.System.GetTrackedDeviceIndexForControllerRole(hand == "right" ? ETrackedControllerRole.RightHand : ETrackedControllerRole.LeftHand);
                 if (dev == OpenVR.k_unTrackedDeviceIndexInvalid) dev = 0;
                 // leicht über dem Handgelenk, zum Gesicht geneigt (Drehung um X)
-                double a = -60 * Math.PI / 180; float c = (float)Math.Cos(a), s = (float)Math.Sin(a);
-                float side = hand == "right" ? -0.02f : 0.02f;
-                var m = M(1, 0, 0, side, 0, c, -s, 0.03f, 0, s, c, 0.12f);
+                double a = -tilt * Math.PI / 180; float c = (float)Math.Cos(a), s = (float)Math.Sin(a);
+                float side = hand == "right" ? -offX : offX;
+                var m = M(1, 0, 0, side, 0, c, -s, offY, 0, s, c, offZ);
                 ov.SetOverlayTransformTrackedDeviceRelative(hud, dev, ref m);
             }
             else if (mode == "front")
@@ -603,7 +615,7 @@ namespace NexusOverlay
                 fx /= len; fz /= len;
                 // Overlay-Vorderseite (+Z) zeigt zum Kopf
                 float sn = -fx, cs = -fz;
-                var m = M(cs, 0, sn, p.m3 + fx * distance, 0, 1, 0, p.m7 - 0.1f, -sn, 0, cs, p.m11 + fz * distance);
+                var m = M(cs, 0, sn, p.m3 + fx * distance, 0, 1, 0, p.m7 + frontY, -sn, 0, cs, p.m11 + fz * distance);
                 ov.SetOverlayTransformAbsolute(hud, ETrackingUniverseOrigin.TrackingUniverseStanding, ref m);
             }
             if (mode == "off" || !hudVisible) ov.HideOverlay(hud);

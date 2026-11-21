@@ -509,7 +509,16 @@
     }
     // ---------- Dialog (Benutzer / Welt / Instanz / Avatar) ----------
     const modal = $('#userModal');
-    function openModal(html) { modal.hidden = false; document.body.style.overflow = 'hidden'; $('#userBody').classList.remove('u-prof'); $('#userBody').innerHTML = html; }
+    /** 3.8.4: Detail-Fenster (Profil, Gruppe, Welt …) über die volle Breite zwischen Menü links und Freundesleiste rechts */
+    function fitModal() {
+        if (window.innerWidth < 900) { modal.style.removeProperty('--pm-l'); modal.style.removeProperty('--pm-r'); return; }
+        const nav = document.getElementById('tabs'), side = document.querySelector('.vx-fside');
+        const l = nav && nav.offsetParent ? Math.max(0, nav.getBoundingClientRect().right) : 0;
+        const r = side && side.offsetParent ? Math.max(0, window.innerWidth - side.getBoundingClientRect().left) : 0;
+        modal.style.setProperty('--pm-l', Math.round(l) + 'px'); modal.style.setProperty('--pm-r', Math.round(r) + 'px');
+    }
+    window.addEventListener('resize', () => { if (!modal.hidden) fitModal(); });
+    function openModal(html) { fitModal(); modal.hidden = false; document.body.style.overflow = 'hidden'; $('#userBody').classList.remove('u-prof'); $('#userBody').innerHTML = html; }
     function closeModal() { modal.hidden = true; document.body.style.overflow = ''; }
     modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-close]')) closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });

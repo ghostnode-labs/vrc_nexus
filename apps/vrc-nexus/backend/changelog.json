@@ -1,5 +1,10 @@
 [
  {
+  "version": "3.8.4",
+  "title": "Modern VR overlay and free HUD placement",
+  "body": "- 🥽 **SteamVR overlay redesigned:** glass panels, rounded corners, bigger buttons – and it now follows the app's **theme and accent colour** (Neon, Midnight, Snow, Sakura, Beach). The HUD uses the theme colours too.\n- 📐 New overlay tab **\"Position\":** move, tilt and resize the wrist window, the free window and the HUD right inside VR with +/− buttons; ↺ resets a value.\n- 🎯 **HUD in the headset:** when placed \"in view\" it can be positioned freely – distance, left/right (X), height (Y) and tilt.\n- ⌚ Wrist window: adjustable tilt and X/Y/Z offset; the free window gets an adjustable height; the HUD next to the arm gets an adjustable gap.\n- 🐞 Fixes: gaze mode no longer flickers when switched off; the overlay no longer breaks when friend or instance data is missing.\n- 🪟 Detail windows (profiles, groups, worlds …) use the full width between the menu and the friends bar.\n- 🖼 \"Open profile picture large\" now opens an in-app viewer with save and browser buttons (it did nothing before)."
+ },
+ {
   "version": "3.8.3",
   "title": "New profile layout",
   "body": "- 👤 **Profiles redesigned:** a profile card on the left (banner, round picture, name, pronouns, status, trust/18+/platform, languages with flags, badges, avatar cloning, current avatar, represented group) and the tabs on the right.\n- 🫂 New **\"Nexus profile\"** tab with the person's community profile (bio, languages, interests, links, member since) plus message/call buttons; the 🔞 18+ profile tab stays for unlocked viewers.\n- 🛡 **Groups tab** as a grid with pictures, search and sorting – represented and shared groups first.\n- 🔞 SFW ↔ NSFW avatar pairs: the editor is open by default."

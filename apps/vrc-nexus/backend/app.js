@@ -38,6 +38,8 @@ const isLoc = l => /^wrld_[0-9a-f-]{36}:[\w~()\-.:]+$/i.test(str(l));
 const json = (data, status = 200) => ({ status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, body: JSON.stringify(data) });
 const download = (body, type, name) => ({ status: 200, headers: { 'Content-Type': type, 'Content-Disposition': 'attachment; filename="' + name + '"' }, body });
 
+const OVERLAY_POS = ['vr.overlay_mode', 'vr.overlay_width', 'vr.overlay_distance', 'vr.overlay_tilt', 'vr.overlay_off_x', 'vr.overlay_off_y', 'vr.overlay_off_z', 'vr.overlay_front_y', 'vr.overlay_alpha',
+    'vr.overlay_hud_place', 'vr.overlay_hud_width', 'vr.overlay_hud_dist', 'vr.overlay_hud_x', 'vr.overlay_hud_y', 'vr.overlay_hud_tilt', 'vr.overlay_hud_arm', 'vr.overlay_hud_alpha'];
 class NexusApp {
     /** @param opts { db, crypt, notify(title, body, silent), host: Hilfsfunktionen von Electron (siehe tools.js) } */
     constructor(opts) {
@@ -159,6 +161,7 @@ class NexusApp {
         return html.replace(/\{\{(\w+)\}\}/g, (m, k) => (k in map ? String(map[k]) : m));
     }
 
+    overlayPos() { const s = this.settings.all(); return Object.fromEntries(OVERLAY_POS.map(k => [k, s[k]]).concat([['vr.overlay_hud', !!s['vr.overlay_hud']]])); }
     async post(input, files) {
         const act = str(input.act), id = str(input.id), user = str(input.user);
         const valid = U.valid;
@@ -199,7 +202,17 @@ class NexusApp {
             if (act.startsWith('space_')) return await this.vrspace.action(act, input);   // 3.3 VR-Bewegung
             if (act.startsWith('prof_')) return await this.profiles.action(act, input);   // 3.4 Multiaccount (Konten wechseln)
             if (act === 'overlay_act') return await this.tools.apiAction(str(input.action), input);
-            if (act === 'overlay_cfg') { const s = this.settings.all(); return { phrases: str(s['vr.overlay_phrases']).split('\n').map(x => x.trim()).filter(Boolean).slice(0, 40), translate: !!s['vr.overlay_translate'], target: str(s['tr.chat_target'] || '') }; }
+            if (act === 'overlay_cfg') { const s = this.settings.all(); return { phrases: str(s['vr.overlay_phrases']).split('\n').map(x => x.trim()).filter(Boolean).slice(0, 40), translate: !!s['vr.overlay_translate'], target: str(s['tr.chat_target'] || ''),
+                theme: str(s['ui.theme'] || 'neon'), accent: str(s['ui.accent'] || ''), pos: this.overlayPos() }; }   // 3.8.4: Theme + Lage fürs Overlay
+            if (act === 'overlay_pos') {   // 3.8.4: Lage live im Overlay verstellen (nur diese Schlüssel)
+                const k = str(input.key);
+                if (!OVERLAY_POS.includes(k)) throw new UserError('Unbekannte Einstellung.');
+                if (input.reset === '1') this.settings.save({ [k]: this.settings.defaults()[k] });
+                else if (input.value !== undefined && input.value !== '') this.settings.save({ [k]: /^-?\d+(\.\d+)?$/.test(String(input.value)) ? Number(input.value) : str(input.value) });
+                else if (input.value !== undefined) this.settings.save({ [k]: str(input.value) });
+                else this.settings.save({ [k]: Number(this.settings.get(k)) + Number(input.delta || 0) });
+                return { pos: this.overlayPos() };
+            }
             if (act.startsWith('ins_')) return await this.insights.action(act, input);
             if (act.startsWith('mod_')) return await this.mod.action(act, input);
             if (act.startsWith('coll_')) return await this.coll.action(act, input);
@@ -297,7 +310,7 @@ class NexusApp {
         const subs = this.subs, now = Date.now();
         const lines = s['vr.overlay_hud_subs'] !== false && subs ? subs.recent().filter(l => now - l.t < 30000).slice(-3) : [];
         const c = subs ? subs.cfg() : {};
-        return { items, lines, target: subs ? subs.target(c) : 'DE', show_orig: !!c.show_orig };
+        return { items, lines, target: subs ? subs.target(c) : 'DE', show_orig: !!c.show_orig, theme: str(s['ui.theme'] || 'neon'), accent: str(s['ui.accent'] || '') };
     }
 
     async toolsExport(kind) {

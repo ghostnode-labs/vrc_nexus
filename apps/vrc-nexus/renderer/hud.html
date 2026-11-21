@@ -3,18 +3,20 @@
 <head>
 <meta charset="utf-8">
 <title>VRC Nexus HUD</title>
+<link rel="stylesheet" href="css/themes.css">
 <style>
-    html, body { margin: 0; width: 768px; height: 320px; overflow: hidden; background: transparent; color: #f1f5f9; font: 26px/1.25 "Segoe UI", system-ui, sans-serif; user-select: none; }
+    :root { --h-accent: var(--accent-cyan, #38d5e6); --h-gold: var(--accent-gold, #f5c242); --h-bg: rgba(var(--bg-rgb, 6, 10, 16), 0.80); }
+    html, body { margin: 0; width: 768px; height: 320px; overflow: hidden; background: transparent !important; color: var(--text-main, #f1f5f9); font: 26px/1.25 "Segoe UI", system-ui, sans-serif; user-select: none; }
     body { display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; padding: 10px 14px; box-sizing: border-box; }
-    .row { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 14px; background: rgba(6, 10, 16, 0.78); border: 2px solid rgba(56, 213, 230, 0.55); border-radius: 12px; font-size: 24px; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 14px; background: var(--h-bg); border: 2px solid rgba(var(--accent-rgb, 56, 213, 230), 0.55); border-radius: 16px; box-shadow: 0 0 18px rgba(var(--accent-rgb, 56, 213, 230), 0.25); font-size: 24px; }
     .row span { white-space: nowrap; }
-    .row b { color: #38d5e6; font-weight: 600; }
+    .row b { color: var(--h-accent); font-weight: 600; }
     .subs { display: flex; flex-direction: column; gap: 6px; }
-    .sub { padding: 6px 14px; background: rgba(6, 10, 16, 0.82); border-left: 5px solid #38d5e6; border-radius: 8px; font-size: 27px; }
-    .sub.me { border-left-color: #f5c242; }
+    .sub { padding: 6px 14px; background: var(--h-bg); border-left: 5px solid var(--h-accent); border-radius: 12px; font-size: 27px; }
+    .sub.me { border-left-color: var(--h-gold); }
     .sub.unsure { opacity: 0.65; }
-    .sub small { font-size: 18px; color: #94a3b8; }
-    .sub .orig { display: block; font-size: 19px; color: #94a3b8; }
+    .sub small { font-size: 18px; color: var(--text-muted, #94a3b8); }
+    .sub .orig { display: block; font-size: 19px; color: var(--text-muted, #94a3b8); }
     .sub.old { opacity: 0.55; }
     [hidden] { display: none !important; }
 </style>

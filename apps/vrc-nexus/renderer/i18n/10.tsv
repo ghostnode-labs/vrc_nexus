@@ -1263,3 +1263,39 @@ Vertretene Gruppe	Represented group	Groupe représenté	代表グループ
 Aktueller Avatar	Current avatar	Avatar actuel	現在のアバター
 Avatar klonen	Avatar cloning	Clonage d'avatar	アバターのクローン
 erlaubt	allowed	autorisé	許可
+📐 Lage	📐 Position	📐 Position	📐 位置
+Fenster	Window	Fenêtre	ウィンドウ
+⌚ Handgelenk	⌚ Wrist	⌚ Poignet	⌚ 手首
+🪟 Vor mir	🪟 In front of me	🪟 Devant moi	🪟 目の前
+🧩 Dashboard	🧩 Dashboard	🧩 Tableau de bord	🧩 ダッシュボード
+⌚ Am Arm	⌚ On the arm	⌚ Sur le bras	⌚ 腕に
+🥽 Im Blickfeld	🥽 In view	🥽 Dans le champ de vision	🥽 視界内
+Deckkraft	Opacity	Opacité	不透明度
+Neigung	Tilt	Inclinaison	傾き
+Versatz X	Offset X	Décalage X	オフセット X
+Versatz Y	Offset Y	Décalage Y	オフセット Y
+Versatz Z	Offset Z	Décalage Z	オフセット Z
+Abstand	Distance	Distance	距離
+Weite	Distance	Distance	距離
+X (seitlich)	X (sideways)	X (latéral)	X（横）
+Y (Höhe)	Y (height)	Y (hauteur)	Y（高さ）
+Abstand zum Fenster	Distance to window	Distance à la fenêtre	ウィンドウとの距離
+HUD (aus – in den Einstellungen einschalten)	HUD (off – enable in settings)	HUD (désactivé – activer dans les paramètres)	HUD（オフ – 設定で有効化）
+Änderungen wirken sofort. ↺ setzt einen Wert zurück.	Changes apply immediately. ↺ resets a value.	Les modifications s'appliquent immédiatement. ↺ réinitialise une valeur.	変更はすぐに反映されます。↺ で値をリセット。
+Neigung am Handgelenk (°)	Tilt on the wrist (°)	Inclinaison au poignet (°)	手首での傾き (°)
+0 = flach auf dem Arm, 90 = senkrecht.	0 = flat on the arm, 90 = upright.	0 = à plat sur le bras, 90 = vertical.	0 = 腕に平ら、90 = 垂直。
+Handgelenk: seitlich (cm)	Wrist: sideways (cm)	Poignet : latéral (cm)	手首：横 (cm)
+Handgelenk: Höhe (cm)	Wrist: height (cm)	Poignet : hauteur (cm)	手首：高さ (cm)
+Handgelenk: Richtung Ellbogen (cm)	Wrist: towards elbow (cm)	Poignet : vers le coude (cm)	手首：肘方向 (cm)
+„Frei vor mir“: Höhe zur Blickmitte (cm)	“In front of me”: height to eye level (cm)	« Devant moi » : hauteur par rapport au regard (cm)	「目の前」：視線中心からの高さ (cm)
+Negativ = unterhalb der Augen.	Negative = below the eyes.	Négatif = sous les yeux.	負の値 = 目より下。
+im Blickfeld (fest am Headset, Position frei einstellbar)	in view (fixed to the headset, freely positionable)	dans le champ de vision (fixé au casque, position réglable)	視界内（ヘッドセット固定、位置は自由に設定）
+Im Blickfeld: Abstand vor den Augen (cm)	In view: distance from the eyes (cm)	Champ de vision : distance des yeux (cm)	視界内：目からの距離 (cm)
+Im Blickfeld: links/rechts (cm)	In view: left/right (cm)	Champ de vision : gauche/droite (cm)	視界内：左右 (cm)
+Negativ = links.	Negative = left.	Négatif = gauche.	負の値 = 左。
+Im Blickfeld: Höhe (cm)	In view: height (cm)	Champ de vision : hauteur (cm)	視界内：高さ (cm)
+Negativ = unterhalb der Blickmitte.	Negative = below eye level.	Négatif = sous le centre du regard.	負の値 = 視線中心より下。
+Im Blickfeld: Neigung (°)	In view: tilt (°)	Champ de vision : inclinaison (°)	視界内：傾き (°)
+Positiv = oben nach hinten gekippt.	Positive = top tilted back.	Positif = haut incliné vers l'arrière.	正の値 = 上部が後ろに傾く。
+Am Arm: Abstand zum Handgelenk (cm)	On the arm: distance to wrist (cm)	Sur le bras : distance au poignet (cm)	腕：手首からの距離 (cm)
+Im Browser öffnen	Open in browser	Ouvrir dans le navigateur	ブラウザで開く

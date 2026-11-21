@@ -975,6 +975,21 @@
         });
     }
 
+    /** 3.8.4: Bild groß in der App zeigen (Klick/Esc schließt) – mit „im Browser öffnen“ und Speichern */
+    function bigImage(url, name) {
+        const src = (UI.pic && UI.pic(url)) || url;
+        const box = document.createElement('div');
+        box.className = 'nx-lb';
+        box.innerHTML = '<img src="' + esc(src) + '" alt="' + esc(name || '') + '" referrerpolicy="no-referrer"><div class="nx-lb-bar">'
+            + (/^https:\/\//.test(url) ? '<button type="button" class="btn btn-sm" data-lb="web">🌐 ' + esc(T('Im Browser öffnen')) + '</button>' : '')
+            + '<a class="btn btn-sm" href="' + esc(src) + '" download="' + esc((name || 'bild').replace(/[^\w-]+/g, '_')) + '.png">⬇ ' + esc(T('Speichern')) + '</a>'
+            + '<button type="button" class="btn btn-sm" data-lb="x">✕</button></div>';
+        const close = () => { box.remove(); document.removeEventListener('keydown', key, true); };
+        const key = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+        box.addEventListener('click', e => { const b = e.target.closest('[data-lb]'); if (b && b.dataset.lb === 'web') { window.open(url, '_blank', 'noopener'); return; } if (!e.target.closest('.nx-lb-bar') || (b && b.dataset.lb === 'x')) close(); });
+        document.addEventListener('keydown', key, true);
+        document.body.appendChild(box);
+    }
     // ======================= Profil: Reiter + Menü =======================
     const U_TABS = [['info', 'Info'], ['mutuals', 'Gemeinsame Freunde'], ['groups', 'Gruppen'], ['worlds', 'Welten'], ['favworlds', 'Lieblingswelten'], ['avatars', 'Avatare'], ['activity', 'Aktivität'], ['instances', 'Frühere Instanzen'], ['json', 'JSON']];
     function userExtra(u) {
@@ -1009,7 +1024,7 @@
             { icon: '↗', label: 'Teilen', sub: shareItems('https://vrchat.com/home/user/' + u.id, u.name, u.id) },
             { icon: '📋', label: 'User-ID kopieren', fn: () => UI.copy(u.id) },
             { icon: '🌐', label: 'Profil auf vrchat.com öffnen', fn: () => window.open('https://vrchat.com/home/user/' + u.id, '_blank', 'noopener') },
-            ...(u.image ? [{ icon: '🖼', label: 'Profilbild groß öffnen', fn: () => window.open(UI.pic ? UI.pic(u.image) || u.image : u.image, '_blank', 'noopener') }] : []),
+            ...(u.image ? [{ icon: '🖼', label: 'Profilbild groß öffnen', fn: () => bigImage(u.image, u.name) }] : []),   // 3.8.4: in der App statt neues Fenster (das blockiert Electron)
             '-',
             { icon: '💬', label: 'Nachricht schreiben (Nexus-Chat)', fn: toChat },
             ...(window.NexusVoice ? [{ icon: '📞', label: 'Anrufen (Nexus)', fn: toCall }] : []),
