@@ -2724,6 +2724,33 @@ test('3.8: Plugin-Rechte „vrchat“ (nur eigene Gruppe, nur erlaubte Pfade) un
     } finally { P.stop(); await wait(300); }
 });
 
+test('3.9: Info-Karten für Links/IDs (Konto, Gruppe, Gruppen-Code, Welt, Instanz, Avatar, Event) – Zwischenspeicher, Fehler als Karte', async () => {
+    const { NexusApp } = require('../backend/app');
+    const app = new NexusApp({ db: await openDatabase(null), crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => ({ vrc_id: 'usr_me', cookie_jar: {} });
+    const U1 = 'usr_11111111-1111-4111-8111-111111111111', G1 = 'grp_22222222-2222-4222-8222-222222222222', W1 = 'wrld_33333333-3333-4333-8333-333333333333', A1 = 'avtr_44444444-4444-4444-8444-444444444444', C1 = 'cal_55555555-5555-4555-8555-555555555555';
+    let calls = 0;
+    app.vrc.call = async (acc, m, p, q) => {
+        calls++;
+        if (p === '/users/' + U1) return { id: U1, displayName: 'Fuchsi', statusDescription: 'chillt', tags: ['system_trust_known'], isFriend: true };
+        if (p === '/groups' && q.query === 'SYLVN.1234') return [{ id: G1, shortCode: 'SYLVN', discriminator: '1234' }];
+        if (p === '/groups/' + G1) return { id: G1, name: 'Sylvan Test', memberCount: 1364, onlineMemberCount: 40, shortCode: 'SYLVN', discriminator: '1234', iconUrl: 'https://x.test/g.png' };
+        if (p === '/worlds/' + W1) return { id: W1, name: 'Waldhütte', authorName: 'Loona', occupants: 12, favorites: 99, thumbnailImageUrl: 'https://x.test/w.png' };
+        if (p === '/calendar/' + G1 + '/' + C1) return { title: 'Clubabend', startsAt: '2026-11-22T19:00:00Z', endsAt: '2026-11-22T22:00:00Z', interestedUserCount: 7 };
+        throw new U.UserError('Nicht gefunden.');
+    };
+    const card = (kind, id) => app.post({ act: 'card_info', kind, id }, {});
+    let c = await card('user', U1); assert.strictEqual(c.name, 'Fuchsi'); assert.ok(c.friend);
+    const n = calls; await card('user', U1); assert.strictEqual(calls, n, 'zwischengespeichert');
+    c = await card('gshort', 'SYLVN.1234'); assert.deepStrictEqual([c.kind, c.id, c.members, c.sub], ['group', G1, 1364, 'SYLVN.1234']);
+    c = await card('instance', W1 + ':12345~group(' + G1 + ')~region(eu)'); assert.strictEqual(c.name, 'Waldhütte'); assert.strictEqual(String(c.region).toLowerCase(), 'eu');
+    c = await card('event', G1 + '/' + C1); assert.deepStrictEqual([c.name, c.group, c.interested], ['Clubabend', G1, 7]);
+    c = await card('avatar', A1); assert.ok(c.error, 'Fehler wird zur Karte statt zum Absturz');
+    assert.match((await card('user', 'quatsch')).error, /Ungültige Kennung/, 'ungültige ID wird zur Fehler-Karte');
+    app.tools.stop();
+});
+
 test('3.0.4: 18+ über /auth/user (ageVerified, „verified“), kurze IDs älterer Konten', async () => {
     const { NexusApp } = require('../backend/app');
     const app = new NexusApp({ db: await openDatabase(null), crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });

@@ -460,6 +460,49 @@ class NexusApp {
                     banner: (deco && deco.banner) || U.https(u.profilePicOverride) || U.https(u.currentAvatarImageUrl) || '',
                     avatar_thumb: U.https(u.currentAvatarThumbnailImageUrl) || '', clone: u.allowAvatarCopying === true ? true : u.allowAvatarCopying === false ? false : null } };
             }
+            // 3.9: Info-Karte für Links/IDs im Feed und Chat (Konto, Gruppe, Welt, Instanz, Avatar, Event) – 1 h zwischengespeichert
+            case 'card_info': {
+                const kind = str(input.kind), key = kind + ':' + id;
+                this.cardCache = this.cardCache || new Map();
+                const hit = this.cardCache.get(key);
+                if (hit && Date.now() - hit.at < 3600000) return hit.card;
+                let card;
+                try {
+                    if (kind === 'user') {
+                        const u = await call('GET', '/users/' + enc(valid(id, 'usr')));
+                        card = { kind, id: u.id, name: str(u.displayName), image: U.userImage(u), sub: str(u.statusDescription) || str(u.status), trust: U.trust(u.tags), pronouns: str(u.pronouns), friend: !!u.isFriend, status: str(u.status) };
+                    } else if (kind === 'group' || kind === 'gshort') {
+                        let gid = id;
+                        if (kind === 'gshort') {
+                            const m = /^([a-z0-9]{3,6})\.(\d{4})$/i.exec(id); if (!m) throw new UserError('Ungültiger Gruppen-Code.');
+                            const hits = arr(await call('GET', '/groups', { query: m[1] + '.' + m[2], n: 10 }));
+                            const g0 = hits.find(g => str(g.shortCode).toLowerCase() === m[1].toLowerCase() && str(g.discriminator) === m[2]);
+                            if (!g0) throw new UserError('Gruppe nicht gefunden.');
+                            gid = str(g0.id);
+                        }
+                        const g = await call('GET', '/groups/' + enc(valid(gid, 'grp')));
+                        card = { kind: 'group', id: str(g.id), name: str(g.name), image: U.https(g.iconUrl) || '', banner: U.https(g.bannerUrl) || '', sub: str(g.shortCode) ? str(g.shortCode) + '.' + str(g.discriminator) : '', members: int(g.memberCount), online: int(g.onlineMemberCount), desc: cut(str(g.description), 220), join: str(g.joinState) };
+                    } else if (kind === 'world' || kind === 'instance') {
+                        const wid = kind === 'instance' ? id.split(':')[0] : id;
+                        const w = await call('GET', '/worlds/' + enc(valid(wid, 'wrld')));
+                        card = { kind, id, world: str(w.id), name: str(w.name), image: U.https(w.thumbnailImageUrl) || U.https(w.imageUrl) || '', sub: str(w.authorName), occupants: int(w.occupants), capacity: int(w.capacity), favorites: int(w.favorites) };
+                        if (kind === 'instance') { const l = U.location(id); card.access = l.access || ''; card.region = l.region || ''; }
+                    } else if (kind === 'avatar') {
+                        const av = await call('GET', '/avatars/' + enc(valid(id, 'avtr')));
+                        card = { kind, id: str(av.id), name: str(av.name), image: U.https(av.thumbnailImageUrl) || U.https(av.imageUrl) || '', sub: str(av.authorName), status: str(av.releaseStatus) };
+                    } else if (kind === 'event') {
+                        const [g, c] = id.split('/');
+                        const e = await call('GET', '/calendar/' + enc(valid(g, 'grp')) + '/' + enc(valid(c, 'cal')));
+                        card = { kind, id, group: g, name: str(e.title), image: U.https(e.imageUrl) || '', sub: str(e.category), starts: str(e.startsAt), ends: str(e.endsAt), desc: cut(str(e.description), 220), interested: int(e.interestedUserCount) };
+                    } else throw new UserError('Unbekannte Karte.');
+                } catch (e) {
+                    if (e instanceof VrcAuthError) throw e;
+                    card = { kind, id, error: e.message || 'nicht gefunden' };
+                }
+                if (this.cardCache.size > 500) this.cardCache.clear();
+                this.cardCache.set(key, { at: Date.now(), card });
+                return card;
+            }
             case 'note_save':
                 v.noteSave(valid(id, 'usr'), str(input.note), truthy(input.favorite), input.lists !== undefined ? str(input.lists) : null, input.watch !== undefined ? truthy(input.watch) : null);
                 if (truthy(input.remote)) { await call('POST', '/userNotes', {}, { targetUserId: id, note: cut(input.note, 256) }); return { msg: 'Notiz gespeichert – auch in VRChat.' }; }

@@ -30,7 +30,7 @@
         return '<article class="cm-post' + (reply ? ' reply' : '') + (p.own ? ' mine' : '') + (p.status !== 'visible' ? ' st-' + esc(p.status) : '') + '" data-pid="' + p.id + '">'
             + '<header><a href="#" data-cprof="' + esc(p.author) + '"><b>' + esc(p.name || p.author) + '</b></a> <span class="muted small">' + esc(when(p.created)) + (p.edited ? ' · ' + esc(T('bearbeitet')) : '') + '</span>'
             + (p.rating === 'nsfw' ? ' <span class="vx-pill" style="--pc:#ff5c8a">🔞</span>' : '') + (p.status === 'pending' ? ' <span class="vx-pill rep">⏳ ' + esc(T('wartet auf Freigabe')) + '</span>' : p.status === 'hidden' ? ' <span class="vx-pill">' + esc(T('ausgeblendet')) + '</span>' : '') + '</header>'
-            + (p.text ? '<div class="cm-text md">' + md(p.text) + '</div>' : '') + imgs(p.media)
+            + (p.text ? '<div class="cm-text md">' + md(p.text) + '</div>' + (window.NexusCards ? window.NexusCards.html(p.text) : '') : '') + imgs(p.media)
             + '<footer><span class="cm-reacts">' + reacts + '</span>'
             + (!reply ? '<button type="button" class="nc-link" data-cthread="' + p.id + '">💬 ' + (p.replies || 0) + '</button>' : '')
             + (p.own ? '<button type="button" class="nc-link" data-cedit="' + p.id + '">✎</button><button type="button" class="nc-link" data-cdel="' + p.id + '">🗑</button>' : '<button type="button" class="nc-link" data-crep="' + p.id + '" title="' + esc(T('Melden')) + '">⚑</button>')
@@ -85,7 +85,7 @@
             if (m.reply) body += '<div class="ch-quote">↩ ' + esc(m.reply.text || T('gelöscht')) + '</div>';
             if (m.img) body += '<a class="ch-img" href="nexus.php?chimg=' + esc(conv + ':' + m.id) + '" target="_blank" rel="noopener"><img src="nexus.php?chimg=' + esc(conv + ':' + m.id) + '" alt="" loading="lazy"></a>';
             if (m.hr) body += '<div class="ch-hr">💓 <b>' + m.hr + '</b> bpm</div>';
-            if (m.text) body += '<div class="md">' + md(m.text) + '</div>';
+            if (m.text) body += '<div class="md">' + md(m.text) + '</div>' + (window.NexusCards && !plain ? window.NexusCards.html(m.text) : '');   // 3.9 Info-Karten
         }
         const reacts = Object.entries(m.reacts || {}).map(([e, who]) => '<button type="button" class="ch-react' + (who.includes('me') ? ' on' : '') + '"' + (o ? ' data-chreact="' + esc(e) + '" data-ref="' + esc(m.id) + '"' : '') + '>' + e + (who.length > 1 ? ' ' + who.length : '') + '</button>').join('');
         const fav = o && (o.favs || []).includes(m.id), pin = o && (o.pins || []).includes(m.id);
