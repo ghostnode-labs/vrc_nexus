@@ -37,6 +37,7 @@
         const ph = { calling: 'klingelt …', connecting: 'verbindet …', connected: '', ringing: '' }[st.phase] || '';
         const secs = st.since ? Math.floor((Date.now() - st.since) / 1000) : 0;
         bar.innerHTML = '<div class="nv-who">📞 <b>' + esc(nameOf(st.uid, st.name)) + '</b><small class="nv-time">' + (ph ? esc(T(ph)) : fmt(secs)) + '</small></div>'
+            + (st.phase === 'connected' ? '<div class="nv-lv"><span class="nv-sp" data-who="them">🗣 ' + esc(nameOf(st.uid, st.name)) + '<i><u></u></i></span><span class="nv-sp" data-who="me">🎙 ' + esc(T('Du')) + '<i><u></u></i></span></div>' : '')
             + '<div class="nv-btns">'
             + '<button type="button" class="btn btn-sm' + (st.muted ? ' btn-danger' : '') + '" data-nv="mute" title="' + esc(T('Mikro an/aus')) + '">' + (st.muted ? '🔇' : '🎙') + '</button>'
             + '<button type="button" class="btn btn-sm' + (st.ptt ? ' btn-gold' : '') + '" data-nv="ptt" title="' + esc(T('Push-to-Talk: nur sprechen, solange die Taste gedrückt ist')) + '">PTT</button>'
@@ -66,6 +67,31 @@
         window.addEventListener('blur', () => { if (st && st.pttDown) talk(false); });
     }
 
+    // ---------- 4.0: aktiven Sprecher anzeigen (Pegel beider Seiten, nur lokal gemessen) ----------
+    let meter = null;
+    function meterAdd(who, stream) {
+        try {
+            if (!meter) {
+                meter = { ctx: new AudioContext(), an: {}, lv: { me: 0, them: 0 }, t: setInterval(meterTick, 100) };
+            }
+            const src = meter.ctx.createMediaStreamSource(stream), an = meter.ctx.createAnalyser();
+            an.fftSize = 512; src.connect(an);
+            meter.an[who] = { an, buf: new Float32Array(an.fftSize) };
+        } catch (e) { /* ohne Anzeige */ }
+    }
+    function meterTick() {
+        if (!meter || !bar) return;
+        for (const who of ['me', 'them']) {
+            const m = meter.an[who];
+            let v = 0;
+            if (m && !(who === 'me' && st && (st.muted || (st.ptt && !st.pttDown)))) { m.an.getFloatTimeDomainData(m.buf); let sum = 0; for (const x of m.buf) sum += x * x; v = Math.sqrt(sum / m.buf.length); }
+            meter.lv[who] = Math.max(v, meter.lv[who] * 0.8);   // sanft abklingen
+            const el = bar.querySelector('.nv-sp[data-who="' + who + '"]');
+            if (el) { el.classList.toggle('on', meter.lv[who] > 0.02); const u = el.querySelector('u'); if (u) u.style.width = Math.min(100, Math.round(meter.lv[who] * 400)) + '%'; }
+        }
+    }
+    function meterStop() { if (!meter) return; clearInterval(meter.t); try { meter.ctx.close(); } catch (e) { /* egal */ } meter = null; }
+
     // ---------- WebRTC ----------
     async function media() {
         const dev = ls.get('mic', '');
@@ -77,9 +103,10 @@
         if (!ice.length) toast(T('Kein STUN/TURN-Server eingerichtet – Anrufe klappen so nur im selben Netz.'), true);
         const pc = new RTCPeerConnection({ iceServers: ice, bundlePolicy: 'max-bundle' });
         stream.getTracks().forEach(t => pc.addTrack(t, stream));
+        meterAdd('me', stream);
         const audio = new Audio(); audio.autoplay = true; audio.volume = ls.get('volume', 1);
         const out = ls.get('speaker', ''); if (out && audio.setSinkId) audio.setSinkId(out).catch(() => {});
-        pc.ontrack = e => { audio.srcObject = e.streams[0]; audio.play().catch(() => {}); };
+        pc.ontrack = e => { audio.srcObject = e.streams[0]; audio.play().catch(() => {}); meterAdd('them', e.streams[0]); };
         pc.onconnectionstatechange = () => {
             if (!st || st.pc !== pc) return;
             if (pc.connectionState === 'connected' && st.phase !== 'connected') { st.phase = 'connected'; st.since = Date.now(); draw(); }
@@ -90,6 +117,7 @@
     const gathered = pc => new Promise(res => { if (pc.iceGatheringState === 'complete') return res(); const t = setTimeout(res, 4000); pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } }); });
     function cleanup() {
         if (st) { try { st.pc && st.pc.close(); } catch (e) { /* egal */ } if (st.stream) st.stream.getTracks().forEach(t => t.stop()); if (st.audio) { st.audio.srcObject = null; } }
+        meterStop();
         st = null; clearTimeout(ringT); clearInterval(tick); tick = null; draw(); schedule();
     }
     async function hangup(send) {

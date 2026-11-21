@@ -1258,3 +1258,39 @@ a.lc:hover { border-color: var(--accent, #38d5e6); background: rgba(255,255,255,
 .pl-c { padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,.08); font-size: .86em; }
 .pl-c p { margin: 2px 0 0; white-space: pre-wrap; }
 .pl-optin { max-width: 680px; }
+
+/* 4.0 Startseite: Tabs, modernere Kacheln, neue Widgets */
+.hm-tabs { display: flex; gap: 6px; margin: 4px 0 14px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.hm-tab { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(var(--accent-rgb), 0.25); background: rgba(var(--panel-rgb), 0.55); color: var(--text-muted); border-radius: 12px; cursor: pointer; font: inherit; font-size: 0.86rem; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
+.hm-tab:hover { border-color: rgba(var(--accent-rgb), 0.6); color: var(--text-main); }
+.hm-tab.on { background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.28), rgba(var(--accent-rgb), 0.1)); border-color: var(--accent-cyan); color: var(--text-main); box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.25); }
+.hm-tab em { font-style: normal; font-weight: 600; letter-spacing: .02em; }
+.hm-tab small { font-size: .7rem; min-width: 20px; text-align: center; padding: 1px 6px; border-radius: 10px; background: rgba(var(--accent-rgb), 0.14); color: var(--accent-cyan); }
+.hm-tab:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+@media (max-width: 700px) { .hm-tab em { display: none; } .hm-tab { padding: 9px 12px; } }
+body.mobile .hm-tab em { display: none; }
+.hm-w { border-radius: 14px; clip-path: none; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18); backdrop-filter: blur(6px); }
+.hm-w > header { min-height: 44px; }
+.hm-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.hm-links.sm { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.hm-lk { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 84px; padding: 10px 6px; border: 1px solid rgba(var(--accent-rgb), 0.25); border-radius: 12px; background: rgba(var(--accent-rgb), 0.06); color: var(--text-main); cursor: pointer; font: inherit; text-decoration: none; text-align: center; transition: transform .12s, border-color .12s, background .12s; }
+.hm-lk:hover { transform: translateY(-2px); border-color: var(--accent-cyan); background: rgba(var(--accent-rgb), 0.14); }
+.hm-lk span { font-size: 1.6rem; line-height: 1; } .hm-lk em { font-style: normal; font-size: .78rem; overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
+.hm-lk.own { border-style: dashed; }
+.hm-lkpick { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px; margin: 8px 0; max-height: 200px; overflow-y: auto; }
+.hm-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.hm-grp { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid rgba(var(--accent-rgb), 0.2); border-radius: 10px; color: inherit; text-decoration: none; min-width: 0; }
+.hm-grp:hover { border-color: var(--accent-cyan); }
+.hm-grp img, .hm-grp i { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; flex: none; display: grid; place-items: center; font-style: normal; background: rgba(var(--accent-rgb), 0.1); }
+.hm-grp span { display: flex; flex-direction: column; min-width: 0; } .hm-grp b, .hm-grp small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .hm-grp small { opacity: .7; font-size: .75rem; }
+
+/* 4.0 Sprachanruf: wer spricht gerade */
+.nv-lv { display: flex; gap: 10px; flex-wrap: wrap; }
+.nv-sp { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 10px; border: 1px solid rgba(var(--accent-rgb), 0.2); font-size: .78rem; opacity: .7; transition: opacity .1s, border-color .1s, box-shadow .1s; }
+.nv-sp.on { opacity: 1; border-color: #51e57e; box-shadow: 0 0 10px rgba(81, 229, 126, 0.45); }
+.nv-sp i { display: block; width: 46px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.nv-sp u { display: block; height: 100%; width: 0; background: #51e57e; text-decoration: none; transition: width .1s; }
+
+/* 4.0 Pride-Profilthemen */
+.nx-pride { height: 8px; border-radius: 6px; margin: 0 0 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+#userBody > .nx-pride { height: 6px; margin: -4px 0 12px; }

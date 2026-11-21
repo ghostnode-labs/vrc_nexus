@@ -193,6 +193,28 @@
             else chatLoad(true);
         }, 4000);
     }
+    // 4.0: Pride-Profilthemen (Farbstreifen im Profil; gespeichert als „theme“ im Community-Profil)
+    const PRIDE = {
+        rainbow: ['🏳️‍🌈 Regenbogen', ['#e40303', '#ff8c00', '#ffed00', '#008026', '#004dff', '#750787']],
+        progress: ['🏳️‍🌈 Progress', ['#000000', '#784f17', '#5bcefa', '#f5a9b8', '#ffffff', '#e40303', '#ff8c00', '#ffed00', '#008026', '#004dff', '#750787']],
+        trans: ['🏳️‍⚧️ Trans', ['#5bcefa', '#f5a9b8', '#ffffff', '#f5a9b8', '#5bcefa']],
+        bi: ['💗💜💙 Bi', ['#d60270', '#d60270', '#9b4f96', '#0038a8', '#0038a8']],
+        pan: ['💖💛💙 Pan', ['#ff218c', '#ffd800', '#21b1ff']],
+        lesbian: ['🧡🤍💗 Lesbisch', ['#d52d00', '#ff9a56', '#ffffff', '#d362a4', '#a30262']],
+        gay: ['💚🤍💙 Schwul (MLM)', ['#078d70', '#26ceaa', '#98e8c1', '#ffffff', '#7bade2', '#5049cc', '#3d1a78']],
+        nonbinary: ['💛🤍💜🖤 Nichtbinär', ['#fcf434', '#ffffff', '#9c59d1', '#2c2c2c']],
+        genderfluid: ['🌊 Genderfluid', ['#ff76a4', '#ffffff', '#c011d7', '#000000', '#2f3cbe']],
+        ace: ['🖤🩶🤍💜 Asexuell', ['#000000', '#a3a3a3', '#ffffff', '#800080']],
+        aro: ['💚🤍🩶🖤 Aromantisch', ['#3da542', '#a7d379', '#ffffff', '#a9a9a9', '#000000']],
+        intersex: ['💛💜 Intersex', ['#ffd800', '#7902aa', '#ffd800']],
+        agender: ['🖤🩶🤍💚 Agender', ['#000000', '#bcc4c7', '#ffffff', '#b7f684', '#ffffff', '#bcc4c7', '#000000']],
+    };
+    const prideBg = k => { const f = PRIDE[k]; if (!f) return ''; const n = f[1].length; return 'linear-gradient(90deg,' + f[1].map((c, i) => c + ' ' + (i / n * 100).toFixed(2) + '% ' + ((i + 1) / n * 100).toFixed(2) + '%').join(',') + ')'; };
+    window.NexusPride = {
+        list: PRIDE, bg: prideBg,
+        stripe: k => (PRIDE[k] ? '<div class="nx-pride" title="' + esc(T(PRIDE[k][0])) + '" style="background:' + prideBg(k) + '"></div>' : ''),
+        select: cur => '<label class="small">🌈 ' + esc(T('Profil-Thema')) + ' <select name="theme"><option value="">' + esc(T('Keins')) + '</option>' + Object.entries(PRIDE).map(([k, v]) => '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + esc(T(v[0])) + '</option>').join('') + '</select></label>',
+    };
     function profileHtml() {
         if (!prof) return '<div class="vx-loading">…</div>';
         const p = prof;
@@ -201,6 +223,7 @@
             + '<div class="nc-row"><input type="text" name="pronouns" maxlength="40" placeholder="' + esc(T('Pronomen')) + '" value="' + esc(p.pronouns) + '"><input type="text" name="languages" maxlength="100" placeholder="' + esc(T('Sprachen')) + '" value="' + esc(p.languages) + '"></div>'
             + '<input type="text" name="interests" maxlength="300" placeholder="' + esc(T('Interessen (mit Komma)')) + '" value="' + esc(p.interests) + '">'
             + '<input type="text" name="links" maxlength="800" placeholder="' + esc(T('Links (https://…, mit Komma)')) + '" value="' + esc((p.links || []).join(', ')) + '">'
+            + '<div class="nc-row">' + window.NexusPride.select(p.theme || '') + '</div>'
             + (window.NexusProfile18 ? window.NexusProfile18.factsForm(p.facts) : '')
             + '<div class="nc-row"><label class="btn btn-sm">🖼 ' + esc(T('Profilbild')) + '<input type="file" accept="image/*" data-cav="avatar" hidden></label><label class="btn btn-sm">🖼 ' + esc(T('Banner')) + '<input type="file" accept="image/*" data-cav="banner" hidden></label>'
             + '<button class="btn btn-sm btn-gold" style="margin-left:auto">' + esc(T('Speichern')) + '</button><button type="button" class="btn btn-sm" data-cpedit="0">' + esc(T('Abbrechen')) + '</button></div></form>';
@@ -212,7 +235,7 @@
         if (profTab === 'acct') return bar + '<div id="cmAcctSlot"></div>';
         if (profTab === 'p18') return bar + p18Html(p);
         return bar + '<div class="cm-pgrid' + (p.own ? ' two' : '') + '"><div class="cm-prof">' + (p.banner ? '<div class="cm-banner" style="background-image:url(nexus.php?cimg=' + esc(p.banner) + ')"></div>' : '')
-            + card('', '<div class="cm-phead">' + (p.avatar ? '<img class="cm-pav" src="nexus.php?cimg=' + esc(p.avatar) + '" alt="">' : '<span class="cm-pav">👤</span>') + '<div><h3>' + esc(p.name) + '</h3>'
+            + window.NexusPride.stripe(p.theme) + card('', '<div class="cm-phead">' + (p.avatar ? '<img class="cm-pav" src="nexus.php?cimg=' + esc(p.avatar) + '" alt="">' : '<span class="cm-pav">👤</span>') + '<div><h3>' + esc(p.name) + '</h3>'
                 + '<div class="small muted">' + [p.pronouns, p.languages].filter(Boolean).map(esc).join(' · ') + '</div>'
                 + (window.NexusProfile18 ? window.NexusProfile18.factsView(p.facts) : '')
                 + '<div>' + (p.verified18 ? '<span class="vx-pill" style="--pc:#51e57e">✔ Verified 18+</span>' : '') + '<span class="vx-pill">' + p.posts + ' ' + esc(T('Beiträge')) + '</span></div></div>'
@@ -254,7 +277,7 @@
         if (p.own && !canEdit) return card('🔞 ' + esc(T('18+-Profil')), '<p class="small">' + esc(T('Schalte oben rechts NSFW ein, um dein 18+-Profil zu bearbeiten.')) + '</p>' + P.nsfwView(p.nsfw_facts, p.nsfw_bio), 'cm-p18');
         return card('🔞 ' + esc(T('18+-Profil')) + (canEdit ? '<button type="button" class="btn btn-sm" data-p18e="1" style="margin-left:auto">✎ ' + esc(T('Bearbeiten')) + '</button>' : ''), P.nsfwView(p.nsfw_facts, p.nsfw_bio), 'cm-p18');
     }
-    const profBody = p => ({ bio: p.bio, pronouns: p.pronouns, languages: p.languages, interests: p.interests, links: p.links || [], nsfw_bio: p.nsfw_bio || '', avatar: p.avatar || '', banner: p.banner || '' });
+    const profBody = p => ({ bio: p.bio, pronouns: p.pronouns, languages: p.languages, interests: p.interests, links: p.links || [], nsfw_bio: p.nsfw_bio || '', avatar: p.avatar || '', banner: p.banner || '', theme: p.theme || '' });
     function modHtml() {
         if (!modData) return '<div class="vx-loading">…</div>';
         const d = modData;
@@ -407,7 +430,7 @@
             }
             if (f.matches('.p18-edit')) return api('comm_profile_save', Object.assign(profBody(prof), { nsfw_bio: f.nsfw_bio.value, nsfw_facts: JSON.stringify(window.NexusProfile18.readNsfw(f)) }))
                 .then(d => { toast(d.msg); const feed = prof.feed; prof = d.profile; prof.feed = feed; p18Edit = false; render(); }).catch(x => toast(x.message, true));
-            if (f.matches('.cm-pform')) return api('comm_profile_save', Object.assign(profBody(prof), { bio: f.bio.value, pronouns: f.pronouns.value, languages: f.languages.value, interests: f.interests.value, links: f.links.value.split(',').map(x => x.trim()).filter(Boolean) },
+            if (f.matches('.cm-pform')) return api('comm_profile_save', Object.assign(profBody(prof), { theme: f.theme ? f.theme.value : (prof.theme || ''), bio: f.bio.value, pronouns: f.pronouns.value, languages: f.languages.value, interests: f.interests.value, links: f.links.value.split(',').map(x => x.trim()).filter(Boolean) },
                 window.NexusProfile18 ? { facts: JSON.stringify(window.NexusProfile18.readFacts(f)) } : {}))
                 .then(d => { toast(d.msg); const feed = prof.feed; prof = d.profile; prof.feed = feed; profEdit = false; render(); }).catch(x => toast(x.message, true));
             if (f.matches('.ch-new')) {

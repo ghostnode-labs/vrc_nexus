@@ -245,7 +245,6 @@ Aus deiner VRChat-Galerie, als Datei vom PC oder als https-Adresse.	From your VR
 Deckkraft (%)	Opacity (%)	Opacité (%)	不透明度 (%)
 0 = unsichtbar, 100 = voll sichtbar	0 = invisible, 100 = fully visible	0 = invisible, 100 = entièrement visible	0 = 非表示、100 = 完全に表示
 Weichzeichnen (px)	Blur (px)	Flou (px)	ぼかし (px)
-Anpassen	Fit	Ajustement	フィット
 Ausfüllen	Fill	Remplir	塗りつぶし
 Ganz zeigen	Show whole	Afficher en entier	全体を表示
 Kacheln	Tile	Mosaïque	タイル
@@ -1329,3 +1328,35 @@ Einschalten	Turn on	Activer	オンにする
 Ausschalten	Turn off	Désactiver	オフにする
 Nexus Pulse ist aus. Bitte zuerst einschalten.	Nexus Pulse is off. Please turn it on first.	Nexus Pulse est désactivé. Active-le d'abord.	Nexus Pulseはオフです。先にオンにしてください。
 Quelle nicht erreichbar.	Source unreachable.	Source injoignable.	ソースに接続できません。
+Übersicht	Overview	Aperçu	概要
+Zuletzt geöffneten Tab merken	Remember last opened tab	Mémoriser le dernier onglet ouvert	最後に開いたタブを記憶
+Keine Widgets in diesem Tab – oben auf „✏️ Anpassen“ drücken und welche hinzufügen.	No widgets in this tab – press “✏️ Customise” above and add some.	Aucun widget dans cet onglet – appuie sur « ✏️ Personnaliser » en haut pour en ajouter.	このタブにはウィジェットがありません – 上の「✏️ カスタマイズ」から追加してください。
+🔗 Verknüpfungen	🔗 Shortcuts	🔗 Raccourcis	🔗 ショートカット
+🛡 Meine Gruppen	🛡 My groups	🛡 Mes groupes	🛡 マイグループ
+🛒 Marktplatz	🛒 Marketplace	🛒 Marché	🛒 マーケット
+📡 Pulse-News	📡 Pulse news	📡 Actus Pulse	📡 Pulseニュース
+Schnellzugriff auf Bereiche der App und eigene Links	Quick access to app sections and your own links	Accès rapide aux sections de l'app et à tes liens	アプリの各画面と自分のリンクへのクイックアクセス
+Deine VRChat-Gruppen, vertretene zuerst	Your VRChat groups, represented first	Tes groupes VRChat, celui représenté en premier	あなたのVRChatグループ（代表グループが先頭）
+Guthaben, gemerkte Artikel und Shops	Balance, saved items and shops	Solde, articles et boutiques enregistrés	残高、保存したアイテムとショップ
+Neueste VRChat-News und Patchnotes	Latest VRChat news and patch notes	Dernières actus et notes de version VRChat	最新のVRChatニュースとパッチノート
+Verknüpfungen bearbeiten	Edit shortcuts	Modifier les raccourcis	ショートカットを編集
+Du bist in keiner Gruppe.	You're not in any group.	Tu n'es dans aucun groupe.	グループに参加していません。
+Credits	Credits	Crédits	クレジット
+gemerkt	saved	enregistrés	保存済み
+Nexus Pulse ist aus.	Nexus Pulse is off.	Nexus Pulse est désactivé.	Nexus Pulseはオフです。
+Nur https-Links.	Only https links.	Liens https uniquement.	httpsリンクのみ。
+Profil-Thema	Profile theme	Thème du profil	プロフィールテーマ
+Keins	None	Aucun	なし
+🏳️‍🌈 Regenbogen	🏳️‍🌈 Rainbow	🏳️‍🌈 Arc-en-ciel	🏳️‍🌈 レインボー
+🏳️‍🌈 Progress	🏳️‍🌈 Progress	🏳️‍🌈 Progress	🏳️‍🌈 プログレス
+🏳️‍⚧️ Trans	🏳️‍⚧️ Trans	🏳️‍⚧️ Trans	🏳️‍⚧️ トランス
+💗💜💙 Bi	💗💜💙 Bi	💗💜💙 Bi	💗💜💙 バイ
+💖💛💙 Pan	💖💛💙 Pan	💖💛💙 Pan	💖💛💙 パン
+🧡🤍💗 Lesbisch	🧡🤍💗 Lesbian	🧡🤍💗 Lesbienne	🧡🤍💗 レズビアン
+💚🤍💙 Schwul (MLM)	💚🤍💙 Gay (MLM)	💚🤍💙 Gay (MLM)	💚🤍💙 ゲイ (MLM)
+💛🤍💜🖤 Nichtbinär	💛🤍💜🖤 Non-binary	💛🤍💜🖤 Non-binaire	💛🤍💜🖤 ノンバイナリー
+🌊 Genderfluid	🌊 Genderfluid	🌊 Genderfluid	🌊 ジェンダーフルイド
+🖤🩶🤍💜 Asexuell	🖤🩶🤍💜 Asexual	🖤🩶🤍💜 Asexuel·le	🖤🩶🤍💜 アセクシュアル
+💚🤍🩶🖤 Aromantisch	💚🤍🩶🖤 Aromantic	💚🤍🩶🖤 Aromantique	💚🤍🩶🖤 アロマンティック
+💛💜 Intersex	💛💜 Intersex	💛💜 Intersexe	💛💜 インターセックス
+🖤🩶🤍💚 Agender	🖤🩶🤍💚 Agender	🖤🩶🤍💚 Agenre	🖤🩶🤍💚 アジェンダー

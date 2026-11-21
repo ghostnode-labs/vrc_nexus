@@ -22,6 +22,15 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.0.0 – Home tabs, Pride themes, speaker indicator
+
+- 🏠 **New home page with tabs:** widgets are grouped by topic into **Overview, Media, Shortcuts, Group, System tools, Marketplace and Other**. Each tab keeps its own layout, the active tab is highlighted with a widget counter, and the last opened tab is remembered (can be switched off while customising). Arrow keys switch tabs. Existing layouts are moved to the matching tabs automatically.
+- 🧱 **Modernised tiles:** rounded cards with consistent header height, spacing and icons; the grid adapts from four columns down to one on narrow windows and Android, where the tab bar shows icons only.
+- 🔗 New widgets: **Shortcuts** (pick any app section plus your own https links), **My groups** (represented group first, owner/moderator marks, quick link to the mod centre), **Marketplace** (credits, saved items and shops) and **Pulse news** (latest VRChat announcements and patch notes).
+- 🌈 **Pride profile themes:** pick a flag (Rainbow, Progress, Trans, Bi, Pan, Lesbian, Gay/MLM, Non-binary, Genderfluid, Asexual, Aromantic, Intersex, Agender) in your Nexus community profile – it shows as a colour stripe on your profile, in the "Nexus profile" tab and at the top of the profile window.
+- 🗣 **Voice calls show who is speaking:** a live level indicator for you and the other person lights up while someone talks (muted or push-to-talk released counts as silent).
+- 📱 **Nexus Pulse on Android** as well.
+
 ### New in 3.9.0 – Info cards, Nexus Pulse and instance history
 
 - 🪪 **Info cards for links and IDs:** accounts (`usr_…`), groups (`grp_…`, `vrc.group/…`), worlds, instances, avatars and group events posted in the community feed or chat turn into cards with picture, name and details (max. 3 per post, cached for an hour; invalid IDs show a small error card).

@@ -1051,6 +1051,7 @@
             const st = comm.querySelector('.u-comm-st'); if (st) st.textContent = p ? '✔ ' + T('ist in der Nexus Community') : T('noch nicht in der Nexus Community');
             if (p && document.contains(bar) && !bar.querySelector('[data-ut="nexus"]')) {   // 3.8.3: Reiter „Nexus-Profil“
                 u._np = p;
+                if (p.theme && window.NexusPride && window.NexusPride.list[p.theme]) { const box = $('#userBody'); if (box && !box.querySelector(':scope > .nx-pride')) box.insertAdjacentHTML('afterbegin', window.NexusPride.stripe(p.theme)); }   // 4.0 Pride-Streifen oben im Profil
                 const nb = document.createElement('button');
                 nb.type = 'button'; nb.dataset.ut = 'nexus'; nb.textContent = '🫂 ' + T('Nexus-Profil');
                 bar.querySelector('[data-ut="info"]').after(nb);
@@ -1089,6 +1090,7 @@
             const links = (p.links || []).filter(x => /^https?:\/\//.test(x));
             pane.innerHTML = '<div class="u-np">'
                 + (p.banner ? '<div class="u-np-ban" style="background-image:url(nexus.php?cimg=' + esc(p.banner) + ')"></div>' : '')
+                + (window.NexusPride ? window.NexusPride.stripe(p.theme) : '')   // 4.0
                 + '<div class="nc-card"><h4>🫂 ' + esc(p.name || u.name) + (p.verified18 ? ' <span class="vx-pill" style="--pc:#38d5e6">🪪 18+</span>' : '') + '</h4>'
                 + (p.pronouns ? '<p class="small">' + esc(p.pronouns) + '</p>' : '')
                 + (p.bio ? '<div class="fmt">' + esc(p.bio).replace(/\n/g, '<br>') + '</div>' : '<p class="small muted">' + esc(T('Noch keine Community-Bio.')) + '</p>')

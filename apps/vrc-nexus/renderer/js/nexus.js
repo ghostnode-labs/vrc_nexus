@@ -2392,7 +2392,7 @@
     // Start
     load(false).then(() => load(true)).finally(schedule);
     window.addEventListener('nexus-colors', () => { try { renderFriends(); } catch (e) { /* noch nicht geladen */ } });
-    window.NexusUI = { copy: copyText, tcol, idColor, subnav: () => syncSubNav(), statusDot, store, pic, popMenu, renderUser, feedRow, tab, api, toast, esc, img, ago, hm, dur, clock, num, launch, openUser, openWorld, openAvatar, openInstance, openModal, closeModal, load, readClipboard,
+    window.NexusUI = { copy: copyText, tcol, idColor, subnav: () => syncSubNav(), statusDot, store, pic, popMenu, renderUser, feedRow, tab, api, toast, esc, img, ago, hm, dur, clock, num, launch, openUser, openWorld, openAvatar, openInstance, openGroup, openModal, closeModal, load, readClipboard,
         state: () => state, statusDot, isoDT, renderFriends, store };
     { const st = (window.VRCX.ui || {})['ui.start_tab']; if (st && st !== 'last') tab(st); else tab(store.get('tab', 'home'), store.get('tabSub', '')); }
     setInterval(() => { if (state && !$('[data-pane=friends]').hidden) renderFriends(); }, 60000);

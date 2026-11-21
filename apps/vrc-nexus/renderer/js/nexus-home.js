@@ -40,29 +40,62 @@
         ['osclog', '📜 OSC-Live', true, 's', 'sml', 'Die letzten Parameter-Änderungen'],
         ['rules', '🤖 Automatik', true, 's', 'sm', 'Regeln an/aus schalten'],
         ['heart', '💓 Puls', true, 's', 'sml', 'Live-Puls mit Kurve der letzten 10 Minuten'],
+        // 4.0
+        ['links', '🔗 Verknüpfungen', false, 'm', 'smlx', 'Schnellzugriff auf Bereiche der App und eigene Links'],
+        ['groups', '🛡 Meine Gruppen', false, 'm', 'smlx', 'Deine VRChat-Gruppen, vertretene zuerst'],
+        ['market', '🛒 Marktplatz', false, 's', 'sml', 'Guthaben, gemerkte Artikel und Shops'],
+        ['pulse', '📡 Pulse-News', false, 'm', 'smlx', 'Neueste VRChat-News und Patchnotes'],
     ].filter(w => !(MOBILE && w[2]));
     const SIZES = { s: ['S', 'Klein'], m: ['M', 'Mittel'], l: ['L', 'Groß'], x: ['XL', 'Extrem – ganze Breite'] };
-    const DEF = MOBILE ? ['me', 'friends', 'notifs', 'events', 'feed', 'anniv', 'clock', 'notes']
-        : ['me', 'friends', 'launch', 'instance', 'chat', 'macros', 'week', 'notifs', 'today', 'music', 'camera', 'params', 'events'];
+    // 4.0: Startseite in thematischen Tabs – jeder Tab hat seine eigene Anordnung
+    const TABS = [['overview', '🏠', 'Übersicht'], ['media', '🎬', 'Medien'], ['links', '🔗', 'Verknüpfungen'], ['group', '🛡', 'Gruppe'], ['system', '🧰', 'Systemwerkzeuge'], ['market', '🛒', 'Marktplatz'], ['misc', '✨', 'Sonstiges']];
+    const TAB_DEF = {
+        overview: ['me', 'friends', 'launch', 'instance', 'notifs', 'today', 'feed', 'clock'],
+        media: ['camera', 'music', 'pulse', 'coll', 'stream'],
+        links: ['links'],
+        group: ['groups', 'events'],
+        system: ['chat', 'macros', 'params', 'rotator', 'speech', 'overlay', 'heart', 'osclog', 'rules'],
+        market: ['market'],
+        misc: ['week', 'anniv', 'notes', 'update'],
+    };
+    const tabOf = k => (Object.entries(TAB_DEF).find(([, l]) => l.includes(k)) || ['misc'])[0];
+    let tab = 'overview';
+    const DEF = TAB_DEF.overview;
     const meta = k => W.find(x => x[0] === k);
     const fit = (k, z) => { const w = meta(k); return w[4].includes(z) ? z : w[4].includes('m') && z !== 's' ? (w[4].includes('l') ? 'l' : 'm') : w[4][0]; };
     const key = 'home' + (MOBILE ? 'M' : '');
-    const defLayout = () => DEF.filter(meta).map(k => ({ k, s: meta(k)[3] }));
-    let layout = UI.store.get(key, null);
-    if (!Array.isArray(layout)) layout = defLayout();
-    // alte Anordnung (Breite 1|2) übernehmen
-    layout = layout.filter(l => l && meta(l.k)).map(l => ({ k: l.k, s: fit(l.k, l.s || (l.w === 2 ? 'm' : 's')), min: !!l.min }));
+    const defLayout = t => (TAB_DEF[t || tab] || DEF).filter(meta).map(k => ({ k, s: meta(k)[3] }));
+    const clean = l => (Array.isArray(l) ? l : []).filter(x => x && meta(x.k)).map(x => ({ k: x.k, s: fit(x.k, x.s || (x.w === 2 ? 'm' : 's')), min: !!x.min }));
+    let all = UI.store.get(key + '4', null);
+    if (!all || typeof all !== 'object' || Array.isArray(all)) {   // erste 4.0-Startseite: bisherige Widgets auf ihre Tabs verteilen
+        const old = clean(UI.store.get(key, null));
+        all = {};
+        for (const [t] of TABS) { const mine = old.filter(x => tabOf(x.k) === t); all[t] = mine.length ? mine : defLayout(t); }
+    }
+    for (const [t] of TABS) all[t] = Array.isArray(all[t]) ? clean(all[t]) : defLayout(t);
+    const remember = () => UI.store.get('homeTabRemember', true) !== false;
+    if (remember()) { const lt = UI.store.get('homeTab', 'overview'); if (all[lt]) tab = lt; }
+    let layout = all[tab];
     let data = null, editing = false, timer = null, clockTimer = null, dragging = null;
-    const save = () => UI.store.set(key, layout);
+    const save = () => { all[tab] = layout; UI.store.set(key + '4', all); };
+    function setTab(t) { if (!all[t] || t === tab) return; tab = t; layout = all[t]; UI.store.set('homeTab', t); render(); }
 
     function shell() {
         box.innerHTML = '<div class="hm-bar"><b class="hm-hi" id="hmHi"></b><span class="hm-sp"></span>'
             + '<button type="button" class="btn btn-sm" id="hmRef" title="Aktualisieren">⟳</button><button type="button" class="btn btn-sm" id="hmEdit">✏️ Anpassen</button></div>'
-            + '<div class="hm-add" id="hmAdd" hidden></div><div class="hm-grid" id="hmGrid"></div>';
+            + '<nav class="hm-tabs" id="hmTabs" role="tablist"></nav><div class="hm-add" id="hmAdd" hidden></div><div class="hm-grid" id="hmGrid"></div>';
+        $('#hmTabs').addEventListener('click', e => { const b = e.target.closest('[data-htab]'); if (b) setTab(b.dataset.htab); });
+        $('#hmTabs').addEventListener('keydown', e => {
+            if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+            const i = TABS.findIndex(x => x[0] === tab), n = TABS[(i + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length][0];
+            setTab(n); const b = $('#hmTabs [data-htab="' + n + '"]'); if (b) b.focus();
+        });
         $('#hmEdit').addEventListener('click', () => { editing = !editing; render(); });
         $('#hmRef').addEventListener('click', load);
         $('#hmAdd').addEventListener('click', e => {
             if (e.target.closest('#hmReset')) { if (confirm('Standard-Anordnung wiederherstellen?')) { layout = defLayout(); save(); render(); } return; }
+            const rm = e.target.closest('#hmRemember');
+            if (rm) { UI.store.set('homeTabRemember', rm.checked); return; }
             const b = e.target.closest('[data-add]'); if (!b) return;
             layout.push({ k: b.dataset.add, s: meta(b.dataset.add)[3] }); save(); render();
             const n = $('#hmGrid [data-w="' + b.dataset.add + '"]'); if (n) n.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -73,6 +106,12 @@
         g.addEventListener('change', e => {
             const r = e.target.closest('[data-hparam]');
             if (r) api('client_osc', { kind: 'param', name: r.dataset.hparam, type: r.dataset.t, value: r.value }).catch(err => toast('⚠ ' + err.message, true));
+            const lt = e.target.closest('[data-lktab]');
+            if (lt) {
+                const cfg = UI.store.get('homeLinks', { tabs: LINK_DEF, own: [] });
+                cfg.tabs = (cfg.tabs || []).filter(x => x !== lt.dataset.lktab).concat(lt.checked ? [lt.dataset.lktab] : []);
+                UI.store.set('homeLinks', cfg); render(); const d = $('.hm-lkedit'); if (d) d.open = true;
+            }
         });
         g.addEventListener('input', e => { const n = e.target.closest('#hmNotes'); if (n) UI.store.set('homeNotes', n.value); });
         // Ziehen & Ablegen (nur im Bearbeiten-Modus)
@@ -144,6 +183,10 @@
             if (op === 'min') layout[i].min = !layout[i].min;
             save(); render(); return;
         }
+        const gp = e.target.closest('.hm-grp[data-group]');
+        if (gp) { e.preventDefault(); if (UI.openGroup) UI.openGroup(gp.dataset.group); return; }
+        const ld = e.target.closest('[data-lkdel]');
+        if (ld) { const cfg = UI.store.get('homeLinks', { tabs: LINK_DEF, own: [] }); (cfg.own || []).splice(Number(ld.dataset.lkdel), 1); UI.store.set('homeLinks', cfg); render(); const d = $('.hm-lkedit'); if (d) d.open = true; return; }
         const b = e.target.closest('[data-h]');
         if (!b) return;
         const a = b.dataset.h, v = b.dataset.v;
@@ -167,6 +210,14 @@
         e.preventDefault();
         if (f.id === 'hmChat') api('client_osc', { kind: 'chatbox', text: f.text.value, sound: '1', split: '1' }).then(() => { f.text.value = ''; toast('💬 gesendet'); }).catch(err => toast('⚠ ' + err.message, true));
         if (f.id === 'hmCd') { UI.store.set('homeCd', { t: f.t.value, l: f.l.value }); render(); }
+        if (f.id === 'hmLkAdd') {
+            const url = f.url.value.trim();
+            if (!/^https:\/\//i.test(url)) return toast(T('Nur https-Links.'), true);
+            const cfg = UI.store.get('homeLinks', { tabs: LINK_DEF, own: [] });
+            cfg.own = (cfg.own || []).concat([{ icon: f.icon.value.trim().slice(0, 4), name: f.name.value.trim().slice(0, 40), url }]).slice(0, 24);
+            UI.store.set('homeLinks', cfg); render();
+            const d = $('.hm-lkedit'); if (d) d.open = true;
+        }
     }
 
     // ---------- Widgets ----------
@@ -284,6 +335,63 @@
         rules: () => (data.rules || []).length ? '<div class="hm-btns">' + data.rules.map(r => '<button type="button" class="chip' + (r.on ? ' on' : '') + '" data-h="rule" data-v="' + esc(r.id) + '" title="' + (r.on ? 'aktiv – klicken zum Ausschalten' : 'aus – klicken zum Einschalten') + '">' + (r.on ? '●' : '○') + ' ' + esc(r.name) + '</button>').join('') + '</div>'
             : empty('Noch keine Regeln.') + '<button type="button" class="nc-link" data-h="tab" data-v="client" data-sub="auto">Automatik →</button>',
     };
+    // ---- 4.0: Widgets mit eigenem Nachladen (nur wenn sie im aktuellen Tab stehen) ----
+    const LZ = {}, LZ_TTL = { groups: 300000, market: 300000, pulse: 900000 };
+    const LZ_API = { groups: () => api('groups'), market: () => Promise.all([api('shop_saved'), api('shop').catch(() => null)]).then(([s, o]) => ({ saved: s, ov: o })), pulse: () => api('pulse_state').then(st => (st.on ? api('pulse_feed', { src: 'vrchat' }).then(r => ({ on: true, items: r.items })) : { on: false, items: [] })) };
+    function lazyKick() {
+        for (const l of layout) {
+            const k = l.k, fn = LZ_API[k];
+            if (!fn) continue;
+            const c = LZ[k];
+            if (c && (c.loading || Date.now() - c.t < LZ_TTL[k])) continue;
+            LZ[k] = Object.assign(c || {}, { loading: true });
+            fn().then(v => { LZ[k] = { t: Date.now(), v }; }).catch(e => { LZ[k] = { t: Date.now(), err: e.message }; }).finally(() => { if (layout.some(x => x.k === k)) render(); });
+        }
+    }
+    const lzBody = (k, fn) => { const c = LZ[k]; if (!c || (!c.v && !c.err)) return '<div class="vx-loading">' + esc(T('Lade …')) + '</div>'; if (c.err) return empty('⚠ ' + esc(c.err)); return fn(c.v); };
+    const T = s => (window.t ? window.t(s) : s);
+    const LINK_DEF = ['friends', 'search', 'community|chat', 'pulse', 'calendar', 'gallery', 'shop', 'tools'];
+    function appTabs() {
+        const seen = new Set(), out = [];
+        document.querySelectorAll('#tabs .vx-tabbtn[data-tab]').forEach(b => {
+            if (b.hidden || b.closest('[hidden]')) return;
+            if (MOBILE && b.classList.contains('nc-pc-only')) return;
+            const id = b.dataset.tab + (b.dataset.msub ? '|' + b.dataset.msub : '');
+            if (seen.has(id)) return; seen.add(id);
+            out.push({ id, icon: (b.querySelector('span') || {}).textContent || '•', label: (b.querySelector('em') || b).textContent.trim() });
+        });
+        return out;
+    }
+    Object.assign(R, {
+        links: z => {
+            const cfg = UI.store.get('homeLinks', { tabs: LINK_DEF, own: [] }), tabs = appTabs();
+            const pick = (cfg.tabs || []).map(id => tabs.find(t => t.id === id)).filter(Boolean);
+            const own = (cfg.own || []).filter(o => /^https:\/\//i.test(o.url));
+            return '<div class="hm-links' + (z === 's' ? ' sm' : '') + '">' + pick.map(t => { const [tb, sub] = t.id.split('|'); return '<button type="button" class="hm-lk" data-h="tab" data-v="' + esc(tb) + '" data-sub="' + esc(sub || '') + '"><span>' + esc(t.icon) + '</span><em>' + esc(t.label) + '</em></button>'; }).join('')
+                + own.map(o => '<a class="hm-lk own" href="' + esc(o.url) + '" target="_blank" rel="noopener"><span>' + esc(o.icon || '🔗') + '</span><em>' + esc(o.name || o.url) + '</em></a>').join('') + '</div>'
+                + '<details class="hm-lkedit small"><summary>' + esc(T('Verknüpfungen bearbeiten')) + '</summary><div class="hm-lkpick">' + tabs.map(t => '<label><input type="checkbox" data-lktab="' + esc(t.id) + '"' + ((cfg.tabs || []).includes(t.id) ? ' checked' : '') + '> ' + esc(t.icon + ' ' + t.label) + '</label>').join('') + '</div>'
+                + '<form id="hmLkAdd" class="nx-row"><input type="text" name="icon" placeholder="🔗" maxlength="4" style="width:46px"><input type="text" name="name" placeholder="' + esc(T('Name')) + '" maxlength="40" style="width:120px"><input type="url" name="url" placeholder="https://…" required style="flex:1"><button class="btn btn-sm">＋</button></form>'
+                + (own.length ? '<div class="hm-btns">' + own.map((o, i) => '<button type="button" class="chip" data-lkdel="' + i + '" title="' + esc(T('entfernen')) + '">✕ ' + esc(o.name || o.url) + '</button>').join('') + '</div>' : '') + '</details>';
+        },
+        groups: z => lzBody('groups', v => {
+            const l = (v.groups || []).slice().sort((a, b) => (b.rep - a.rep) || (b.owner - a.owner) || (b.staff - a.staff) || b.members - a.members);
+            if (!l.length) return empty(T('Du bist in keiner Gruppe.'));
+            return '<div class="hm-groups' + (z === 'x' ? ' big' : '') + '">' + l.slice(0, N(z, 4, 8, 14, 24)).map(g => '<a href="#" class="hm-grp" data-group="' + esc(g.id) + '">' + (UI.pic(g.icon) ? '<img src="' + esc(UI.pic(g.icon)) + '" alt="" loading="lazy">' : '<i>🛡</i>')
+                + '<span><b>' + (g.rep ? '⭐ ' : '') + esc(g.name) + '</b><small>' + (g.short && g.short !== '.' ? esc(g.short) + ' · ' : '') + UI.num(g.members) + ' ' + esc(T('Mitglieder')) + (g.owner ? ' · 👑' : g.staff ? ' · 🛡' : '') + '</small></span></a>').join('') + '</div>'
+                + '<div class="hm-btns"><button type="button" class="nc-link" data-h="tab" data-v="groups">' + esc(T('Alle Gruppen')) + ' (' + l.length + ') →</button>' + (l.some(g => g.mod) ? '<button type="button" class="nc-link" data-h="tab" data-v="mod">🛡 ' + esc(T('Mod-Zentrale')) + ' →</button>' : '') + '</div>';
+        }),
+        market: z => lzBody('market', v => {
+            const ov = v.ov || {}, it = (v.saved && v.saved.items) || [], sh = (v.saved && v.saved.shops) || [];
+            return '<div class="hm-kpis">' + (ov.balance != null ? '<span><b>' + UI.num(ov.balance) + '</b> ' + esc(T('Credits')) + '</span>' : '') + '<span><b>' + it.length + '</b> ' + esc(T('gemerkt')) + '</span><span><b>' + sh.length + '</b> ' + esc(T('Shops')) + '</span>' + (ov.subs && ov.subs.length ? '<span>💎 VRC+</span>' : '') + '</div>'
+                + (it.length ? '<div class="hm-thumbs">' + it.slice(0, N(z, 4, 6, 9, 9)).map(x => '<span class="hm-th" title="' + esc(x.name || '') + '">' + (UI.pic(x.image || x.thumb) ? '<img src="' + esc(UI.pic(x.image || x.thumb)) + '" alt="" loading="lazy">' : '🛍') + '</span>').join('') + '</div>' : empty(T('Noch nichts gemerkt.')))
+                + '<button type="button" class="nc-link" data-h="tab" data-v="shop">' + esc(T('Shop & Käufe')) + ' →</button>';
+        }),
+        pulse: z => lzBody('pulse', v => {
+            if (!v.on) return empty(T('Nexus Pulse ist aus.')) + '<button type="button" class="nc-link" data-h="tab" data-v="pulse">📡 ' + esc(T('Einschalten')) + ' →</button>';
+            const K = { news: '📢', patch: '🛠', dev: '🧪', security: '🔐', creator: '💰' };
+            return (v.items || []).slice(0, N(z, 3, 5, 8, 10)).map(x => '<div class="hm-row"><span title="' + esc(x.kind) + '">' + (K[x.kind] || '📰') + '</span> <a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.title) + '</a> <span class="muted small">' + UI.ago(x.ts) + '</span></div>').join('') || empty(T('Keine Beiträge.'));
+        }) + '<button type="button" class="nc-link" data-h="tab" data-v="pulse">Nexus Pulse →</button>',
+    });
     const FEED = { online: 'ist online', offline: 'ist offline', location: 'ist jetzt', status: 'Status:', avatar: 'neuer Avatar', bio: 'Bio geändert', friend_add: 'neuer Freund', friend_remove: 'entfreundet', gps: 'ist jetzt' };
 
     function render() {
@@ -293,8 +401,9 @@
         $('#hmEdit').textContent = editing ? '✔ Fertig' : '✏️ Anpassen';
         const add = $('#hmAdd');
         add.hidden = !editing;
+        $('#hmTabs').innerHTML = TABS.map(([k, ic, l]) => '<button type="button" role="tab" class="hm-tab' + (k === tab ? ' on' : '') + '" aria-selected="' + (k === tab) + '" tabindex="' + (k === tab ? 0 : -1) + '" data-htab="' + k + '"><span>' + ic + '</span><em>' + esc(T(l)) + '</em><small>' + all[k].length + '</small></button>').join('');
         const free = W.filter(w => !layout.some(l => l.k === w[0]));
-        add.innerHTML = '<div class="hm-addh"><b>＋ Widget hinzufügen</b><span class="muted small">' + (free.length ? free.length + ' verfügbar' : 'alle sind schon auf der Startseite') + '</span><span class="hm-sp"></span><button type="button" class="nc-link" id="hmReset">↺ Standard</button></div>'
+        add.innerHTML = '<div class="hm-addh"><b>＋ Widget hinzufügen</b><span class="muted small">' + (free.length ? free.length + ' verfügbar' : 'alle sind schon auf der Startseite') + '</span><span class="hm-sp"></span><label class="small"><input type="checkbox" id="hmRemember"' + (remember() ? ' checked' : '') + '> ' + esc(T('Zuletzt geöffneten Tab merken')) + '</label><button type="button" class="nc-link" id="hmReset">↺ Standard</button></div>'
             + '<div class="hm-picks">' + free.map(w => '<button type="button" class="hm-pick" data-add="' + w[0] + '"><b>' + esc(w[1]) + '</b><small>' + esc(w[5]) + '</small><em>' + [...w[4]].map(z => SIZES[z][0]).join(' · ') + '</em></button>').join('') + '</div>';
         const g = $('#hmGrid');
         g.classList.toggle('editing', editing);
@@ -309,7 +418,8 @@
                     + '<button type="button" data-hed="up" title="nach vorne">◀</button><button type="button" data-hed="down" title="nach hinten">▶</button><button type="button" data-hed="del" title="entfernen">✕</button></span>'
                     : '<button type="button" class="hm-min" data-hed="min" title="' + (l.min ? 'aufklappen' : 'einklappen') + '">▾</button>')
                 + '</header><div class="hm-body">' + body + '</div></section>';
-        }).join('') || '<div class="hm-empty">Keine Widgets – oben auf „✏️ Anpassen“ drücken und welche hinzufügen.</div>';
+        }).join('') || '<div class="hm-empty">' + esc(T('Keine Widgets in diesem Tab – oben auf „✏️ Anpassen“ drücken und welche hinzufügen.')) + '</div>';
+        lazyKick();
         if (ro) g.querySelectorAll('.hm-body > *').forEach(c => ro.observe(c));
         g.querySelectorAll('img').forEach(i => { i.addEventListener('load', relayout, { once: true }); i.addEventListener('error', () => { const x = document.createElement('i'); x.textContent = '🖼'; i.replaceWith(x); relayout(); }, { once: true }); });
         relayout();
