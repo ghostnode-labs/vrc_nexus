@@ -730,6 +730,16 @@ test('1.9: Sprachausgabe (Windows, Piper, Google, Azure, ElevenLabs, OpenAI) + n
     for (const k of ['NEXUS_GTTS_BASE', 'NEXUS_AZURE_BASE', 'NEXUS_EL_BASE', 'NEXUS_OPENAI_BASE', 'NEXUS_FAKE_SAPI', 'NEXUS_PIPER_BIN']) delete process.env[k];
 });
 
+test('Versionsschema: x.0–9.0–9 (keine x.10.x, kein x.y.10) und überall gleich', () => {
+    const v = require('../backend/vrchat').VERSION;
+    assert.match(v, /^\d+\.\d\.\d$/, 'Version ' + v + ' – nach x.y.9 kommt x.(y+1).0, nach x.9.9 kommt (x+1).0.0');
+    const pk = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8')).version;
+    const lock = JSON.parse(fs.readFileSync(path.join(__dirname, '../package-lock.json'), 'utf8'));
+    assert.strictEqual(pk, v, 'package.json'); assert.strictEqual(lock.version, v, 'package-lock.json'); assert.strictEqual(lock.packages[''].version, v, 'package-lock.json (packages)');
+    const andr = path.join(__dirname, '../../vrc-nexus-android/package.json');
+    if (fs.existsSync(andr)) assert.strictEqual(JSON.parse(fs.readFileSync(andr, 'utf8')).version, v, 'Android-App');
+});
+
 test('1.9.1: Über-Seite – Changelog aktuell (aus der README gebaut) und letzte 2 Versionen', async () => {
     const { build } = require('../scripts/changelog-build');
     const fresh = build(), saved = require('../backend/changelog.json');
