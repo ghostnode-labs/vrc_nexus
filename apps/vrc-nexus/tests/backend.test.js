@@ -2878,6 +2878,64 @@ test('3.2.3: Gemeinsames Netzwerk – Kanten nur aus gemeinsamen Freunden, Commu
     app.tools.stop();
 });
 
+test('3.9: Nexus Pulse – Opt-in, Steam-News, Reddit-RSS, Kommentare, Favoriten, 18+-Sperre (nur Mocks)', async () => {
+    const http = require('http');
+    const steam = { appnews: { newsitems: [
+        { gid: '1', title: 'VRChat 2026.4.1 Patch Notes', url: 'https://store.steampowered.com/news/1', author: 'tupper', contents: '[img]{STEAM_CLAN_IMAGE}/a.png[/img] Fixes &amp; more', date: 1763700000, feedname: 'steam_community_announcements' },
+        { gid: '2', title: 'Developer Update - 20 November', url: 'https://store.steampowered.com/news/2', contents: 'Hi', date: 1763600000 },
+        { gid: '3', title: 'Beware of phishing scams', url: 'https://store.steampowered.com/news/3', contents: 'x', date: 1763500000 },
+        { gid: '4', title: 'Bad', url: 'javascript:alert(1)', contents: '', date: 1 }] } };
+    const atom = (n, extra) => '<?xml version="1.0"?><feed>' + Array.from({ length: n }, (_, i) => '<entry><author><name>/u/user' + i + '</name></author><content type="html">&lt;table&gt;&lt;tr&gt;&lt;td&gt;&lt;img src=&quot;https://i.redd.it/p' + i + '.jpg&quot; /&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;Text &amp;amp; ' + i + '&lt;/p&gt; submitted by /u/user' + i + '</content><id>t3_abc' + i + '</id><link href="https://www.reddit.com/r/VRChat/comments/abc' + i + '/title/" /><updated>2026-11-21T10:00:0' + i + '+00:00</updated><title>Post ' + i + (extra || '') + '</title></entry>').join('') + '</feed>';
+    const hits = [];
+    const srv = http.createServer((req, res) => {
+        hits.push(req.url + ' UA=' + req.headers['user-agent']);
+        if (req.url.startsWith('/ISteamNews/')) { res.setHeader('Content-Type', 'application/json'); return res.end(JSON.stringify(steam)); }
+        if (req.url.startsWith('/r/VRChat/comments/abc0/')) return res.end(atom(3, ' (c)'));
+        if (req.url.startsWith('/r/VRChat/')) return res.end(atom(2));
+        res.statusCode = 404; res.end('');
+    });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    const B = 'http://127.0.0.1:' + srv.address().port;
+    process.env.NEXUS_STEAMNEWS_BASE = B; process.env.NEXUS_REDDIT_BASE = B;
+    try {
+        const { NexusApp } = require('../backend/app');
+        const db = await openDatabase(null);
+        const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
+        app.game.osc.stopListen();
+        const P = app.pulse;
+        assert.strictEqual((await P.action('pulse_state', {})).on, false);
+        await assert.rejects(P.action('pulse_feed', { src: 'vrchat' }), /aus/);
+        assert.strictEqual(hits.length, 0, 'ohne Opt-in kein Abruf');
+        await P.action('pulse_enable', { on: '1' });
+        const v = await P.action('pulse_feed', { src: 'vrchat' });
+        assert.deepStrictEqual(v.items.map(x => x.kind), ['patch', 'dev', 'security']);
+        assert.strictEqual(v.items[0].img, 'https://clan.akamai.steamstatic.com/images/a.png');
+        assert.strictEqual(v.items[0].text, 'Fixes & more');
+        assert.ok(/^VRC-Nexus\//.test(hits[0].split('UA=')[1]));
+        assert.strictEqual((await P.action('pulse_feed', { src: 'vrchat', kind: 'security' })).items.length, 1);
+        const r = await P.action('pulse_feed', { src: 'reddit', sort: 'top' });
+        assert.strictEqual(r.items.length, 2);
+        assert.strictEqual(r.items[0].author, 'user0');
+        assert.strictEqual(r.items[0].img, 'https://i.redd.it/p0.jpg');
+        assert.strictEqual(r.items[0].text, 'Text & 0');
+        assert.ok(hits.some(h => h.startsWith('/r/VRChat/top/.rss?t=week')));
+        const c = await P.action('pulse_comments', { url: r.items[0].url });
+        assert.strictEqual(c.items.length, 2);
+        await assert.rejects(P.action('pulse_comments', { url: 'https://evil.example/r/VRChat/comments/abc0/' }), /Kein Reddit/);
+        await assert.rejects(P.action('pulse_feed', { src: 'erp' }), /18\+/);
+        await assert.rejects(P.action('pulse_comments', { url: 'https://www.reddit.com/r/VRchatERP/comments/abc0/x/' }), /Nicht freigeschaltet/);
+        await P.action('pulse_fav', { id: r.items[1].id, on: '1', item: JSON.stringify(r.items[1]) });
+        await assert.rejects(P.action('pulse_fav', { id: 'x', on: '1', item: JSON.stringify({ title: 't', url: 'javascript:alert(1)' }) }), /Link/);
+        assert.strictEqual((await P.action('pulse_favs', {})).items[0].title, 'Post 1');
+        assert.strictEqual((await P.action('pulse_feed', { src: 'reddit', sort: 'top' })).items[1].fav, true);
+        const n = hits.length;
+        await P.action('pulse_feed', { src: 'reddit', sort: 'top' });
+        assert.strictEqual(hits.length, n, 'Zwischenspeicher');
+        await P.action('pulse_fav', { id: r.items[1].id, on: '' });
+        assert.strictEqual((await P.action('pulse_favs', {})).items.length, 0);
+    } finally { delete process.env.NEXUS_STEAMNEWS_BASE; delete process.env.NEXUS_REDDIT_BASE; srv.close(); }
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {

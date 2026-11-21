@@ -1305,3 +1305,27 @@ lädt …	loading …	chargement …	読み込み中 …
 Wer war hier	Who was here	Qui était ici	ここにいた人
 laut deinem Spiel-Log	according to your game log	d'après ton journal de jeu	あなたのゲームログより
 dort	there	là-bas	訪問
+Nexus Pulse	Nexus Pulse	Nexus Pulse	Nexus Pulse
+Nexus Pulse (News)	Nexus Pulse (news)	Nexus Pulse (actus)	Nexus Pulse（ニュース）
+VRChat-News und Reddit abrufen	Fetch VRChat news and Reddit	Récupérer les actus VRChat et Reddit	VRChatニュースとRedditを取得
+Holt öffentliche Feeds (Steam-News von VRChat, r/VRChat). Standardmäßig aus.	Fetches public feeds (VRChat Steam news, r/VRChat). Off by default.	Récupère des flux publics (actus Steam de VRChat, r/VRChat). Désactivé par défaut.	公開フィード（VRChatのSteamニュース、r/VRChat）を取得します。既定ではオフ。
+18+-Subreddit anzeigen	Show 18+ subreddit	Afficher le subreddit 18+	18+サブレディットを表示
+Nur mit 18+-Freischaltung. Vorschaubilder bleiben verschwommen, bis du sie antippst.	Only with 18+ unlock. Previews stay blurred until you tap them.	Uniquement avec le déblocage 18+. Les aperçus restent floutés jusqu'à ce que tu les touches.	18+解除時のみ。プレビューはタップするまでぼかされます。
+★ Favoriten	★ Favourites	★ Favoris	★ お気に入り
+Offizielle News	Official news	Actus officielles	公式ニュース
+Patchnotes	Patch notes	Notes de version	パッチノート
+Developer-Updates	Developer updates	Mises à jour développeurs	開発者アップデート
+Creator-Economy	Creator economy	Économie des créateurs	クリエイターエコノミー
+Top der Woche	Top of the week	Top de la semaine	今週のトップ
+Kommentare	Comments	Commentaires	コメント
+Original öffnen	Open original	Ouvrir l'original	元の記事を開く
+Auf Reddit öffnen	Open on Reddit	Ouvrir sur Reddit	Redditで開く
+Noch nichts gemerkt.	Nothing saved yet.	Rien d'enregistré pour l'instant.	まだ保存したものはありません。
+Keine Beiträge.	No posts.	Aucune publication.	投稿はありません。
+Noch keine Kommentare.	No comments yet.	Pas encore de commentaires.	まだコメントはありません。
+News & Discovery: offizielle VRChat-News, Patchnotes, Developer-Updates, Sicherheitsmeldungen und Creator-Economy sowie neue und beliebte Beiträge aus r/VRChat – mit Kommentaren, Vorschaubildern und Favoriten.	News & discovery: official VRChat news, patch notes, developer updates, security notices and creator economy, plus new and popular posts from r/VRChat – with comments, previews and favourites.	Actus et découverte : actus officielles de VRChat, notes de version, mises à jour développeurs, alertes de sécurité et économie des créateurs, ainsi que les publications récentes et populaires de r/VRChat – avec commentaires, aperçus et favoris.	ニュースと発見：VRChat公式ニュース、パッチノート、開発者アップデート、セキュリティ情報、クリエイターエコノミー、r/VRChatの新着・人気投稿 – コメント、プレビュー、お気に入り付き。
+Online-Dienst: VRC Nexus ruft dafür öffentliche Feeds von Steam (VRChat-Ankündigungen) und Reddit ab. Ohne Anmeldung, es werden keine Daten von dir gesendet. Standardmäßig aus.	Online service: VRC Nexus fetches public feeds from Steam (VRChat announcements) and Reddit. No login, none of your data is sent. Off by default.	Service en ligne : VRC Nexus récupère des flux publics de Steam (annonces VRChat) et de Reddit. Sans connexion, aucune donnée te concernant n'est envoyée. Désactivé par défaut.	オンラインサービス：VRC NexusはSteam（VRChatのお知らせ）とRedditの公開フィードを取得します。ログイン不要で、あなたのデータは送信されません。既定ではオフ。
+Einschalten	Turn on	Activer	オンにする
+Ausschalten	Turn off	Désactiver	オフにする
+Nexus Pulse ist aus. Bitte zuerst einschalten.	Nexus Pulse is off. Please turn it on first.	Nexus Pulse est désactivé. Active-le d'abord.	Nexus Pulseはオフです。先にオンにしてください。
+Quelle nicht erreichbar.	Source unreachable.	Source injoignable.	ソースに接続できません。

@@ -66,6 +66,7 @@ class NexusApp {
         this.backup = new CloudBackup(this, opts.crypt);
         this.account = new (require('./account').Account)(this, opts.crypt);
         this.warn = new (require('./warnlist').WarnList)(this);
+        this.pulse = new (require('./pulse').Pulse)(this);   // 3.9 News & Discovery
         this.comm = new (require('./community').Community)(this);
         this.buttons = new (require('./buttons').Buttons)(this);
         this.deco = new (require('./deco').Deco)(this);                    // 3.1: Profil-Dekorationen
@@ -229,6 +230,7 @@ class NexusApp {
             if (act.startsWith('plug_')) { if (!this.plugins) throw new UserError('Plugins gibt es nur in der Windows-App.'); return await this.plugins.action(act, input, files); }
             if (act.startsWith('chat_')) { if (!this.chat) throw new UserError('Der verschlüsselte Chat kommt für Android später.'); return await this.chat.action(act, input, files); }
             if (act.startsWith('warn_')) return await this.warn.action(act, input);
+            if (act.startsWith('pulse_')) return await this.pulse.action(act, input);
             if (act.startsWith('hr_')) { if (!this.heart) throw new UserError('Den Puls gibt es nur in der Windows-App.'); return await this.heart.action(act, input); }
             if (act.startsWith('cm_')) { if (!this.chatmods) throw new UserError('Chatbox-Module gibt es nur in der Windows-App.'); return await this.chatmods.action(act, input); }
             if (act.startsWith('backup_')) return await this.backup.action(act, input);

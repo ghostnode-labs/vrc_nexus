@@ -190,6 +190,7 @@
         if (name === 'global') loadGlobal();
         if (name === 'moderation') loadModeration();
         if (name === 'warn' && window.NexusWarn) window.NexusWarn.open();
+        if (name === 'pulse' && window.NexusPulse) window.NexusPulse.open();   // 3.9
         if (name === 'community' && window.NexusCommunity) window.NexusCommunity.open(sub);
         if (name === 'buttons' && window.NexusButtons) window.NexusButtons.open();
         if (name === 'osc' && window.NexusMOsc) window.NexusMOsc.open();

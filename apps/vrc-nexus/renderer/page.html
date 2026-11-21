@@ -72,6 +72,7 @@
                 <button type="button" class="vx-tabbtn" data-tab="moderation"><span>🚫</span><em>Blockiert &amp; stumm</em></button>
                 <button type="button" class="vx-tabbtn cm-mod-only" data-tab="community" data-msub="mod" hidden><span>🛡</span><em>Community-Moderation</em></button>
             </div></div>
+        <button type="button" class="vx-tabbtn nc-pc-only" data-tab="pulse"><span>📡</span><em>Nexus Pulse</em></button>
         <div class="vx-mgroup"><button type="button" class="vx-mtop" aria-haspopup="true"><span>⭐</span><em>Favoriten</em><i>▾</i></button>
             <div class="vx-mdrop" role="menu">
                 <button type="button" class="vx-tabbtn" data-tab="favs" data-msub="friend"><span>👤</span><em>Lieblings-Freunde</em></button>
@@ -307,6 +308,10 @@
         <div id="cmtBox"></div>
     </section>
 
+    <section class="vx-tab" data-pane="pulse" hidden>
+        <div id="pulseBox"></div>
+    </section>
+
     <section class="vx-tab" data-pane="warn" hidden>
         <p class="vx-small">Gemeinsame Warnliste für Crasher, Ripper und Troller – gespeichert auf der GhostNode-Webseite, nur für freigeschaltete Nutzer. Sichtbar erst ab mehreren unabhängigen Meldungen mit Beweis. Betritt jemand von der Liste deine Instanz, bekommst du einen Hinweis (nie in der Chatbox).</p>
         <div id="warnBox"></div>
@@ -414,6 +419,7 @@
 <script src="js/nexus-client.js"></script>
 <script src="js/nexus-heart.js"></script>
 <script src="js/nexus-warn.js"></script>
+<script src="js/nexus-pulse.js"></script>
 <script src="js/nexus-account.js"></script>
 <script src="js/nexus-md.js"></script>
 <script src="js/nexus-profile18.js"></script>
