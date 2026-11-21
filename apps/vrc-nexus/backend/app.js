@@ -1020,7 +1020,8 @@ class NexusApp {
                 const pf = i.platforms || {};
                 return { instance: { location: loc, loc: U.location(loc), users: int(i.userCount || i.n_users), capacity: int(i.capacity), pc: int(pf.standalonewindows), quest: int(pf.android), ios: int(pf.ios),
                     full: !!i.full, queue: int(i.queueSize), closed: !!i.closedAt, name: str(i.displayName || i.name),
-                    friends: v.friendList().filter(f => f.loc.location === loc).map(f => ({ id: f.id, name: f.name, image: f.image })) } };
+                    friends: v.friendList().filter(f => f.loc.location === loc).map(f => ({ id: f.id, name: f.name, image: f.image })),
+                    seen: (() => { try { return this.game.instancePlayers(loc); } catch (e) { return { visits: 0, players: [] }; } })() } };   // 3.9: wer war dort (Spiel-Log)
             }
             case 'instance_create': {
                 const world = valid(str(input.world), 'wrld');

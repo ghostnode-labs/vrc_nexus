@@ -1226,3 +1226,15 @@ a.lc:hover { border-color: var(--accent, #38d5e6); background: rgba(255,255,255,
 .lc-desc { font-size: .8em; opacity: .7; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lc-load, .lc-err { opacity: .8; }
 .ch-msg .lc-wrap { max-width: 100%; }
+
+/* 3.9 Wer war in der Instanz */
+.vx-seen { margin: 10px 0; }
+.vx-seen summary { cursor: pointer; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; list-style: none; }
+.vx-seen summary::-webkit-details-marker { display: none; }
+.vx-seen summary h4 { margin: 0; }
+.vx-seen summary small { opacity: .7; }
+.vx-seen-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; margin-top: 8px; max-height: 300px; overflow-y: auto; }
+.vx-seen-p { display: flex; flex-direction: column; padding: 6px 10px; border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 8px; background: rgba(255,255,255,.03); min-width: 0; }
+.vx-seen-p a, .vx-seen-p span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vx-seen-p small { opacity: .7; font-size: .8em; }
+.vx-seen-p.fr { border-color: rgba(var(--gold-rgb, 243, 194, 98), .5); }

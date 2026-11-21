@@ -757,6 +757,16 @@
         });
         $('#wFav').addEventListener('click', () => api('world_fav', { id: w.id, on: favEntry ? '' : 1, fav_id: favEntry ? favEntry.fav_id : '' }).then(d => { toast(d.msg); if (worldKind === 'favorites') loadWorlds('favorites'); }).catch(x => toast(x.message, true)));
     }
+    // 3.9: wer war (laut eigenem Spiel-Log) in dieser Instanz – auch wenn sie schon geschlossen ist
+    function seenList(sn) {
+        const t = s => (window.t ? window.t(s) : s);
+        if (!sn || !sn.players || !sn.players.length) return '';
+        const dur = sec => sec >= 3600 ? Math.floor(sec / 3600) + ' h ' + Math.round(sec % 3600 / 60) + ' min' : Math.max(1, Math.round(sec / 60)) + ' min';
+        return '<details class="vx-seen"' + (sn.players.length <= 40 ? ' open' : '') + '><summary><h4>👥 ' + esc(t('Wer war hier')) + ' · ' + sn.players.length + '</h4><small>'
+            + esc(t('laut deinem Spiel-Log')) + ' · ' + sn.visits + '× ' + esc(t('dort')) + (sn.last ? ' · ' + esc(t('zuletzt')) + ' ' + new Date(sn.last * 1000).toLocaleString() : '') + '</small></summary><div class="vx-seen-list">'
+            + sn.players.map(p => '<div class="vx-seen-p' + (p.friend ? ' fr' : '') + '">' + (p.id ? '<a href="#" data-user="' + esc(p.id) + '">' + (p.friend ? '⭐ ' : '') + esc(p.name) + '</a>' : '<span>' + (p.friend ? '⭐ ' : '') + esc(p.name) + '</span>')
+                + '<small>' + dur(p.seconds) + (p.visits > 1 ? ' · ' + p.visits + '×' : '') + '</small></div>').join('') + '</div></details>';
+    }
     function openInstance(loc) {
         openModal('<div class="vx-loading">Lade Instanz …</div>');
         api('instance', { location: loc }).then(d => {
@@ -768,6 +778,7 @@
                 + (i.ios ? '<div><b>' + i.ios + '</b><span>🍏 iOS</span></div>' : '') + (i.queue ? '<div><b>' + i.queue + '</b><span>in der Warteschlange</span></div>' : '') + '</div>'
                 + '<div class="vx-cap"><div style="width:' + pct + '%"></div></div>' + (i.full ? '<p class="vx-error">Die Instanz ist voll.</p>' : '') + (i.closed ? '<p class="vx-error">Die Instanz wurde geschlossen.</p>' : '')
                 + (i.friends.length ? '<h4>Deine Freunde hier</h4><div class="vx-members">' + i.friends.map(f => '<div class="vx-member">' + img(f.image, 'vx-av sm', f.name) + '<a href="#" data-user="' + esc(f.id) + '">' + esc(f.name) + '</a></div>').join('') + '</div>' : '')
+                + seenList(i.seen)
                 + '<div class="vx-u-actions">' + (joinable(l) ? '<a class="btn btn-sm btn-gold" href="' + esc(launch(i.location)) + '">▶ Beitreten (Spiel)</a><button type="button" class="btn btn-sm" data-self="' + esc(i.location) + '">📨 Selbst-Einladung</button>' : '')
                 + '<button type="button" class="btn btn-sm" data-copy="' + esc(i.location) + '">⧉ Instanz-ID</button><button type="button" class="btn btn-sm" data-link="' + esc(i.location) + '">🔗 Einladungslink</button>'
                 + '<button type="button" class="btn btn-sm" data-bm="' + esc(i.location) + '" data-name="' + esc((i.name || l.access) + ' #' + (l.name || '')) + '">🔖 Merken</button>'

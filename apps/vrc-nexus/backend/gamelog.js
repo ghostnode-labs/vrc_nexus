@@ -449,6 +449,33 @@ class GameLog {
         }
         return rows.map(r => { const k = r.player_id || 'n:' + r.name; return { id: r.player_id, name: r.name, meets: int(r.meets), last: int(r.last), first: int(r.first), worlds: int(r.worlds), friend: friends.has(r.player_id), seconds: int(time[k]) }; });
     }
+    // 3.9: Wer war (laut eigenem Spiel-Log) in einer Instanz? Nur Besuche, bei denen man selbst dort war.
+    instancePlayers(location) {
+        const i = str(location).indexOf(':');
+        if (i < 0) return { visits: 0, players: [] };
+        const wid = location.slice(0, i), inst = location.slice(i + 1);
+        const starts = this.db.prepare("SELECT ts FROM game_log WHERE user_id = ? AND kind = 'world_join' AND world_id = ? AND instance = ? ORDER BY ts DESC LIMIT 20").column(UID, wid, inst);
+        const me = str(this.state.displayName), friends = new Set(this.db.prepare('SELECT vrc_id FROM friends WHERE user_id = ?').column(UID));
+        const by = new Map();
+        for (const t0 of starts) {
+            const endRow = this.db.prepare("SELECT MIN(ts) AS t FROM game_log WHERE user_id = ? AND ts > ? AND kind IN ('world_join', 'world_leave', 'vrc_quit')").get(UID, t0);
+            const t1 = endRow && endRow.t ? int(endRow.t) : Math.min(now(), t0 + 43200);
+            const open = {};
+            for (const e of this.db.prepare("SELECT ts, kind, player_id, player_name FROM game_log WHERE user_id = ? AND ts >= ? AND ts <= ? AND kind IN ('player_join', 'player_leave') ORDER BY ts, id").all(UID, t0, t1)) {
+                if (!e.player_name || e.player_name === me) continue;
+                const k = e.player_id || 'n:' + e.player_name;
+                let p = by.get(k);
+                if (!p) { p = { id: e.player_id, name: e.player_name, first: e.ts, last: e.ts, seconds: 0, visits: new Set(), friend: friends.has(e.player_id) }; by.set(k, p); }
+                p.visits.add(t0); p.last = Math.max(p.last, e.ts); p.first = Math.min(p.first, e.ts);
+                if (e.kind === 'player_join') open[k] = e.ts;
+                else if (k in open) { p.seconds += e.ts - open[k]; delete open[k]; }
+            }
+            for (const [k, ts] of Object.entries(open)) { const p = by.get(k); p.seconds += Math.max(0, t1 - ts); p.last = Math.max(p.last, t1); }
+        }
+        const players = [...by.values()].map(p => Object.assign(p, { visits: p.visits.size, seconds: Math.min(p.seconds, 43200 * p.visits.size) }))
+            .sort((a, b) => (b.friend - a.friend) || (b.seconds - a.seconds) || a.name.localeCompare(b.name)).slice(0, 300);
+        return { visits: starts.length, last: starts.length ? int(starts[0]) : 0, players };
+    }
     visits(days) {
         const visits = [];
         let cur = null;

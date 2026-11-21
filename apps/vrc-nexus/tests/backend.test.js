@@ -120,6 +120,13 @@ test('Spiel-Log: speichern, doppelt erkennen, OSC senden', async () => {
     assert.strictEqual(g.store(ev), 0);
     assert.strictEqual(g.players(3650).length, 2);
     assert.strictEqual(g.visits(3650).length, 1);
+    // 3.9: wer war in einer (auch geschlossenen) Instanz
+    const seen = g.instancePlayers('wrld_aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:12345~friends(usr_11111111-2222-3333-4444-555555555555)~region(eu)');
+    assert.strictEqual(seen.visits, 1);
+    const wolf = seen.players.find(x => x.name === 'Wolf Byte');
+    assert.ok(wolf && wolf.id === 'usr_99999999-2222-3333-4444-555555555555' && wolf.seconds >= 280 && wolf.seconds <= 300, JSON.stringify(seen));
+    assert.ok(seen.players.some(x => x.name === 'OldName'));
+    assert.deepStrictEqual(g.instancePlayers('wrld_x:999').players, []);
     const sock = dgram.createSocket('udp4');
     const got = [];
     sock.on('message', m => got.push(oscDecode(m)[0]));
