@@ -103,6 +103,7 @@
                     <input type="search" id="ncPQ" placeholder="🔎 Parameter suchen …">
                     <label class="check small"><input type="checkbox" id="ncPBuiltin"> VRChat-eigene zeigen</label>
                     <label class="check small"><input type="checkbox" id="ncPFav"> nur ★</label>
+                    <button type="button" class="btn btn-sm" id="ncPLive" aria-pressed="false" title="Nur Parameter, deren Wert VRChat gerade meldet">📡 nur live</button>
                     <button type="button" class="btn btn-sm" id="ncPReload">↻</button>
                 </div>
                 <div class="muted small" id="ncPInfo"></div>
@@ -525,6 +526,9 @@
         if (pBound) return;
         pBound = true;
         ['#ncPQ', '#ncPBuiltin', '#ncPFav'].forEach(s => $(s).addEventListener('input', renderParams));
+        const liveBtn = $('#ncPLive'), setLive = on => { liveBtn.classList.toggle('btn-gold', on); liveBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+        setLive(!!store.get('pLive', false));
+        liveBtn.addEventListener('click', () => { const on = liveBtn.getAttribute('aria-pressed') !== 'true'; store.set('pLive', on); setLive(on); renderParams(); });
         $('#ncPReload').addEventListener('click', loadParams);
         $('#ncPList').addEventListener('click', e => {
             const fav = e.target.closest('[data-pfav]');
@@ -548,8 +552,8 @@
     function renderParams() {
         if (!pData) return;
         const d = pData;
-        const q = $('#ncPQ').value.trim().toLowerCase(), bi = $('#ncPBuiltin').checked, fo = $('#ncPFav').checked;
-        const list = d.params.filter(p => (bi || !p.builtin) && (!fo || p.fav) && (!q || p.name.toLowerCase().includes(q)));
+        const q = $('#ncPQ').value.trim().toLowerCase(), bi = $('#ncPBuiltin').checked, fo = $('#ncPFav').checked, lo = $('#ncPLive').getAttribute('aria-pressed') === 'true';
+        const list = d.params.filter(p => (bi || !p.builtin) && (!fo || p.fav) && (!lo || p.value !== null) && (!q || p.name.toLowerCase().includes(q)));
         const T = x => (window.t ? window.t(x) : x);
         const SRC = { osc: 'per OSC erkannt', oscquery: 'per OSCQuery erkannt', log: 'laut Spiel-Log', api: 'laut VRChat-Konto' };
         $('#ncPInfo').innerHTML = (d.avatar
@@ -569,7 +573,7 @@
             else ctl = '<input type="range" min="-1" max="1" step="0.01" value="' + (p.value === null ? 0 : p.value) + '" data-prange="' + esc(p.name) + '" data-t="float"><b class="small">' + esc(pVal(p) || '–') + '</b>';
             return '<div class="nc-prow' + (p.builtin ? ' builtin' : '') + '"><button type="button" class="nc-star' + (p.fav ? ' on' : '') + '" data-pfav="' + esc(p.name) + '" title="Favorit">★</button>'
                 + '<span class="nc-pname" title="' + esc(p.name) + '">' + esc(p.name) + ' <small class="muted">' + ({ bool: 'An/Aus', int: 'Zahl', float: 'Komma' })[p.type] + (p.live_only ? ' · nur live' : '') + '</small></span><span class="nc-pctl">' + ctl + '</span></div>';
-        }).join('') : '<div class="nc-empty">' + (q ? 'Keine Parameter für „' + esc(q) + '“.' : d.avatar ? 'Keine Parameter. VRChat legt die Datei an, sobald du den Avatar mit eingeschaltetem OSC trägst – Avatar einmal neu laden.' : 'Sobald VRChat läuft und du einen Avatar trägst, erscheinen hier seine Parameter.') + '</div>';
+        }).join('') : '<div class="nc-empty">' + (q ? 'Keine Parameter für „' + esc(q) + '“.' : lo && d.params.length ? 'Gerade meldet VRChat keine Werte – „nur live“ ausschalten oder Avatar einmal neu laden.' : d.avatar ? 'Keine Parameter. VRChat legt die Datei an, sobald du den Avatar mit eingeschaltetem OSC trägst – Avatar einmal neu laden.' : 'Sobald VRChat läuft und du einen Avatar trägst, erscheinen hier seine Parameter.') + '</div>';
     }
 
     // ---------- 🤖 Automatik / Chat-Widgets ----------

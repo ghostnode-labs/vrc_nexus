@@ -1,5 +1,10 @@
 [
  {
+  "version": "4.2.2",
+  "title": "“Live only” button",
+  "body": "- Parameters page: new “📡 live only” button shows only the parameters whose value VRChat is currently reporting (remembered)"
+ },
+ {
   "version": "4.2.1",
   "title": "OSC receiving fix",
   "body": "- Fix: on Windows, the app re-bound port 9001 right after start, the second bind could fail as \"in use\", and the app then waited for VRChat via OSCQuery – so no parameters arrived. The receiver now stays open, and a busy port is retried before falling back\n- OSCQuery announcement is more robust (all network adapters, repeated announcements, unicast answers)\n- Parameters page shows only the avatar you are wearing – detected via OSC, VRChat's OSCQuery tree, the game log or your VRChat account – with its current values right away\n- Avatar debugger and OSC status explain what is missing when nothing arrives from VRChat"

@@ -22,6 +22,9 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.2.2 – “Live only” button
+- Parameters page: new “📡 live only” button shows only the parameters whose value VRChat is currently reporting (remembered)
+
 ### New in 4.2.1 – OSC receiving fix
 - Fix: on Windows, the app re-bound port 9001 right after start, the second bind could fail as "in use", and the app then waited for VRChat via OSCQuery – so no parameters arrived. The receiver now stays open, and a busy port is retried before falling back
 - OSCQuery announcement is more robust (all network adapters, repeated announcements, unicast answers)
