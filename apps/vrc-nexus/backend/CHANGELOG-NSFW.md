@@ -2,6 +2,46 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 4.1.0 – Edge of Glory 💦
+
+The big NSFW overhaul: new tab **🔥 Lust & PCS**, a **🧩 device details** panel under 🎮 Toys and lots of new toy features straight from the Buttplug protocol (written by us from the open spec, no foreign code).
+
+**🫦 PCS & lust (NSFW features)**
+- **PCS – Penetration Contact System** (Dismay Custom) as a toy source: depth, velocity, sliding in/out, smash hits (strength 1–4), move-in and deep-throat pulses, quickening boost and lust as a base level – each with its own weight. "Seen" parameters are listed so you know they arrive (they have to be in the avatar's Expression Parameters).
+- **PCS zones → own device**: new link type "🫦 PCS" with zones (mouth, boobs, pussy, ass, custom1–8) – e.g. one toy only reacts to the pussy socket.
+- **💗 Lust meter** with 10-minute curve: taken from PCS (`pcs/satisfaction/lust`) or calculated by Nexus from how hard and how long your toys run.
+- **💥 Climax actions** at 100 % lust or PCS event 10: climax pattern on the toys, optional chatbox line and an avatar bool parameter for 3 s (for squirt/blush toggles); also by hand.
+- **🎯 Edging mode**: from a threshold the toys are braked to a low level until lust drops again; "release" lifts the brake for 2 minutes.
+- **💓 Heart-rate coupling**: your pulse (Pulsoid/HypeRate/OSC) drives a toy, with your own bpm range.
+- **🎙 Voice coupling**: moaning louder = stronger. Only the microphone level is measured, nothing is recorded or sent.
+- **🚦 Consent traffic light**: 🟢 go on / 🟡 slower (dampened to your share) / 🔴 stop (everything off and blocked until green). Sets the avatar parameter `NX/Consent` (0/1/2) for a light on your avatar and optionally tells the chatbox; also on the phone remote.
+- **🎬 Scene timer**: name + duration; at the end the toys wind down.
+- **💞 Aftercare**: reminder after every session (desktop notification + optional chatbox line) and a checklist (water, cuddles, check-in …).
+- **🎭 Scene ideas**: random place, roles, mood and a twist – inspiration only, always with consent.
+- **SteamVR HUD**: new HUD items `lust` and `toy` (never in private mode), optional lust display in the chatbox.
+
+**🎮 Toys – new Buttplug features**
+- All actuator types: vibrate, oscillate, constrict, inflate (constrict/inflate default to 60 % for safety) with a share per type.
+- **Rotation** devices (RotateCmd) with direction right/left/alternating every x seconds.
+- **Strokers** (LinearCmd): strength becomes stroke speed, with an adjustable stroke range.
+- **Battery** (SensorReadCmd/BatteryLevelCmd) shown per device, warning notification when low.
+- **Signal strength** (RSSI) per device.
+- **Sensors**: pressure live, device **button** → stop everything / surprise / next pattern.
+- **Motors individually** (e.g. inner/outer motor of a rabbit) with "auto" to follow again.
+- **DeviceMessageTimingGap** respected – no flooding of slow toys.
+- **Stop a single device** (StopDeviceCmd).
+- **Auto reconnect** to Intiface (2 s … 60 s back-off) and auto scan after connecting.
+- **Own device names** and switching single devices off.
+- **Minimum and maximum** strength per device.
+- **Curve** per device (strong early ↔ gentle start).
+- **Soft start / smoothing** per device (ramp in ms).
+- **👆 Tap** a device to find out which one it is.
+- **✏️ Custom patterns**: your own value list with step time, smoothly blended; usable everywhere patterns are.
+- **6 new patterns**: 🫁 breath, 🪚 sawtooth, 🚪 knock, 📈 crescendo, 🆘 morse, 🎯 edge ride (+ 💥 climax).
+- **Server info and clear error messages** (Intiface error codes in plain words, scan status).
+- **Stop on disconnect**: Nexus sends "stop all" before closing the connection.
+- **Runtime per device** and the step count of each motor.
+
 ### New in 3.9.0 – Nexus Pulse
 
 - 📡 **r/VRchatERP in Nexus Pulse:** with the 18+ unlock and the switch "Show 18+ subreddit" (Settings → Social → Nexus Pulse) a third source appears with new, popular and top posts plus comments. Previews stay blurred until you tap them; favourites from it are refused without the unlock.

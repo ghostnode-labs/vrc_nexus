@@ -2936,6 +2936,123 @@ test('3.9: Nexus Pulse – Opt-in, Steam-News, Reddit-RSS, Kommentare, Favoriten
     } finally { delete process.env.NEXUS_STEAMNEWS_BASE; delete process.env.NEXUS_REDDIT_BASE; srv.close(); }
 });
 
+test('4.1: Buttplug-Funktionen (Aktoren, Rotation, Stroker, Sensoren, Gerät-Einstellungen, Motoren) + PCS, Lust, Höhepunkt, Edging, Consent, Szene, HUD', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const { ALLOWED } = require('../backend/remote');
+    const OWNER = 'usr_' + 'd'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-41-')) } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    grant18(app);
+    const t = app.toys, sent = [], chat = [], osc = [];
+    app.game.osc.chatbox = async x => { chat.push(x); };
+    app.game.osc.send = async (a, v) => { osc.push([a, v]); };
+    t.ws = { readyState: 1, send() {} };
+    t.req = async m => { sent.push(m); if (m.SensorReadCmd) return { SensorReading: { DeviceIndex: m.SensorReadCmd.DeviceIndex, SensorIndex: 0, SensorType: m.SensorReadCmd.SensorType, Data: [m.SensorReadCmd.SensorType === 'Battery' ? 12 : -60] } }; return {}; };
+    t.addDevice({ DeviceIndex: 0, DeviceName: 'Combo', DeviceMessageTimingGap: 0, DeviceMessages: {
+        ScalarCmd: [{ StepCount: 20, ActuatorType: 'Vibrate', FeatureDescriptor: 'Spitze' }, { StepCount: 10, ActuatorType: 'Constrict' }],
+        RotateCmd: [{ StepCount: 20 }], LinearCmd: [{ StepCount: 100 }],
+        SensorReadCmd: [{ SensorType: 'Battery', SensorRange: [[0, 100]] }, { SensorType: 'RSSI', SensorRange: [[-128, 0]] }], SensorSubscribeCmd: [{ SensorType: 'Button', SensorRange: [[0, 1]] }] } });
+    await U.sleep(400);
+    const d = t.status().devices[0];
+    assert.strictEqual(d.battery, 12, 'Akku über SensorReadCmd'); assert.strictEqual(d.rssi, -60, 'Signalstärke');
+    assert.ok(sent.some(m => m.SensorSubscribeCmd && m.SensorSubscribeCmd.SensorType === 'Button'), 'Knopf abonniert');
+    assert.ok(d.rotate === 1 && d.linear === 1 && d.scalars.length === 2);
+    const lastOf = k => sent.filter(m => m[k]).pop()[k];
+    await app.post({ act: 'toys_set', device: '0', level: '0.5' }, {});
+    let sc = lastOf('ScalarCmd').Scalars;
+    assert.strictEqual(sc[0].Scalar, 0.5); assert.strictEqual(sc[1].Scalar, 0.3, 'Enge mit 60 % Anteil (Standard)'); assert.strictEqual(sc[1].ActuatorType, 'Constrict');
+    assert.deepStrictEqual(lastOf('RotateCmd').Rotations[0], { Index: 0, Speed: 0.5, Clockwise: true });
+    const lin = lastOf('LinearCmd').Vectors[0]; assert.ok(lin.Duration > 250 && lin.Duration < 1600 && (lin.Position === 1 || lin.Position === 0));
+    // Gerät: Min/Max/Kurve/Anteile/Richtung/Hub
+    await app.post({ act: 'toys_dev', name: 'Combo', data: JSON.stringify({ min: 20, max: 80, curve: 2, types: { Constrict: 0 }, rot: 'ccw', lin_min: 10, lin_max: 60, alias: 'Liebling' }) }, {});
+    await app.post({ act: 'toys_set', device: '0', level: '0.5' }, {});
+    sc = lastOf('ScalarCmd').Scalars;
+    assert.strictEqual(sc[0].Scalar, 0.35, '20 % + 60 % × 0,5² = 35 %'); assert.strictEqual(sc[1].Scalar, 0, 'Enge abgeschaltet');
+    assert.strictEqual(lastOf('RotateCmd').Rotations[0].Clockwise, false);
+    assert.strictEqual(t.status().devices[0].label, 'Liebling');
+    t.devices.get(0).linNext = 0; await t.drive(t.devices.get(0), true);
+    assert.ok([0.1, 0.6].includes(lastOf('LinearCmd').Vectors[0].Position), 'Hub im Bereich 10–60 %');
+    await app.post({ act: 'toys_dev', name: 'Combo', data: JSON.stringify({ on: '0' }) }, {});
+    await app.post({ act: 'toys_set', device: '0', level: '1' }, {});
+    assert.strictEqual(lastOf('ScalarCmd').Scalars[0].Scalar, 0, 'Gerät aus → 0');
+    await app.post({ act: 'toys_dev', name: 'Combo', data: JSON.stringify({ on: '1', min: 0, max: 100, curve: 1, types: { Constrict: 60 } }) }, {});
+    // einzelner Motor, Antippen, Einzel-Stopp
+    await app.post({ act: 'toys_motor', device: '0', motor: '1', level: '0.9' }, {});
+    assert.strictEqual(lastOf('ScalarCmd').Scalars[1].Scalar, 0.9, 'Motor 2 eigener Wert');
+    await app.post({ act: 'toys_stop_dev', device: '0' }, {});
+    assert.ok(sent.some(m => m.StopDeviceCmd && m.StopDeviceCmd.DeviceIndex === 0));
+    // Knopf am Gerät → Standard „stoppen“
+    const nStop = sent.filter(m => m.StopAllDevices).length;
+    t.onSensor({ DeviceIndex: 0, SensorType: 'Button', Data: [1] }); await U.sleep(10);
+    assert.strictEqual(sent.filter(m => m.StopAllDevices).length, nStop + 1, 'Knopf stoppt');
+    // eigene Muster
+    await app.post({ act: 'toys_cfg', custom: JSON.stringify([{ name: 'Treppchen', steps: '0, 100', step_ms: 1000 }]) }, {});
+    const cid = 'u:' + t.cfg().custom[0].id;
+    assert.ok(t.status().patterns.some(p => p.id === cid));
+    assert.strictEqual(t.patternFn(cid)(0.5), 0.5, 'weich übergeblendet');
+    // PCS
+    await app.post({ act: 'toys_cfg', pcs: JSON.stringify({ on: '1', w_depth: 60, w_speed: 80, w_lust: 20 }) }, {});
+    const pcs = (n, v) => t.onOsc('/avatar/parameters/pcs/' + n, [v]);
+    pcs('output/depth-value', 0.5); pcs('output/velocity', 0.5);
+    assert.strictEqual(Math.round(t.pcsLevel() * 100), 70, '0,5×60 % + 0,5×80 %');
+    t.linkSent.clear(); t.compute(); await U.sleep(10);
+    assert.strictEqual(lastOf('ScalarCmd').Scalars[0].Scalar, 0.7);
+    pcs('output/smash-intensity', 4); pcs('output/smash-hit', true);
+    assert.strictEqual(Math.round(t.pcsLevel() * 100), 99, 'Stoß-Impuls stärke 4');
+    pcs('select/pussy', true);
+    assert.ok(t.pcsLevel(['pussy']) > 0 && t.pcsLevel(['mouth']) === 0, 'Zonen-Filter');
+    assert.ok(t.status().pcs.seen.includes('pcs/output/depth-value') && t.status().pcs.zones.includes('pussy'));
+    await app.post({ act: 'toys_cfg', links: JSON.stringify({ Combo: [{ type: 'pcs', include: ['pussy', 'quatsch'] }] }) }, {});
+    assert.deepStrictEqual(t.cfg().links.Combo[0].include, ['pussy', 'quatsch']);
+    // PCS-Ereignis 10 → Höhepunkt (Chatbox + Parameter)
+    await app.post({ act: 'toys_cfg', lust: JSON.stringify({ climax: '1', climax_chat: '💥 Wow', climax_param: 'Climax' }) }, {});
+    pcs('satisfaction/lust', 0.97); pcs('satisfaction/event', 9); pcs('satisfaction/event', 10);
+    await U.sleep(10);
+    assert.ok(chat.includes('💥 Wow') && osc.some(([a, v]) => a === '/avatar/parameters/Climax' && v === true), 'Höhepunkt-Aktionen');
+    assert.strictEqual(t.pat && t.pat.id, 'hoehepunkt');
+    t.tickLust(t.cfg()); assert.strictEqual(t.status().lust.v, 97, 'Lust aus PCS'); assert.ok(t.status().lust.ext);
+    // Edging: Schwelle 85 % → auf 20 % gebremst
+    await app.post({ act: 'toys_cfg', edge: JSON.stringify({ on: '1', at: 85, cap: 20 }) }, {});
+    t.tickLust(t.cfg()); assert.ok(t.lust.edgeHold);
+    t.level.set(0, 1); assert.strictEqual(Math.round(t.shaped(t.devices.get(0)) * 100), 20, 'Edging-Bremse');
+    await app.post({ act: 'toys_edge_release' }, {}); t.tickLust(t.cfg());
+    assert.strictEqual(Math.round(t.shaped(t.devices.get(0)) * 100), 100, 'erlöst');
+    // Consent-Ampel
+    let st = await app.post({ act: 'toys_consent', light: 'red' }, {});
+    assert.ok(/Rot/.test(st.msg) && osc.some(([a, v]) => a === '/avatar/parameters/NX/Consent' && v === 2) && chat.some(c => /STOPP/.test(c)));
+    t.level.set(0, 1); assert.strictEqual(t.shaped(t.devices.get(0)), 0, 'Rot blockiert');
+    await app.post({ act: 'toys_consent', light: 'yellow' }, {}); t.level.set(0, 1);
+    assert.strictEqual(Math.round(t.shaped(t.devices.get(0)) * 100), 50, 'Gelb = 50 %');
+    await assert.rejects(app.post({ act: 'toys_consent', light: 'lila' }, {}), /Ampel/);
+    await app.post({ act: 'toys_consent', light: 'green' }, {});
+    // eigene Lust-Berechnung → Höhepunkt bei 100 %
+    await app.post({ act: 'toys_cfg', lust: JSON.stringify({ source: 'own' }), edge: JSON.stringify({ on: '0' }) }, {});
+    t.lust.climaxAt = 0; t.lust.v = 0.999; t.cur.set(0, 1); t.lust.at = Date.now() - 1000; t.tickLust(t.cfg());
+    assert.ok(t.lust.climaxes >= 2 && t.lust.v < 0.5, 'eigener Höhepunkt, danach zurück');
+    // Szene → Ende stoppt und Aftercare fällig
+    st = await app.post({ act: 'toys_scene', name: 'Test', minutes: '5' }, {});
+    assert.ok(st.scene && st.scene.left > 250);
+    t.scene.until = Date.now() - 1; t.tickLust(t.cfg()); await U.sleep(10);
+    assert.ok(!t.scene && t.status().session.aftercare_due);
+    await app.post({ act: 'toys_aftercare_done' }, {}); assert.ok(!t.status().session.aftercare_due);
+    // Puls & Stimme
+    app.heart.push(120, 'test');
+    await app.post({ act: 'toys_cfg', heart: JSON.stringify({ lo: 80, hi: 160 }) }, {});
+    assert.strictEqual(t.heartLevel(), 0.5);
+    await app.post({ act: 'toys_voice', lv: '0.4' }, {}); assert.strictEqual(t.voiceLevel(), 0.4);
+    // HUD & Handy
+    app.settings.save({ 'vr.overlay_hud_items': 'lust,toy' });
+    assert.ok(app.hudState().items.some(i => i.key === 'lust'), 'Lust im HUD');
+    app.nsfw.private = true; assert.ok(!app.hudState().items.some(i => i.key === 'lust'), 'nicht im Privat-Modus');
+    assert.ok(ALLOWED.includes('toys_consent'));
+    delete process.env.NEXUS_OWNER_HASH;
+    t.stop(); app.tools.stop();
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {

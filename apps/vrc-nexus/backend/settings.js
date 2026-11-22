@@ -142,7 +142,7 @@ const FIELDS = [
     ['vr.overlay_hud_y', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'number', -32, 'Im Blickfeld: Höhe (cm)', 'Negativ = unterhalb der Blickmitte.', [-150, 150]],
     ['vr.overlay_hud_tilt', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'number', 0, 'Im Blickfeld: Neigung (°)', 'Positiv = oben nach hinten gekippt.', [-60, 60]],
     ['vr.overlay_hud_arm', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'number', 27, 'Am Arm: Abstand zum Handgelenk (cm)', '', [0, 60]],
-    ['vr.overlay_hud_items', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'text', 'zeit,welt,spieler,dauer,musik,freunde', 'Infos', 'Kommagetrennt: zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls – leer = nur Untertitel'],
+    ['vr.overlay_hud_items', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'text', 'zeit,welt,spieler,dauer,musik,freunde', 'Infos', 'Kommagetrennt: zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – leer = nur Untertitel'],
     ['vr.overlay_hud_subs', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'bool', true, 'Untertitel zeigen', 'Eigene Sprache und der Übersetzer „VRChat → Text“ (Spiel & OSC → Übersetzer).'],
     ['vr.overlay_hud_width', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'number', 28, 'Breite (cm)', '', [10, 150]],
     ['vr.overlay_hud_alpha', 'vr', 'SteamVR-HUD (Infos & Untertitel)', 'number', 90, 'Deckkraft (%)', '', [10, 100]],

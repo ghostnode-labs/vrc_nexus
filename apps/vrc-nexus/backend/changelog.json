@@ -1,5 +1,10 @@
 [
  {
+  "version": "4.1.0",
+  "title": "🔞 Big NSFW update",
+  "body": "- 🔞 *** (only visible in the app when NSFW is unlocked)"
+ },
+ {
   "version": "4.0.0",
   "title": "Home tabs, Pride themes, speaker indicator",
   "body": "- 🏠 **New home page with tabs:** widgets are grouped by topic into **Overview, Media, Shortcuts, Group, System tools, Marketplace and Other**. Each tab keeps its own layout, the active tab is highlighted with a widget counter, and the last opened tab is remembered (can be switched off while customising). Arrow keys switch tabs. Existing layouts are moved to the matching tabs automatically.\n- 🧱 **Modernised tiles:** rounded cards with consistent header height, spacing and icons; the grid adapts from four columns down to one on narrow windows and Android, where the tab bar shows icons only.\n- 🔗 New widgets: **Shortcuts** (pick any app section plus your own https links), **My groups** (represented group first, owner/moderator marks, quick link to the mod centre), **Marketplace** (credits, saved items and shops) and **Pulse news** (latest VRChat announcements and patch notes).\n- 🌈 **Pride profile themes:** pick a flag (Rainbow, Progress, Trans, Bi, Pan, Lesbian, Gay/MLM, Non-binary, Genderfluid, Asexual, Aromantic, Intersex, Agender) in your Nexus community profile – it shows as a colour stripe on your profile, in the \"Nexus profile\" tab and at the top of the profile window.\n- 🗣 **Voice calls show who is speaking:** a live level indicator for you and the other person lights up while someone talks (muted or push-to-talk released counts as silent).\n- 📱 **Nexus Pulse on Android** as well."

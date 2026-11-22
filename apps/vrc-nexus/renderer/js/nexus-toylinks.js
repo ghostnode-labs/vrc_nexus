@@ -5,8 +5,8 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = UI.api;
-    const TYPES = { plugs: '🍆 SPS-Plugs', sockets: '🍑 SPS-Sockets', touch: '✋ SPS-Touch-Zonen', constant: '♾ Konstant', param: '🎚 Avatar-Parameter' };
-    const WHAT = { plugs: 'Plugs', sockets: 'Sockets', touch: 'Touch-Zonen' };
+    const TYPES = { plugs: '🍆 SPS-Plugs', sockets: '🍑 SPS-Sockets', touch: '✋ SPS-Touch-Zonen', constant: '♾ Konstant', param: '🎚 Avatar-Parameter', pcs: '🫦 PCS', heart: '💓 Puls', voice: '🎙 Stimme', lust: '💗 Lust-Meter' };
+    const WHAT = { plugs: 'Plugs', sockets: 'Sockets', touch: 'Touch-Zonen', pcs: 'PCS-Zonen' };
     const SRC = {
         plugs: [['pen_others', 'fremde SPS-Sockets'], ['touch_others', 'fremde Hände / Füße / Kopf'], ['frot_others', 'fremde SPS-Plugs'], ['pen_self', 'meine SPS-Sockets'], ['touch_self', 'meine Hände / Füße']],
         sockets: [['pen_others', 'fremde SPS-Plugs'], ['touch_others', 'fremde Hände / Füße / Kopf'], ['frot_others', 'fremde SPS-Sockets'], ['pen_self', 'meine SPS-Plugs'], ['touch_self', 'meine Hände / Füße']],
@@ -29,7 +29,7 @@
                 + l.exclude.map(n => '<span class="tl-chip ex">− ' + esc(n) + '<i data-tl="unex" data-d="' + di + '" data-l="' + li + '" data-n="' + esc(n) + '">×</i></span>').join('') + '</div>'
                 + '<div class="nc-row"><select data-tl="pick" data-d="' + di + '" data-l="' + li + '"><option value="">' + (avail.length ? 'Name wählen …' : '(noch keine gesehen – Avatar mit SPS tragen)') + '</option>' + avail.map(n => '<option>' + esc(n) + '</option>').join('') + '</select>'
                 + '<input type="text" placeholder="oder Name eintippen" data-tl="pickname" data-d="' + di + '" data-l="' + li + '" style="width:150px"><button type="button" class="btn btn-sm" data-tl="inc" data-d="' + di + '" data-l="' + li + '">＋ Einschließen</button><button type="button" class="btn btn-sm" data-tl="exc" data-d="' + di + '" data-l="' + li + '">− Ausschließen</button></div>'
-                + '<div class="small">… berührt werden von:</div><div class="tl-src">' + SRC[l.type].map(([k, lab]) => '<label class="switch-row"><span class="switch"><input type="checkbox" data-tl="src" data-k="' + k + '" data-d="' + di + '" data-l="' + li + '"' + (l.src[k] ? ' checked' : '') + '><i></i></span> ' + lab + '</label>').join('') + '</div>';
+                + (SRC[l.type] ? '<div class="small">… berührt werden von:</div><div class="tl-src">' : '<div class="tl-src" hidden>') + (SRC[l.type] || []).map(([k, lab]) => '<label class="switch-row"><span class="switch"><input type="checkbox" data-tl="src" data-k="' + k + '" data-d="' + di + '" data-l="' + li + '"' + (l.src[k] ? ' checked' : '') + '><i></i></span> ' + lab + '</label>').join('') + '</div>';
         }
         if (l.type === 'constant') h += '<div class="nc-row"><input type="range" min="0" max="100" value="' + l.value + '" data-tl="value" data-d="' + di + '" data-l="' + li + '" style="flex:1"><span class="small">' + l.value + ' %</span></div>';
         if (l.type === 'param') h += '<div class="nc-row"><span class="small">Parameter</span><input type="text" value="' + esc(l.param) + '" placeholder="z. B. Tail_Wag" data-tl="param" data-d="' + di + '" data-l="' + li + '" style="flex:1"></div>';

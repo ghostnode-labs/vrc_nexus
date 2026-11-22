@@ -1360,3 +1360,143 @@ Keins	None	Aucun	なし
 💚🤍🩶🖤 Aromantisch	💚🤍🩶🖤 Aromantic	💚🤍🩶🖤 Aromantique	💚🤍🩶🖤 アロマンティック
 💛💜 Intersex	💛💜 Intersex	💛💜 Intersexe	💛💜 インターセックス
 🖤🩶🤍💚 Agender	🖤🩶🤍💚 Agender	🖤🩶🤍💚 Agenre	🖤🩶🤍💚 アジェンダー
+Akku & Sensoren lesen	Read battery & sensors	Lire batterie et capteurs	バッテリーとセンサーを読む
+Alle 5 Minuten wird gewechselt.	Switch every 5 minutes.	On change toutes les 5 minutes.	5分ごとに交代。
+Als Szene starten	Start as scene	Lancer comme scène	シーンとして開始
+Am Ende fährt das Spielzeug herunter und die Aftercare-Erinnerung kommt.	At the end the toys wind down and the aftercare reminder appears.	À la fin, les jouets s'arrêtent et le rappel d'aftercare apparaît.	終了時にトイが停止し、アフターケアのリマインダーが表示されます。
+Anteil je Aktor-Art	Share per actuator type	Part par type d'actionneur	アクチュエーター種別ごとの割合
+Avatar-Parameter (Bool, 3 s an)	Avatar parameter (bool, on for 3 s)	Paramètre d'avatar (booléen, actif 3 s)	アバターパラメーター（Bool、3秒オン）
+Barkeeper·in und Gast	Bartender and guest	Barman·aid et client·e	バーテンダーと客
+Bodyguard und VIP	Bodyguard and VIP	Garde du corps et VIP	ボディーガードとVIP
+Chef·in und neue·r Mitarbeiter·in	Boss and new employee	Patron·ne et nouvel·le employé·e	上司と新入社員
+Consent-Ampel	Consent traffic light	Feu de consentement	同意シグナル
+Danke dir – alles gut bei dir?	Thank you – are you okay?	Merci – tout va bien pour toi ?	ありがとう – 大丈夫？
+Der Zufall (🎁) steuert das Spielzeug.	Chance (🎁) controls the toy.	Le hasard (🎁) contrôle le jouet.	ランダム（🎁）がトイを操作。
+Die Ampel entscheidet alles.	The traffic light decides everything.	Le feu décide de tout.	シグナルがすべてを決める。
+Drehrichtung	Rotation direction	Sens de rotation	回転方向
+Edging-Bremse	Edging brake	Frein d'edging	エッジングブレーキ
+Edging-Modus	Edging mode	Mode edging	エッジングモード
+Eigene Muster	Custom patterns	Motifs personnalisés	カスタムパターン
+Eigenes Muster	Custom pattern	Motif personnalisé	カスタムパターン
+Einer gibt das Tempo vor, der andere darf nicht anfassen.	One sets the pace, the other may not touch.	L'un donne le rythme, l'autre ne doit pas toucher.	一人がペースを決め、もう一人は触れてはいけない。
+Erlösen (2 min ohne Bremse)	Release (2 min without brake)	Libérer (2 min sans frein)	解放（2分間ブレーキなし）
+Fotograf·in und Model	Photographer and model	Photographe et modèle	カメラマンとモデル
+Fremde, die sich zum ersten Mal treffen	Strangers meeting for the first time	Inconnu·e·s qui se rencontrent pour la première fois	初めて会う他人同士
+Gesehen	Seen	Vu	検出済み
+Herzfrequenz steuert Spielzeug	Heart rate controls toys	La fréquence cardiaque contrôle les jouets	心拍数でトイを操作
+Hub von	Stroke from	Course de	ストローク開始
+Höhepunkt	Climax	Orgasme	絶頂
+Im SteamVR-HUD: unter Einstellungen → VR → HUD-Infos „lust“ und „toy“ eintragen.	In the SteamVR HUD: add “lust” and “toy” under Settings → VR → HUD info.	Dans le HUD SteamVR : ajouter « lust » et « toy » sous Paramètres → VR → Infos HUD.	SteamVR HUD：設定 → VR → HUD情報に「lust」と「toy」を追加。
+Jetzt auslösen	Trigger now	Déclencher maintenant	今すぐ発動
+Knopf am Gerät	Button on the device	Bouton sur l'appareil	デバイスのボタン
+Kurve	Curve	Courbe	カーブ
+Laufzeit	Runtime	Durée d'utilisation	稼働時間
+Lautstärke am Mikrofon steuert Spielzeug	Microphone volume controls toys	Le volume du micro contrôle les jouets	マイク音量でトイを操作
+Lehrer·in für einen Tanzkurs	Teacher for a dance class	Professeur·e de danse	ダンス教室の先生
+Lust als Grundlast	Lust as base level	Désir comme niveau de base	ベースレベルとしての興奮度
+Lust-Meter	Lust meter	Jauge de désir	興奮メーター
+Mindestabstand	Minimum gap	Écart minimum	最小間隔
+Mindestens zwei Werte.	At least two values.	Au moins deux valeurs.	少なくとも2つの値が必要です。
+Mindeststärke	Minimum strength	Intensité minimale	最小強度
+Motoren einzeln	Motors individually	Moteurs individuellement	モーター個別
+Muster löschen?	Delete pattern?	Supprimer le motif ?	パターンを削除しますか？
+Neue Idee	New idea	Nouvelle idée	新しいアイデア
+Noch keine pcs/…-Werte – Avatar mit PCS tragen, OSC an. Die PCS-Parameter müssen in den Expression Parameters des Avatars stehen.	No pcs/… values yet – wear an avatar with PCS, OSC on. The PCS parameters must be in the avatar's Expression Parameters.	Pas encore de valeurs pcs/… – porte un avatar avec PCS, OSC activé. Les paramètres PCS doivent figurer dans les Expression Parameters de l'avatar.	pcs/…の値がまだありません – PCS付きアバターを着用し、OSCをオン。PCSパラメーターはアバターのExpression Parametersに含まれている必要があります。
+Nur der Pegel wird gemessen – nichts wird aufgenommen oder verschickt. Läuft, solange VRC Nexus offen ist.	Only the level is measured – nothing is recorded or sent. Runs while VRC Nexus is open.	Seul le niveau est mesuré – rien n'est enregistré ni envoyé. Actif tant que VRC Nexus est ouvert.	音量レベルのみ測定 – 録音や送信は一切しません。VRC Nexusが開いている間動作します。
+Nur flüstern erlaubt.	Whispering only.	Seulement chuchoter.	ささやきのみ。
+Ort, Rollen, Stimmung und ein Twist – nur als Anregung, alles nur mit Zustimmung.	Place, roles, mood and a twist – just inspiration, everything only with consent.	Lieu, rôles, ambiance et un rebondissement – simple inspiration, tout uniquement avec consentement.	場所、役割、雰囲気、そしてひねり – あくまでアイデア。すべて同意のもとで。
+PCS steuert Spielzeug	PCS controls toys	PCS contrôle les jouets	PCSでトイを操作
+PCS-Werte kommen an	PCS values are arriving	Les valeurs PCS arrivent	PCSの値を受信中
+PCS-Zonen	PCS zones	Zones PCS	PCSゾーン
+Pro Zone ein eigenes Gerät: unter 🎮 Spielzeug → Geräte verknüpfen → „PCS“ und die Zonen (mouth, boobs, pussy, ass, custom1–8) wählen.	One device per zone: under 🎮 Toys → Link devices pick “PCS” and the zones (mouth, boobs, pussy, ass, custom1–8).	Un appareil par zone : sous 🎮 Jouets → Lier les appareils, choisir « PCS » et les zones (mouth, boobs, pussy, ass, custom1–8).	ゾーンごとに別デバイス：🎮 トイ → デバイス連携で「PCS」とゾーン（mouth、boobs、pussy、ass、custom1–8）を選択。
+Puls-Kopplung	Heart-rate coupling	Couplage au pouls	心拍連動
+Quelle: PCS (pcs/satisfaction/lust).	Source: PCS (pcs/satisfaction/lust).	Source : PCS (pcs/satisfaction/lust).	ソース：PCS（pcs/satisfaction/lust）。
+Quelle: eigene Berechnung aus der Spielzeug-Stärke – steigt mit der Zeit, sinkt in Pausen.	Source: own calculation from toy strength – rises over time, falls during breaks.	Source : calcul propre à partir de l'intensité des jouets – augmente avec le temps, baisse pendant les pauses.	ソース：トイ強度からの独自計算 – 時間とともに上昇し、休憩中に下降。
+Rotation	Rotation	Rotation	回転
+Sanftanlauf	Soft start	Démarrage progressif	ソフトスタート
+Schwelle	Threshold	Seuil	しきい値
+Sensoren	Sensors	Capteurs	センサー
+Sitzung läuft seit	Session running for	Session en cours depuis	セッション継続時間
+Stimm-Kopplung	Voice coupling	Couplage à la voix	音声連動
+Stoß-Impulse (smash-hit, move-in, deep-throat)	Thrust pulses (smash-hit, move-in, deep-throat)	Impulsions de poussée (smash-hit, move-in, deep-throat)	突きインパルス（smash-hit、move-in、deep-throat）
+Stroker	Stroker	Stroker	ストローカー
+Stufen	steps	paliers	段階
+Stärke = Hubtempo (langsam 1,6 s … schnell 0,25 s pro Hub).	Strength = stroke speed (slow 1.6 s … fast 0.25 s per stroke).	Intensité = vitesse de course (lent 1,6 s … rapide 0,25 s par course).	強度 = ストローク速度（遅い1.6秒〜速い0.25秒/回）。
+Szene beenden	End scene	Terminer la scène	シーン終了
+Szenen-Ideen	Scene ideas	Idées de scène	シーンのアイデア
+Szenen-Timer	Scene timer	Minuteur de scène	シーンタイマー
+Tempo / Gleiten	Speed / sliding	Vitesse / glissement	速度 / スライド
+Tiefe	Depth	Profondeur	深さ
+Vampir·in und Opfer	Vampire and victim	Vampire et victime	吸血鬼と獲物
+Warnung ab	Warn below	Avertir en dessous de	警告しきい値
+Wer zuerst lacht, verliert.	Whoever laughs first loses.	Le premier qui rit a perdu.	先に笑った方が負け。
+Werte 0–100, getrennt mit Komma; dazwischen wird weich übergeblendet.	Values 0–100, separated by commas; blended smoothly in between.	Valeurs 0–100, séparées par des virgules ; transition douce entre elles.	0〜100の値をカンマ区切りで。間は滑らかに補間されます。
+Zeit für Aftercare!	Time for aftercare!	C'est l'heure de l'aftercare !	アフターケアの時間です！
+Zone	Zone	Zone	ゾーン
+ab Schwelle bremsen, bis die Lust wieder sinkt	brake from the threshold until lust drops again	freiner dès le seuil jusqu'à ce que le désir redescende	しきい値から興奮度が下がるまでブレーキ
+alle Geräte	all devices	tous les appareils	全デバイス
+auf dem Dach bei Nacht	on a rooftop at night	sur un toit la nuit	夜の屋上で
+auf einer Raumstation	on a space station	dans une station spatiale	宇宙ステーションで
+automatisch neu verbinden	reconnect automatically	se reconnecter automatiquement	自動再接続
+bei 100 % (oder PCS-Ereignis 10) auslösen	trigger at 100 % (or PCS event 10)	déclencher à 100 % (ou événement PCS 10)	100 %（またはPCSイベント10）で発動
+dominant / devot	dominant / submissive	dominant / soumis	ドミナント / サブミッシブ
+erlöst – noch	released – remaining	libéré – encore	解放中 – 残り
+früher stark	strong earlier	fort plus tôt	早めに強く
+gebremst auf	braked to	freiné à	ブレーキ時の強度
+heimlich – niemand darf es merken	secretly – nobody may notice	en secret – personne ne doit le remarquer	こっそり – 誰にも気づかれずに
+im Fotostudio	in a photo studio	dans un studio photo	写真スタジオで
+im Hotelzimmer	in a hotel room	dans une chambre d'hôtel	ホテルの部屋で
+im Wald am Lagerfeuer	in the woods by a campfire	dans la forêt près d'un feu de camp	森のキャンプファイヤーで
+in der Bibliothek	in the library	à la bibliothèque	図書館で
+in der Chatbox zeigen	show in the chatbox	afficher dans la chatbox	チャットボックスに表示
+in einer Onsen-Welt	in an onsen world	dans un monde onsen	温泉ワールドで
+kein Puls – Quelle unter Spiel & OSC → 💓 Puls einrichten	no heart rate – set up a source under Game & OSC → 💓 Heart rate	pas de pouls – configurer une source sous Jeu & OSC → 💓 Pouls	心拍なし – ゲーム & OSC → 💓 心拍でソースを設定
+kurz antippen – welches Gerät ist das?	short tap – which device is this?	petite impulsion – quel appareil est-ce ?	軽く振動 – どのデバイス？
+langsam & neckend	slow & teasing	lent et taquin	ゆっくり焦らす
+leer = folgt der Gesamtstärke	empty = follows overall strength	vide = suit l'intensité globale	空 = 全体の強度に従う
+leer = nichts senden	empty = send nothing	vide = ne rien envoyer	空 = 何も送らない
+leidenschaftlich	passionate	passionné	情熱的
+nach	after	après	後
+nach dem Verbinden Geräte suchen	search for devices after connecting	rechercher des appareils après connexion	接続後にデバイスを検索
+nach jeder Sitzung erinnern	remind after every session	rappeler après chaque session	毎回のセッション後に通知
+noch	remaining	encore	残り
+romantisch	romantic	romantique	ロマンチック
+sanfter Anfang	gentle start	début doux	穏やかな立ち上がり
+sucht …	searching …	recherche …	検索中…
+verspielt	playful	joueur	遊び心たっぷり
+verwenden	use	utiliser	使用
+wechselnd	alternating	alterné	交互
+wettbewerbsorientiert	competitive	compétitif	競争的
+zwei Rivalen	two rivals	deux rivaux	ライバル同士
+🍫 Snack	🍫 Snack	🍫 En-cas	🍫 おやつ
+🎙 Stimme	🎙 Voice	🎙 Voix	🎙 声
+💗 Lust-Meter	💗 Lust meter	💗 Jauge de désir	💗 興奮メーター
+💧 Wasser trinken	💧 Drink water	💧 Boire de l'eau	💧 水を飲む
+💬 Nachfragen: Wie war es für dich?	💬 Check in: how was it for you?	💬 Demander : c'était comment pour toi ?	💬 確認：どうだった？
+📝 Grenzen für nächstes Mal besprechen	📝 Talk about limits for next time	📝 Parler des limites pour la prochaine fois	📝 次回の境界線を話し合う
+🔥 Lust & PCS	🔥 Lust & PCS	🔥 Désir & PCS	🔥 興奮 & PCS
+🔴 stoppt sofort alles und blockiert bis Grün, 🟡 dämpft auf den eingestellten Anteil. Setzt den Avatar-Parameter (0 = grün, 1 = gelb, 2 = rot) – damit kann dein Avatar z. B. ein Lämpchen zeigen.	🔴 stops everything at once and blocks until green, 🟡 dampens to the set share. Sets the avatar parameter (0 = green, 1 = yellow, 2 = red) – so your avatar can show a light, for example.	🔴 arrête tout immédiatement et bloque jusqu'au vert, 🟡 atténue à la part réglée. Définit le paramètre d'avatar (0 = vert, 1 = jaune, 2 = rouge) – ton avatar peut par ex. afficher un voyant.	🔴 すべて即停止し緑まで遮断、🟡 設定した割合に抑制。アバターパラメーター（0 = 緑、1 = 黄、2 = 赤）を設定 – アバターでランプ表示などが可能。
+🧘 Kurz durchatmen	🧘 Take a breath	🧘 Respirer un instant	🧘 一息つく
+🧩 Geräte im Detail	🧩 Device details	🧩 Détails des appareils	🧩 デバイス詳細
+🫂 Kuscheln / Nähe	🫂 Cuddles / closeness	🫂 Câlins / proximité	🫂 寄り添う
+🫦 PCS	🫦 PCS	🫦 PCS	🫦 PCS
+〰 Vibration	〰 Vibration	〰 Vibration	〰 振動
+↔ Oszillation	↔ Oscillation	↔ Oscillation	↔ オシレーション
+🔄 Rotation	🔄 Rotation	🔄 Rotation	🔄 回転
+🫸 Enge	🫸 Constriction	🫸 Constriction	🫸 締め付け
+🎈 Aufpumpen	🎈 Inflate	🎈 Gonflage	🎈 膨張
+📍 Position	📍 Position	📍 Position	📍 位置
+⏹ alles stoppen	⏹ stop everything	⏹ tout arrêter	⏹ すべて停止
+⏭ nächstes Muster	⏭ next pattern	⏭ motif suivant	⏭ 次のパターン
+– nichts	– nothing	– rien	– なし
+Langsamer	Slower	Plus lent	ゆっくり
+nur PCS	PCS only	PCS uniquement	PCSのみ
+eigene Berechnung	own calculation	calcul propre	独自計算
+🫁 Atem	🫁 Breath	🫁 Respiration	🫁 呼吸
+🪚 Sägezahn	🪚 Sawtooth	🪚 Dents de scie	🪚 ノコギリ波
+🚪 Klopfen	🚪 Knock	🚪 Toc-toc	🚪 ノック
+📈 Crescendo	📈 Crescendo	📈 Crescendo	📈 クレッシェンド
+🆘 Morse	🆘 Morse	🆘 Morse	🆘 モールス
+🎯 Kantenritt	🎯 Edge ride	🎯 Sur le fil	🎯 寸止め
+💥 Höhepunkt	💥 Climax	💥 Orgasme	💥 絶頂
+Kommagetrennt: zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – leer = nur Untertitel	Comma-separated: zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – empty = subtitles only	Séparés par des virgules : zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – vide = seulement les sous-titres	カンマ区切り：zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – 空 = 字幕のみ

@@ -44,6 +44,7 @@
     function refreshAccess() {
         return api('nsfw_state').then(d => {
             st = d;
+            if (window.NexusNsfw2 && d.toys && d.toys.cfg) window.NexusNsfw2.micSync(!!(d.toys.cfg.voice && d.toys.cfg.voice.on) && d.access.unlocked);
             const b = btn();
             if (b) b.hidden = !d.access.unlocked;
             const hp = headPanic(); if (hp) hp.hidden = !d.access.unlocked;
@@ -69,11 +70,12 @@
         let h = '<div class="ns-top"><span class="muted small">🚨 ' + esc(T('Panik-Knopf: oben in der Kopfzeile')) + '</span>'
             + '<button type="button" class="btn ' + (st.private ? 'btn-gold' : '') + '" data-ns="private">🕶 Privat-Modus ' + (st.private ? 'AN' : 'aus') + '</button>'
             + '<span class="muted small">' + (a.owner ? '👑 Besitzer' : '🔓 freigeschaltet' + (a.exp ? ' bis ' + esc(new Date(a.exp * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE')) : '')) + '</span></div>';
-        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['fun', '🎲 Spielereien'], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
+        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['fun', '🎲 Spielereien'], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
         if (!tabs.some(x => x[0] === sub)) sub = 'main';
         h += '<div class="chips ns-sub">' + tabs.map(([k, n]) => '<button type="button" class="chip' + (sub === k ? ' on' : '') + '" data-nsub="' + k + '">' + n + '</button>').join('') + '</div>';
         h += '<div class="nc-grid">';
-        if (sub === 'fun') h += funHtml(t, has('toys'));
+        if (sub === 'fun') h += funHtml(t, has('toys')) + (has('toys') && t && window.NexusNsfw2 ? window.NexusNsfw2.funHtml(t) : '');
+        if (sub === 'lust' && has('toys') && t && window.NexusNsfw2) h += window.NexusNsfw2.lustHtml(t);
         if (sub === 'net' && st.tremote) h += netHtml(st.tremote, t);
         if (sub === 'main') {
         // Avatar-Paare
@@ -109,6 +111,7 @@
                 + '<details class="ns-edit"><summary class="small">Eigene Regeln (beliebiger Parameter → Stärke)</summary>' + chk('auto', tc.auto, 'Regeln aktiv')
                 + '<textarea id="nsRules" rows="3" placeholder="Parameter | Gerät (all oder Nummer) | min | max   – z. B. Tail_Wag | all | 0.1 | 0.8">' + esc((tc.rules || []).map(r => r.param + ' | ' + r.device + ' | ' + r.min + ' | ' + r.max).join('\n')) + '</textarea><button type="button" class="btn btn-sm" data-ns="save_rules">💾 Speichern</button></details>'
                 + '<p class="small" style="margin-top:10px">🌊 Muster, 🎁 Überraschung & 📊 Statistik findest du unter <a href="#" data-nsub="fun">🎲 Spielereien</a>.</p>', 'ns-toys ns-wide');
+            if (window.NexusNsfw2) h += sec('🧩 Geräte im Detail', window.NexusNsfw2.devicesHtml(t), 'ns-wide');
         }
         // Handy
         if (sub === 'phone' && has('remote') && r) {
@@ -184,6 +187,7 @@
     const toysDo = (act, data) => api(act, data).then(d => { if (st) st.toys = d; if (d.msg) toast(d.msg); render(); }).catch(x => toast(x.message, true));
     function onClick(e) {
         if (window.NexusToyLinks && window.NexusToyLinks.onClick(e, render)) return;
+        if (window.NexusNsfw2 && window.NexusNsfw2.onClick(e, toysDo, render)) return;
         const g = e.target.closest('[data-tab-go]'); if (g) return UI.tab(g.dataset.tabGo);
         if (e.target.closest('[data-od]')) { UI.tab('client'); setTimeout(() => { const c = document.querySelector('#ncSub [data-sub="debug"]'); if (c) c.click(); }, 400); return; }
         const sb = e.target.closest('[data-nsub]'); if (sb) { e.preventDefault(); sub = sb.dataset.nsub; lsSet('sub', sub); return render(); }
@@ -236,6 +240,7 @@
     const $v = s => { const el = box.querySelector(s); return el ? el.value : ''; };
     function onChange(e) {
         if (window.NexusToyLinks && window.NexusToyLinks.onChange(e, render)) return;
+        if (window.NexusNsfw2 && window.NexusNsfw2.onChange(e, toysDo)) return;
         const tm = e.target.closest('[data-tr]'); if (tm) return trCfg({ [tm.dataset.tr]: tm.value });
         const pe = e.target.closest('[data-pc]');
         if (pe) {
@@ -255,6 +260,7 @@
     let slideT = null, trT = null;
     function onInput(e) {
         if (window.NexusToyLinks && window.NexusToyLinks.onInput(e)) return;
+        if (window.NexusNsfw2 && window.NexusNsfw2.onInput(e, toysDo)) return;
         const tl = e.target.closest('input[type=range][data-trlv]');
         if (tl) { const s = tl.parentNode.querySelector('span'); if (s) s.textContent = tl.value + ' %'; clearTimeout(trT); trT = setTimeout(() => trSend('set', { lv: tl.value / 100 }), 350); return; }
         const tr = e.target.closest('input[type=range][data-tr]'); if (tr) { const s = tr.nextElementSibling; if (s) s.textContent = tr.value + ' %'; return; }

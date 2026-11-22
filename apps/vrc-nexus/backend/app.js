@@ -308,6 +308,12 @@ class NexusApp {
         let fr = 0; try { fr = this.vrc.friendList().filter(f => f.state === 'online').length; } catch (e) { /* ohne Konto */ }
         const ALL = { zeit: ['🕒', v.zeit, ''], welt: ['🌐', v.welt, ''], spieler: ['👥', v.spieler, 'Spieler'], dauer: ['⏱', v.dauer, ''], musik: ['🎵', v.musik || '', ''],
             freunde: ['🟢', String(fr), 'Freunde online'], avatar: ['🎭', v.avatar, ''], region: ['📍', v.region, ''], puls: ['💓', v.puls ? v.puls : '', 'bpm'] };
+        // 4.1 (NSFW): Lust & Spielzeug-Stärke – nur freigeschaltet, nie im Privat-Modus
+        if (this.toys && this.nsfw && this.nsfw.access().features.includes('toys') && !this.nsfw.private) {
+            const ts = this.toys.status();
+            ALL.lust = ['💗', ts.lust.v ? ts.lust.v + ' %' : '', ts.lust.edging ? 'Edging' : ''];
+            ALL.toy = ['🎮', ts.devices.length ? Math.max(0, ...ts.devices.map(d => d.out)) + ' %' : '', ''];
+        }
         const items = str(s['vr.overlay_hud_items']).split(/[\s,;]+/).filter(k => ALL[k] && ALL[k][1] && ALL[k][1] !== '–').map(k => ({ key: k, icon: ALL[k][0], value: cut(ALL[k][1], 60), label: ALL[k][2] }));
         const subs = this.subs, now = Date.now();
         const lines = s['vr.overlay_hud_subs'] !== false && subs ? subs.recent().filter(l => now - l.t < 30000).slice(-3) : [];

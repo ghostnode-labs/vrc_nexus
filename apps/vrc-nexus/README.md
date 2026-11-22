@@ -22,6 +22,10 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.1.0 – 🔞 Big NSFW update
+
+- 🔞 *** (only visible in the app when NSFW is unlocked)
+
 ### New in 4.0.0 – Home tabs, Pride themes, speaker indicator
 
 - 🏠 **New home page with tabs:** widgets are grouped by topic into **Overview, Media, Shortcuts, Group, System tools, Marketplace and Other**. Each tab keeps its own layout, the active tab is highlighted with a widget counter, and the last opened tab is remembered (can be switched off while customising). Arrow keys switch tabs. Existing layouts are moved to the matching tabs automatically.

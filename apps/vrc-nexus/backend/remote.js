@@ -9,7 +9,7 @@ const os = require('os');
 const crypto = require('crypto');
 const { str, int, UserError } = require('./util');
 
-const ALLOWED = ['nsfw_panic', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise', 'toys_pattern', 'toys_pattern_stop', 'nsfw_consent'];
+const ALLOWED = ['nsfw_panic', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise', 'toys_pattern', 'toys_pattern_stop', 'nsfw_consent', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop'];
 const DEF = { on: false, port: 17870, token: '' };
 
 class Remote {
