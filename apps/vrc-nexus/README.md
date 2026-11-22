@@ -22,6 +22,9 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.2.4 – HypeRate fallback
+- If an own (e.g. old) HypeRate key doesn't work, the app automatically uses the VRC Nexus relay instead of showing “HypeRate unreachable”
+
 ### New in 4.2.3 – HypeRate without your own API key
 - HypeRate now only needs the device ID from the HypeRate app on your watch or phone (e.g. Samsung Galaxy Watch) – the connection runs through the VRC Nexus relay, which holds the project's API key (the key is never inside the app)
 - Clear messages for an unknown device ID or an unreachable relay, automatic reconnect

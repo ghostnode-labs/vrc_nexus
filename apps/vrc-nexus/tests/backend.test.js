@@ -3251,6 +3251,14 @@ test('4.2.3: HypeRate über die Weiterleitung – Schlüssel bleibt auf dem Serv
     assert.ok(seen.some(u => u === RB + '/hr/Ab12cd') && !seen.some(u => u.includes('token')), 'App spricht nur mit der Weiterleitung, ohne Schlüssel');
     assert.deepStrictEqual([...new Set(tokens)], ['project-secret-key'], 'nur der Server nutzt den Projekt-Schlüssel');
     assert.strictEqual((await post('hr_get')).hyperate_via, 'relay');
+    // 4.2.4: alter, nicht funktionierender eigener Schlüssel → automatisch zurück auf die Weiterleitung
+    process.env.NEXUS_HYPERATE_WS = 'ws://127.0.0.1:1';
+    await post('hr_hyperate_key', { token: 'old-broken-key-123' });
+    app.heart.bpm = 0; app.heart.at = 0;
+    for (let i = 0; i < 150 && app.heart.bpm !== 88; i++) { await app.heart.refresh(); await U.sleep(20); }
+    assert.strictEqual(app.heart.bpm, 88, 'Rückfall auf die Weiterleitung');
+    assert.strictEqual((await post('hr_get')).hyperate_via, 'relay');
+    await post('hr_hyperate_key', { token: '' }); delete process.env.NEXUS_HYPERATE_WS;
     // zweiter Zuhörer für dieselbe ID → kein zweiter Beitritt; letzter Wert kommt sofort
     const ctl = new AbortController();
     const r2 = await realFetch(RB + '/hr/Ab12cd', { signal: ctl.signal });

@@ -173,7 +173,7 @@ class NexusApp {
     refreshKnown() {
         const known = {};
         try { for (const p of this.params.list().params) known[p.name] = p.type; } catch (e) { /* ohne VRChat-Ordner */ }
-        if (this.oq) { for (const [k, v] of Object.entries(this.oq.params || {})) if (v.type !== 'other') known[k] = v.type; this.oq.refreshParams().then(ps => { for (const [k, v] of Object.entries(ps)) if (v.type !== 'other') this.game.osc.known[k] = v.type; }).catch(() => {}); }
+        if (this.oq) { for (const [k, v] of Object.entries(this.oq.params || {})) if (v.type !== 'other') known[k] = v.type; if (typeof this.oq.refreshParams === 'function') this.oq.refreshParams().then(ps => { for (const [k, v] of Object.entries(ps)) if (v.type !== 'other') this.game.osc.known[k] = v.type; }).catch(() => {}); }
         this.game.osc.known = known;
         return known;
     }

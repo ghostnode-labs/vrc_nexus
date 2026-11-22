@@ -149,7 +149,8 @@ class Heart {
     openHyperate(c) {
         const key = this.hyperateKey();
         if (!c.hyperate_id) { this.error = 'HypeRate-Device-ID fehlt'; return; }
-        if (!key) return this.openRelay(c);   // Normalfall: über die Weiterleitung des Projekts
+        // Normalfall: über die Weiterleitung des Projekts; 4.2.4: klappt ein eigener (z. B. alter) Schlüssel nicht, 10 min lang auch die Weiterleitung nutzen
+        if (!key || Date.now() < (this.ownKeyFailedUntil || 0)) return this.openRelay(c);
         const sig = c.hyperate_id + '|' + key;
         if (this.ws && this.wsKey === sig) return;
         this.closeWs();
@@ -167,11 +168,12 @@ class Heart {
         };
         ws.onmessage = ev => {
             let m; try { m = JSON.parse(String(ev.data)); } catch (e) { return; }
-            if (m.event === 'hr_update' && m.payload) this.push(m.payload.hr, 'hyperate');
+            if (m.event === 'hr_update' && m.payload) { got = true; this.push(m.payload.hr, 'hyperate'); }
             else if (m.event === 'phx_reply' && m.payload && m.payload.status === 'error') this.error = 'HypeRate: Beitritt abgelehnt (ID/Schlüssel prüfen)';
         };
-        ws.onerror = () => { this.error = 'HypeRate nicht erreichbar'; };
-        ws.onclose = () => { if (this.ws === ws) { this.ws = null; this.wsKey = ''; clearInterval(this.wsTimer); } };
+        let got = false;
+        ws.onerror = () => { this.error = 'HypeRate nicht erreichbar'; if (!got && this.ws === ws) { this.ownKeyFailedUntil = Date.now() + 600000; this.closeWs(); } };   // nicht auf close warten
+        ws.onclose = () => { if (this.ws === ws) { this.ws = null; this.wsKey = ''; clearInterval(this.wsTimer); if (!got) { this.ownKeyFailedUntil = Date.now() + 600000; this.error = ''; } } };
     }
     /** 4.2.3: HypeRate über die Weiterleitung (Server-Sent Events: „data: {hr}“) – ohne Schlüssel in der App */
     openRelay(c) {
@@ -247,7 +249,7 @@ class Heart {
         const c = this.cfg(), t = Date.now();
         return { cfg: c, bpm: this.active ? this.bpm : 0, active: this.active, from: this.from || '', error: this.active ? '' : this.error, stats: this.stats(),
             hist: this.hist.filter(h => t - h.t <= KEEP).map(h => [Math.round((h.t - t) / 1000), h.v]),
-            has_pulsoid: !!this.pulsoidToken(), has_hyperate: !!this.hyperateKey(), hyperate_via: this.hyperateKey() ? 'own_key' : 'relay' };
+            has_pulsoid: !!this.pulsoidToken(), has_hyperate: !!this.hyperateKey(), hyperate_via: this.hyperateKey() && Date.now() >= (this.ownKeyFailedUntil || 0) ? 'own_key' : 'relay' };
     }
     async action(act, input) {
         switch (act) {
