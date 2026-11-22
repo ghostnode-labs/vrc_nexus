@@ -1320,3 +1320,4 @@ body.mobile .hm-tab em { display: none; }
 .n2-ped { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
 .n2-sp { flex: 1; }
 .nc-card > .ns-bar { flex: none; margin: 6px 0; }
+.n2-check { margin: 8px 0; padding-left: 4px; list-style: none; } .n2-check li { margin: 3px 0; font-size: .86rem; }

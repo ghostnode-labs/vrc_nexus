@@ -238,6 +238,8 @@
                     <div class="set-row"><div><b>OSC-Port (senden)</b><div class="nx-hint">Standard 9000</div></div><input form="ncCfg" type="number" name="osc_send_port" min="1" max="65535"></div>
                     <div class="set-row"><div><b>Avatar-Parameter von VRChat mitlesen</b><div class="nx-hint">In VRChat: Action-Menü → Optionen → <b>OSC aktivieren</b>. <span id="ncOscErr"></span></div></div><label class="switch"><input form="ncCfg" type="checkbox" name="osc_listen"><i></i></label></div>
                     <div class="set-row"><div><b>OSC-Port (empfangen)</b><div class="nx-hint">Standard 9001</div></div><input form="ncCfg" type="number" name="osc_listen_port" min="1" max="65535"></div>
+                    <div class="set-row"><div><b>Empfangs-Modus</b><div class="nx-hint"><b>Automatisch</b>: Port 9001, und wenn der schon belegt ist (VRCFury Haptics, OscGoesBrrr …) per <b>OSCQuery</b> auf einem freien Port – dann laufen alle Programme gleichzeitig. <b>Nur OSCQuery</b> lässt 9001 für andere Programme frei.</div></div><select form="ncCfg" name="osc_mode"><option value="auto">Automatisch</option><option value="oscquery">Nur OSCQuery</option><option value="classic">Klassisch (nur Port)</option></select></div>
+                    <div class="set-row"><div><b>OSC-Status</b><div class="nx-hint" id="ncOscInfo">…</div></div><button type="button" class="btn btn-sm" id="ncOscRefresh">↻</button></div>
                 </div></div>
             </div>`;
         $('#ncSub').addEventListener('click', e => {
@@ -324,7 +326,7 @@
         cfgForm.addEventListener('submit', e => {
             e.preventDefault();
             const f = cfgForm, d = {};
-            ['log_dir', 'osc_host', 'osc_send_port', 'osc_listen_port', 'rotator_text', 'rotator_seconds', 'rotator_texts', 'rotator_mode'].forEach(k => { d[k] = f[k].value; });
+            ['log_dir', 'osc_host', 'osc_send_port', 'osc_listen_port', 'osc_mode', 'rotator_text', 'rotator_seconds', 'rotator_texts', 'rotator_mode'].forEach(k => { d[k] = f[k].value; });
             ['logs', 'osc_listen', 'rotator_enabled', 'rotator_only_game'].forEach(k => { d[k] = f[k].checked ? '1' : '0'; });
             api('client_cfg_save', d).then(r => { data.cfg = r.cfg; toast('Gespeichert.'); refresh(); }).catch(fail);
         });
@@ -430,11 +432,27 @@
         const f = $('#ncCfg'), c = data.cfg || {};
         if ($('#ncRotRow')) { $('#ncRotRow').classList.toggle('on', !!c.rotator_enabled); const n = String(c.rotator_texts || '').split('\n').filter(x => x.trim()).length; $('#ncRotNote').textContent = (n ? n + ' Texte' : c.rotator_text ? '1 Text' : 'kein Text') + ' · alle ' + (c.rotator_seconds || 30) + ' s'; }
         if (!f || (document.activeElement && document.activeElement.form === f)) return;
-        ['log_dir', 'osc_host', 'osc_send_port', 'osc_listen_port', 'rotator_text', 'rotator_seconds', 'rotator_texts', 'rotator_mode'].forEach(k => { f[k].value = c[k] ?? ''; });
+        ['log_dir', 'osc_host', 'osc_send_port', 'osc_listen_port', 'osc_mode', 'rotator_text', 'rotator_seconds', 'rotator_texts', 'rotator_mode'].forEach(k => { f[k].value = c[k] ?? (k === 'osc_mode' ? 'auto' : ''); });
         ['logs', 'osc_listen', 'rotator_enabled', 'rotator_only_game'].forEach(k => { f[k].checked = !!c[k]; });
         if ($('#ncLogDir')) $('#ncLogDir').textContent = data.log_dir || '';
         if ($('#ncOscErr')) $('#ncOscErr').textContent = data.state && data.state.osc_error ? '⚠ ' + data.state.osc_error : '';
+        oscInfo();
     }
+    // 4.2: OSC-Status (Modus, Ports, OSCQuery, VRChat gefunden, Pakete pro Sekunde)
+    let oscInfoAt = 0;
+    function oscInfo(force) {
+        const el = $('#ncOscInfo'); if (!el || (!force && Date.now() - oscInfoAt < 4000)) return;
+        oscInfoAt = Date.now();
+        api(force ? 'client_oscrefresh' : 'client_oscinfo').then(o => {
+            const T = s => (window.t ? window.t(s) : s), q = o.oscquery, v = q && q.vrchat;
+            const mode = { classic: '📡 ' + T('klassisch') + ' · Port ' + o.listen_port, oscquery: '🔎 OSCQuery · Port ' + o.listen_port + (q && q.advertising ? ' · ' + T('angemeldet als') + ' ' + esc(q.name) : ''), aus: '⏸ ' + T('aus') }[o.mode] || esc(o.mode);
+            el.innerHTML = mode + ' · ' + T('senden an') + ' ' + esc(o.send.host) + ':' + o.send.port
+                + '<br>' + (o.active ? '🟢 ' + T('VRChat sendet') : '⚪ ' + T('nichts von VRChat')) + ' · ⬇ ' + o.rate.in + '/s · ⬆ ' + o.rate.out + '/s' + (o.rate.merged ? ' · ' + o.rate.merged + ' ' + T('gebündelt') : '')
+                + '<br>' + (v ? '🎮 ' + esc(v.name) + ' ' + T('per OSCQuery gefunden') + ' · ' + v.params + ' ' + T('Parameter mit Typ') : '🎮 ' + T('VRChat per OSCQuery noch nicht gefunden')) + ' · ' + o.known + ' ' + T('Typen bekannt')
+                + (o.error ? '<br><span class="bad">⚠ ' + esc(o.error) + '</span>' : '') + (q && q.mdns_error ? '<br><span class="muted">' + esc(q.mdns_error) + '</span>' : '');
+        }).catch(() => {});
+    }
+    document.addEventListener('click', e => { if (e.target.id === 'ncOscRefresh') oscInfo(true); });
 
     function eventText(e) {
         const w = e.world_name ? '<b>' + esc(e.world_name) + '</b>' : esc(e.world_id);

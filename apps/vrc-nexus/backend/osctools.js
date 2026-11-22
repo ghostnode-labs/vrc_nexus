@@ -127,7 +127,7 @@ class OscTools {
     }
     /** Port-Test: 1) Empfangsport offen? (Paket an uns selbst)  2) kommt etwas von VRChat?  3) Senden an VRChat */
     async test() {
-        const o = this.osc, c = this.app.game.cfg(), lp = int(c.osc_listen_port) || 9001;
+        const o = this.osc, c = this.app.game.cfg(), lp = o.listenPort || int(c.osc_listen_port) || 9001;
         const out = { send: { host: o.host, port: o.port, ok: false, error: '' }, listen: { port: lp, open: !!o.listener, error: o.listenError || '', self: false }, vrchat: { last: o.lastPacket || 0, active: o.active } };
         if (o.listener) {
             out.listen.self = await new Promise(res => {
@@ -196,7 +196,7 @@ class OscTools {
         this.stopPlay();
         const f = Math.max(0.25, Math.min(4, Number(speed) || 1));
         const timers = r.events.map(([t, k, v]) => setTimeout(() => {
-            this.osc.send('/avatar/parameters/' + k, typeof v === 'boolean' ? v : Number.isInteger(v) ? v : { float: v }).catch(() => {});
+            this.osc.sendParam(k, v).catch(() => {});   // 4.2: Typ vom Avatar (Float 1.0 bleibt Float)
         }, t / f));
         timers.push(setTimeout(() => { this.playing = null; }, r.dur * 1000 / f + 50));
         this.playing = { id: r.id, timers, until: Date.now() + r.dur * 1000 / f };

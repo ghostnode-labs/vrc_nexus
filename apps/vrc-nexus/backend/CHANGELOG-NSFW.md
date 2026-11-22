@@ -2,6 +2,14 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 4.2.0 – OSC overhaul (NSFW part)
+
+- 🧲 **Much better SPS / OGB / PCS detection:** current VRCFury SPS names (`OGB/Plug/…`, `OGB/Socket/…`, `OGB/Touch/…` incl. `DepthSelf/DepthOthers`), old OGB names (`Pen/Orf` incl. `NewRoot/NewTip/Close`), old VRCFury Haptics (`VFH/…`) and PCS – measurement-only values (`LengthMult`, `DepthRadius`) no longer trigger toys.
+- ⚡ **OGB/Enabled is switched on automatically:** VRCFury only activates its haptic contacts while `OGB/Enabled` is true (normally OscGoesBrrr does this). Nexus now sets it whenever OGB/SPS mode or device links are on – without it no SPS values arrive at all. Can be switched off.
+- 🔍 **Avatar check** (🔥 Lust & PCS): shows which systems the worn avatar has – SPS version, plugs, sockets and touch zones, old OGB/VFH, PCS outputs and zones, `NX/Consent`, `NX/Toy`/`NX/Lust` – with hints (e.g. "Haptics was off in VRCFury when uploading").
+- 🔁 **Feedback to the avatar:** if the avatar has the float parameters `NX/Toy` and/or `NX/Lust`, Nexus sends the current toy strength and lust (0–1) – for blushing, trembling, steam … Never in private mode.
+- 🔒 **Privacy:** intimate parameters (OGB/VFH/PCS/SPS/TPS/DPS, NX/Lust …) are no longer written to the OSC log and are hidden in the avatar debugger while NSFW is locked or private mode is on.
+
 ### New in 4.1.0 – Edge of Glory 💦
 
 The big NSFW overhaul: new tab **🔥 Lust & PCS**, a **🧩 device details** panel under 🎮 Toys and lots of new toy features straight from the Buttplug protocol (written by us from the open spec, no foreign code).

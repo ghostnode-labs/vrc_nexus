@@ -22,6 +22,15 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.2.0 – OSC overhaul
+
+- 🔎 **OSCQuery:** VRC Nexus can now announce itself to VRChat via OSCQuery (mDNS) and receive on a free port – so it runs **side by side with other OSC apps** instead of failing with "port 9001 in use". New receive mode under Game & OSC: **Automatic** (9001, falls back to OSCQuery when the port is taken), **OSCQuery only** (leaves 9001 free for other apps) or **Classic**. Nexus also finds VRChat itself and reads its real input port and the worn avatar's parameter list with types.
+- 🎯 **Type-correct sending:** avatar parameters are sent with the type the avatar expects (from OSCQuery or VRChat's OSC file). Fixes float parameters with whole values (0/1) being sent as int and ignored by VRChat – e.g. in parameter scenes, recordings and buttons.
+- 🚦 **No more flooding:** rapid changes to the same parameter are merged (max. every 50 ms, newest value wins, nothing gets lost).
+- 📦 **More OSC types** understood when receiving (double, int64, time tag, char, blob, colour/MIDI, nil/impulse).
+- 📊 **OSC status** in the settings: mode, ports, OSCQuery registration, whether VRChat was found, packets per second in/out and merged messages.
+- 🔞 *** (only visible in the app when NSFW is unlocked)
+
 ### New in 4.1.0 – 🔞 Big NSFW update
 
 - 🔞 *** (only visible in the app when NSFW is unlocked)

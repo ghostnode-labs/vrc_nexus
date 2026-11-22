@@ -76,6 +76,8 @@ class OscLog {
         const c = this.cfg();
         if (!c.on || (dir === 'out' && !c.out)) return;
         address = str(address);
+        // 4.2: intime Parameter (SPS/OGB/PCS/…) nur mitschreiben, wenn NSFW freigeschaltet ist und der Privat-Modus aus ist
+        if (address.startsWith('/avatar/parameters/') && require('./haptics').isNsfw(address.slice(19)) && !this.app.nsfwVisible()) return;
         const value = round(show(args || []));
         const key = dir + address;
         const prev = this.last.has(key) ? this.last.get(key) : null;

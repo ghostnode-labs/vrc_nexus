@@ -20,6 +20,7 @@
         twist: ['Wer zuerst lacht, verliert.', 'Nur flüstern erlaubt.', 'Einer gibt das Tempo vor, der andere darf nicht anfassen.', 'Alle 5 Minuten wird gewechselt.', 'Die Ampel entscheidet alles.', 'Der Zufall (🎁) steuert das Spielzeug.'],
     };
     const AFTER = ['💧 Wasser trinken', '🫂 Kuscheln / Nähe', '💬 Nachfragen: Wie war es für dich?', '🍫 Snack', '🧘 Kurz durchatmen', '📝 Grenzen für nächstes Mal besprechen'];
+    let check = null, checking = false;
     let scene = null, mic = null, micT = null, devOpen = {}, after = {}, patEd = null, lastT = null;
     const pick = a => a[Math.floor(Math.random() * a.length)];
 
@@ -103,6 +104,19 @@
         h += sec('🎯 ' + T('Edging-Modus'), sw('edge.on', c.edge.on, T('ab Schwelle bremsen, bis die Lust wieder sinkt'))
             + '<div class="n2-grid"><label class="small">' + esc(T('Schwelle')) + rng('edge.at', c.edge.at, 30, 99, 1, ' %') + '</label><label class="small">' + esc(T('gebremst auf')) + rng('edge.cap', c.edge.cap, 0, 80, 5, ' %') + '</label></div>'
             + (L.release_left ? '<p class="small">🔓 ' + esc(T('erlöst – noch')) + ' ' + L.release_left + ' s</p>' : '<button type="button" class="btn btn-sm" data-n2a="release">🔓 ' + esc(T('Erlösen (2 min ohne Bremse)')) + '</button>'));
+        // 4.2: Avatar-Check – welche Systeme hat der getragene Avatar?
+        const ck = check, li = (ok, txt) => '<li>' + (ok ? '✔' : '✖') + ' ' + txt + '</li>';
+        h += sec('🔍 ' + T('Avatar-Check: SPS · OGB · PCS'), '<button type="button" class="btn btn-sm btn-gold" data-n2a="check">' + esc(checking ? T('prüft …') : T('Avatar prüfen')) + '</button>'
+            + (ck ? '<ul class="n2-check">'
+                + li(ck.sps.found, '<b>SPS (VRCFury)</b>' + (ck.sps.version ? ' v' + ck.sps.version : '') + (ck.sps.found ? ' · ' + esc(T('Plugs')) + ': ' + (esc(ck.sps.plugs.join(', ')) || '–') + ' · ' + esc(T('Sockets')) + ': ' + (esc(ck.sps.sockets.join(', ')) || '–') + (ck.sps.touch.length ? ' · Touch: ' + esc(ck.sps.touch.join(', ')) : '') : ''))
+                + (ck.ogb_legacy.found ? li(true, '<b>OGB (alt)</b> · ' + esc([...ck.ogb_legacy.plugs, ...ck.ogb_legacy.sockets].join(', '))) : '')
+                + (ck.vfh.found ? li(true, '<b>VRCFury Haptics (alt)</b> · ' + esc(ck.vfh.zones.join(', '))) : '')
+                + li(ck.pcs.found, '<b>PCS</b>' + (ck.pcs.found ? ' · ' + ck.pcs.outputs.length + ' ' + esc(T('Ausgaben')) + (ck.pcs.zones.length ? ' · ' + esc(T('Zonen')) + ': ' + esc(ck.pcs.zones.join(', ')) : '') + (ck.pcs.lust ? ' · 💗' : '') : ''))
+                + li(ck.extras.consent, '<code>NX/Consent</code> ' + esc(T('(Ampel-Lämpchen)'))) + li(ck.extras.toy || ck.extras.lust, '<code>NX/Toy</code> / <code>NX/Lust</code> ' + esc(T('(Rückkanal: Stärke & Lust als Float 0–1)')))
+                + '</ul>' + ck.hints.map(x => '<p class="small">' + esc(T(x)) + '</p>').join('') + '<p class="muted small">' + ck.params + ' ' + esc(T('Parameter geprüft')) + (ck.ogb_enabled_sent ? ' · OGB/Enabled ✔' : '') + '</p>'
+                : '<p class="muted small">' + esc(T('Liest die Parameter des getragenen Avatars (OSCQuery bzw. VRChat-OSC-Datei) und zeigt, welche Systeme er hat.')) + '</p>')
+            + '<div class="nc-row">' + sw('sps_enable', c.sps_enable !== false, T('OGB/Enabled automatisch setzen (sonst liefern VRCFury-SPS-Kontakte nichts)')) + '</div>'
+            + '<div class="nc-row">' + sw('osc_out', c.osc_out !== false, T('Rückkanal: Stärke & Lust an den Avatar senden (NX/Toy, NX/Lust)')) + '</div>');
         // N1/N2 PCS
         h += sec('🫦 PCS – Penetration Contact System', sw('pcs.on', c.pcs.on, '<b>' + esc(T('PCS steuert Spielzeug')) + '</b>') + ' ' + devSel('pcs.device', c.pcs.device, devs)
             + '<p class="small">' + (p.active ? '🟢 ' + esc(T('PCS-Werte kommen an')) + ' · ' + esc(T('Tiefe')) + ' ' + p.depth + ' % · ' + esc(T('Tempo')) + ' ' + p.vel + ' % · → ' + p.level + ' %' + (p.zones.length ? ' · ' + esc(T('Zone')) + ': ' + esc(p.zones.join(', ')) : '') : '⚪ ' + esc(T('Noch keine pcs/…-Werte – Avatar mit PCS tragen, OSC an. Die PCS-Parameter müssen in den Expression Parameters des Avatars stehen.'))) + '</p>'
@@ -149,6 +163,7 @@
         const b = e.target.closest('[data-n2a]');
         if (!b) return false;
         const a = b.dataset.n2a, t = lastT;
+        if (a === 'check') { checking = true; render(); api('toys_check').then(d => { check = d.check; }).catch(x => toast(x.message, true)).finally(() => { checking = false; render(); }); return true; }
         if (a === 'devopen') { devOpen[b.dataset.name] = !devOpen[b.dataset.name]; render(); return true; }
         if (a === 'tap') { toysDo('toys_tap', { device: b.dataset.dev }); return true; }
         if (a === 'stopdev') { toysDo('toys_stop_dev', { device: b.dataset.dev }); return true; }

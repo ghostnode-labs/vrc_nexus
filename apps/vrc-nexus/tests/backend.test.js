@@ -3053,6 +3053,98 @@ test('4.1: Buttplug-Funktionen (Aktoren, Rotation, Stroker, Sensoren, Gerät-Ein
     t.stop(); app.tools.stop();
 });
 
+test('4.2: OSC – typrichtig senden & bündeln, mehr OSC-Typen, OSCQuery (mDNS simuliert), SPS/OGB/PCS-Erkennung, OGB/Enabled', async () => {
+    const { Osc, oscDecode } = require('../backend/gamelog');
+    const { OscQuery, encodeMsg, decodeMsg, T } = require('../backend/oscquery');
+    const H = require('../backend/haptics');
+    // --- Decoder: double + Typ-Tags (unsichtbar)
+    const addr = Buffer.from('/avatar/parameters/X\0\0\0\0'), tags = Buffer.from(',d\0\0'), d = Buffer.alloc(8); d.writeDoubleBE(0.25);
+    const dec = oscDecode(Buffer.concat([addr, tags, d]));
+    assert.deepStrictEqual(dec, [['/avatar/parameters/X', [0.25]]]); assert.strictEqual(dec[0].tags, 'd');
+    // --- typrichtig senden & bündeln
+    const o = new Osc(); const sent = []; o.send = async (a, v) => { sent.push([a, v]); };
+    o.known = { Hue: 'float', Ears: 'bool', Mode: 'int' };
+    await o.sendParam('Hue', 1); assert.deepStrictEqual(sent.pop(), ['/avatar/parameters/Hue', { float: 1 }], 'Float 1.0 bleibt Float');
+    await o.sendParam('Ears', 1, 'float'); assert.deepStrictEqual(sent.pop(), ['/avatar/parameters/Ears', true], 'Typ vom Avatar schlägt Vorgabe');
+    await o.sendParam('Mode', 2.6); assert.deepStrictEqual(sent.pop(), ['/avatar/parameters/Mode', 3]);
+    sent.length = 0;
+    o.sendParam('Wag', 0.1); o.sendParam('Wag', 0.2); await o.sendParam('Wag', 0.3);
+    assert.deepStrictEqual(sent.map(x => x[1].float), [0.1, 0.3], 'zwischendurch gebündelt, letzter Wert gewinnt');
+    assert.ok(o.stats.merged >= 1);
+    // --- mDNS kodieren/lesen
+    const m = decodeMsg(encodeMsg({ response: true, answers: [{ name: '_oscjson._tcp.local', type: T.PTR, data: 'X._oscjson._tcp.local' }, { name: 'X._oscjson._tcp.local', type: T.SRV, port: 1234, target: 'x.local' }, { name: 'x.local', type: T.A, ip: '127.0.0.1' }] }));
+    assert.ok(m.response && m.answers[1].port === 1234 && m.answers[2].ip === '127.0.0.1' && m.answers[0].data === 'X._oscjson._tcp.local');
+    // --- OSCQuery: simuliertes mDNS-Netz zwischen „VRChat“ und Nexus
+    const bus = new Set();
+    const mk = () => { const t = { handlers: new Set(), error: '', start() { bus.add(t); }, stop() { bus.delete(t); }, on(h) { t.handlers.add(h); },
+        send(msg) { const buf = encodeMsg(msg); setTimeout(() => { for (const x of bus) if (x !== t) for (const h of x.handlers) h(decodeMsg(buf), { address: '127.0.0.1' }); }, 1); } }; return t; };
+    const vr = new OscQuery({ name: 'VRChat-Client-ABC123', transport: mk() });
+    vr.treeJson = () => ({ FULL_PATH: '/', CONTENTS: { avatar: { FULL_PATH: '/avatar', CONTENTS: { parameters: { FULL_PATH: '/avatar/parameters', CONTENTS: {
+        OGB: { FULL_PATH: '/avatar/parameters/OGB', CONTENTS: { Enabled: { FULL_PATH: '/avatar/parameters/OGB/Enabled', TYPE: 'T', VALUE: [false] } } },
+        Ears: { FULL_PATH: '/avatar/parameters/Ears', TYPE: 'i', VALUE: [2] }, Hue: { FULL_PATH: '/avatar/parameters/Hue', TYPE: 'f', VALUE: [0.5] } } } } } } });
+    vr.hostInfo = () => ({ NAME: 'VRChat-Client-ABC123', OSC_IP: '127.0.0.1', OSC_PORT: 9123, OSC_TRANSPORT: 'UDP' });
+    await vr.advertise(9123);
+    const nx = new OscQuery({ transport: mk() });
+    const ad = await nx.advertise(45678);
+    const hi = await (await fetch('http://127.0.0.1:' + ad.http + '/?HOST_INFO')).json();
+    assert.ok(hi.OSC_PORT === 45678 && hi.OSC_TRANSPORT === 'UDP' && /^VRC-Nexus-/.test(hi.NAME));
+    const av = await (await fetch('http://127.0.0.1:' + ad.http + '/avatar')).json();
+    assert.ok(av.CONTENTS.parameters && av.FULL_PATH === '/avatar', 'Nexus möchte /avatar empfangen');
+    nx.discover(); await U.sleep(200);
+    assert.ok(nx.vrchat && nx.vrchat.osc_port === 9123, 'VRChat gefunden: Eingangs-Port');
+    assert.deepStrictEqual(nx.params, { 'OGB/Enabled': { type: 'bool', value: false }, Ears: { type: 'int', value: 2 }, Hue: { type: 'float', value: 0.5 } });
+    // Fragen anderer werden beantwortet
+    let answered = null; const probe = mk(); probe.start(); probe.on(msg => { if (msg.response && msg.answers.some(a => /VRC-Nexus/.test(a.data || ''))) answered = msg; });
+    probe.send({ questions: [{ name: '_oscjson._tcp.local', type: T.PTR }] }); await U.sleep(50);
+    assert.ok(answered && answered.answers.some(a => a.type === T.SRV && a.port === ad.http), 'Nexus antwortet auf mDNS-Fragen');
+    vr.stop(); nx.stop();
+    // --- SPS / OGB / PCS erkennen
+    assert.deepStrictEqual(H.parse('OGB/Socket/Vag/DepthOthers'), { sys: 'sps', kind: 'sockets', id: 'Vag', field: 'DepthOthers', key: 'penothers', meta: false });
+    assert.strictEqual(H.parse('OGB/Plug/Dick/FrotOthers').key, 'frotothers');
+    assert.strictEqual(H.parse('OGB/Touch/Hand/Others').key, 'touchothers');
+    assert.strictEqual(H.parse('OGB/Pen/Old/PenOthersNewTip').sys, 'ogb'); assert.strictEqual(H.parse('OGB/Pen/Old/PenOthersNewTip').key, 'penothers');
+    assert.ok(H.parse('OGB/Plug/Dick/LengthMult1').meta);
+    assert.strictEqual(H.parse('VFH/Zone/Orf/X/PenOthers').kind, 'sockets');
+    const det = H.detect(['OGB/Enabled', 'OGB/Version/11', 'OGB/Plug/Dick/TouchSelf', 'OGB/Socket/Vag/DepthOthers', 'OGB/Socket/Mouth/DepthOthers', 'pcs/output/depth-value', 'pcs/select/pussy', 'pcs/satisfaction/event', 'NX/Consent'], {});
+    assert.ok(det.sps.found && det.sps.version === 11 && det.sps.enabled_param);
+    assert.deepStrictEqual(det.sps.sockets, ['Vag', 'Mouth']); assert.deepStrictEqual(det.sps.plugs, ['Dick']);
+    assert.ok(det.pcs.found && det.pcs.zones.includes('pussy') && det.pcs.events && det.extras.consent);
+    assert.ok(H.isNsfw('pcs/output/velocity') && H.isNsfw('OGB/Enabled') && !H.isNsfw('Ears'));
+    // --- Spielzeug: neue SPS-Namen + OGB/Enabled
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWNER = 'usr_' + 'e'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-42-')) } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    grant18(app);
+    const t = app.toys, cmds = [], osc = [];
+    app.game.osc.send = async (a, v) => { osc.push([a, v]); };
+    t.ws = { readyState: 1, send() {} }; t.req = async m => { cmds.push(m); return {}; };
+    t.devices.set(0, { index: 0, name: 'Testgerät', motors: [{ index: 0, type: 'Vibrate', steps: 100 }] });
+    await app.post({ act: 'toys_cfg', ogb: '1', ogb_min: '0' }, {});
+    t.onOsc('/avatar/parameters/OGB/Socket/Vag/DepthOthers', [0.7]); await U.sleep(150);
+    assert.strictEqual(cmds.filter(m => m.ScalarCmd).pop().ScalarCmd.Scalars[0].Scalar, 0.7, 'SPS-3-Tiefe steuert');
+    t.onOsc('/avatar/parameters/OGB/Plug/Dick/LengthMult1', [0.95]); await U.sleep(150);
+    assert.strictEqual(cmds.filter(m => m.ScalarCmd).pop().ScalarCmd.Scalars[0].Scalar, 0.7, 'Maße steuern nichts');
+    app.game.osc.known = { 'OGB/Enabled': 'bool' };
+    t.idle(); await U.sleep(10);
+    assert.ok(osc.some(([a, v]) => a === '/avatar/parameters/OGB/Enabled' && v === true), 'OGB/Enabled eingeschaltet');
+    await app.post({ act: 'toys_cfg', ogb: '0' }, {}); t.idle(); await U.sleep(60);
+    assert.ok(osc.some(([a, v]) => a === '/avatar/parameters/OGB/Enabled' && v === false), 'und wieder aus');
+    app.game.osc.known = { 'NX/Lust': 'float' }; t.lust.v = 0.5; t.pcs.lust = -1; t.cur.set(0, 0.5); t.tickLust(t.cfg()); await U.sleep(10);
+    assert.ok(osc.some(([a, v]) => a === '/avatar/parameters/NX/Lust' && v && v.float > 0.4), 'Rückkanal NX/Lust');
+    app.game.osc.known = { 'OGB/Enabled': 'bool' };
+    const chk = await app.post({ act: 'toys_check' }, {});
+    assert.ok(chk.check && chk.check.sps.enabled_param);
+    const st = await app.post({ act: 'client_oscinfo' }, {});
+    assert.ok(st.rate && st.setting === 'auto');
+    delete process.env.NEXUS_OWNER_HASH;
+    t.stop(); app.tools.stop();
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {

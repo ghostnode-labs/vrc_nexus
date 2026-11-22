@@ -207,15 +207,25 @@ function oscDecode(buf) {
     let tags;
     [tags, pos] = oscRead(buf, pos);
     const args = [];
+    // 4.2: auch d (double), h (int64), t (Zeitstempel), c (Zeichen), b (Blob), N/I (nichts/Impuls), r/m (Farbe/MIDI)
     for (const t of tags.slice(1)) {
         if (t === 'i') { args.push(buf.readInt32BE(pos)); pos += 4; }
         else if (t === 'f') { args.push(buf.readFloatBE(pos)); pos += 4; }
-        else if (t === 's') { let s; [s, pos] = oscRead(buf, pos); args.push(s); }
+        else if (t === 's' || t === 'S') { let s; [s, pos] = oscRead(buf, pos); args.push(s); }
         else if (t === 'T') args.push(true);
         else if (t === 'F') args.push(false);
+        else if (t === 'd') { args.push(buf.readDoubleBE(pos)); pos += 8; }
+        else if (t === 'h' || t === 't') { args.push(Number(buf.readBigInt64BE(pos))); pos += 8; }
+        else if (t === 'c') { args.push(String.fromCharCode(buf.readInt32BE(pos))); pos += 4; }
+        else if (t === 'r' || t === 'm') { args.push(buf.readUInt32BE(pos)); pos += 4; }
+        else if (t === 'b') { const n = buf.readInt32BE(pos); pos += 4; args.push(buf.subarray(pos, pos + n)); pos += n + ((4 - (n % 4)) % 4); }
+        else if (t === 'N') args.push(null);
+        else if (t === 'I') args.push(1);
         else break;
     }
-    return [[address, args]];
+    const r = [address, args];
+    Object.defineProperty(r, 'tags', { value: tags.slice(1), enumerable: false });   // Typ-Tags (i/f/T/F …), unsichtbar für Vergleiche
+    return [r];
 }
 
 /** „/n“ und „\n“ (als Text getippt) werden zu echten Zeilenumbrüchen in der Chatbox */
@@ -240,7 +250,40 @@ function splitChat(text, max) {
 class Osc {
     constructor() { this.sock = dgram.createSocket('udp4'); this.sock.unref(); this.host = '127.0.0.1'; this.port = 9000; this.lastChat = 0; this.chain = Promise.resolve(); this.listener = null; this.params = {}; this.avatarId = ''; this.lastPacket = 0; this.listenError = ''; this.cam = {}; this.onMessage = null; }
     configure(host, port) { this.host = host || '127.0.0.1'; this.port = int(port) || 9000; }
-    send(address, ...args) { return new Promise((res, rej) => this.sock.send(oscEncode(address, ...args), this.port, this.host, e => (e ? rej(e) : res()))); }
+    send(address, ...args) { this.stats.out++; return new Promise((res, rej) => this.sock.send(oscEncode(address, ...args), this.port, this.host, e => (e ? rej(e) : res()))); }
+    get stats() { if (!this._stats) this._stats = { in: 0, out: 0, merged: 0, since: Date.now() }; return this._stats; }
+    /** 4.2: Typ eines Avatar-Parameters – aus OSCQuery/Avatar-Datei (known) oder dem zuletzt empfangenen OSC-Typ */
+    paramType(name) {
+        const k = (this.known || {})[name] || (this.types || {})[name];
+        return k === 'T' || k === 'F' || k === 'bool' ? 'bool' : k === 'i' || k === 'int' ? 'int' : k === 'f' || k === 'float' ? 'float' : '';
+    }
+    /** 4.2: Wert passend zum Typ verpacken (Float 1.0 bleibt Float – VRChat ignoriert falsche Typen) */
+    typed(name, value, type) {
+        const t = this.paramType(name) || type || (typeof value === 'boolean' ? 'bool' : 'float');
+        if (t === 'bool') return value === true || value === 1 || value === '1' || value === 'true' || (typeof value === 'number' && value >= 0.5);
+        if (t === 'int') return Math.max(-2147483648, Math.min(2147483647, Math.round(Number(value) || 0)));
+        return { float: Number(value) || 0 };
+    }
+    /** 4.2: Avatar-Parameter senden – typrichtig und gebündelt (pro Parameter höchstens alle 50 ms, der neueste Wert gewinnt) */
+    sendParam(name, value, type) {
+        const n = str(name).replace(/^\/?avatar\/parameters\//, '').replace(/^\/+/, '');
+        const v = this.typed(n, value, type), now = Date.now();
+        this.lastSent = this.lastSent || {}; this.pend = this.pend || new Map();
+        const last = this.lastSent[n] || 0;
+        if (now - last >= 50 && !this.pend.has(n)) { this.lastSent[n] = now; return this.send('/avatar/parameters/' + n, v); }
+        const old = this.pend.get(n);
+        if (old) this.stats.merged++;
+        const e = { v, wait: old ? old.wait : [] };
+        this.pend.set(n, e);
+        if (!this.pendT) this.pendT = setTimeout(() => this.flushParams(), Math.max(5, 50 - (now - last)));
+        return new Promise(res => e.wait.push(res));
+    }
+    flushParams() {
+        this.pendT = null;
+        const now = Date.now();
+        for (const [n, e] of this.pend) { this.lastSent[n] = now; this.send('/avatar/parameters/' + n, e.v).catch(() => {}).then(() => e.wait.forEach(r => r())); }
+        this.pend.clear();
+    }
     chatbox(text, sound = true) {
         // VRChat drosselt die Chatbox – Nachrichten nacheinander mit 1,6 s Abstand
         this.chain = this.chain.then(async () => {
@@ -256,8 +299,8 @@ class Osc {
         if (kind === 'chatbox') return this.chatbox(p.text, p.sound !== false);
         if (kind === 'typing') return this.send('/chatbox/typing', !!p.on);
         if (kind === 'param') {
-            const v = p.type === 'bool' ? !!p.value : p.type === 'int' ? int(p.value) : { float: Number(p.value) };
-            return this.send('/avatar/parameters/' + str(p.name).replace(/^\/+/, ''), v);
+            const raw = p.type === 'bool' ? (p.value === true || p.value === '1' || p.value === 'true' || p.value === 1) : Number(p.value);
+            return this.sendParam(str(p.name), raw, p.type);
         }
         if (kind === 'input') {
             await this.send('/input/' + p.name, int(p.value === undefined ? 1 : p.value));
@@ -266,21 +309,30 @@ class Osc {
         }
         throw new Error('Unbekannte OSC-Art: ' + kind);
     }
-    listen(port) {
+    /** Empfang starten. port 0 = freier Port (für OSCQuery). Liefert ein Promise mit dem echten Port; onFail bei belegtem Port. */
+    listen(port, onFail, bindHost) {
         this.stopListen();
-        this.listenError = '';
+        this.listenError = ''; this.listenPort = 0;
         const s = dgram.createSocket('udp4');
-        s.on('error', e => { this.listenError = 'Port ' + port + ' ist belegt (läuft schon ein anderes OSC-Programm?): ' + e.message; try { s.close(); } catch (x) { /* egal */ } this.listener = null; });
+        let ok = false;
+        const ready = new Promise(res => {
+            s.on('error', e => { this.listenError = 'Port ' + port + ' ist belegt (läuft schon ein anderes OSC-Programm?): ' + e.message; try { s.close(); } catch (x) { /* egal */ } if (this.listener === s) this.listener = null; if (!ok && onFail) onFail(e); res(0); });
+            s.on('listening', () => { ok = true; this.listenPort = s.address().port; res(this.listenPort); });
+        });
+        this.ready = ready;
         s.on('message', msg => {
             let list = [];
             try { list = oscDecode(msg); } catch (e) { return; }
-            this.lastPacket = Date.now();
+            this.lastPacket = Date.now(); this.stats.in++;
             if (this.rawTaps) for (const f of this.rawTaps) { try { f(msg); } catch (e) { /* egal */ } }   // z. B. Weiterleitung (osctools)
             for (const [address, args] of list) {
                 if (address === '/avatar/change' && args.length) { this.avatarId = str(args[0]); this.params = {}; }
                 else if (address.startsWith('/avatar/parameters/') && args.length) {
                     const v = args[0];
-                    const pn = address.slice(19), nv = typeof v === 'number' && !Number.isInteger(v) ? Math.round(v * 1000) / 1000 : v;
+                    const pn = address.slice(19);
+                    const tg = (list.find(x => x[0] === address) || {}).tags;
+                    if (tg) (this.types = this.types || {})[pn] = tg[0];
+                    const nv = typeof v === 'number' && !Number.isInteger(v) ? Math.round(v * 1000) / 1000 : v;
                     if (this.params[pn] !== nv) (this.changedAt = this.changedAt || {})[pn] = Date.now();
                     this.params[pn] = nv;
                 }
@@ -290,9 +342,10 @@ class Osc {
             }
         });
         // Ziel im eigenen Netz (z. B. Handy → PC): auch Pakete von dort annehmen, sonst nur vom eigenen Rechner
-        s.bind(int(port) || 9001, /^(127\.|localhost$)/.test(this.host) ? '127.0.0.1' : '0.0.0.0');
+        s.bind(port === 0 ? 0 : int(port) || 9001, bindHost || (/^(127\.|localhost$)/.test(this.host) ? '127.0.0.1' : '0.0.0.0'));
         s.unref();
         this.listener = s;
+        return ready;
     }
     stopListen() { if (this.listener) { try { this.listener.close(); } catch (e) { /* egal */ } this.listener = null; } }
     get active() { return Date.now() - this.lastPacket < 120000; }
@@ -311,7 +364,7 @@ class GameLog {
         this.applySettings();
     }
     cfg() {
-        const d = { log_dir: '', osc_host: '127.0.0.1', osc_send_port: 9000, osc_listen_port: 9001, osc_listen: true, logs: true, rotator_enabled: false,
+        const d = { log_dir: '', osc_host: '127.0.0.1', osc_send_port: 9000, osc_listen_port: 9001, osc_listen: true, osc_mode: 'auto', logs: true, rotator_enabled: false,
             rotator_text: '🕒 {zeit} · 🌐 {welt} · 👥 {spieler}', rotator_seconds: 30, rotator_texts: '', rotator_mode: 'seq', rotator_only_game: false };
         try { return Object.assign(d, JSON.parse(this.db.setting('client_cfg', '{}'))); } catch (e) { return d; }
     }
@@ -320,7 +373,8 @@ class GameLog {
         const n = Object.assign(cur, {
             log_dir: cut(str(c.log_dir ?? cur.log_dir).trim(), 400), osc_host: /^[\w.-]{1,100}$/.test(str(c.osc_host)) ? c.osc_host : cur.osc_host,
             osc_send_port: Math.min(65535, Math.max(1, int(c.osc_send_port) || cur.osc_send_port)), osc_listen_port: Math.min(65535, Math.max(1, int(c.osc_listen_port) || cur.osc_listen_port)),
-            osc_listen: c.osc_listen !== undefined ? !!c.osc_listen && c.osc_listen !== '0' : cur.osc_listen, logs: c.logs !== undefined ? !!c.logs && c.logs !== '0' : cur.logs,
+            osc_listen: c.osc_listen !== undefined ? !!c.osc_listen && c.osc_listen !== '0' : cur.osc_listen,
+            osc_mode: c.osc_mode !== undefined ? (['auto', 'oscquery', 'classic'].includes(str(c.osc_mode)) ? str(c.osc_mode) : 'auto') : (cur.osc_mode || 'auto'), logs: c.logs !== undefined ? !!c.logs && c.logs !== '0' : cur.logs,
             rotator_enabled: c.rotator_enabled !== undefined ? !!c.rotator_enabled && c.rotator_enabled !== '0' : cur.rotator_enabled,
             rotator_text: c.rotator_text !== undefined ? cut(str(c.rotator_text), 200) : cur.rotator_text, rotator_seconds: Math.max(5, Math.min(3600, int(c.rotator_seconds) || cur.rotator_seconds)),
             rotator_texts: c.rotator_texts !== undefined ? cut(str(c.rotator_texts).replace(/\r/g, ''), 4000) : cur.rotator_texts,
@@ -334,7 +388,8 @@ class GameLog {
     applySettings() {
         const c = this.cfg();
         this.osc.configure(c.osc_host, c.osc_send_port);
-        if (c.osc_listen) this.osc.listen(c.osc_listen_port); else this.osc.stopListen();
+        if (this.onApply) this.onApply(c);   // 4.2: Empfang über OSCQuery/klassisch (app.js)
+        else if (c.osc_listen) this.osc.listen(c.osc_listen_port); else this.osc.stopListen();
         this.watcher = c.logs ? new LogWatcher(this.logDir(), new LogParser(this.state)) : null;
     }
     start(intervalMs = 1000) {

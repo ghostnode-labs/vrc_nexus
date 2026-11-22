@@ -53,6 +53,10 @@ class NexusApp {
         this.updater = new Updater(this);
         this.tools = new Tools(this, Object.assign({ notify: opts.notify }, opts.host || {}));
         this.params = new AvatarParams(this);
+        // 4.2: Parameter-Typen des getragenen Avatars (OSC-Datei von VRChat + OSCQuery) → typrichtiges Senden, SPS/PCS-Erkennung
+        this.game.osc.taps = this.game.osc.taps || new Set();
+        this.game.osc.taps.add(a => { if (a === '/avatar/change') { clearTimeout(this.knownT); this.knownT = setTimeout(() => this.refreshKnown(), 1500); } });
+        if (opts.oscquery) { this.game.onApply = c => this.oscSetup(c); this.game.applySettings(); }
         this.cam = new Camera(this);
         this.macros = new Macros(this);
         this.auto = new Automation(this);
@@ -163,6 +167,40 @@ class NexusApp {
     }
 
     overlayPos() { const s = this.settings.all(); return Object.fromEntries(OVERLAY_POS.map(k => [k, s[k]]).concat([['vr.overlay_hud', !!s['vr.overlay_hud']]])); }
+    /** 4.2: Darf man intime Parameter (SPS/OGB/PCS) gerade sehen? */
+    nsfwVisible() { try { return !!(this.nsfw && this.nsfw.access().unlocked && !this.nsfw.private); } catch (e) { return false; } }
+    /** 4.2: bekannte Parameter-Typen (Datei + OSCQuery) */
+    refreshKnown() {
+        const known = {};
+        try { for (const p of this.params.list().params) known[p.name] = p.type; } catch (e) { /* ohne VRChat-Ordner */ }
+        if (this.oq) { for (const [k, v] of Object.entries(this.oq.params || {})) if (v.type !== 'other') known[k] = v.type; this.oq.refreshParams().then(ps => { for (const [k, v] of Object.entries(ps)) if (v.type !== 'other') this.game.osc.known[k] = v.type; }).catch(() => {}); }
+        this.game.osc.known = known;
+        return known;
+    }
+    /** 4.2: Empfang einrichten – klassisch (9001), OSCQuery (freier Port, per mDNS angemeldet) oder automatisch */
+    oscSetup(c) {
+        const osc = this.game.osc;
+        if (!this.oq) { const { OscQuery } = require('./oscquery'); this.oq = new OscQuery(); this.oq.onParams = () => this.refreshKnown(); }
+        const oq = this.oq;
+        this.oscMode = '';
+        if (!c.osc_listen) { osc.stopListen(); oq.stop(); return; }
+        const viaQuery = () => osc.listen(0, null, '127.0.0.1').then(p => { if (!p) return; this.oscMode = 'oscquery'; return oq.advertise(p); }).catch(e => { this.oscErr = e.message; });
+        if (c.osc_mode === 'oscquery') viaQuery();
+        else {
+            oq.stop();
+            osc.listen(c.osc_listen_port, c.osc_mode === 'auto' ? () => { osc.listenError = ''; viaQuery(); } : null).then(p => { if (p) this.oscMode = 'classic'; });
+        }
+        // VRChat per OSCQuery suchen (Eingangs-Port + Parameter-Baum)
+        const find = () => { try { oq.discover(); } catch (e) { /* egal */ }
+            if (oq.vrchat && oq.vrchat.osc_port && /^(127\.|localhost$)/.test(c.osc_host) && int(c.osc_send_port) === 9000 && oq.vrchat.osc_port !== osc.port) osc.configure(c.osc_host, oq.vrchat.osc_port); };
+        clearInterval(this.oqT); find(); this.oqT = setInterval(find, 15000); if (this.oqT.unref) this.oqT.unref();
+    }
+    oscStatus() {
+        const o = this.game.osc, st = o.stats, secs = Math.max(1, (Date.now() - st.since) / 1000), c = this.game.cfg();
+        return { mode: this.oscMode || (o.listener ? 'classic' : 'aus'), setting: c.osc_mode || 'auto', listen_port: o.listenPort || 0, send: { host: o.host, port: o.port }, error: o.listenError || '',
+            active: !!o.active, last: o.lastPacket || 0, avatar: o.avatarId || '', known: Object.keys(o.known || {}).length,
+            rate: { in: Math.round(st.in / secs * 10) / 10, out: Math.round(st.out / secs * 10) / 10, merged: st.merged }, oscquery: this.oq ? this.oq.status() : null };
+    }
     async post(input, files) {
         const act = str(input.act), id = str(input.id), user = str(input.user);
         const valid = U.valid;
@@ -276,7 +314,14 @@ class NexusApp {
             case 'client_rot_preview': return { text: g.rotatorText(str(input.text)) };
             case 'client_log_clear': return { deleted: g.clear() };
             case 'client_params': return this.params.list(str(input.avatar));
-            case 'client_debug': { const o = g.osc; return { active: !!o.active, error: str(o.listenError), avatar: str(o.avatarId), params: o.params || {}, changed: o.changedAt || {} }; }
+            case 'client_oscinfo': return this.oscStatus();
+            case 'client_oscrefresh': this.refreshKnown(); if (this.oq) this.oq.discover(); return this.oscStatus();
+            case 'client_debug': {   // 4.2: intime Parameter nur bei Freigabe und ohne Privat-Modus
+                const o = g.osc, H = require('./haptics'), vis = this.nsfwVisible();
+                const params = vis ? (o.params || {}) : Object.fromEntries(Object.entries(o.params || {}).filter(([k]) => !H.isNsfw(k)));
+                const hidden = vis ? 0 : Object.keys(o.params || {}).length - Object.keys(params).length;
+                return { active: !!o.active, error: str(o.listenError), avatar: str(o.avatarId), params, changed: o.changedAt || {}, hidden, types: o.known || {} };
+            }
             case 'client_macros': return { macros: this.macros.list() };
             case 'client_macro_save': return { macros: this.macros.save(input.name, input.script, input.id), msg: 'Makro gespeichert.' };
             case 'client_macro_delete': return { macros: this.macros.remove(input.id) };

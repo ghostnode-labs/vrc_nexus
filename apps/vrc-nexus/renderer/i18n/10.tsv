@@ -1500,3 +1500,37 @@ eigene Berechnung	own calculation	calcul propre	独自計算
 🎯 Kantenritt	🎯 Edge ride	🎯 Sur le fil	🎯 寸止め
 💥 Höhepunkt	💥 Climax	💥 Orgasme	💥 絶頂
 Kommagetrennt: zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – leer = nur Untertitel	Comma-separated: zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – empty = subtitles only	Séparés par des virgules : zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – vide = seulement les sous-titres	カンマ区切り：zeit, welt, spieler, dauer, musik, freunde, avatar, region, puls, lust, toy – 空 = 字幕のみ
+Empfangs-Modus	Receive mode	Mode de réception	受信モード
+Nur OSCQuery	OSCQuery only	OSCQuery uniquement	OSCQueryのみ
+Klassisch (nur Port)	Classic (port only)	Classique (port uniquement)	クラシック（ポートのみ）
+OSC-Status	OSC status	État OSC	OSCステータス
+klassisch	classic	classique	クラシック
+angemeldet als	registered as	enregistré comme	登録名
+senden an	sending to	envoi vers	送信先
+VRChat sendet	VRChat is sending	VRChat envoie	VRChatが送信中
+nichts von VRChat	nothing from VRChat	rien de VRChat	VRChatから受信なし
+gebündelt	merged	regroupés	統合
+per OSCQuery gefunden	found via OSCQuery	trouvé via OSCQuery	OSCQueryで検出
+Parameter mit Typ	parameters with type	paramètres avec type	型付きパラメーター
+VRChat per OSCQuery noch nicht gefunden	VRChat not found via OSCQuery yet	VRChat pas encore trouvé via OSCQuery	OSCQueryでVRChatがまだ見つかりません
+Typen bekannt	types known	types connus	型が判明
+intime Parameter ausgeblendet (NSFW gesperrt oder Privat-Modus)	intimate parameters hidden (NSFW locked or private mode)	paramètres intimes masqués (NSFW verrouillé ou mode privé)	プライベートなパラメーターを非表示（NSFWロック中またはプライベートモード）
+Avatar-Check: SPS · OGB · PCS	Avatar check: SPS · OGB · PCS	Vérification d'avatar : SPS · OGB · PCS	アバターチェック：SPS · OGB · PCS
+prüft …	checking …	vérification …	確認中…
+Avatar prüfen	Check avatar	Vérifier l'avatar	アバターを確認
+Plugs	Plugs	Plugs	プラグ
+Sockets	Sockets	Sockets	ソケット
+Ausgaben	outputs	sorties	出力
+Zonen	Zones	Zones	ゾーン
+(Ampel-Lämpchen)	(traffic-light indicator)	(voyant du feu)	（シグナル表示）
+(Rückkanal: Stärke & Lust als Float 0–1)	(feedback: strength & lust as float 0–1)	(retour : intensité et désir en float 0–1)	（フィードバック：強度と興奮度をfloat 0–1で）
+Parameter geprüft	parameters checked	paramètres vérifiés	パラメーターを確認済み
+Liest die Parameter des getragenen Avatars (OSCQuery bzw. VRChat-OSC-Datei) und zeigt, welche Systeme er hat.	Reads the parameters of the worn avatar (OSCQuery or VRChat's OSC file) and shows which systems it has.	Lit les paramètres de l'avatar porté (OSCQuery ou fichier OSC de VRChat) et montre quels systèmes il possède.	着用中のアバターのパラメーター（OSCQueryまたはVRChatのOSCファイル）を読み取り、搭載システムを表示します。
+OGB/Enabled automatisch setzen (sonst liefern VRCFury-SPS-Kontakte nichts)	Set OGB/Enabled automatically (otherwise VRCFury SPS contacts deliver nothing)	Activer OGB/Enabled automatiquement (sinon les contacts SPS de VRCFury ne fournissent rien)	OGB/Enabledを自動で設定（設定しないとVRCFury SPSの接触値が届きません）
+Rückkanal: Stärke & Lust an den Avatar senden (NX/Toy, NX/Lust)	Feedback: send strength & lust to the avatar (NX/Toy, NX/Lust)	Retour : envoyer intensité et désir à l'avatar (NX/Toy, NX/Lust)	フィードバック：強度と興奮度をアバターに送信（NX/Toy、NX/Lust）
+✔ OGB/Enabled ist an – die SPS-Kontakte liefern Werte.	✔ OGB/Enabled is on – the SPS contacts deliver values.	✔ OGB/Enabled est actif – les contacts SPS fournissent des valeurs.	✔ OGB/Enabledはオン – SPSの接触値が届いています。
+ℹ OGB/Enabled ist aus – VRC Nexus schaltet es ein, sobald OGB/SPS oder Verknüpfungen aktiv sind.	ℹ OGB/Enabled is off – VRC Nexus turns it on as soon as OGB/SPS or links are active.	ℹ OGB/Enabled est désactivé – VRC Nexus l'active dès que OGB/SPS ou les liaisons sont actifs.	ℹ OGB/Enabledはオフ – OGB/SPSまたは連携が有効になるとVRC Nexusがオンにします。
+⚠ In VRCFury ist „Haptics“ beim Hochladen ausgeschaltet gewesen (OGB/HapticsDisabled) – dann gibt es keine Kontakte für Spielzeug.	⚠ “Haptics” was switched off in VRCFury when uploading (OGB/HapticsDisabled) – then there are no contacts for toys.	⚠ « Haptics » était désactivé dans VRCFury lors de l'envoi (OGB/HapticsDisabled) – il n'y a alors aucun contact pour les jouets.	⚠ アップロード時にVRCFuryの「Haptics」がオフでした（OGB/HapticsDisabled） – トイ用の接触がありません。
+ℹ Alte OGB-Namen (Pen/Orf) gefunden – werden weiter unterstützt; ein Update auf aktuelles SPS (VRCFury) wird empfohlen.	ℹ Old OGB names (Pen/Orf) found – still supported; updating to current SPS (VRCFury) is recommended.	ℹ Anciens noms OGB (Pen/Orf) trouvés – toujours pris en charge ; une mise à jour vers le SPS actuel (VRCFury) est recommandée.	ℹ 旧OGB名（Pen/Orf）を検出 – 引き続き対応。最新のSPS（VRCFury）への更新を推奨します。
+⚠ PCS-Menü gefunden, aber keine pcs/output/…-Parameter – die Ausgabe-Parameter müssen in den Expression Parameters stehen.	⚠ PCS menu found, but no pcs/output/… parameters – the output parameters must be in the Expression Parameters.	⚠ Menu PCS trouvé, mais aucun paramètre pcs/output/… – les paramètres de sortie doivent figurer dans les Expression Parameters.	⚠ PCSメニューはありますがpcs/output/…パラメーターがありません – 出力パラメーターをExpression Parametersに含める必要があります。
+Kein SPS/OGB/PCS an diesem Avatar gefunden (oder OSC-Konfiguration noch nicht gelesen).	No SPS/OGB/PCS found on this avatar (or OSC configuration not read yet).	Aucun SPS/OGB/PCS trouvé sur cet avatar (ou configuration OSC pas encore lue).	このアバターにSPS/OGB/PCSは見つかりません（またはOSC設定が未読込）。

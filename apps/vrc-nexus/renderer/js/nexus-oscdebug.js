@@ -14,11 +14,11 @@
         if (!box) return;
         last = d;
         const now = Date.now(), names = Object.keys(d.params).sort((a, b) => a.localeCompare(b));
-        const sps = n => /^(OGB|VFH)\//i.test(n) || /(Pen|Touch|Frot)(Self|Others)$/i.test(n);
+        const sps = n => /^(OGB|VFH|pcs)\//i.test(n) || /(Pen|Touch|Frot|Depth)(Self|Others)$/i.test(n);
         const list = names.filter(n => (!q || n.toLowerCase().includes(q)) && (only === 'all' || (only === 'sps' && sps(n)) || (only === 'recent' && now - (d.changed[n] || 0) < 10000)));
         const head = box.querySelector('.od-head .od-info');
         if (head) head.innerHTML = (d.active ? '<span class="nc-badge ok">OSC aktiv</span>' : '<span class="nc-badge">⚠ nichts von VRChat</span>') + (d.error ? ' <span class="bad small">' + esc(d.error) + '</span>' : '')
-            + ' <span class="muted small">' + names.length + ' Parameter' + (d.avatar ? ' · ' + esc(d.avatar) : '') + (names.some(sps) ? ' · ' + names.filter(sps).length + ' SPS' : '') + '</span>';
+            + ' <span class="muted small">' + names.length + ' Parameter' + (d.avatar ? ' · ' + esc(d.avatar) : '') + (names.some(sps) ? ' · ' + names.filter(sps).length + ' SPS/PCS' : '') + (d.hidden ? ' · 🔒 ' + d.hidden + ' ' + (window.t ? window.t('intime Parameter ausgeblendet (NSFW gesperrt oder Privat-Modus)') : 'intime Parameter ausgeblendet (NSFW gesperrt oder Privat-Modus)') : '') + '</span>';
         const el = box.querySelector('.od-list');
         if (el) el.innerHTML = list.length ? list.map(n => '<div class="od-p' + (now - (d.changed[n] || 0) < 1500 ? ' hot' : '') + (sps(n) ? ' sps' : '') + '" title="' + esc(n) + '">' + esc(n) + '=' + val(d.params[n]) + '</div>').join('')
             : '<div class="muted small">' + (names.length ? 'Kein Treffer.' : 'Noch keine Parameter – in VRChat OSC einschalten (Action-Menü → Optionen → OSC) und Avatar wechseln/neu laden.') + '</div>';

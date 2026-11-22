@@ -10,10 +10,11 @@
  * Min/Max, Kurve, Glättung, Edging-Bremse und Consent-Ampel ein und sendet unter Beachtung von DeviceMessageTimingGap.
  */
 const { str, int, arr, cut, UserError } = require('./util');
+const H = require('./haptics');
 
 const DEF = { url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idle_stop: 3, ogb: false, ogb_self: false, ogb_device: 'all', ogb_min: 0.05, links: {}, links_on: false,
     // 4.1
-    reconnect: true, auto_scan: true, dev: {}, custom: [], button_action: 'stop', battery_warn: 15,
+    reconnect: true, auto_scan: true, sps_enable: true, osc_out: true, dev: {}, custom: [], button_action: 'stop', battery_warn: 15,
     pcs: { on: false, device: 'all', w_depth: 60, w_speed: 80, w_lust: 20, impulses: true },
     lust: { source: 'auto', climax: true, climax_pattern: 'hoehepunkt', climax_chat: '', climax_param: '', chat_show: false },
     edge: { on: false, at: 85, cap: 20 },
@@ -23,11 +24,6 @@ const DEF = { url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idl
     aftercare: { on: true, after_min: 3, chat: '' } };
 const DEV_DEF = { alias: '', on: true, min: 0, max: 100, curve: 1, smooth: 0, rot: 'cw', rot_alt: 8, lin_min: 0, lin_max: 100, types: {} };
 const TYPE_DEF = { Vibrate: 100, Oscillate: 100, Rotate: 100, Constrict: 60, Inflate: 60, Position: 100 };
-/** OGB-/SPS-kompatible Avatar-Parameter (OscGoesBrrr, VRCFury Haptics): …/<Name>/(Touch|Pen|Frot)(Self|Others) bzw. VFH/Zone/… – Werte 0…1 = Nähe */
-const OGB_RE = /^(?:OGB|VFH)\/.*?(Touch|Pen|Frot)(Self|Others)$/i;
-/** SPS-Zonen: OGB/<Pen|Orf|Touch>/<Name>/<Wert> (auch VFH/Zone/…) – Pen = Plug, Orf = Socket. */
-const ZONE_RE = /^(?:OGB|VFH(?:\/Zone)?)\/(Pen|Orf|Touch)\/([^/]+)\/(\w+)$/i;
-const ZONE_KIND = { pen: 'plugs', orf: 'sockets', touch: 'touch' };
 const LINK_TYPES = ['plugs', 'sockets', 'touch', 'constant', 'param', 'pcs', 'heart', 'voice', 'lust'];
 /** „berührt von“: Schalter → Wert-Namen */
 const SRC = { pen_others: ['penothers'], touch_others: ['touchothers', 'others'], frot_others: ['frotothers'], pen_self: ['penself'], touch_self: ['touchself', 'self'], frot_self: ['frotself'] };
@@ -90,7 +86,7 @@ class Toys {
             if (/^wss?:\/\/0\.0\.0\.0/.test(u)) u = u.replace('0.0.0.0', '127.0.0.1');   // 0.0.0.0 = Intiface hört überall → auf diesem PC über 127.0.0.1
             if (u !== cur.url) { this.error = ''; this.state = 'aus'; }
             n.url = u; }
-        for (const k of ['auto', 'links_on', 'ogb', 'ogb_self', 'reconnect', 'auto_scan']) if (c[k] !== undefined) n[k] = yes(c[k]);
+        for (const k of ['auto', 'links_on', 'ogb', 'ogb_self', 'reconnect', 'auto_scan', 'sps_enable', 'osc_out']) if (c[k] !== undefined) n[k] = yes(c[k]);
         if (c.max !== undefined) n.max = Math.max(5, Math.min(100, int(c.max)));
         if (c.idle_stop !== undefined) n.idle_stop = Math.max(0, Math.min(60, int(c.idle_stop)));
         if (c.battery_warn !== undefined) n.battery_warn = Math.max(0, Math.min(50, int(c.battery_warn)));
@@ -449,11 +445,11 @@ class Toys {
         const val = typeof v === 'boolean' ? (v ? 1 : 0) : Number(v);
         if (!Number.isFinite(val)) return;
         this.rule = this.rule || {};
-        // OGB/SPS: stärkste Berührung zählt (Self optional)
-        const og = c.ogb ? OGB_RE.exec(name) : null;
-        if (og) {
+        // OGB/SPS: stärkste Berührung zählt (Self optional) – 4.2: SPS (OGB/Plug|Socket|Touch), altes OGB (Pen/Orf) und VFH
+        const hp = c.ogb ? H.parse(name) : null;
+        if (hp && hp.kind && !hp.meta) {
             this.ogbSeen = this.ogbSeen || new Set(); this.ogbSeen.add(name);
-            if (/self/i.test(og[2]) && !c.ogb_self) return;
+            if (/self/.test(hp.key) && !c.ogb_self) return;
             const x = clamp(val);
             this.rule['ogb|' + name] = { device: c.ogb_device || 'all', lv: x < 0.01 ? 0 : c.ogb_min + (1 - c.ogb_min) * x };
             this.lastParam = Date.now();
@@ -508,10 +504,10 @@ class Toys {
         const val = typeof v === 'boolean' ? (v ? 1 : 0) : Number(v);
         if (!Number.isFinite(val)) return;
         const x = clamp(val), t = Date.now();
-        const z = ZONE_RE.exec(name);
-        if (z) {
-            const kind = ZONE_KIND[z[1].toLowerCase()], zone = this.zones[kind][z[2]] = this.zones[kind][z[2]] || {};
-            const key = z[3].toLowerCase(), old = zone[key];
+        const z = H.parse(name);
+        if (z && z.kind && !z.meta) {
+            const kind = z.kind, zone = this.zones[kind][z.id] = this.zones[kind][z.id] || {};
+            const key = z.key, old = zone[key];
             const speed = old ? Math.abs(x - old.v) / Math.max(0.02, (t - old.at) / 1000) : 0;
             zone[key] = { v: x, at: t, speed: old ? Math.max(speed, old.speed * 0.6) : 0 };
         }
@@ -648,6 +644,7 @@ class Toys {
             L.chatAt = t; L.chatV = L.v;
             this.app.game.osc.chatbox('💗 ' + Math.round(L.v * 100) + ' %' + (L.edgeHold ? ' · 🎯 Edging' : ''), false).catch(() => {});
         }
+        this.oscOut(L.v, out);
         // N9/N10: Szene & Aftercare
         if (this.scene && t >= this.scene.until) { this.scene = null; this.stopAll().catch(() => {}); this.session.due = c.aftercare.on; this.session.start = 0; return; }
         if (out > 0.02) { if (!this.session.start) this.session.start = t; this.session.last = t; this.session.due = false; }
@@ -662,6 +659,19 @@ class Toys {
             }
         }
     }
+    /** 4.2: Rückkanal – Spielzeug-Stärke und Lust als Avatar-Parameter (nur wenn der Avatar NX/Toy bzw. NX/Lust hat, nie im Privat-Modus) */
+    oscOut(lust, toy) {
+        const g = this.app.game; if (!g || !g.osc || this.cfg().osc_out === false) return;
+        const osc = g.osc, known = osc.known || {}, priv = this.app.nsfw && this.app.nsfw.private;
+        if (this.app.nsfw && !this.app.nsfw.access().features.includes('toys')) return;
+        this.outSent = this.outSent || {};
+        for (const [name, v] of [['NX/Toy', toy], ['NX/Lust', lust]]) {
+            if (!known[name]) continue;
+            const x = priv ? 0 : Math.round(v * 50) / 50;
+            if (this.outSent[name] === x) continue;
+            this.outSent[name] = x; osc.sendParam(name, x, 'float').catch(() => {});
+        }
+    }
     /** N4: Höhepunkt – Muster, Chatbox, Avatar-Parameter */
     climax(from) {
         const c = this.cfg(), L = this.lust, t = Date.now();
@@ -671,8 +681,8 @@ class Toys {
         const priv = this.app.nsfw && this.app.nsfw.private;
         if (c.lust.climax_chat && !priv && this.app.game) this.app.game.osc.chatbox(c.lust.climax_chat, true).catch(() => {});
         if (c.lust.climax_param && this.app.game) {
-            const osc = this.app.game.osc, a = '/avatar/parameters/' + c.lust.climax_param;
-            osc.send(a, true).catch(() => {}); setTimeout(() => osc.send(a, false).catch(() => {}), 3000);
+            const osc = this.app.game.osc, a = c.lust.climax_param;
+            osc.sendParam(a, true, 'bool').catch(() => {}); setTimeout(() => osc.sendParam(a, false, 'bool').catch(() => {}), 3000);
         }
         this.lastClimax = { from, at: t };
     }
@@ -688,7 +698,7 @@ class Toys {
         this.consent = light;
         const c = this.cfg().consent, g = this.app.game;
         if (light === 'red') await this.stopAll();
-        if (g && c.param) await g.osc.send('/avatar/parameters/' + c.param, { green: 0, yellow: 1, red: 2 }[light]).catch(() => {});
+        if (g && c.param) await g.osc.sendParam(c.param, { green: 0, yellow: 1, red: 2 }[light], 'int').catch(() => {});
         if (g && c.chat && !(this.app.nsfw && this.app.nsfw.private)) await g.osc.chatbox({ green: '🟢 alles gut – weiter so', yellow: '🟡 bitte langsamer / sanfter', red: '🔴 STOPP – Pause bitte' }[light], true).catch(() => {});
         return light;
     }
@@ -703,13 +713,32 @@ class Toys {
         const c = this.cfg();
         if ([...this.level.values()].some(v => v > 0)) this.stats.active++;
         if ((c.auto || c.ogb) && c.idle_stop && this.lastParam && Date.now() - this.lastParam > c.idle_stop * 1000 && [...this.level.values()].some(v => v > 0) && !this.pat && !(c.pcs.on || c.heart.on || c.voice.on || c.links_on)) { this.lastParam = 0; this.stopAll().catch(() => {}); }
+        this.ogbEnable(c);
         if (!this.batAt || Date.now() - this.batAt > 60000) { this.batAt = Date.now(); for (const d of this.devices.values()) this.readSensors(d).catch(() => {}); }
     }
 
+    /** 4.2: VRCFury-Haptik braucht OGB/Enabled = true, sonst liefern die SPS-Kontakte nichts (sonst macht das OscGoesBrrr) */
+    ogbEnable(c) {
+        const g = this.app.game; if (!g || !g.osc) return;
+        const osc = g.osc, hasParam = !!((osc.known || {})['OGB/Enabled'] || Object.keys(osc.params || {}).some(k => /^OGB\/(Version\/|Plug\/|Socket\/|Touch\/|Enabled$)/.test(k)));
+        const allowed = !this.app.nsfw || this.app.nsfw.access().features.includes('toys');
+        const want = allowed && c.sps_enable !== false && (c.ogb || c.links_on) && hasParam;
+        const t = Date.now();
+        if (want && (!this.ogbOn || t - this.ogbAt > 10000 || osc.avatarId !== this.ogbAv)) { this.ogbOn = true; this.ogbAt = t; this.ogbAv = osc.avatarId; osc.sendParam('OGB/Enabled', true, 'bool').catch(() => {}); }
+        else if (!want && this.ogbOn) { this.ogbOn = false; osc.sendParam('OGB/Enabled', false, 'bool').catch(() => {}); }
+    }
+    /** 4.2: Avatar-Check – welche Haptik-/PCS-Systeme hat der getragene Avatar? */
+    avatarCheck() {
+        const osc = this.app.game.osc, names = new Set([...Object.keys(osc.known || {}), ...Object.keys(osc.params || {})]);
+        let file = null; try { file = this.app.params.list(); } catch (e) { file = null; }
+        if (file) for (const p of file.params) names.add(p.name);
+        return Object.assign(H.detect([...names], osc.params || {}), { avatar: osc.avatarId || '', params: names.size, ogb_enabled_sent: !!this.ogbOn });
+    }
     async action(act, input) {
         if (this.app.nsfw) this.app.nsfw.need('toys');
         switch (act) {
             case 'toys_status': return this.status();
+            case 'toys_check': return Object.assign(this.status(), { check: this.avatarCheck() });
             case 'toys_cfg': { const c = this.saveCfg(input); return Object.assign(this.status(), { cfg: c, msg: 'Gespeichert.' }); }
             case 'toys_connect': { const r = await this.connect(); return Object.assign({ msg: 'Mit Intiface verbunden.' }, r); }
             case 'toys_disconnect': this.disconnect(); return this.status();
