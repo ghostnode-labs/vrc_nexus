@@ -2,6 +2,12 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 4.3.0 – Panic button: Wallpaper Engine & all-clear
+
+- 🖼 **Wallpaper Engine in the panic button:** switch to a harmless profile (e.g. "Brav"), pause the wallpaper or just mute it – Wallpaper Engine is found automatically via Steam (all libraries), or enter the path to `wallpaper64.exe`.
+- ✅ **All-clear button:** turns private mode off, frees the chatbox rotation again and restores the wallpaper (play / unmute / your normal profile).
+- If Wallpaper Engine isn't found, the panic still runs completely and only shows a hint.
+
 ### New in 4.2.0 – OSC overhaul (NSFW part)
 
 - 🧲 **Much better SPS / OGB / PCS detection:** current VRCFury SPS names (`OGB/Plug/…`, `OGB/Socket/…`, `OGB/Touch/…` incl. `DepthSelf/DepthOthers`), old OGB names (`Pen/Orf` incl. `NewRoot/NewTip/Close`), old VRCFury Haptics (`VFH/…`) and PCS – measurement-only values (`LengthMult`, `DepthRadius`) no longer trigger toys.

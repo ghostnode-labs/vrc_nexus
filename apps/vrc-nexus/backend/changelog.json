@@ -1,5 +1,10 @@
 [
  {
+  "version": "4.3.0",
+  "title": "🔞 Panic button update",
+  "body": "- 🔞 *** (only visible in the app when NSFW is unlocked)"
+ },
+ {
   "version": "4.2.4",
   "title": "HypeRate fallback",
   "body": "- If an own (e.g. old) HypeRate key doesn't work, the app automatically uses the VRC Nexus relay instead of showing “HypeRate unreachable”"

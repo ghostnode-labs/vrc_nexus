@@ -22,6 +22,9 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.3.0 – 🔞 Panic button update
+- 🔞 *** (only visible in the app when NSFW is unlocked)
+
 ### New in 4.2.4 – HypeRate fallback
 - If an own (e.g. old) HypeRate key doesn't work, the app automatically uses the VRC Nexus relay instead of showing “HypeRate unreachable”
 

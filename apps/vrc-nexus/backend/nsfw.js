@@ -26,7 +26,7 @@ const ROLES = { supporter: 'Supporter', mod: 'Moderator' };
 const b64u = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = s => Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 const hashId = id => crypto.createHash('sha256').update(str(id)).digest('hex');
-const DEF = { safe_avatar: '', pairs: [], yes: '', maybe: '', no: '', panic_avatar: true, panic_chat: true, panic_private: true, panic_toys: true, group: '' };
+const DEF = { safe_avatar: '', pairs: [], yes: '', maybe: '', no: '', panic_avatar: true, panic_chat: true, panic_private: true, panic_toys: true, group: '', panic_we: 'off', panic_we_profile: '', panic_we_back: '', panic_we_path: '' };
 
 class Nsfw {
     constructor(app, crypt) { this.app = app; this.crypt = crypt; this.private = false; this.trusted = TRUSTED.slice(); }
@@ -164,6 +164,10 @@ class Nsfw {
         if (c.pairs !== undefined) { let p = c.pairs; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) { p = []; } } n.pairs = arr(p).map(x => ({ name: cut(str(x.name), 40), sfw: av(x.sfw), nsfw: av(x.nsfw) })).filter(x => x.sfw && x.nsfw).slice(0, 20); }
         for (const k of ['yes', 'maybe', 'no']) if (c[k] !== undefined) n[k] = cut(str(c[k]).replace(/\s+/g, ' ').trim(), 200);
         for (const k of ['panic_avatar', 'panic_chat', 'panic_private', 'panic_toys']) if (c[k] !== undefined) n[k] = c[k] === true || c[k] === '1' || c[k] === 'true';
+        // 4.3: Wallpaper Engine im Panik-Knopf
+        if (c.panic_we !== undefined) n.panic_we = require('./wallpaper').MODES.includes(str(c.panic_we)) ? str(c.panic_we) : 'off';
+        for (const k of ['panic_we_profile', 'panic_we_back']) if (c[k] !== undefined) n[k] = cut(str(c[k]).replace(/["\r\n]/g, '').trim(), 60);
+        if (c.panic_we_path !== undefined) { const v = cut(str(c.panic_we_path).replace(/["\r\n]/g, '').trim(), 400); if (v && !/\.exe$/i.test(v)) throw new UserError('Bitte den Pfad zu wallpaper64.exe eintragen.'); n.panic_we_path = v; }
         if (c.group !== undefined) n.group = /^grp_[0-9a-f-]{36}$/i.test(str(c.group).trim()) ? str(c.group).trim() : '';
         this.app.db.setSetting('nsfw_cfg', JSON.stringify(n));
         return n;
@@ -181,8 +185,18 @@ class Nsfw {
             await g.osc.chatbox('', false).catch(() => {}); done.push('Chatbox leer & aus');
         }
         if (c.panic_avatar && c.safe_avatar) { await this.selectAvatar(c.safe_avatar).catch(e => done.push('⚠ Avatar: ' + e.message)); done.push('sicherer Avatar'); }
+        if (c.panic_we && c.panic_we !== 'off') { try { const m = await this.we().panic(c); if (m) done.push(m); } catch (e) { done.push('⚠ Wallpaper: ' + e.message); } }
         if (this.app.tools.rpc) this.app.tools.rpc.setActivity(null);
         return { ok: true, msg: '🚨 Panik: ' + done.join(' · '), private: this.private };
+    }
+    we() { if (!this.app.wallpaper) { const { Wallpaper } = require('./wallpaper'); this.app.wallpaper = new Wallpaper(this.app); } return this.app.wallpaper; }
+    /** 4.3: Entwarnung – Privat-Modus aus, Chatbox-Rotation wieder frei, Wallpaper zurück */
+    async allClear() {
+        const c = this.cfg(), done = [];
+        if (this.private) { this.private = false; done.push('Privat-Modus aus'); }
+        if (this.app.game.suppressRotator) { this.app.game.suppressRotator = false; done.push('Chatbox-Rotation frei'); }
+        if (c.panic_we && c.panic_we !== 'off') { try { const m = await this.we().restore(c); if (m) done.push(m); } catch (e) { done.push('⚠ Wallpaper: ' + e.message); } }
+        return { ok: true, msg: '✅ Entwarnung' + (done.length ? ': ' + done.join(' · ') : ''), private: this.private };
     }
     async toggleAvatar(i) {
         const c = this.cfg(), p = c.pairs[int(i)];
@@ -240,6 +254,7 @@ class Nsfw {
         switch (act) {
             case 'nsfw_cfg': return Object.assign(this.state(), { cfg: this.saveCfg(input), msg: 'Gespeichert.' });
             case 'nsfw_panic': return await this.panic();
+            case 'nsfw_allclear': return await this.allClear();
             case 'nsfw_private': { this.private = input.on === undefined ? !this.private : input.on === '1' || input.on === true; if (this.private && this.app.tools.rpc) this.app.tools.rpc.setActivity(null); return { ok: true, private: this.private, msg: this.private ? '🕶 Privat-Modus an' : 'Privat-Modus aus' }; }
             case 'nsfw_avatar': return await this.toggleAvatar(input.i);
             case 'nsfw_chat': {

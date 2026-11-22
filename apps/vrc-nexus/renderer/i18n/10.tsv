@@ -1560,3 +1560,17 @@ HypeRate-Weiterleitung nicht erreichbar	HypeRate relay unreachable	Relais HypeRa
 HypeRate-Weiterleitung ausgelastet – gleich nochmal	HypeRate relay busy – trying again shortly	Relais HypeRate saturé – nouvel essai sous peu	HypeRateリレーが混雑中 – まもなく再試行します
 HypeRate-Weiterleitung: zu viele Verbindungen von dieser Adresse	HypeRate relay: too many connections from this address	Relais HypeRate : trop de connexions depuis cette adresse	HypeRateリレー：このアドレスからの接続が多すぎます
 HypeRate: Device-ID ungültig	HypeRate: invalid device ID	HypeRate : ID d'appareil invalide	HypeRate：無効なデバイスID
+Wallpaper Engine	Wallpaper Engine	Wallpaper Engine	Wallpaper Engine
+nicht ändern	don't change	ne pas modifier	変更しない
+auf harmloses Profil wechseln	switch to a harmless profile	passer à un profil anodin	無難なプロファイルに切り替え
+anhalten	pause	mettre en pause	一時停止
+nur Ton aus	mute only	couper le son uniquement	音声のみオフ
+Profil bei Panik	profile on panic	profil en cas de panique	パニック時のプロファイル
+bei Entwarnung	on all-clear	à la fin de l'alerte	解除時
+Profile legst du in Wallpaper Engine an (Monitore einrichten → Profil speichern).	Create profiles in Wallpaper Engine (set up monitors → save profile).	Créez les profils dans Wallpaper Engine (configurer les écrans → enregistrer le profil).	プロファイルはWallpaper Engineで作成します（モニターを設定 → プロファイルを保存）。
+Pfad (optional)	path (optional)	chemin (facultatif)	パス（任意）
+leer = automatisch über Steam finden	empty = find automatically via Steam	vide = détection automatique via Steam	空欄 = Steam経由で自動検出
+Entwarnung	All clear	Fin d'alerte	解除
+Privat-Modus aus, Chatbox-Rotation frei, Wallpaper zurück	private mode off, chatbox rotation on again, wallpaper restored	mode privé désactivé, rotation de la chatbox réactivée, fond d'écran restauré	プライベートモード解除、チャットボックスのローテーション再開、壁紙を元に戻す
+Wallpaper Engine nicht gefunden – Pfad zu wallpaper64.exe eintragen.	Wallpaper Engine not found – enter the path to wallpaper64.exe.	Wallpaper Engine introuvable – saisissez le chemin de wallpaper64.exe.	Wallpaper Engineが見つかりません – wallpaper64.exeのパスを入力してください。
+Bitte den Pfad zu wallpaper64.exe eintragen.	Please enter the path to wallpaper64.exe.	Veuillez saisir le chemin de wallpaper64.exe.	wallpaper64.exeのパスを入力してください。

@@ -3284,6 +3284,40 @@ test('4.2.3: HypeRate über die Weiterleitung – Schlüssel bleibt auf dem Serv
     for (const k of ['HYPERATE_WS', 'HYPERATE_API_KEY', 'RELAY_PER_IP', 'RELAY_NO_AUTOSTART', 'NEXUS_HYPERATE_RELAY']) delete process.env[k];
 });
 
+test('4.3: Panik-Knopf steuert Wallpaper Engine (Profil/Pause/Ton), Entwarnung holt alles zurück', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWNER = 'usr_' + 'f'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-43-')) } });
+    app.game.osc.stopListen(); app.game.osc.send = async () => {};
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    grant18(app);
+    const fake = path.join(os.tmpdir(), 'nx-43-wallpaper64.exe'); fs.writeFileSync(fake, '');
+    const calls = [];
+    app.nsfw.we().exec = async (exe, args) => { calls.push([path.basename(exe), ...args]); };
+    const post = (act, d) => app.post(Object.assign({ act }, d || {}), {});
+    await assert.rejects(post('nsfw_cfg', { panic_we_path: 'C:\\evil.bat' }), /wallpaper64/);
+    await post('nsfw_cfg', { panic_avatar: '0', panic_chat: '0', panic_toys: '0', panic_private: '1', panic_we: 'profile', panic_we_profile: 'Brav"; rm', panic_we_back: 'Normal', panic_we_path: fake });
+    let r = await post('nsfw_panic');
+    assert.deepStrictEqual(calls.pop(), ['nx-43-wallpaper64.exe', '-control', 'applyProfile', '-profile', 'Brav; rm'], 'Profil, Anführungszeichen entfernt, ein Argument');
+    assert.ok(/Wallpaper-Profil/.test(r.msg) && r.private);
+    r = await post('nsfw_allclear');
+    assert.deepStrictEqual(calls.pop(), ['nx-43-wallpaper64.exe', '-control', 'applyProfile', '-profile', 'Normal']);
+    assert.ok(!r.private && /Entwarnung/.test(r.msg));
+    await post('nsfw_cfg', { panic_we: 'pause' }); await post('nsfw_panic'); assert.deepStrictEqual(calls.pop().slice(1), ['-control', 'pause']);
+    await post('nsfw_allclear'); assert.deepStrictEqual(calls.pop().slice(1), ['-control', 'play']);
+    await post('nsfw_cfg', { panic_we: 'mute' }); await post('nsfw_panic'); assert.deepStrictEqual(calls.pop().slice(1), ['-control', 'mute']);
+    // nicht gefunden → Panik läuft trotzdem durch, mit Hinweis
+    await post('nsfw_cfg', { panic_we_path: path.join(os.tmpdir(), 'gibtsnicht', 'wallpaper64.exe') });
+    r = await post('nsfw_panic');
+    assert.ok(r.ok && /Wallpaper Engine nicht gefunden/.test(r.msg));
+    await post('nsfw_cfg', { panic_we: 'off' }); const n = calls.length; await post('nsfw_panic'); assert.strictEqual(calls.length, n, 'aus = nichts');
+    delete process.env.NEXUS_OWNER_HASH; fs.unlinkSync(fake);
+    app.tools.stop(); if (app.toys) app.toys.stop();
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {

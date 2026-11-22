@@ -85,7 +85,12 @@
             + '<div class="nc-row"><span class="small">Sicherer Avatar (Panik)</span><input type="text" id="nsSafe" value="' + esc(c.safe_avatar) + '" placeholder="avtr_…" style="flex:1"></div><button type="button" class="btn btn-sm btn-gold" data-ns="save_av">💾 Speichern</button></details>');
         // Panik-Optionen
         h += sec('🚨 Panik-Knopf', '<p class="muted small">Auch auf dem Handy und als Stream-Deck-Befehl. Was passiert:</p>' + chk('panic_avatar', c.panic_avatar, 'sicheren Avatar anziehen') + chk('panic_chat', c.panic_chat, 'Chatbox leeren & Module aus')
-            + chk('panic_private', c.panic_private, 'Privat-Modus an (kein Discord-Status, keine Chatbox)') + chk('panic_toys', c.panic_toys, 'Spielzeug sofort stoppen'));
+            + chk('panic_private', c.panic_private, 'Privat-Modus an (kein Discord-Status, keine Chatbox)') + chk('panic_toys', c.panic_toys, 'Spielzeug sofort stoppen')
+            + '<div class="nc-row"><span class="small">🖼 Wallpaper Engine</span><select data-nk="panic_we">' + [['off', 'nicht ändern'], ['profile', 'auf harmloses Profil wechseln'], ['pause', 'anhalten'], ['mute', 'nur Ton aus']].map(([v, l]) => '<option value="' + v + '"' + ((c.panic_we || 'off') === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></div>'
+            + ((c.panic_we || 'off') === 'profile' ? '<div class="nc-row"><span class="small">Profil bei Panik</span><input type="text" data-nk="panic_we_profile" value="' + esc(c.panic_we_profile || '') + '" placeholder="z. B. Brav" maxlength="60"><span class="small">bei Entwarnung</span><input type="text" data-nk="panic_we_back" value="' + esc(c.panic_we_back || '') + '" placeholder="z. B. Normal" maxlength="60"></div>'
+                + '<p class="muted small">Profile legst du in Wallpaper Engine an (Monitore einrichten → Profil speichern).</p>' : '')
+            + ((c.panic_we || 'off') !== 'off' ? '<div class="nc-row"><span class="small">Pfad (optional)</span><input type="text" data-nk="panic_we_path" value="' + esc(c.panic_we_path || '') + '" placeholder="leer = automatisch über Steam finden" style="flex:1"></div>' : '')
+            + '<div class="nc-row"><button type="button" class="btn btn-sm" data-ns="allclear">✅ Entwarnung</button><span class="muted small">Privat-Modus aus, Chatbox-Rotation frei, Wallpaper zurück</span></div>');
         // Grenzen-Karte
         h += sec('🟢🟡🔴 Grenzen-Karte', '<div class="ns-bnd"><label><span class="small">🟢 Ja</span><input type="text" id="nsYes" value="' + esc(c.yes) + '" maxlength="200"></label><label><span class="small">🟡 Vielleicht</span><input type="text" id="nsMaybe" value="' + esc(c.maybe) + '" maxlength="200"></label>'
             + '<label><span class="small">🔴 Nein</span><input type="text" id="nsNo" value="' + esc(c.no) + '" maxlength="200"></label></div><div class="nc-row"><button type="button" class="btn btn-sm" data-ns="save_bnd">💾 Speichern</button><button type="button" class="btn btn-sm btn-gold" data-ns="boundaries">📨 In die Chatbox</button></div>');
@@ -200,7 +205,7 @@
         if (!b) return;
         const a = b.dataset.ns;
         if (b.dataset.tabGo) return UI.tab(b.dataset.tabGo);
-        const simple = { panic: 'nsfw_panic', private: 'nsfw_private', boundaries: 'nsfw_boundaries' };
+        const simple = { panic: 'nsfw_panic', allclear: 'nsfw_allclear', private: 'nsfw_private', boundaries: 'nsfw_boundaries' };
         if (simple[a]) return api(simple[a]).then(d => { toast(d.msg); refreshAccess(); }).catch(x => toast(x.message, true));
         if (a === 'avatar') return api('nsfw_avatar', { i: b.dataset.i }).then(d => { toast(d.msg); refreshAccess(); }).catch(x => toast(x.message, true));
         if (a === 'tr_allow') return trCfg({ allow: $v('#trAllow') });
