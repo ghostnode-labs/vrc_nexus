@@ -732,7 +732,7 @@ class Toys {
         const osc = this.app.game.osc, names = new Set([...Object.keys(osc.known || {}), ...Object.keys(osc.params || {})]);
         let file = null; try { file = this.app.params.list(); } catch (e) { file = null; }
         if (file) for (const p of file.params) names.add(p.name);
-        return Object.assign(H.detect([...names], osc.params || {}), { avatar: osc.avatarId || '', params: names.size, ogb_enabled_sent: !!this.ogbOn });
+        return Object.assign(H.detect([...names], osc.params || {}), { avatar: (file && file.current) || osc.avatarId || '', params: names.size, ogb_enabled_sent: !!this.ogbOn });
     }
     async action(act, input) {
         if (this.app.nsfw) this.app.nsfw.need('toys');

@@ -22,6 +22,12 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.2.1 – OSC receiving fix
+- Fix: on Windows, the app re-bound port 9001 right after start, the second bind could fail as "in use", and the app then waited for VRChat via OSCQuery – so no parameters arrived. The receiver now stays open, and a busy port is retried before falling back
+- OSCQuery announcement is more robust (all network adapters, repeated announcements, unicast answers)
+- Parameters page shows only the avatar you are wearing – detected via OSC, VRChat's OSCQuery tree, the game log or your VRChat account – with its current values right away
+- Avatar debugger and OSC status explain what is missing when nothing arrives from VRChat
+
 ### New in 4.2.0 – OSC overhaul
 
 - 🔎 **OSCQuery:** VRC Nexus can now announce itself to VRChat via OSCQuery (mDNS) and receive on a free port – so it runs **side by side with other OSC apps** instead of failing with "port 9001 in use". New receive mode under Game & OSC: **Automatic** (9001, falls back to OSCQuery when the port is taken), **OSCQuery only** (leaves 9001 free for other apps) or **Classic**. Nexus also finds VRChat itself and reads its real input port and the worn avatar's parameter list with types.

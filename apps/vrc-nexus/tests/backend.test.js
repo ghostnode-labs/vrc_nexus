@@ -3145,6 +3145,67 @@ test('4.2: OSC – typrichtig senden & bündeln, mehr OSC-Typen, OSCQuery (mDNS 
     t.stop(); app.tools.stop();
 });
 
+test('4.2.1: OSC-Empfang bleibt beim erneuten Anwenden bestehen; Parameter nur vom getragenen Avatar (OSC, OSCQuery, Log, Konto)', async () => {
+    const { Osc } = require('../backend/gamelog');
+    // --- gleicher Port zweimal: kein Neubinden (unter Windows sonst „belegt“ → Ausweichen auf OSCQuery)
+    const o = new Osc();
+    const p1 = await o.listen(0, null, '127.0.0.1');
+    const sock = o.listener;
+    o.listenWant = p1;   // so tun, als wäre p1 der feste Port
+    let failed = false;
+    const p2 = await o.listen(p1, () => { failed = true; }, '127.0.0.1');
+    assert.ok(p1 > 0 && p2 === p1 && o.listener === sock && !failed, 'Socket bleibt, kein Fehler');
+    // --- belegter Port: erst nach mehreren Versuchen onFail
+    const o2 = new Osc(); const t0 = Date.now();
+    const r = await o2.listen(p1, () => { failed = true; }, '127.0.0.1');
+    assert.ok(r === 0 && failed && Date.now() - t0 >= 1000 && /belegt/.test(o2.listenError), 'wiederholt, dann onFail');
+    // Empfang über receive(): /avatar/change setzt Avatar + Quelle
+    const enc = (a, tag, v) => { const pad = b => Buffer.concat([b, Buffer.alloc(4 - (b.length % 4))]); return Buffer.concat([pad(Buffer.from(a)), pad(Buffer.from(',' + tag)), v]); };
+    o.stopListen(); o2.stopListen();
+
+    // --- getragener Avatar & Parameterliste
+    const { NexusApp } = require('../backend/app');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nx-421-'));
+    const usr = 'usr_' + '1'.repeat(8) + '-2222-3333-4444-555555555555';
+    const A = 'avtr_' + 'a'.repeat(8) + '-1111-2222-3333-444444444444', B = 'avtr_' + 'b'.repeat(8) + '-1111-2222-3333-444444444444';
+    fs.mkdirSync(path.join(dir, 'OSC', usr, 'Avatars'), { recursive: true });
+    const wr = (id, name, ps) => fs.writeFileSync(path.join(dir, 'OSC', usr, 'Avatars', id + '.json'), '﻿' + JSON.stringify({ id, name, parameters: ps.map(([n, ty]) => ({ name: n, input: { address: '/avatar/parameters/' + n, type: ty }, output: { address: '/avatar/parameters/' + n, type: ty } })) }));
+    wr(A, 'Fuchs', [['Ears', 'Bool'], ['Hue', 'Float']]);
+    wr(B, 'Fiya Full', [['Tail', 'Int']]);
+    const old = process.env.NEXUS_VRCHAT_DIR; process.env.NEXUS_VRCHAT_DIR = dir;
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-421u-')) } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => null;
+    let l = await app.post({ act: 'client_params' }, {});
+    assert.ok(!l.avatar && l.params.length === 0, 'ohne Hinweis: kein Avatar geraten (nicht einfach die neueste Datei)');
+    // Konto (VRChat-API) kennt den Avatar
+    app.vrc.account = () => ({ user_id: usr, me: { currentAvatar: A } });
+    l = await app.post({ act: 'client_params' }, {});
+    assert.ok(l.avatar.id === A && l.avatar.name === 'Fuchs' && l.src === 'api' && l.params.map(p => p.name).join() === 'Ears,Hue' && !l.avatars, 'Konto: nur dieser Avatar');
+    // Spiel-Log (Name) schlägt das Konto
+    app.game.state.avatar = 'Fiya Full'; app.game.state.running = true;
+    l = await app.post({ act: 'client_params' }, {});
+    assert.ok(l.avatar.id === B && l.src === 'log' && l.params.map(p => p.name).join() === 'Tail');
+    // OSCQuery: Avatar-ID und Werte aus VRChats Baum
+    app.oq = { avatarId: A, params: { Ears: { type: 'bool', value: true }, Hue: { type: 'float', value: 0.25 }, Extra: { type: 'int', value: 3 } } };
+    app.fromQuery(app.oq.params);
+    l = await app.post({ act: 'client_params' }, {});
+    assert.ok(l.avatar.id === A && l.src === 'oscquery', 'OSCQuery vor Log');
+    assert.deepStrictEqual(l.params.map(p => [p.name, p.value]), [['Ears', true], ['Extra', 3], ['Hue', 0.25]], 'Werte aus OSCQuery, live-Parameter ergänzt');
+    const dbg = await app.post({ act: 'client_debug' }, {});
+    assert.ok(dbg.params.Ears === true && dbg.avatar === A && dbg.avatar_name === 'Fuchs', 'Debugger zeigt Werte schon vor dem ersten OSC-Paket');
+    // OSC /avatar/change gewinnt
+    app.game.osc.receive(enc('/avatar/change', 's', Buffer.from(B + '\0\0\0\0'.slice((B.length) % 4))));
+    app.game.osc.receive(enc('/avatar/parameters/Tail', 'i', Buffer.from([0, 0, 0, 7])));
+    l = await app.post({ act: 'client_params' }, {});
+    assert.ok(l.avatar.id === B && l.src === 'osc' && l.live && l.params.find(p => p.name === 'Tail').value === 7, 'OSC: Avatarwechsel + Wert');
+    app.fromQuery(app.oq.params);   // veraltete OSCQuery-Antwort überschreibt den frischen Wechsel nicht
+    assert.strictEqual(app.game.osc.avatarId, B);
+    if (old === undefined) delete process.env.NEXUS_VRCHAT_DIR; else process.env.NEXUS_VRCHAT_DIR = old;
+    app.tools.stop(); if (app.toys) app.toys.stop();
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {

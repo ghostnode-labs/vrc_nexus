@@ -180,7 +180,7 @@ class NexusApp {
     /** 4.2: Empfang einrichten – klassisch (9001), OSCQuery (freier Port, per mDNS angemeldet) oder automatisch */
     oscSetup(c) {
         const osc = this.game.osc;
-        if (!this.oq) { const { OscQuery } = require('./oscquery'); this.oq = new OscQuery(); this.oq.onParams = () => this.refreshKnown(); }
+        if (!this.oq) { const { OscQuery } = require('./oscquery'); this.oq = new OscQuery(); this.oq.onParams = ps => this.fromQuery(ps); }
         const oq = this.oq;
         this.oscMode = '';
         if (!c.osc_listen) { osc.stopListen(); oq.stop(); return; }
@@ -188,17 +188,31 @@ class NexusApp {
         if (c.osc_mode === 'oscquery') viaQuery();
         else {
             oq.stop();
-            osc.listen(c.osc_listen_port, c.osc_mode === 'auto' ? () => { osc.listenError = ''; viaQuery(); } : null).then(p => { if (p) this.oscMode = 'classic'; });
+            this.oscFallback = false;
+            osc.listen(c.osc_listen_port, c.osc_mode === 'auto' ? () => { osc.listenError = ''; this.oscFallback = int(c.osc_listen_port) || 9001; viaQuery(); } : null).then(p => { if (p) this.oscMode = 'classic'; });
         }
         // VRChat per OSCQuery suchen (Eingangs-Port + Parameter-Baum)
         const find = () => { try { oq.discover(); } catch (e) { /* egal */ }
-            if (oq.vrchat && oq.vrchat.osc_port && /^(127\.|localhost$)/.test(c.osc_host) && int(c.osc_send_port) === 9000 && oq.vrchat.osc_port !== osc.port) osc.configure(c.osc_host, oq.vrchat.osc_port); };
-        clearInterval(this.oqT); find(); this.oqT = setInterval(find, 15000); if (this.oqT.unref) this.oqT.unref();
+            if (oq.vrchat && oq.vrchat.osc_port && /^(127\.|localhost$)/.test(c.osc_host) && int(c.osc_send_port) === 9000 && oq.vrchat.osc_port !== osc.port) osc.configure(c.osc_host, oq.vrchat.osc_port);
+            if (oq.vrchat) oq.refreshParams().catch(() => { oq.vrchat = null; }); };   // 4.2.1: Avatar + Werte aktuell halten (VRChat neu gestartet → neu suchen)
+        clearInterval(this.oqT); find(); this.oqT = setInterval(find, 10000); if (this.oqT.unref) this.oqT.unref();
+    }
+    /** 4.2.1: Parameter-Baum von VRChat (OSCQuery) übernehmen: Typen, getragener Avatar und aktuelle Werte – auch ohne dass VRChat schon etwas gesendet hat */
+    fromQuery(ps) {
+        const osc = this.game.osc, oq = this.oq;
+        if (oq && oq.avatarId && oq.avatarId !== osc.avatarId && (!osc.avatarId || osc.avatarSrc !== 'osc' || Date.now() - (osc.avatarAt || 0) > 5000)) {
+            osc.avatarId = oq.avatarId; osc.avatarSrc = 'oscquery'; osc.avatarAt = Date.now(); osc.params = {};
+        }
+        osc.known = osc.known || {};
+        for (const [k, v] of Object.entries(ps || {})) {
+            if (v.type !== 'other') osc.known[k] = v.type;
+            if (osc.params[k] === undefined && v.value !== undefined && v.value !== null) osc.params[k] = typeof v.value === 'number' && !Number.isInteger(v.value) ? Math.round(v.value * 1000) / 1000 : v.value;
+        }
     }
     oscStatus() {
         const o = this.game.osc, st = o.stats, secs = Math.max(1, (Date.now() - st.since) / 1000), c = this.game.cfg();
         return { mode: this.oscMode || (o.listener ? 'classic' : 'aus'), setting: c.osc_mode || 'auto', listen_port: o.listenPort || 0, send: { host: o.host, port: o.port }, error: o.listenError || '',
-            active: !!o.active, last: o.lastPacket || 0, avatar: o.avatarId || '', known: Object.keys(o.known || {}).length,
+            active: !!o.active, last: o.lastPacket || 0, avatar: o.avatarId || '', fallback: this.oscFallback || 0, known: Object.keys(o.known || {}).length,
             rate: { in: Math.round(st.in / secs * 10) / 10, out: Math.round(st.out / secs * 10) / 10, merged: st.merged }, oscquery: this.oq ? this.oq.status() : null };
     }
     async post(input, files) {
@@ -320,7 +334,9 @@ class NexusApp {
                 const o = g.osc, H = require('./haptics'), vis = this.nsfwVisible();
                 const params = vis ? (o.params || {}) : Object.fromEntries(Object.entries(o.params || {}).filter(([k]) => !H.isNsfw(k)));
                 const hidden = vis ? 0 : Object.keys(o.params || {}).length - Object.keys(params).length;
-                return { active: !!o.active, error: str(o.listenError), avatar: str(o.avatarId), params, changed: o.changedAt || {}, hidden, types: o.known || {} };
+                const cur = this.params.current();
+                return { active: !!o.active, error: str(o.listenError), avatar: str(o.avatarId), avatar_name: cur.name, avatar_src: cur.src, params, changed: o.changedAt || {}, hidden, types: o.known || {},
+                    mode: this.oscMode || (o.listener ? 'classic' : 'aus'), listen_port: o.listenPort || 0, oscquery: !!(this.oq && this.oq.vrchat) };
             }
             case 'client_macros': return { macros: this.macros.list() };
             case 'client_macro_save': return { macros: this.macros.save(input.name, input.script, input.id), msg: 'Makro gespeichert.' };

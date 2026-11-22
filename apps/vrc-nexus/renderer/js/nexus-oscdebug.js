@@ -3,7 +3,7 @@
 (function () {
     const UI = window.NexusUI;
     if (!UI) return;
-    const esc = UI.esc, api = UI.api;
+    const esc = UI.esc, api = UI.api, T = x => (window.t ? window.t(x) : x);
     let box = null, timer = null, q = '', only = 'all', paused = false, last = null;
     function val(v) {
         if (v === true) return '<b class="od-t">true</b>';
@@ -18,10 +18,10 @@
         const list = names.filter(n => (!q || n.toLowerCase().includes(q)) && (only === 'all' || (only === 'sps' && sps(n)) || (only === 'recent' && now - (d.changed[n] || 0) < 10000)));
         const head = box.querySelector('.od-head .od-info');
         if (head) head.innerHTML = (d.active ? '<span class="nc-badge ok">OSC aktiv</span>' : '<span class="nc-badge">⚠ nichts von VRChat</span>') + (d.error ? ' <span class="bad small">' + esc(d.error) + '</span>' : '')
-            + ' <span class="muted small">' + names.length + ' Parameter' + (d.avatar ? ' · ' + esc(d.avatar) : '') + (names.some(sps) ? ' · ' + names.filter(sps).length + ' SPS/PCS' : '') + (d.hidden ? ' · 🔒 ' + d.hidden + ' ' + (window.t ? window.t('intime Parameter ausgeblendet (NSFW gesperrt oder Privat-Modus)') : 'intime Parameter ausgeblendet (NSFW gesperrt oder Privat-Modus)') : '') + '</span>';
+            + ' <span class="muted small">' + names.length + ' Parameter' + (d.avatar ? ' · 🎭 ' + esc(d.avatar_name || d.avatar) : '') + (names.some(sps) ? ' · ' + names.filter(sps).length + ' SPS/PCS' : '') + (d.hidden ? ' · 🔒 ' + d.hidden + ' ' + (window.t ? window.t('intime Parameter ausgeblendet (NSFW gesperrt oder Privat-Modus)') : 'intime Parameter ausgeblendet (NSFW gesperrt oder Privat-Modus)') : '') + '</span>';
         const el = box.querySelector('.od-list');
         if (el) el.innerHTML = list.length ? list.map(n => '<div class="od-p' + (now - (d.changed[n] || 0) < 1500 ? ' hot' : '') + (sps(n) ? ' sps' : '') + '" title="' + esc(n) + '">' + esc(n) + '=' + val(d.params[n]) + '</div>').join('')
-            : '<div class="muted small">' + (names.length ? 'Kein Treffer.' : 'Noch keine Parameter – in VRChat OSC einschalten (Action-Menü → Optionen → OSC) und Avatar wechseln/neu laden.') + '</div>';
+            : '<div class="muted small">' + (names.length ? 'Kein Treffer.' : !d.active ? '<span>' + esc(T('Von VRChat kommt kein OSC an – in VRChat: Action-Menü → Optionen → OSC → Aktiviert. Läuft ein anderes OSC-Programm, unter Einstellungen → OSC den Empfangs-Modus prüfen.')) + '</span> <span class="mono">(' + esc(d.mode === 'oscquery' ? 'OSCQuery · ' + d.listen_port : d.mode === 'classic' ? 'UDP ' + d.listen_port : '–') + ')</span>' : esc(T('Noch keine Parameter – Avatar einmal wechseln oder neu laden, dann sendet VRChat alle Werte.'))) + '</div>';
     }
     function tick() {
         clearTimeout(timer);

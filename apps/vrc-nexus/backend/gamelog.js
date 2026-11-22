@@ -309,45 +309,63 @@ class Osc {
         }
         throw new Error('Unbekannte OSC-Art: ' + kind);
     }
-    /** Empfang starten. port 0 = freier Port (für OSCQuery). Liefert ein Promise mit dem echten Port; onFail bei belegtem Port. */
+    /** Empfang starten. port 0 = freier Port (für OSCQuery). Liefert ein Promise mit dem echten Port; onFail erst, wenn der Port auch nach mehreren Versuchen belegt ist.
+     *  4.2.1: Läuft der Empfang schon auf demselben Port/Host, bleibt er bestehen – sofortiges Schließen und Neubinden schlägt unter Windows oft mit „belegt“ fehl. */
     listen(port, onFail, bindHost) {
+        const want = port === 0 ? 0 : int(port) || 9001;
+        const host = bindHost || (/^(127\.|localhost$)/.test(this.host) ? '127.0.0.1' : '0.0.0.0');
+        if (this.listener && this.listenWant === want && this.listenHost === host && this.listenPort) return Promise.resolve(this.listenPort);
         this.stopListen();
-        this.listenError = ''; this.listenPort = 0;
-        const s = dgram.createSocket('udp4');
-        let ok = false;
+        this.listenError = ''; this.listenPort = 0; this.listenWant = want; this.listenHost = host;
+        const gen = this.listenGen = (this.listenGen || 0) + 1;
         const ready = new Promise(res => {
-            s.on('error', e => { this.listenError = 'Port ' + port + ' ist belegt (läuft schon ein anderes OSC-Programm?): ' + e.message; try { s.close(); } catch (x) { /* egal */ } if (this.listener === s) this.listener = null; if (!ok && onFail) onFail(e); res(0); });
-            s.on('listening', () => { ok = true; this.listenPort = s.address().port; res(this.listenPort); });
+            const attempt = (n) => {
+                if (gen !== this.listenGen) return res(0);
+                const s = dgram.createSocket('udp4');
+                let ok = false;
+                s.on('error', e => {
+                    try { s.close(); } catch (x) { /* egal */ }
+                    if (this.listener === s) this.listener = null;
+                    if (ok || gen !== this.listenGen) return;
+                    if (e.code === 'EADDRINUSE' && n < 5) { setTimeout(() => attempt(n + 1), 300 + n * 200); return; }   // alter Socket evtl. noch nicht frei
+                    this.listenError = 'Port ' + want + ' ist belegt (läuft schon ein anderes OSC-Programm?): ' + e.message;
+                    if (onFail) onFail(e);
+                    res(0);
+                });
+                s.on('listening', () => { ok = true; this.listenPort = s.address().port; this.listenError = ''; res(this.listenPort); });
+                s.on('message', msg => this.receive(msg));
+                this.listener = s;
+                s.bind(want, host);
+                s.unref();
+            };
+            attempt(0);
         });
         this.ready = ready;
-        s.on('message', msg => {
-            let list = [];
-            try { list = oscDecode(msg); } catch (e) { return; }
-            this.lastPacket = Date.now(); this.stats.in++;
-            if (this.rawTaps) for (const f of this.rawTaps) { try { f(msg); } catch (e) { /* egal */ } }   // z. B. Weiterleitung (osctools)
-            for (const [address, args] of list) {
-                if (address === '/avatar/change' && args.length) { this.avatarId = str(args[0]); this.params = {}; }
-                else if (address.startsWith('/avatar/parameters/') && args.length) {
-                    const v = args[0];
-                    const pn = address.slice(19);
-                    const tg = (list.find(x => x[0] === address) || {}).tags;
-                    if (tg) (this.types = this.types || {})[pn] = tg[0];
-                    const nv = typeof v === 'number' && !Number.isInteger(v) ? Math.round(v * 1000) / 1000 : v;
-                    if (this.params[pn] !== nv) (this.changedAt = this.changedAt || {})[pn] = Date.now();
-                    this.params[pn] = nv;
-                }
-                else if (address.startsWith('/usercamera/') && args.length) this.cam[address.slice(12)] = args.length === 1 ? args[0] : args;
-                if (this.onMessage) { try { this.onMessage(address, args); } catch (e) { /* egal */ } }
-                if (this.taps) for (const f of this.taps) { try { f(address, args); } catch (e) { /* egal */ } }
-            }
-        });
-        // Ziel im eigenen Netz (z. B. Handy → PC): auch Pakete von dort annehmen, sonst nur vom eigenen Rechner
-        s.bind(port === 0 ? 0 : int(port) || 9001, bindHost || (/^(127\.|localhost$)/.test(this.host) ? '127.0.0.1' : '0.0.0.0'));
-        s.unref();
-        this.listener = s;
         return ready;
     }
-    stopListen() { if (this.listener) { try { this.listener.close(); } catch (e) { /* egal */ } this.listener = null; } }
+    /** Ein empfangenes OSC-Paket auswerten (auch für Tests und Weiterleitungen) */
+    receive(msg) {
+        let list = [];
+        try { list = oscDecode(msg); } catch (e) { return; }
+        this.lastPacket = Date.now(); this.stats.in++;
+        if (this.rawTaps) for (const f of this.rawTaps) { try { f(msg); } catch (e) { /* egal */ } }   // z. B. Weiterleitung (osctools)
+        for (const [address, args] of list) {
+            if (address === '/avatar/change' && args.length) { this.avatarId = str(args[0]); this.avatarAt = Date.now(); this.avatarSrc = 'osc'; this.params = {}; }
+            else if (address.startsWith('/avatar/parameters/') && args.length) {
+                const v = args[0];
+                const pn = address.slice(19);
+                const tg = (list.find(x => x[0] === address) || {}).tags;
+                if (tg) (this.types = this.types || {})[pn] = tg[0];
+                const nv = typeof v === 'number' && !Number.isInteger(v) ? Math.round(v * 1000) / 1000 : v;
+                if (this.params[pn] !== nv) (this.changedAt = this.changedAt || {})[pn] = Date.now();
+                this.params[pn] = nv;
+            }
+            else if (address.startsWith('/usercamera/') && args.length) this.cam[address.slice(12)] = args.length === 1 ? args[0] : args;
+            if (this.onMessage) { try { this.onMessage(address, args); } catch (e) { /* egal */ } }
+            if (this.taps) for (const f of this.taps) { try { f(address, args); } catch (e) { /* egal */ } }
+        }
+    }
+    stopListen() { this.listenGen = (this.listenGen || 0) + 1; this.listenWant = null; this.listenPort = 0; if (this.listener) { try { this.listener.close(); } catch (e) { /* egal */ } this.listener = null; } }
     get active() { return Date.now() - this.lastPacket < 120000; }
 }
 

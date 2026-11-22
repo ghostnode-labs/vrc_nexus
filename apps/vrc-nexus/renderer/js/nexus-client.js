@@ -100,7 +100,6 @@
             </div>
             <div class="nc-pane" data-p="params" hidden>
                 <div class="nc-row nc-filter">
-                    <select id="ncPAv" title="Avatar"></select>
                     <input type="search" id="ncPQ" placeholder="🔎 Parameter suchen …">
                     <label class="check small"><input type="checkbox" id="ncPBuiltin"> VRChat-eigene zeigen</label>
                     <label class="check small"><input type="checkbox" id="ncPFav"> nur ★</label>
@@ -449,6 +448,8 @@
             el.innerHTML = mode + ' · ' + T('senden an') + ' ' + esc(o.send.host) + ':' + o.send.port
                 + '<br>' + (o.active ? '🟢 ' + T('VRChat sendet') : '⚪ ' + T('nichts von VRChat')) + ' · ⬇ ' + o.rate.in + '/s · ⬆ ' + o.rate.out + '/s' + (o.rate.merged ? ' · ' + o.rate.merged + ' ' + T('gebündelt') : '')
                 + '<br>' + (v ? '🎮 ' + esc(v.name) + ' ' + T('per OSCQuery gefunden') + ' · ' + v.params + ' ' + T('Parameter mit Typ') : '🎮 ' + T('VRChat per OSCQuery noch nicht gefunden')) + ' · ' + o.known + ' ' + T('Typen bekannt')
+                + (o.fallback ? '<br>ℹ ' + T('Port') + ' ' + o.fallback + ' ' + T('ist von einem anderen Programm belegt – VRC Nexus empfängt deshalb über OSCQuery.') : '')
+                + (o.mode === 'oscquery' && !o.active ? '<br><span class="bad">⚠ ' + T(v ? 'VRChat ist gefunden, schickt aber noch nichts an VRC Nexus – Avatar einmal neu laden. Hilft das nicht: das andere OSC-Programm schließen und „Klassisch“ wählen.' : 'VRChat hat VRC Nexus per OSCQuery noch nicht gefunden – VRChat mit eingeschaltetem OSC starten. Hilft das nicht: das andere OSC-Programm schließen und „Klassisch“ wählen.') + '</span>' : '')
                 + (o.error ? '<br><span class="bad">⚠ ' + esc(o.error) + '</span>' : '') + (q && q.mdns_error ? '<br><span class="muted">' + esc(q.mdns_error) + '</span>' : '');
         }).catch(() => {});
     }
@@ -514,16 +515,15 @@
     }
 
     // ---------- 🎚 Avatar-Parameter (aus der OSC-Konfiguration von VRChat) ----------
-    let pData = null, pAvatar = '', pBound = false;
+    let pData = null, pBound = false;
     const pVal = p => p.value === null ? '' : p.type === 'float' ? Number(p.value).toFixed(2) : String(p.value);
     function loadParams() {
         bindParams();
-        return api('client_params', { avatar: pAvatar }).then(d => { pData = d; renderParams(); }).catch(fail);
+        return api('client_params').then(d => { pData = d; renderParams(); }).catch(fail);
     }
     function bindParams() {
         if (pBound) return;
         pBound = true;
-        $('#ncPAv').addEventListener('change', e => { pAvatar = e.target.value; loadParams(); });
         ['#ncPQ', '#ncPBuiltin', '#ncPFav'].forEach(s => $(s).addEventListener('input', renderParams));
         $('#ncPReload').addEventListener('click', loadParams);
         $('#ncPList').addEventListener('click', e => {
@@ -548,13 +548,18 @@
     function renderParams() {
         if (!pData) return;
         const d = pData;
-        $('#ncPAv').innerHTML = (d.avatars.length ? '' : '<option value="">(keine Avatar-Dateien gefunden)</option>') + d.avatars.map(a => '<option value="' + esc(a.id) + '"' + (d.avatar && a.id === d.avatar.id ? ' selected' : '') + '>'
-            + (a.id === d.current ? '▶ ' : '') + esc(a.name) + ' (' + a.count + ')</option>').join('');
         const q = $('#ncPQ').value.trim().toLowerCase(), bi = $('#ncPBuiltin').checked, fo = $('#ncPFav').checked;
         const list = d.params.filter(p => (bi || !p.builtin) && (!fo || p.fav) && (!q || p.name.toLowerCase().includes(q)));
-        $('#ncPInfo').innerHTML = (d.avatar ? '🎭 <b>' + esc(d.avatar.name || d.avatar.id) + '</b>' + (d.avatar.id === d.current ? ' · <span class="nc-badge ok">wird getragen</span>' : ' · <span class="nc-badge">nicht getragen – Werte unbekannt</span>') : 'Kein Avatar erkannt.')
-            + ' · ' + d.params.length + ' Parameter' + (d.osc_active ? '' : ' · ⚠ Kein OSC empfangen – in VRChat: Action-Menü → Optionen → OSC → Aktiviert')
-            + '<br>Quelle: <span class="mono">' + esc(d.dir) + '</span>';
+        const T = x => (window.t ? window.t(x) : x);
+        const SRC = { osc: 'per OSC erkannt', oscquery: 'per OSCQuery erkannt', log: 'laut Spiel-Log', api: 'laut VRChat-Konto' };
+        $('#ncPInfo').innerHTML = (d.avatar
+            ? '🎭 <b>' + esc(d.avatar.name || d.avatar.id) + '</b> · <span class="nc-badge ok">' + esc(T('wird getragen')) + '</span> <span class="muted">(' + esc(T(SRC[d.src] || d.src)) + ')</span>'
+                + ' · ' + d.params.length + ' ' + esc(T('Parameter'))
+                + (d.live ? '' : ' · <span class="nc-badge">' + esc(T('Werte kommen, sobald VRChat sie sendet')) + '</span>')
+            : '🎭 ' + esc(T('Kein getragener Avatar erkannt')) + (d.log_name ? ' (' + esc(d.log_name) + ')' : '') + '.')
+            + (d.osc_active ? '' : '<br>⚠ ' + esc(T('Von VRChat kommt kein OSC an – in VRChat: Action-Menü → Optionen → OSC → Aktiviert. Läuft ein anderes OSC-Programm, unter Einstellungen → OSC den Empfangs-Modus prüfen.')))
+            + (d.avatar && !d.file ? '<br>ℹ ' + esc(T('VRChat hat für diesen Avatar noch keine OSC-Datei angelegt – angezeigt werden die Parameter, die VRChat live meldet.')) : '')
+            + '<br>' + esc(T('Quelle')) + ': <span class="mono">' + esc(d.dir) + '</span>';
         $('#ncPList').innerHTML = list.length ? list.map(p => {
             let ctl;
             if (!p.input) ctl = '<span class="muted small">nur Ausgabe</span> <b>' + esc(pVal(p)) + '</b>';
@@ -564,7 +569,7 @@
             else ctl = '<input type="range" min="-1" max="1" step="0.01" value="' + (p.value === null ? 0 : p.value) + '" data-prange="' + esc(p.name) + '" data-t="float"><b class="small">' + esc(pVal(p) || '–') + '</b>';
             return '<div class="nc-prow' + (p.builtin ? ' builtin' : '') + '"><button type="button" class="nc-star' + (p.fav ? ' on' : '') + '" data-pfav="' + esc(p.name) + '" title="Favorit">★</button>'
                 + '<span class="nc-pname" title="' + esc(p.name) + '">' + esc(p.name) + ' <small class="muted">' + ({ bool: 'An/Aus', int: 'Zahl', float: 'Komma' })[p.type] + (p.live_only ? ' · nur live' : '') + '</small></span><span class="nc-pctl">' + ctl + '</span></div>';
-        }).join('') : '<div class="nc-empty">Keine Parameter' + (q ? ' für „' + esc(q) + '“' : '') + '. VRChat legt die Datei an, sobald du den Avatar mit eingeschaltetem OSC trägst.</div>';
+        }).join('') : '<div class="nc-empty">' + (q ? 'Keine Parameter für „' + esc(q) + '“.' : d.avatar ? 'Keine Parameter. VRChat legt die Datei an, sobald du den Avatar mit eingeschaltetem OSC trägst – Avatar einmal neu laden.' : 'Sobald VRChat läuft und du einen Avatar trägst, erscheinen hier seine Parameter.') + '</div>';
     }
 
     // ---------- 🤖 Automatik / Chat-Widgets ----------

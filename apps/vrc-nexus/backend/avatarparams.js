@@ -47,34 +47,63 @@ class AvatarParams {
         this.cache.set(file, { mtime, cfg });
         return cfg;
     }
-    /** Parameter eines Avatars (Standard: der gerade getragene laut OSC) mit aktuellen Werten */
-    list(avatarId) {
-        const osc = this.app.game.osc;
-        const id = str(avatarId) || str(osc.avatarId);
-        const all = this.avatars();
-        const av = all.find(a => a.id === id) || (!avatarId && all[0]) || null;
-        const favs = this.favs(av ? av.id : id);
-        const values = av && av.id === str(osc.avatarId) ? osc.params : {};
-        let params = [];
+    /** 4.2.1: welcher Avatar wird gerade getragen? Quellen der Reihe nach:
+     *  OSC (/avatar/change) → OSCQuery (VRChats Parameter-Baum) → Spiel-Log („Switching … to avatar …“, per Name) → VRChat-Konto (currentAvatar). */
+    current() {
+        const osc = this.app.game.osc, oq = this.app.oq, all = this.avatars();
+        const named = id => { const f = this.fileFor(id, all); return f ? f.name : ''; };
+        if (/^avtr_/i.test(str(osc.avatarId))) return { id: osc.avatarId, name: named(osc.avatarId), src: osc.avatarSrc || 'osc' };
+        if (oq && /^avtr_/i.test(str(oq.avatarId))) return { id: oq.avatarId, name: named(oq.avatarId), src: 'oscquery' };
+        const st = this.app.game.state || {}, logName = str(st.avatar);
+        if (logName && st.running !== false) {
+            const m = all.find(x => x.name === logName);
+            if (m) return { id: m.id, name: m.name, src: 'log' };
+        }
+        try {
+            const acc = this.app.vrc && this.app.vrc.account(), id = str(acc && acc.me && acc.me.currentAvatar);
+            if (/^avtr_[0-9a-f-]{36}$/i.test(id)) return { id, name: named(id) || (logName && !all.some(x => x.name === logName) ? logName : ''), src: 'api' };
+        } catch (e) { /* ohne Konto */ }
+        return { id: '', name: logName, src: '' };
+    }
+    /** OSC-Datei zu einem Avatar – bei mehreren VRChat-Konten die des angemeldeten bzw. die neueste */
+    fileFor(id, all) {
+        const l = (all || this.avatars()).filter(a => a.id === id);
+        if (l.length < 2) return l[0] || null;
+        let uid = '';
+        try { const acc = this.app.vrc && this.app.vrc.account(); uid = str(acc && (acc.user_id || (acc.me && acc.me.id))); } catch (e) { /* egal */ }
+        return l.find(a => a.user === uid) || l[0];
+    }
+    /** Parameter des gerade getragenen Avatars mit aktuellen Werten (aus OSC bzw. OSCQuery) */
+    list() {
+        const osc = this.app.game.osc, oq = this.app.oq;
+        const cur = this.current();
+        const av = cur.id ? this.fileFor(cur.id) : null;
+        const favs = this.favs(cur.id);
+        const liveSame = cur.id && str(osc.avatarId) === cur.id;
+        const values = Object.assign({}, oq && oq.avatarId === cur.id ? Object.fromEntries(Object.entries(oq.params || {}).map(([k, v]) => [k, v.value])) : {}, liveSame ? osc.params : {});
+        const params = [];
+        const seen = new Set();
         if (av) {
             for (const p of (this.read(av.file) || {}).parameters || []) {
                 const name = str(p.name);
                 const t = str((p.input || p.output || {}).type).toLowerCase();
-                if (!name) continue;
+                if (!name || seen.has(name)) continue;
+                seen.add(name);
                 params.push({ name, type: t === 'bool' ? 'bool' : t === 'int' ? 'int' : 'float', input: !!p.input, builtin: BUILTIN.has(name), fav: favs.includes(name),
                     value: values[name] === undefined ? null : values[name] });
             }
         }
-        // per OSC empfangene, aber nicht in der Datei stehende Parameter ergänzen
-        if (!av || av.id === str(osc.avatarId)) {
-            for (const [name, v] of Object.entries(osc.params)) {
-                if (params.some(p => p.name === name)) continue;
-                params.push({ name, type: typeof v === 'boolean' ? 'bool' : Number.isInteger(v) ? 'int' : 'float', input: true, builtin: BUILTIN.has(name), fav: favs.includes(name), value: v, live_only: true });
-            }
+        // per OSCQuery/OSC bekannte, aber nicht in der Datei stehende Parameter ergänzen (oder alle, wenn VRChat die Datei noch nicht geschrieben hat)
+        const known = Object.assign({}, oq && oq.avatarId === cur.id ? oq.params : {});
+        if (liveSame) for (const [k, v] of Object.entries(osc.params)) if (!known[k]) known[k] = { type: typeof v === 'boolean' ? 'bool' : Number.isInteger(v) ? 'int' : 'float', value: v };
+        for (const [name, k] of Object.entries(known)) {
+            if (seen.has(name) || k.type === 'other') continue;
+            seen.add(name);
+            params.push({ name, type: k.type, input: true, builtin: BUILTIN.has(name), fav: favs.includes(name), value: values[name] === undefined ? null : values[name], live_only: true });
         }
         params.sort((a, b) => (b.fav - a.fav) || (a.builtin - b.builtin) || a.name.localeCompare(b.name));
-        return { avatar: av ? { id: av.id, name: av.name } : (id ? { id, name: '' } : null), current: str(osc.avatarId), osc_active: osc.active, params,
-            avatars: all.slice(0, 200).map(a => ({ id: a.id, name: a.name, count: a.count })), dir: this.root() };
+        return { avatar: cur.id ? { id: cur.id, name: (av && av.name) || cur.name || '' } : null, current: cur.id, src: cur.src, osc_active: osc.active, live: !!liveSame,
+            file: !!av, params, dir: av ? av.file : this.root(), log_name: cur.id ? '' : cur.name };
     }
     favs(avatarId) { try { return (JSON.parse(this.app.db.setting('param_favs', '{}')) || {})[avatarId] || []; } catch (e) { return []; } }
     toggleFav(avatarId, name) {

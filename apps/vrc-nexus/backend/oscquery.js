@@ -8,6 +8,7 @@
  * mDNS-Nachrichten werden von Hand kodiert (RFC 6762/1035, nur PTR/SRV/TXT/A).
  */
 const dgram = require('dgram');
+const os = require('os');
 const http = require('http');
 const { str, int } = require('./util');
 
@@ -52,7 +53,7 @@ function decodeMsg(buf) {
     const flags = buf.readUInt16BE(2), qd = buf.readUInt16BE(4), an = buf.readUInt16BE(6) + buf.readUInt16BE(8) + buf.readUInt16BE(10);
     let pos = 12;
     const questions = [], answers = [];
-    for (let i = 0; i < qd; i++) { let n; [n, pos] = readName(buf, pos); questions.push({ name: n, type: buf.readUInt16BE(pos) }); pos += 4; }
+    for (let i = 0; i < qd; i++) { let n; [n, pos] = readName(buf, pos); questions.push({ name: n, type: buf.readUInt16BE(pos), qu: !!(buf.readUInt16BE(pos + 2) & 0x8000) }); pos += 4; }
     for (let i = 0; i < an && pos < buf.length; i++) {
         let n; [n, pos] = readName(buf, pos);
         const type = buf.readUInt16BE(pos), len = buf.readUInt16BE(pos + 8); pos += 10;
@@ -63,24 +64,40 @@ function decodeMsg(buf) {
         else if (type === T.A && len === 4) a.ip = [...d].join('.');
         answers.push(a); pos += len;
     }
-    return { response: !!(flags & 0x8000), questions, answers };
+    return { id: buf.readUInt16BE(0), response: !!(flags & 0x8000), questions, answers };
 }
 
 // ---------- mDNS-Transport (austauschbar für Tests) ----------
 class MdnsSocket {
     constructor() { this.handlers = new Set(); this.sock = null; this.error = ''; }
+    /** alle IPv4-Adressen dieses Rechners (inkl. 127.0.0.1) */
+    static addrs() {
+        const out = [];
+        try { for (const l of Object.values(os.networkInterfaces())) for (const a of l || []) if (a.family === 'IPv4' || a.family === 4) out.push(a.address); } catch (e) { /* egal */ }
+        return out.length ? out : ['127.0.0.1'];
+    }
     start() {
         if (this.sock) return;
         const s = dgram.createSocket({ type: 'udp4', reuseAddr: true });
         s.on('error', e => { this.error = 'mDNS: ' + e.message; });
         s.on('message', (msg, rinfo) => { let m; try { m = decodeMsg(msg); } catch (e) { return; } for (const h of this.handlers) { try { h(m, rinfo); } catch (e) { /* egal */ } } });
         s.bind(MDNS.port, () => {
-            try { s.addMembership(MDNS.host); s.setMulticastTTL(255); s.setMulticastLoopback(true); } catch (e) { this.error = 'mDNS: ' + e.message; }
+            // 4.2.1: der Gruppe auf jedem Netz beitreten – sonst sieht man VRChat (und VRChat Nexus) nur auf dem Standard-Netz
+            let joined = 0;
+            for (const a of MdnsSocket.addrs()) { try { s.addMembership(MDNS.host, a); joined++; } catch (e) { /* schon beigetreten o. Ä. */ } }
+            if (!joined) { try { s.addMembership(MDNS.host); joined++; } catch (e) { this.error = 'mDNS: ' + e.message; } }
+            try { s.setMulticastTTL(255); s.setMulticastLoopback(true); } catch (e) { /* egal */ }
+            if (this.onReady) this.onReady();
         });
         s.unref();
         this.sock = s;
     }
-    send(msg) { if (this.sock) this.sock.send(encodeMsg(msg), MDNS.port, MDNS.host, () => {}); }
+    /** an die Gruppe senden – oder direkt an den Fragenden (Unicast), wenn to angegeben ist */
+    send(msg, to) {
+        if (!this.sock) return;
+        const b = encodeMsg(msg);
+        try { if (to) this.sock.send(b, to.port, to.address, () => {}); else this.sock.send(b, MDNS.port, MDNS.host, () => {}); } catch (e) { /* Socket noch nicht bereit */ }
+    }
     on(h) { this.handlers.add(h); }
     stop() { try { if (this.sock) this.sock.close(); } catch (e) { /* egal */ } this.sock = null; }
 }
@@ -97,7 +114,7 @@ class OscQuery {
         this.ip = opts.host || '127.0.0.1';
         this.udpPort = 0; this.httpPort = 0; this.server = null; this.advertising = false;
         this.vrchat = null;            // { name, ip, http, osc_port, at }
-        this.tree = null; this.params = {}; this.treeAt = 0;
+        this.tree = null; this.params = {}; this.treeAt = 0; this.avatarId = '';
         this.onParams = null;
         this.mdns.on((m, rinfo) => this.onMdns(m, rinfo));
         this.found = {};               // Instanzname → { http, target, ip }
@@ -133,9 +150,11 @@ class OscQuery {
             this.server.unref();
             this.httpPort = this.server.address().port;
         }
+        this.mdns.onReady = () => { this.announce(); this.discover(); };
         this.mdns.start();
         this.advertising = true;
         this.announce();
+        [1000, 3000, 8000].forEach(ms => { const t = setTimeout(() => this.announce(), ms); if (t.unref) t.unref(); });
         clearInterval(this.annT); this.annT = setInterval(() => this.announce(), 60000); if (this.annT.unref) this.annT.unref();
         return { http: this.httpPort, udp: this.udpPort };
     }
@@ -154,7 +173,9 @@ class OscQuery {
             for (const q of m.questions) for (const r of mine) if (r.name.toLowerCase() === q.name.toLowerCase() && (q.type === r.type || q.type === T.ANY)) ans.push(r);
             if (ans.length) {   // zur PTR-Antwort die Details dazu (spart Rückfragen)
                 const extra = mine.filter(r => !ans.includes(r) && ans.some(a => a.type === T.PTR && (r.name === a.data || r.name === this.hostName())));
-                this.mdns.send({ response: true, answers: ans.concat(extra) });
+                const all = ans.concat(extra), legacy = !!(rinfo && rinfo.port && rinfo.port !== MDNS.port);
+                if (legacy) this.mdns.send({ id: m.id || 0, response: true, questions: m.questions, answers: all }, rinfo);
+                else { if (rinfo && m.questions.some(q => q.qu)) this.mdns.send({ response: true, answers: all }, rinfo); this.mdns.send({ response: true, answers: all }); }
             }
             return;
         }
@@ -179,8 +200,12 @@ class OscQuery {
     /** Parameter-Baum des aktuellen Avatars holen → { Name: { type: 'bool'|'int'|'float', value } } */
     async refreshParams() {
         if (!this.vrchat) return {};
-        const t = await this.fetch(this.vrchat.base + '/avatar/parameters');
+        // 4.2.1: ganzen /avatar-Zweig holen – darin steht unter /avatar/change auch die ID des getragenen Avatars
+        const t = await this.fetch(this.vrchat.base + '/avatar');
         const out = {};
+        const ch = t && t.CONTENTS && t.CONTENTS.change;
+        const cid = ch ? str(Array.isArray(ch.VALUE) ? ch.VALUE[0] : ch.VALUE) : '';
+        if (/^avtr_[0-9a-f-]{36}$/i.test(cid)) this.avatarId = cid;
         const walk = n => {
             if (!n || typeof n !== 'object') return;
             if (n.TYPE && n.FULL_PATH && n.FULL_PATH.startsWith('/avatar/parameters/')) {
@@ -196,7 +221,7 @@ class OscQuery {
     }
     status() {
         return { name: this.name, advertising: this.advertising, http: this.httpPort, udp: this.udpPort, mdns_error: this.mdns.error || '',
-            vrchat: this.vrchat ? { name: this.vrchat.name, osc_port: this.vrchat.osc_port, ip: this.vrchat.ip, http: this.vrchat.http, params: Object.keys(this.params).length, at: this.treeAt } : null };
+            vrchat: this.vrchat ? { name: this.vrchat.name, osc_port: this.vrchat.osc_port, ip: this.vrchat.ip, http: this.vrchat.http, params: Object.keys(this.params).length, at: this.treeAt, avatar: this.avatarId } : null };
     }
     stop() { clearInterval(this.annT); this.advertising = false; try { if (this.server) this.server.close(); } catch (e) { /* egal */ } this.server = null; this.mdns.stop(); }
 }
