@@ -3224,7 +3224,9 @@ test('4.2.3: HypeRate über die Weiterleitung – Schlüssel bleibt auf dem Serv
         });
     });
     await new Promise(res => wss.on('listening', res));
-    const relayFile = path.join(__dirname, '..', '..', 'hyperate-relay', 'app.js');
+    // Die Weiterleitung liegt neben der App im Repo; der Windows-Build kopiert nur die App – dann diesen Teil überspringen
+    const relayFile = [path.join(__dirname, '..', '..', 'hyperate-relay', 'app.js'), path.join(__dirname, '..', '..', 'apps', 'hyperate-relay', 'app.js')].find(f => fs.existsSync(f));
+    if (!relayFile || typeof WebSocket === 'undefined') { wss.close(); console.log('   (HypeRate-Weiterleitung nicht im Build-Ordner – Test übersprungen)'); return; }
     Object.assign(process.env, { HYPERATE_WS: 'ws://127.0.0.1:' + wss.address().port, HYPERATE_API_KEY: 'project-secret-key', RELAY_PER_IP: '3', RELAY_NO_AUTOSTART: '1' });
     delete require.cache[require.resolve(relayFile)];
     const relay = require(relayFile);
