@@ -14,7 +14,11 @@ const SOURCES = ['off', 'pulsoid', 'hyperate', 'osc'];
 const DEF = { source: '', send_osc: true, param: 'HeartRate', min: 50, max: 180, osc_in: 'HR, HeartRate, Heartrate, HeartRateInt, BPM', hyperate_id: '' };
 const STALE = 20000;          // ohne neuen Wert nach 20 s gilt der Puls als weg
 const KEEP = 10 * 60000;      // Verlauf: 10 Minuten
-const base = (env, def) => (process.env[env] || def).replace(/\/+$/, '');
+const base = (env, def) => ((typeof process !== 'undefined' && process.env && process.env[env]) || def).replace(/\/+$/, '');
+/* 4.2.3: HypeRate läuft über die Weiterleitung des Projekts (Schlüssel bleibt auf dem Server, siehe apps/hyperate-relay) */
+const RELAY = 'https://hr.sylvanclub.eu';
+const RELAY_ERR = { bad_id: 'HypeRate: Device-ID ungültig', join_rejected: 'HypeRate: Device-ID unbekannt – ID in der HypeRate-App prüfen', relay_no_key: 'HypeRate-Weiterleitung noch nicht eingerichtet',
+    too_many_connections: 'HypeRate-Weiterleitung: zu viele Verbindungen von dieser Adresse', relay_full: 'HypeRate-Weiterleitung ausgelastet – gleich nochmal' };
 const normName = s => str(s).toLowerCase().replace(/^\/?avatar\/parameters\//, '').replace(/[^a-z0-9]/g, '');
 
 class Heart {
@@ -144,7 +148,8 @@ class Heart {
     /** HypeRate: Phoenix-Kanal „hr:<ID>“ über WebSocket */
     openHyperate(c) {
         const key = this.hyperateKey();
-        if (!c.hyperate_id || !key) { this.error = !c.hyperate_id ? 'HypeRate-ID fehlt' : 'HypeRate-API-Schlüssel fehlt'; return; }
+        if (!c.hyperate_id) { this.error = 'HypeRate-Device-ID fehlt'; return; }
+        if (!key) return this.openRelay(c);   // Normalfall: über die Weiterleitung des Projekts
         const sig = c.hyperate_id + '|' + key;
         if (this.ws && this.wsKey === sig) return;
         this.closeWs();
@@ -168,13 +173,62 @@ class Heart {
         ws.onerror = () => { this.error = 'HypeRate nicht erreichbar'; };
         ws.onclose = () => { if (this.ws === ws) { this.ws = null; this.wsKey = ''; clearInterval(this.wsTimer); } };
     }
-    closeWs() { clearInterval(this.wsTimer); this.wsTimer = null; if (this.ws) { const w = this.ws; this.ws = null; this.wsKey = ''; try { w.close(); } catch (e) { /* egal */ } } }
+    /** 4.2.3: HypeRate über die Weiterleitung (Server-Sent Events: „data: {hr}“) – ohne Schlüssel in der App */
+    openRelay(c) {
+        const sig = 'relay|' + c.hyperate_id;
+        if (this.relay && this.relayKey === sig) return;
+        if (this.ws) this.closeWs();
+        if (this.relay) this.closeRelay();
+        if (Date.now() < (this.relayRetryAt || 0)) return;
+        const ctl = new AbortController();
+        this.relay = ctl; this.relayKey = sig;
+        const url = base('NEXUS_HYPERATE_RELAY', RELAY) + '/hr/' + encodeURIComponent(c.hyperate_id);
+        (async () => {
+            let got = false;
+            try {
+                const r = await fetch(url, { signal: ctl.signal, headers: { Accept: 'text/event-stream' }, cache: 'no-store' });
+                if (!r.ok || !r.body) {
+                    let code = ''; try { code = (await r.json()).error || ''; } catch (e) { /* kein JSON */ }
+                    this.error = RELAY_ERR[code] || 'HypeRate-Weiterleitung: HTTP ' + r.status;
+                    this.relayWait = code === 'bad_id' ? 60000 : 15000;
+                    return;
+                }
+                this.relayWait = 5000;
+                const rd = r.body.getReader(), dec = new TextDecoder();
+                let buf = '';
+                for (;;) {
+                    const { value, done } = await rd.read();
+                    if (done) break;
+                    buf += dec.decode(value, { stream: true }).replace(/\r/g, '');
+                    let i;
+                    while ((i = buf.indexOf('\n\n')) >= 0) {
+                        const block = buf.slice(0, i); buf = buf.slice(i + 2);
+                        const data = block.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5).trim()).join('');
+                        if (!data) continue;
+                        let m; try { m = JSON.parse(data); } catch (e) { continue; }
+                        if (m.hr !== undefined) { got = true; this.push(m.hr, 'hyperate'); }
+                        else if (m.error) this.error = RELAY_ERR[m.error] || 'HypeRate: ' + m.error;
+                    }
+                }
+            } catch (e) {
+                if (!ctl.signal.aborted) this.error = 'HypeRate-Weiterleitung nicht erreichbar';
+            } finally {
+                if (this.relay === ctl) {
+                    this.relay = null; this.relayKey = '';
+                    this.relayRetryAt = Date.now() + (got ? 2000 : this.relayWait || 5000);
+                    this.relayWait = Math.min(60000, (this.relayWait || 5000) * (got ? 1 : 2));
+                }
+            }
+        })();
+    }
+    closeRelay() { if (this.relay) { const r = this.relay; this.relay = null; this.relayKey = ''; try { r.abort(); } catch (e) { /* egal */ } } }
+    closeWs() { this.closeRelay(); clearInterval(this.wsTimer); this.wsTimer = null; if (this.ws) { const w = this.ws; this.ws = null; this.wsKey = ''; try { w.close(); } catch (e) { /* egal */ } } }
 
     /** wird von den Chatbox-Modulen und vom eigenen Takt aufgerufen */
     async refresh(force) {
         const c = this.cfg(), t = Date.now();
         if (c.source === 'pulsoid' && (force || t - this.lastPoll >= 3000)) { this.lastPoll = t; await this.pollPulsoid(); }
-        if (c.source === 'hyperate') this.openHyperate(c); else if (this.ws) this.closeWs();
+        if (c.source === 'hyperate') this.openHyperate(c); else if (this.ws || this.relay) this.closeWs();
         if (c.source === 'osc' && !this.active && !this.error) this.error = '';
         // Puls weg → Avatar einmal „aus“ melden
         const on = this.active;
@@ -193,7 +247,7 @@ class Heart {
         const c = this.cfg(), t = Date.now();
         return { cfg: c, bpm: this.active ? this.bpm : 0, active: this.active, from: this.from || '', error: this.active ? '' : this.error, stats: this.stats(),
             hist: this.hist.filter(h => t - h.t <= KEEP).map(h => [Math.round((h.t - t) / 1000), h.v]),
-            has_pulsoid: !!this.pulsoidToken(), has_hyperate: !!this.hyperateKey() };
+            has_pulsoid: !!this.pulsoidToken(), has_hyperate: !!this.hyperateKey(), hyperate_via: this.hyperateKey() ? 'own_key' : 'relay' };
     }
     async action(act, input) {
         switch (act) {

@@ -1,0 +1,10 @@
+{
+  "name": "vrc-nexus-hyperate-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Relays HypeRate heart rate to VRC Nexus without shipping the API key in the app",
+  "main": "app.js",
+  "scripts": { "start": "node app.js" },
+  "engines": { "node": ">=22" },
+  "license": "UNLICENSED"
+}

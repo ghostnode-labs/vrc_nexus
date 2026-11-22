@@ -3206,6 +3206,74 @@ test('4.2.1: OSC-Empfang bleibt beim erneuten Anwenden bestehen; Parameter nur v
     app.tools.stop(); if (app.toys) app.toys.stop();
 });
 
+test('4.2.3: HypeRate über die Weiterleitung – Schlüssel bleibt auf dem Server, ein Kanal je Device-ID, Fehler, Limits', async () => {
+    const { WebSocketServer } = require('ws');
+    // nachgestelltes HypeRate (Phoenix-Kanäle)
+    const wss = new WebSocketServer({ port: 0 });
+    const tokens = [], joins = [], leaves = [];
+    wss.on('connection', (ws, req) => {
+        tokens.push(new URL(req.url, 'http://x').searchParams.get('token'));
+        ws.on('message', m => {
+            const j = JSON.parse(String(m));
+            if (j.event === 'phx_leave') leaves.push(j.topic);
+            if (j.event !== 'phx_join') return;
+            joins.push(j.topic);
+            if (j.topic === 'hr:unknown') return ws.send(JSON.stringify({ topic: j.topic, event: 'phx_reply', payload: { status: 'error' }, ref: j.ref }));
+            ws.send(JSON.stringify({ topic: j.topic, event: 'phx_reply', payload: { status: 'ok' }, ref: j.ref }));
+            setTimeout(() => ws.send(JSON.stringify({ topic: j.topic, event: 'hr_update', payload: { hr: 88 } })), 30);
+        });
+    });
+    await new Promise(res => wss.on('listening', res));
+    const relayFile = path.join(__dirname, '..', '..', 'hyperate-relay', 'app.js');
+    Object.assign(process.env, { HYPERATE_WS: 'ws://127.0.0.1:' + wss.address().port, HYPERATE_API_KEY: 'project-secret-key', RELAY_PER_IP: '3' });
+    delete require.cache[require.resolve(relayFile)];
+    const relay = require(relayFile);
+    await new Promise(res => relay.server.listen(0, '127.0.0.1', res));
+    const RB = 'http://127.0.0.1:' + relay.server.address().port;
+    const h = await (await fetch(RB + '/health')).json();
+    assert.ok(h.ok && h.service === 'vrc-nexus-hyperate-relay' && !JSON.stringify(h).includes('project-secret'), 'Health ohne Schlüssel');
+    assert.strictEqual((await fetch(RB + '/hr/bad id!')).status, 400);
+    // App ohne eigenen Schlüssel → Weiterleitung
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => 'enc:' + s, decrypt: s => s.replace(/^enc:/, '') }, host: { userData: os.tmpdir() } });
+    app.game.osc.stopListen(); app.game.osc.send = async () => {};
+    process.env.NEXUS_HYPERATE_RELAY = RB;
+    const seen = [];
+    const realFetch = global.fetch;
+    global.fetch = (u, o) => { seen.push(String(u)); return realFetch(u, o); };
+    const post = (act, d) => app.post(Object.assign({ act }, d || {}), {});
+    await post('hr_save', { source: 'hyperate', hyperate_id: 'Ab12cd' });
+    for (let i = 0; i < 100 && app.heart.bpm !== 88; i++) { await app.heart.refresh(); await U.sleep(20); }
+    assert.strictEqual(app.heart.bpm, 88); assert.strictEqual(app.heart.from, 'hyperate');
+    assert.ok(seen.some(u => u === RB + '/hr/Ab12cd') && !seen.some(u => u.includes('token')), 'App spricht nur mit der Weiterleitung, ohne Schlüssel');
+    assert.deepStrictEqual([...new Set(tokens)], ['project-secret-key'], 'nur der Server nutzt den Projekt-Schlüssel');
+    assert.strictEqual((await post('hr_get')).hyperate_via, 'relay');
+    // zweiter Zuhörer für dieselbe ID → kein zweiter Beitritt; letzter Wert kommt sofort
+    const ctl = new AbortController();
+    const r2 = await realFetch(RB + '/hr/Ab12cd', { signal: ctl.signal });
+    const rd = r2.body.getReader(); let txt = '';
+    for (let i = 0; i < 5 && !txt.includes('"hr":88'); i++) txt += new TextDecoder().decode((await rd.read()).value);
+    assert.ok(txt.includes('"hr":88')); assert.strictEqual(joins.filter(j => j === 'hr:Ab12cd').length, 1, 'ein Kanal je ID');
+    ctl.abort();
+    // unbekannte ID → verständliche Meldung
+    await post('hr_save', { hyperate_id: 'unknown' });
+    for (let i = 0; i < 100 && !/unbekannt/.test(app.heart.error); i++) { await app.heart.refresh(); await U.sleep(20); }
+    assert.match(app.heart.error, /Device-ID unbekannt/);
+    await post('hr_save', { source: 'off' }); await U.sleep(50);
+    // Limit je IP
+    const ctls = [1, 2, 3].map(() => new AbortController());
+    const rs = await Promise.all(ctls.map(c => realFetch(RB + '/hr/limit1', { signal: c.signal })));
+    const over = await realFetch(RB + '/hr/limit1');
+    assert.ok(rs.every(r => r.status === 200), 'drei erlaubt');
+    assert.strictEqual(over.status, 429);
+    ctls.forEach(c => c.abort());
+    global.fetch = realFetch;
+    app.heart.stop(); app.tools.stop();
+    relay.server.closeAllConnections(); relay.server.close(); wss.close();
+    for (const k of ['HYPERATE_WS', 'HYPERATE_API_KEY', 'RELAY_PER_IP', 'NEXUS_HYPERATE_RELAY']) delete process.env[k];
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {

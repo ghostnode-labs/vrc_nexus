@@ -1,5 +1,10 @@
 [
  {
+  "version": "4.2.3",
+  "title": "HypeRate without your own API key",
+  "body": "- HypeRate now only needs the device ID from the HypeRate app on your watch or phone (e.g. Samsung Galaxy Watch) – the connection runs through the VRC Nexus relay, which holds the project's API key (the key is never inside the app)\n- Clear messages for an unknown device ID or an unreachable relay, automatic reconnect\n- Developers can still enter their own key"
+ },
+ {
   "version": "4.2.2",
   "title": "“Live only” button",
   "body": "- Parameters page: new “📡 live only” button shows only the parameters whose value VRChat is currently reporting (remembered)"
