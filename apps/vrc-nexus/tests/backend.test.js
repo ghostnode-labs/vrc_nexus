@@ -3225,7 +3225,7 @@ test('4.2.3: HypeRate über die Weiterleitung – Schlüssel bleibt auf dem Serv
     });
     await new Promise(res => wss.on('listening', res));
     const relayFile = path.join(__dirname, '..', '..', 'hyperate-relay', 'app.js');
-    Object.assign(process.env, { HYPERATE_WS: 'ws://127.0.0.1:' + wss.address().port, HYPERATE_API_KEY: 'project-secret-key', RELAY_PER_IP: '3' });
+    Object.assign(process.env, { HYPERATE_WS: 'ws://127.0.0.1:' + wss.address().port, HYPERATE_API_KEY: 'project-secret-key', RELAY_PER_IP: '3', RELAY_NO_AUTOSTART: '1' });
     delete require.cache[require.resolve(relayFile)];
     const relay = require(relayFile);
     await new Promise(res => relay.server.listen(0, '127.0.0.1', res));
@@ -3271,7 +3271,7 @@ test('4.2.3: HypeRate über die Weiterleitung – Schlüssel bleibt auf dem Serv
     global.fetch = realFetch;
     app.heart.stop(); app.tools.stop();
     relay.server.closeAllConnections(); relay.server.close(); wss.close();
-    for (const k of ['HYPERATE_WS', 'HYPERATE_API_KEY', 'RELAY_PER_IP', 'NEXUS_HYPERATE_RELAY']) delete process.env[k];
+    for (const k of ['HYPERATE_WS', 'HYPERATE_API_KEY', 'RELAY_PER_IP', 'RELAY_NO_AUTOSTART', 'NEXUS_HYPERATE_RELAY']) delete process.env[k];
 });
 
 (async () => {

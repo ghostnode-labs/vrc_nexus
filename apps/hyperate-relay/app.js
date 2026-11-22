@@ -141,7 +141,8 @@ server.requestTimeout = 0;            // Streams laufen lange
 server.headersTimeout = 15000;
 server.keepAliveTimeout = 65000;
 
-if (require.main === module) {
+// Plesk/Passenger lädt app.js über einen eigenen Lader (require.main ist dann nicht dieses Modul) – darum immer starten, außer im Test
+if (process.env.RELAY_NO_AUTOSTART !== '1') {
     if (typeof WebSocket === 'undefined') { console.error('Node ≥ 22 nötig (eingebauter WebSocket).'); process.exit(1); }
     server.listen(PORT, () => log('HypeRate-Weiterleitung auf Port', PORT, KEY ? '' : '– ⚠ HYPERATE_API_KEY fehlt'));
 }
