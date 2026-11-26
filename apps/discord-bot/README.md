@@ -34,4 +34,16 @@ sudo systemctl daemon-reload && sudo systemctl enable --now ghostnode-bot
 journalctl -u ghostnode-bot -f
 ```
 
-On Plesk the bot only stays online if Passenger keeps the app running (`passenger_min_instances 1;`) – a root server with systemd is the better place.
+## Run on Plesk (e.g. `discord.ghostnode-labs.dev`)
+
+1. Create the subdomain, SSL (Let's Encrypt), upload `bot.js` and `package.json` into its folder.
+2. *Node.js*: application root and document root = that folder, startup file `bot.js`, Node 22 or newer. No `npm install` needed.
+3. *Node.js → Environment → Secrets*: `DISCORD_TOKEN`; as variables `DISCORD_APP_ID`, `DISCORD_GUILD_ID`, `RELEASE_CHANNEL_ID`.
+4. **Keep it running:** Passenger stops idle apps after a few minutes. In *Apache & nginx settings → Additional nginx directives* add:
+   ```
+   passenger_min_instances 1;
+   passenger_pool_idle_time 0;
+   ```
+   Then open `https://discord.ghostnode-labs.dev/` once – it shows `{"ok":true,…}` when the bot is connected.
+
+A root server with systemd (above) is still the most reliable place.

@@ -1,4 +1,5 @@
 'use strict';
+process.env.NEXUS_NO_SERVER_CHECK = '1';   // Tests: keine echten Server-Prüfungen
 /* Tests ohne Netzwerk und ohne Electron:  npm test */
 const assert = require('assert');
 const fs = require('fs');
@@ -3322,6 +3323,7 @@ test('4.4: Plugin-Marktplatz – signierter Katalog, Schlüssel merken, Prüfsum
     const crypto = require('crypto');
     const { writeZip } = require('../backend/nxp');
     const servers = require('../backend/servers');
+    servers._active.nexus = servers.LISTS.nexus.length - 1; servers._active.hyperate = servers.LISTS.hyperate.length - 1;
     assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu', 'bis zur Bestätigung die bewährte Adresse');
     assert.strictEqual(servers.hyperate(), 'https://hr.sylvanclub.eu');
     // neue Domain zeigt nur die Plesk-Standardseite (nexus.php 404) → alte bleibt

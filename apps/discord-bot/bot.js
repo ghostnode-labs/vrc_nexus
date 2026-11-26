@@ -196,7 +196,9 @@ async function start() {
     const gw = new Gateway(); gw.connect();
     const rel = () => checkRelease().catch(e => log('Release-Prüfung:', e.message));
     setTimeout(rel, 15000); setInterval(rel, 10 * 60000);
-    if (CFG.port) http.createServer((q, s) => { s.writeHead(200, { 'Content-Type': 'application/json' }); s.end(JSON.stringify({ ok: gw.ready, service: 'ghostnode-discord-bot' })); }).listen(CFG.port);
+    // Plesk/Passenger erwartet einen HTTP-Dienst (sonst gilt die App als nicht gestartet) – dort immer lauschen
+    const port = CFG.port || (process.env.IN_PASSENGER === '1' || typeof PhusionPassenger !== 'undefined' ? 3000 : 0);
+    if (port) http.createServer((q, s) => { s.writeHead(200, { 'Content-Type': 'application/json' }); s.end(JSON.stringify({ ok: gw.ready, service: 'ghostnode-discord-bot' })); }).listen(port);
     const bye = () => { gw.stop(); process.exit(0); };
     process.on('SIGTERM', bye); process.on('SIGINT', bye);
     return gw;
