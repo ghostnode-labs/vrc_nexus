@@ -19,8 +19,8 @@ Only the non-privileged `GUILDS` intent is used – no message content, no membe
 | `DISCORD_APP_ID` | yes | application ID |
 | `DISCORD_GUILD_ID` | no | your server ID – commands appear instantly (otherwise global, up to an hour) |
 | `RELEASE_CHANNEL_ID` | no | channel for release announcements |
-| `NEXUS_BASE` | no | website with `market.php` / `p.php` (default `https://privat.sylvanclub.eu`) |
-| `HYPERATE_RELAY` | no | HypeRate relay (default `https://hr.sylvanclub.eu`) |
+| `NEXUS_BASE` | no | website with `market.php` / `p.php` (default `https://ghostnode-labs.dev`) |
+| `HYPERATE_RELAY` | no | HypeRate relay (default `https://hr.ghostnode-labs.dev`) |
 | `PORT` | no | small health endpoint (`/`), e.g. for Plesk/Passenger |
 
 ## Run on a Linux server (recommended)

@@ -22,4 +22,4 @@ The key lives only in the server's environment variable `HYPERATE_API_KEY` – n
 5. Enable Node.js, then open `https://hr.example.org/health` – it should show `"ok":true`.
 6. SSL certificate for the subdomain (Let's Encrypt).
 
-The app uses `https://hr.sylvanclub.eu` by default (`RELAY` in `apps/vrc-nexus/backend/heart.js`).
+The app tries `https://hr.ghostnode-labs.dev` first and falls back to `https://hr.sylvanclub.eu` (`apps/vrc-nexus/backend/servers.js`).

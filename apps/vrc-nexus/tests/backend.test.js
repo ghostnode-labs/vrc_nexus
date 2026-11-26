@@ -3322,14 +3322,18 @@ test('4.4: Plugin-Marktplatz – signierter Katalog, Schlüssel merken, Prüfsum
     const crypto = require('crypto');
     const { writeZip } = require('../backend/nxp');
     const servers = require('../backend/servers');
-    assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu');
-    // Rückfall: erste Adresse tot, zweite antwortet
-    servers.LISTS.nexus.unshift('https://neu.example');
-    await servers.check(async u => { if (u.startsWith('https://neu.example')) throw new Error('down'); return { status: 200 }; });
+    assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu', 'bis zur Bestätigung die bewährte Adresse');
+    assert.strictEqual(servers.hyperate(), 'https://hr.sylvanclub.eu');
+    // neue Domain zeigt nur die Plesk-Standardseite (nexus.php 404) → alte bleibt
+    await servers.check(async u => ({ status: u.startsWith('https://ghostnode-labs.dev') ? 404 : u.includes('hr.ghostnode') ? 0 : 200 }));
     assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu', 'Rückfall auf die alte Adresse');
+    assert.strictEqual(servers.hyperate(), 'https://hr.sylvanclub.eu');
     await servers.check(async () => ({ status: 200 }));
-    assert.strictEqual(servers.nexus(), 'https://neu.example', 'neue Adresse hat Vorrang');
-    servers.LISTS.nexus.shift(); servers._active.nexus = 0;
+    assert.strictEqual(servers.nexus(), 'https://ghostnode-labs.dev', 'neue Adresse hat Vorrang, sobald sie läuft');
+    assert.strictEqual(servers.hyperate(), 'https://hr.ghostnode-labs.dev');
+    await servers.check(async () => { throw new Error('offline'); });
+    assert.strictEqual(servers.nexus(), 'https://ghostnode-labs.dev', 'offline: Wahl bleibt');
+    servers._active.nexus = 1; servers._active.hyperate = 1;
     // nachgestellter Marktplatz
     const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
     const rawPub = publicKey.export({ format: 'der', type: 'spki' }).subarray(12).toString('base64');

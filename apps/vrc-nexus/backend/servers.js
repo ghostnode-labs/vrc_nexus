@@ -6,10 +6,11 @@
  * Umzug: neue Adresse vorn eintragen, alte als Rückfall hinten lassen – erst nach dem Update aller Nutzer abschalten.
  */
 const LISTS = {
-    nexus: ['https://privat.sylvanclub.eu'],      // nexus.php, Konto, Chat, Community, Warnliste, Fernsteuerung, Marktplatz
-    hyperate: ['https://hr.sylvanclub.eu'],        // HypeRate-Weiterleitung (apps/hyperate-relay)
+    nexus: ['https://ghostnode-labs.dev', 'https://privat.sylvanclub.eu'],      // nexus.php, Konto, Chat, Community, Warnliste, Fernsteuerung, Marktplatz
+    hyperate: ['https://hr.ghostnode-labs.dev', 'https://hr.sylvanclub.eu'],    // HypeRate-Weiterleitung (apps/hyperate-relay)
 };
-const active = { nexus: 0, hyperate: 0 };
+// bis check() eine neue Adresse bestätigt hat, gilt die bewährte (letzte) – so bricht nichts, solange der Umzug läuft
+const active = { nexus: LISTS.nexus.length - 1, hyperate: LISTS.hyperate.length - 1 };
 const trim = u => String(u).replace(/\/+$/, '');
 
 /** aktuelle Adresse eines Dienstes */
@@ -24,10 +25,11 @@ async function check(fetchFn = globalThis.fetch) {
         if (l.length < 2) continue;
         for (let i = 0; i < l.length; i++) {
             try {
-                const r = await fetchFn(trim(l[i]) + (kind === 'hyperate' ? '/health' : '/'), { method: 'GET', signal: AbortSignal.timeout(5000) });
-                if (r.status < 500) { active[kind] = i; break; }
+                // gezielt den Dienst prüfen (eine Domain-Standardseite reicht nicht): nexus.php darf nicht 404 sein, die Weiterleitung muss /health beantworten
+                const r = await fetchFn(trim(l[i]) + (kind === 'hyperate' ? '/health' : '/nexus.php'), { method: 'GET', signal: AbortSignal.timeout(5000) });
+                if (kind === 'hyperate' ? r.status === 200 : r.status !== 404 && r.status < 500 && r.status !== 0) { active[kind] = i; break; }
             } catch (e) { /* nächste probieren */ }
-        }
+        }   // keine erreichbar: bisherige Wahl bleiben lassen
     }
     return { nexus: nexus(), hyperate: hyperate() };
 }

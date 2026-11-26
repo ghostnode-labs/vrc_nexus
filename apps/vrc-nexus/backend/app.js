@@ -58,7 +58,7 @@ class NexusApp {
         this.game.osc.taps.add(a => { if (a === '/avatar/change') { clearTimeout(this.knownT); this.knownT = setTimeout(() => this.refreshKnown(), 1500); } });
         if (opts.oscquery) { this.game.onApply = c => this.oscSetup(c); this.game.applySettings(); }
         // 4.4: Server-Adressen (Domain-Umzug): erreichbare Adresse wählen – nur wenn es mehrere gibt
-        if (opts.oscquery) { const sv = require('./servers'), chk = () => sv.check().catch(() => {}); const t1 = setTimeout(chk, 5000), t2 = setInterval(chk, 1800000); if (t1.unref) { t1.unref(); t2.unref(); } }
+        if (opts.oscquery || opts.mobile) { const sv = require('./servers'), chk = () => sv.check().catch(() => {}); chk(); const t2 = setInterval(chk, 900000); if (t2.unref) t2.unref(); }
         this.cam = new Camera(this);
         this.macros = new Macros(this);
         this.auto = new Automation(this);

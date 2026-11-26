@@ -1,5 +1,10 @@
 [
  {
+  "version": "4.4.1",
+  "title": "New home: ghostnode-labs.dev",
+  "body": "- VRC Nexus now uses ghostnode-labs.dev (website, account, chat, community, marketplace) and hr.ghostnode-labs.dev (HypeRate) as soon as they answer – until then, and as a fallback, the previous addresses keep working\n- The app checks the right service (not just the domain) at start and every 15 minutes, on Windows and Android"
+ },
+ {
   "version": "4.4.0",
   "title": "Plugin marketplace",
   "body": "- 🛒 **Plugin marketplace** under Plugins: browse reviewed plugins from the GhostNode website, install or update with one click (update badge)\n- Every plugin is reviewed before it is published; the catalog is signed (Ed25519) and each package is checked (size, SHA-256) before the usual permission dialog\n- Server addresses in one place with automatic fallback – preparation for the move to ghostnode-labs.dev"

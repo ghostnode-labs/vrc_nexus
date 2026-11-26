@@ -14,7 +14,7 @@ const env = (k, d = '') => String(process.env[k] || d).trim();
 const CFG = {
     token: env('DISCORD_TOKEN'), app: env('DISCORD_APP_ID'), guild: env('DISCORD_GUILD_ID'),
     api: env('DISCORD_API', 'https://discord.com/api/v10').replace(/\/+$/, ''), gateway: env('DISCORD_GATEWAY', 'wss://gateway.discord.gg'),
-    nexus: env('NEXUS_BASE', 'https://privat.sylvanclub.eu').replace(/\/+$/, ''), relay: env('HYPERATE_RELAY', 'https://hr.sylvanclub.eu').replace(/\/+$/, ''),
+    nexus: env('NEXUS_BASE', 'https://ghostnode-labs.dev').replace(/\/+$/, ''), relay: env('HYPERATE_RELAY', 'https://hr.ghostnode-labs.dev').replace(/\/+$/, ''),
     repo: env('GITHUB_REPO', 'ghostnode-labs/vrc_nexus'), github: env('GITHUB_API', 'https://api.github.com').replace(/\/+$/, ''),
     releaseChannel: env('RELEASE_CHANNEL_ID'), state: env('BOT_STATE', path.join(__dirname, 'bot-state.json')), port: Number(env('PORT')) || 0,
 };
