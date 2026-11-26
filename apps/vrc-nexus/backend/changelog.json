@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.2.1",
+  "title": "Watch takes over heart rate",
+  "body": "- When Nexus Watch sends heart rate and the selected source delivers nothing (e.g. \"HypeRate not reachable\"), VRC Nexus switches to the watch automatically – no more manual switch needed\n- Pairing a watch also selects it as the heart-rate source unless another source is currently delivering"
+ },
+ {
   "version": "5.2.0",
   "title": "Nexus Watch (Wear OS)",
   "body": "- ⌚ **Nexus Watch**, a new app for Wear OS watches (Galaxy Watch 4 and newer, Pixel Watch …) – download `VRC-Nexus-Watch-…-wearos.apk` from the release\n- ♥ Heart rate straight from the watch sensor as a new heart-rate source (no HypeRate/Pulsoid account needed), 💤 sleep mode and 🔞 *** from your wrist\n- Connects directly to the Windows app on your home network: pairing with a 6-digit code (under 💓 Heart rate), automatic discovery, one key per watch, removable at any time"

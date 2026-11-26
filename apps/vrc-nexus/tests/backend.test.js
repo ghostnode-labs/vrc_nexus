@@ -3720,8 +3720,11 @@ test('5.2: VRC Nexus Watch – Suche per UDP, Kopplung mit Code (Fehlversuche), 
     assert.notStrictEqual(app.watch.pin, pin, 'Code wechselt nach der Kopplung');
     assert.ok(!JSON.stringify(db.setting('watch_cfg', '')).includes(tok), 'Schlüssel nur als Hash gespeichert');
     assert.strictEqual(app.heart.cfg().source, 'watch', 'erste Uhr wird Puls-Quelle');
+    // 5.2.1: eingestellte Quelle liefert nichts (z. B. HypeRate nicht erreichbar) → Uhr übernimmt automatisch
+    app.heart.save({ source: 'hyperate' }); app.heart.error = 'HypeRate nicht erreichbar';
     // Puls
     x = await call('/watch/heart', { bpm: 88 }, tok); assert.ok(x.j.ok);
+    assert.strictEqual(x.j.switched, 'hyperate'); assert.strictEqual(app.heart.cfg().source, 'watch'); assert.strictEqual(app.heart.error, '', 'Fehlermeldung weg');
     assert.strictEqual(app.heart.bpm, 88); assert.strictEqual(app.heart.from, 'watch');
     assert.strictEqual((await call('/watch/heart', { bpm: 400 }, tok)).j.ok, false, 'unmögliche Werte nicht übernehmen');
     x = await call('/watch/state', undefined, tok);

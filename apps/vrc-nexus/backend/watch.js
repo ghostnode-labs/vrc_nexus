@@ -118,7 +118,7 @@ class Watch {
         this.pin = newPin();
         this.saveCfg({ devices: c.devices });
         const h = this.app.heart;
-        if (h && ['off', ''].includes(h.cfg().source)) h.save({ source: 'watch' });   // erste Uhr: Puls direkt von der Uhr
+        if (h && h.cfg().source !== 'watch' && !h.active) h.save({ source: 'watch' });   // Uhr übernimmt, wenn die bisherige Quelle gerade nichts liefert
         if (this.app.tools && this.app.tools.alert) this.app.tools.alert('⌚ Uhr gekoppelt', name);
         return { ok: true, token, id, name: cut(str((this.app.vrc.account() || {}).display_name) || os.hostname(), 40) };
     }
@@ -136,8 +136,14 @@ class Watch {
     heart(b) {
         const h = this.app.heart;
         if (!h) throw new UserError('Puls gibt es nur in der Windows-App.');
-        if (h.cfg().source !== 'watch') return { ok: false, ignored: true, msg: 'In VRC Nexus ist eine andere Puls-Quelle gewählt.' };
-        return { ok: h.push(int(b.bpm), 'watch') };
+        const src = h.cfg().source;
+        if (src !== 'watch') {
+            // 5.2.1: liefert die eingestellte Quelle gerade nichts (z. B. HypeRate nicht erreichbar), übernimmt die Uhr automatisch
+            if (h.active && h.from !== 'watch') return { ok: false, ignored: true, msg: 'In VRC Nexus liefert gerade eine andere Puls-Quelle (' + src + ').' };
+            h.save({ source: 'watch' });
+            h.switchedFrom = src;
+        }
+        return { ok: h.push(int(b.bpm), 'watch'), switched: src !== 'watch' ? src : undefined };
     }
     async action(a, b, dev) {
         const post = (act, x) => this.app.post(Object.assign({ act }, x || {}), {});
