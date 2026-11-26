@@ -2937,6 +2937,49 @@ test('3.9: Nexus Pulse – Opt-in, Steam-News, Reddit-RSS, Kommentare, Favoriten
     } finally { delete process.env.NEXUS_STEAMNEWS_BASE; delete process.env.NEXUS_REDDIT_BASE; srv.close(); }
 });
 
+test('5.2.5: Nexus Pulse – Reddit gesperrt (404) → automatisch über die GhostNode-Webseite (nur Mocks)', async () => {
+    const http = require('http');
+    const hits = [], bodies = [];
+    const srv = http.createServer((req, res) => {
+        hits.push(req.url);
+        if (req.url.startsWith('/nexuspulse.php')) {
+            let b = ''; req.on('data', d => b += d); req.on('end', () => {
+                const j = JSON.parse(b); bodies.push(j);
+                res.setHeader('Content-Type', 'application/json');
+                if (req.url.endsWith('a=comments')) return res.end(JSON.stringify({ items: [{ author: 'c1', ts: 5, text: 'Hallo', url: 'https://www.reddit.com/r/VRChat/comments/abc0/x/c1/' }] }));
+                res.end(JSON.stringify({ items: [{ id: 'reddit:t3_abc0', src: 'reddit', kind: 'reddit', title: 'Über API &amp; Proxy', url: 'https://www.reddit.com/r/VRChat/comments/abc0/x/', author: 'u0', ts: 10, text: 't', img: 'javascript:x', comments: 1 },
+                    { id: 'bad', title: 'kein Link', url: 'http://evil/' }] }));
+            });
+            return;
+        }
+        res.statusCode = 404; res.end('');
+    });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    const B = 'http://127.0.0.1:' + srv.address().port;
+    process.env.NEXUS_REDDIT_BASE = B; process.env.NEXUS_PULSE_BASE = B;
+    try {
+        const { NexusApp } = require('../backend/app');
+        const db = await openDatabase(null);
+        const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
+        app.game.osc.stopListen();
+        const P = app.pulse;
+        await P.action('pulse_enable', { on: '1' });
+        const r = await P.action('pulse_feed', { src: 'reddit', sort: 'hot' });
+        assert.strictEqual(r.items.length, 1, 'unsichere Links fliegen raus');
+        assert.strictEqual(r.items[0].title, 'Über API & Proxy');
+        assert.strictEqual(r.items[0].img, '');
+        assert.strictEqual(bodies[0].sub, 'VRChat'); assert.strictEqual(bodies[0].sort, 'hot');
+        assert.ok(hits[0].startsWith('/r/VRChat/hot/.rss'), 'zuerst direkt');
+        const n = hits.length;
+        await P.action('pulse_feed', { src: 'reddit', sort: 'new' });
+        assert.ok(!hits.slice(n).some(h => h.startsWith('/r/')), 'direkter Weg wird 1 h übersprungen');
+        const c = await P.action('pulse_comments', { url: r.items[0].url });
+        assert.deepStrictEqual(c.items.map(x => x.author), ['c1']);
+        assert.strictEqual(bodies[bodies.length - 1].id, 'abc0');
+        await assert.rejects(P.action('pulse_feed', { src: 'erp' }), /18\+/);
+    } finally { delete process.env.NEXUS_REDDIT_BASE; delete process.env.NEXUS_PULSE_BASE; srv.close(); }
+});
+
 test('4.1: Buttplug-Funktionen (Aktoren, Rotation, Stroker, Sensoren, Gerät-Einstellungen, Motoren) + PCS, Lust, Höhepunkt, Edging, Consent, Szene, HUD', async () => {
     const { NexusApp } = require('../backend/app');
     const { hashId } = require('../backend/nsfw');

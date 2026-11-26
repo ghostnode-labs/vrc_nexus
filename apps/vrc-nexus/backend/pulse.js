@@ -2,7 +2,9 @@
 /* VRC Nexus – 📰 Nexus Pulse (3.9): News & Discovery.
  * Quellen: offizielle VRChat-Ankündigungen und Patchnotes (Steam-News der App 438100), r/VRChat (Reddit-RSS, neu/beliebt + Kommentare),
  * optional r/VRchatERP – nur mit 18+-Freischaltung UND eigenem Schalter. Online-Abruf erst nach Opt-in (pulse.on).
- * Favoriten bleiben lokal in der Datenbank. Keine Anmeldung bei Reddit/Steam, nur öffentliche Feeds. */
+ * Favoriten bleiben lokal in der Datenbank. Keine Anmeldung bei Reddit/Steam, nur öffentliche Feeds.
+ * 5.2.5: Reddit sperrt anonyme RSS-Abrufe zunehmend (403/404) – dann übernimmt automatisch die GhostNode-Webseite
+ * (nexuspulse.php, offizielle Reddit-API, Schlüssel nur auf dem Server). Für r/VRchatERP schickt die App das Nexus-Konto-Token mit. */
 const { UID } = require('./vrchat');
 const { UserError } = require('./util');
 
@@ -72,12 +74,35 @@ class Pulse {
         this.cache.set(url, { t: Date.now(), v });
         return v;
     }
-    async source(src, sort) {
-        const RD = base('NEXUS_REDDIT_BASE', 'https://www.reddit.com'), ST = base('NEXUS_STEAMNEWS_BASE', 'https://api.steampowered.com');
+    // Weg über die GhostNode-Webseite (offizielle Reddit-API); merkt sich 1 h, dass der direkte Weg gesperrt ist
+    async viaNexus(a, body) {
+        const key = 'nx:' + a + ':' + JSON.stringify(body), c = this.cache.get(key);
+        if (c && Date.now() - c.t < TTL) return c.v;
+        const acc = this.app.account && this.app.account.current && this.app.account.current();
+        let r;
+        try { r = await fetch(base('NEXUS_PULSE_BASE', require('./servers').LISTS.nexus[0]) + '/nexuspulse.php?a=' + a, { method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': UA() }, body: JSON.stringify(Object.assign(acc ? { token: acc.token } : {}, body)), signal: AbortSignal.timeout(20000) }); }
+        catch (e) { throw new UserError('Reddit gerade nicht erreichbar (direkt gesperrt, GhostNode-Webseite nicht erreichbar).'); }
+        let j = {}; try { j = await r.json(); } catch (e) { }
+        if (!r.ok) throw new UserError(r.status === 401 ? 'r/VRchatERP über GhostNode braucht ein angemeldetes Nexus-Konto (Konto & Sicherheit).' : 'Reddit: ' + str(j.error || ('HTTP ' + r.status)));
+        const v = (Array.isArray(j.items) ? j.items : []).map(x => ({ id: str(x.id).slice(0, 80), src: str(x.src), kind: str(x.kind), title: cut(plain(x.title), 300), url: httpsOnly(x.url), author: cut(str(x.author), 60), ts: Number(x.ts) || 0, text: cut(str(x.text), a === 'comments' ? 1500 : 400), img: httpsOnly(x.img), comments: x.comments ? 1 : 0 }));
+        this.cache.set(key, { t: Date.now(), v });
+        return v;
+    }
+    async reddit(sub, sort, src) {
+        const RD = base('NEXUS_REDDIT_BASE', 'https://www.reddit.com');
         const so = sort === 'top' ? 'top/.rss?t=week&limit=30' : sort === 'hot' ? 'hot/.rss?limit=30' : 'new/.rss?limit=30';
+        if (!(this.directBlocked > Date.now())) {
+            try { const l = parseAtom(await this.get(RD + '/r/' + sub + '/' + so, 'xml'), src); if (l.length) return l; }
+            catch (e) { if (!/HTTP (403|404|429)|nicht erreichbar/.test(e.message)) throw e; }
+            this.directBlocked = Date.now() + 3600 * 1000;
+        }
+        return (await this.viaNexus('feed', { sub, sort: ['hot', 'top'].includes(sort) ? sort : 'new' })).filter(x => x.url && x.title).map(x => Object.assign(x, { src, kind: src, comments: 1 }));
+    }
+    async source(src, sort) {
+        const ST = base('NEXUS_STEAMNEWS_BASE', 'https://api.steampowered.com');
         if (src === 'vrchat') return parseSteam(await this.get(ST + '/ISteamNews/GetNewsForApp/v2/?appid=438100&count=30&maxlength=1200&format=json', 'json'));
-        if (src === 'reddit') return parseAtom(await this.get(RD + '/r/VRChat/' + so, 'xml'), 'reddit');
-        if (src === 'erp') { if (!this.erpAllowed()) throw new UserError('r/VRchatERP braucht die 18+-Freischaltung und den Schalter in den Einstellungen.'); return parseAtom(await this.get(RD + '/r/VRchatERP/' + so, 'xml'), 'erp'); }
+        if (src === 'reddit') return this.reddit('VRChat', sort, 'reddit');
+        if (src === 'erp') { if (!this.erpAllowed()) throw new UserError('r/VRchatERP braucht die 18+-Freischaltung und den Schalter in den Einstellungen.'); return this.reddit('VRchatERP', sort, 'erp'); }
         throw new UserError('Unbekannte Quelle.');
     }
     favIds() { return new Set(this.db.prepare('SELECT id FROM pulse_favs WHERE user_id = ?').column(UID)); }
@@ -111,8 +136,14 @@ class Pulse {
             const m = /^https:\/\/(?:www\.|old\.)?reddit\.com\/r\/(VRChat|VRchatERP)\/comments\/([a-z0-9]{2,12})\//i.exec(url);
             if (!m) throw new UserError('Kein Reddit-Beitrag.');
             if (/erp/i.test(m[1]) && !this.erpAllowed()) throw new UserError('Nicht freigeschaltet.');
-            const list = parseAtom(await this.get(base('NEXUS_REDDIT_BASE', 'https://www.reddit.com') + '/r/' + m[1] + '/comments/' + m[2] + '/.rss?limit=40', 'xml'), 'comment');
-            return { items: list.slice(1, 41).map(c => ({ author: c.author, ts: c.ts, text: c.text, url: c.url })) };   // erster Eintrag = Beitrag selbst
+            const sub = /erp/i.test(m[1]) ? 'VRchatERP' : 'VRChat';
+            if (!(this.directBlocked > Date.now())) {
+                try {
+                    const list = parseAtom(await this.get(base('NEXUS_REDDIT_BASE', 'https://www.reddit.com') + '/r/' + sub + '/comments/' + m[2] + '/.rss?limit=40', 'xml'), 'comment');
+                    return { items: list.slice(1, 41).map(c => ({ author: c.author, ts: c.ts, text: c.text, url: c.url })) };   // erster Eintrag = Beitrag selbst
+                } catch (e) { if (!/HTTP (403|404|429)|nicht erreichbar/.test(e.message)) throw e; this.directBlocked = Date.now() + 3600 * 1000; }
+            }
+            return { items: (await this.viaNexus('comments', { sub, id: m[2].toLowerCase() })).slice(0, 40).map(c => ({ author: c.author, ts: c.ts, text: c.text, url: c.url })) };
         }
         throw new UserError('Unbekannte Aktion.');
     }

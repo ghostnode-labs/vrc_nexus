@@ -22,6 +22,9 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.2.5 – Reddit works again
+- 📰 Nexus Pulse: Reddit now blocks anonymous feed requests (HTTP 403/404). The app still tries the direct way first and otherwise switches automatically to the GhostNode website, which reads r/VRChat (new/hot/top + comments) through the official Reddit API – the API key lives only on the server, responses are cached for 10 minutes. r/VRchatERP via the website only with a signed-in Nexus account (Verified 18+ and NSFW on)
+
 ### New in 5.2.4 – Watch background from the watch gallery
 - 🖼 Nexus Watch: ⚙ Settings → *Background from gallery* shows the latest photos on the watch – tap one and it becomes the background (cropped square, shrunk on the watch, also sent to the PC so the preview and other watches get it)
 
