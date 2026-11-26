@@ -213,6 +213,7 @@ public class MainActivity extends Activity {
     private void render() {
         root.removeAllViews();
         if ("settings".equals(screen)) { renderSettings(); return; }
+        if ("gallery".equals(screen)) { renderGallery(); return; }
         if (!Nexus.paired(this) || p().getBoolean("lost", false)) { renderPair(); return; }
         switch (screen) {
             case "heart": renderHeart(); return;
@@ -311,6 +312,7 @@ public class MainActivity extends Activity {
         String tk = themeKey(); int ti = 0; while (ti < THEMES.length && !THEMES[ti].equals(tk)) ti++;
         final int next = (ti + 1) % THEMES.length;
         button("🎨 Thema: " + THEME_NAMES[ti % THEMES.length], CYAN, v -> act("theme", "theme", THEMES[next]));
+        button("🖼 Hintergrund aus Galerie", CYAN, v -> go("gallery"));
         toggle("Puls beim Start senden", "auto_heart", false, null);
         toggle("Bildschirm anlassen", "screen_on", false, this::applyScreenOn);
         toggle("Vibration", "vibrate", true, null);
@@ -437,8 +439,88 @@ public class MainActivity extends Activity {
     }
     @Override public void onRequestPermissionsResult(int code, String[] perms, int[] r) {
         super.onRequestPermissionsResult(code, perms, r);
+        if (code == 9) { gallery = null; render(); return; }
         if (code == 7 && r.length > 0 && r[0] == PackageManager.PERMISSION_GRANTED) toggleHeart();
         else if (code == 7) toast("Ohne Sensor-Erlaubnis kein Puls.");
+    }
+
+    // ---------- 5.2.4: Hintergrund aus der Galerie der Uhr ----------
+    private java.util.List<Object[]> gallery;   // {Uri, Bitmap}
+    private boolean galleryBusy;
+    private String galPerm() { return android.os.Build.VERSION.SDK_INT >= 33 ? "android.permission.READ_MEDIA_IMAGES" : Manifest.permission.READ_EXTERNAL_STORAGE; }
+    private void renderGallery() {
+        text("🖼 Galerie", 16, GOLD, true);
+        if (checkSelfPermission(galPerm()) != PackageManager.PERMISSION_GRANTED) {
+            text("Nexus Watch braucht Zugriff auf deine Fotos, um eins als Hintergrund zu nehmen.", 11, MUTED, false);
+            button("Zugriff erlauben", GOLD, v -> requestPermissions(new String[]{ galPerm() }, 9));
+            button("← Zurück", MUTED, v -> go("settings"));
+            return;
+        }
+        if (gallery == null) {
+            text("Lade Fotos …", 11, MUTED, false);
+            if (!galleryBusy) { galleryBusy = true; net.execute(this::loadGallery); }
+        } else if (gallery.isEmpty()) text("Keine Fotos auf der Uhr gefunden.", 11, MUTED, false);
+        else {
+            LinearLayout r = null;
+            for (int i = 0; i < gallery.size(); i++) {
+                if (i % 2 == 0) r = tileRow();
+                final Uri u = (Uri) gallery.get(i)[0];
+                android.widget.ImageView iv = new android.widget.ImageView(this);
+                iv.setImageBitmap((android.graphics.Bitmap) gallery.get(i)[1]);
+                iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                GradientDrawable g = new GradientDrawable(); g.setShape(GradientDrawable.OVAL); g.setStroke(dp(2), CYAN);
+                iv.setBackground(g); iv.setClipToOutline(true);
+                int size = dp(74);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size); lp.leftMargin = dp(5); lp.rightMargin = dp(5);
+                iv.setLayoutParams(lp);
+                iv.setOnClickListener(v -> { buzz(20); useImage(u); });
+                r.addView(iv);
+            }
+        }
+        if (!err.isEmpty()) text("⚠ " + err, 10, GOLD, false);
+        button("← Zurück", MUTED, v -> { gallery = null; go("settings"); });
+    }
+    private void loadGallery() {
+        java.util.List<Object[]> out = new java.util.ArrayList<>();
+        String[] cols = { android.provider.MediaStore.Images.Media._ID };
+        try (android.database.Cursor cur = getContentResolver().query(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cols, null, null,
+                android.provider.MediaStore.Images.Media.DATE_ADDED + " DESC")) {
+            while (cur != null && cur.moveToNext() && out.size() < 24) {
+                Uri u = android.content.ContentUris.withAppendedId(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cur.getLong(0));
+                try { out.add(new Object[]{ u, getContentResolver().loadThumbnail(u, new android.util.Size(160, 160), null) }); } catch (Exception ignored) { }
+            }
+        } catch (Exception e) { err = "Galerie nicht lesbar: " + e.getMessage(); }
+        gallery = out; galleryBusy = false;
+        ui.post(() -> { if ("gallery".equals(screen)) render(); });
+    }
+    /** Foto auf Uhrgröße bringen (quadratisch, max. 480 px, JPEG) und an den PC schicken → kommt als Hintergrund zurück */
+    private void useImage(Uri u) {
+        toast("Wird übernommen …");
+        net.execute(() -> {
+            try {
+                android.graphics.Bitmap src;
+                if (android.os.Build.VERSION.SDK_INT >= 28) src = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(getContentResolver(), u), (dec, info, s) -> {
+                    int max = Math.max(info.getSize().getWidth(), info.getSize().getHeight()); if (max > 960) dec.setTargetSampleSize(max / 960);
+                    dec.setAllocator(android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE);
+                });
+                else throw new Exception("zu altes Android");
+                int side = Math.min(src.getWidth(), src.getHeight());
+                android.graphics.Bitmap sq = android.graphics.Bitmap.createBitmap(src, (src.getWidth() - side) / 2, (src.getHeight() - side) / 2, side, side);
+                android.graphics.Bitmap out = android.graphics.Bitmap.createScaledBitmap(sq, Math.min(480, side), Math.min(480, side), true);
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                out.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, bo);
+                JSONObject b = new JSONObject();
+                b.put("data", "data:image/jpeg;base64," + android.util.Base64.encodeToString(bo.toByteArray(), android.util.Base64.NO_WRAP));
+                JSONObject r = Nexus.call(this, "/watch/bg", b);
+                // sofort lokal setzen (ohne erneuten Download)
+                java.io.File f = new java.io.File(getFilesDir(), "bg.img");
+                try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) { o.write(bo.toByteArray()); }
+                JSONObject st = r.optJSONObject("state");
+                if (st != null) { state = st; JSONObject lk = st.optJSONObject("look"); if (lk != null) p().edit().putString("bg_rev", lk.optString("bg_rev")).apply(); }
+                err = "";
+                ui.post(() -> { toast("🖼 Hintergrund gesetzt"); if (state != null) applyLook(state.optJSONObject("look"), false); gallery = null; go("main"); });
+            } catch (Exception e) { err = String.valueOf(e.getMessage()); ui.post(this::render); }
+        });
     }
 
     // ---------- Updater ----------

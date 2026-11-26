@@ -3807,6 +3807,11 @@ test('5.2.3: Handy ↔ PC über die Uhr-Kopplung (feste Aktionsliste), Themen & 
     const img = Buffer.from(await (await fetch(B + '/watch/bg', { headers: { 'X-Nexus-Watch': w.token } })).arrayBuffer());
     assert.ok(img.equals(png), 'Uhr bekommt das Bild');
     assert.strictEqual((await fetch(B + '/watch/bg')).status, 401, 'Bild nur für gekoppelte Geräte');
+    // 5.2.4: Bild aus der Galerie der Uhr hochladen
+    const jpg = Buffer.concat([Buffer.from('ffd8ffe000104a464946', 'hex'), Buffer.alloc(200)]);
+    let up = await (await fetch(B + '/watch/bg', { method: 'POST', headers: { 'X-Nexus-Watch': w.token }, body: JSON.stringify({ data: 'data:image/jpeg;base64,' + jpg.toString('base64') }) })).json();
+    assert.ok(up.ok && up.state.look.bg === 'image' && up.state.look.bg_rev !== r.look.bg_rev, 'Uhr setzt eigenes Bild');
+    assert.strictEqual((await fetch(B + '/watch/bg', { method: 'POST', body: '{}' })).status, 401);
     // Thema von der Uhr aus ändern
     await fetch(B + '/watch/action', { method: 'POST', headers: { 'X-Nexus-Watch': w.token }, body: JSON.stringify({ a: 'theme', theme: 'amoled' }) });
     assert.strictEqual(pc.watch.cfg().theme, 'amoled');

@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.2.4",
+  "title": "Watch background from the watch gallery",
+  "body": "- 🖼 Nexus Watch: ⚙ Settings → *Background from gallery* shows the latest photos on the watch – tap one and it becomes the background (cropped square, shrunk on the watch, also sent to the PC so the preview and other watches get it)"
+ },
+ {
   "version": "5.2.3",
   "title": "Watch & phone hub, themes, auto-updater",
   "body": "- 🧰 **Tools → ⌚ Nexus Watch & phone**: everything in one place – connection & pairing code, paired devices with online status and version, live heart rate, 🔔 *find watch* (it vibrates)\n- 🎨 **Watch design**: 6 themes (Cyber, Neon, Ocean, Forest, Sunset, AMOLED), background (none, gradient or your own image, automatically shrunk) with dimming and a live round preview – synced to every paired watch, and the theme can also be changed on the watch\n- 📱 **Phone ↔ PC**: the Android app pairs with the same code (Tools → *Connect to PC*) and talks directly to the PC on your home network: status & heart rate, chatbox text, avatar presets, macros, sleep mode and 🔞 *** – only a fixed list of actions, one key per device\n- ⬆ **Watch auto-updater**: checks about every 12 h while charging on Wi-Fi and installs new versions by itself (Wear OS 4+, after confirming the first update once; Wear OS 3 asks with a notification)"

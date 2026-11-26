@@ -22,6 +22,9 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.2.4 – Watch background from the watch gallery
+- 🖼 Nexus Watch: ⚙ Settings → *Background from gallery* shows the latest photos on the watch – tap one and it becomes the background (cropped square, shrunk on the watch, also sent to the PC so the preview and other watches get it)
+
 ### New in 5.2.3 – Watch & phone hub, themes, auto-updater
 - 🧰 **Tools → ⌚ Nexus Watch & phone**: everything in one place – connection & pairing code, paired devices with online status and version, live heart rate, 🔔 *find watch* (it vibrates)
 - 🎨 **Watch design**: 6 themes (Cyber, Neon, Ocean, Forest, Sunset, AMOLED), background (none, gradient or your own image, automatically shrunk) with dimming and a live round preview – synced to every paired watch, and the theme can also be changed on the watch

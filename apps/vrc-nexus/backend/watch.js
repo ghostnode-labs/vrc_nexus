@@ -111,10 +111,10 @@ class Watch {
         this.server = null; this.udp = null; this.port = 0;
     }
     send(res, code, data) { res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data)); }
-    body(req) {
+    body(req, max = MAX_BODY) {
         return new Promise((ok, bad) => {
             let n = 0; const chunks = [];
-            req.on('data', c => { n += c.length; if (n > MAX_BODY) { bad(new UserError('Anfrage zu groß.')); req.destroy(); } else chunks.push(c); });
+            req.on('data', c => { n += c.length; if (n > max) { bad(new UserError('Anfrage zu groß.')); req.destroy(); } else chunks.push(c); });
             req.on('end', () => { try { ok(JSON.parse(Buffer.concat(chunks).toString() || '{}') || {}); } catch (e) { bad(new UserError('Ungültige Anfrage.')); } });
             req.on('error', bad);
         });
@@ -135,6 +135,11 @@ class Watch {
         const dev = this.device(req);
         if (!dev) return this.send(res, 401, { error: 'Nicht gekoppelt.' });
         if (url.pathname === '/watch/state') { const st = this.state(); const bz = this.buzz[dev.id]; if (bz && Date.now() < bz) { st.buzz = bz; delete this.buzz[dev.id]; } return this.send(res, 200, st); }
+        if (url.pathname === '/watch/bg' && req.method === 'POST') {   // 5.2.4: Bild aus der Galerie der Uhr
+            const b = await this.body(req, Math.ceil(BG_MAX * 1.4) + 200);
+            this.setBg(b.data);
+            return this.send(res, 200, { ok: true, msg: '🖼 Hintergrund gespeichert.', state: this.state() });
+        }
         if (url.pathname === '/watch/bg') {
             const b = this.bgFile();
             if (!b) return this.send(res, 404, { error: 'Kein Bild.' });
