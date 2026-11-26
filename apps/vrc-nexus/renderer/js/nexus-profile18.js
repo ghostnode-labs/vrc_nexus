@@ -17,7 +17,7 @@
         open_contact: ['Offen für sexuelle Kontakte', [['', '– leer lassen –'], ['yes', 'Ja'], ['no', 'Nein'], ['ask', 'Frag mich']]],
         safer: ['Safer-Sex-Grundsatz', [['', '– leer lassen –'], ['always', 'Immer'], ['sometimes', 'Manchmal'], ['never', 'Nie'], ['talk', 'Lass uns reden']]],
     };
-    const VIS = { visibility: ['Wer sieht mein 18+-Profil?', [['', 'Alle mit Verified 18+ und NSFW an'], ['hidden', 'Nur ich']]] };
+    const VIS = { visibility: ['Wer sieht mein 18+-Profil?', [['', 'Alle mit Verified 18+ und NSFW an'], ['connections', 'Nur meine Verbindungen (angenommene Anfragen)'], ['hidden', 'Nur ich']]] };
     /* Kink-Liste: Schlüssel → Bezeichnung (die Bezeichnungen bleiben bewusst Englisch – so kennt man sie in der Community) */
     const KINKS = [
         ['Allgemein', [['condoms', 'Condoms'], ['feet', 'Feet'], ['foreplay', 'Foreplay'], ['inflatables', 'Inflatables'], ['toys', 'Sex Toys'], ['sweat', 'Sweat'], ['teasing', 'Teasing'], ['tickling', 'Tickling']]],

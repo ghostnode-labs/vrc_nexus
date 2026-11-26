@@ -2,6 +2,15 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 6.0.0 – NSFW major: 18+ requests, connections & consent check
+
+- 💌 **18+ requests** (Community → *💌 18+ requests*, in the profile and on Nexus Web): send someone with Verified 18+ and NSFW on a request with a short message. They accept or decline – a decline is shown to you only as “not accepted”. Limits: 20 requests a day, no duplicates, 30 days pause after a decline, open requests expire after 14 days.
+- 💞 **Connections:** after both agree you are connected. Your 18+ profile can now be shown **only to your connections** (new visibility option). Either side can unlink at any time – that also ends running consent checks.
+- 🧩 **Compatibility** (only between connections): your preferences (receive / give) are compared – 💚 match, 💛 maybe, 🚫 conflict, with a score. Just a conversation starter.
+- 🤝 **Consent check:** one side proposes – traffic light 🟢🟡🔴 (🔴 starts nothing), limits for today, safeword, duration (5–240 min) and whether toys are allowed. The other side agrees with their own terms; the **shorter duration wins** and both see each other's safeword and limits.
+- 🛑 **Safeword button** ends the session for both sides immediately and **stops all toys** in the app; “done” and “withdraw” as well.
+- Works the same in the app and on Nexus Web (same Nexus account); everything is checked on the server (Verified 18+, NSFW switch).
+
 ### New in 5.3.0 – Panic from watch and phone switches NSFW off
 
 - 🚨 Panic on the **Nexus Watch** and in the **paired phone app** now works exactly like the panic button at the top of the PC app: all panic actions run and **NSFW is switched off on your Nexus account** – the app leaves the NSFW page right away. If the GhostNode server can't be reached, NSFW is switched off locally anyway.

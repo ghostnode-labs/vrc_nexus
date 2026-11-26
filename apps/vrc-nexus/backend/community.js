@@ -9,7 +9,9 @@ const { str, int, UserError } = require('./util');
 const BASE = () => (process.env.NEXUS_COMM_BASE || process.env.NEXUS_ACCT_BASE || process.env.NEXUS_RELAY_BASE || require('./servers').nexus()).replace(/\/+$/, '');
 const ACTS = { comm_me: 'me', comm_feed: 'feed', comm_thread: 'thread', comm_post: 'post', comm_edit: 'edit', comm_delete: 'delete', comm_react: 'react', comm_report: 'report',
     comm_profile: 'profile', comm_profile_save: 'profile_save', comm_mod_queue: 'mod_queue', comm_mod: 'mod', comm_world: 'world', comm_world_note: 'world_note',
-    comm_save: 'save', comm_follow: 'follow', comm_follows: 'follows', comm_trends: 'trends', comm_inbox: 'inbox' };   // 5.3
+    comm_save: 'save', comm_follow: 'follow', comm_follows: 'follows', comm_trends: 'trends', comm_inbox: 'inbox',   // 5.3
+    comm_req_list: 'req_list', comm_req_send: 'req_send', comm_req_answer: 'req_answer', comm_req_withdraw: 'req_withdraw', comm_compat: 'compat',   // 6.0 (18+)
+    comm_sess_start: 'sess_start', comm_sess_answer: 'sess_answer', comm_sess_end: 'sess_end' };
 const MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 class Community {
@@ -62,11 +64,13 @@ class Community {
             if (k === 'act' || k === 'token' || k === 'key') continue;
             if (k === 'media' || k === 'links') body[k] = Array.isArray(v) ? v.map(str) : str(v) ? str(v).split(',').map(x => x.trim()).filter(Boolean) : [];
             else if (k === 'facts' || k === 'nsfw_facts') { let o = v; if (typeof v === 'string') { try { o = JSON.parse(v); } catch (e) { o = null; } } if (o && typeof o === 'object' && !Array.isArray(o)) body[k] = o; }   // 3.1.1: Steckbrief (prüft der Server)
-            else if (k === 'id' && a === 'profile') { if (str(v).trim()) body.id = str(v).trim(); }   // Profil: VRChat-ID (leer = eigenes Profil), keine Zahl
+            else if (k === 'id' && ['profile', 'follow', 'req_send', 'compat', 'sess_start'].includes(a)) { if (str(v).trim()) body.id = str(v).trim(); }   // VRChat-ID (Profil leer = eigenes), keine Zahl
+            else if (k === 'terms') { let o = v; if (typeof v === 'string') { try { o = JSON.parse(v); } catch (e) { o = null; } } if (o && typeof o === 'object' && !Array.isArray(o)) body.terms = o; }   // 6.0: Consent-Check
             else if (['id', 'before', 'parent', 'hours', 'report'].includes(k)) body[k] = int(v);
             else body[k] = str(v);
         }
         if (a === 'feed' && body.rating === 'nsfw' && !this.app.nsfw.access().unlocked) throw new UserError('NSFW ist nicht freigegeben.');
+        if (/^(req_|sess_|compat)/.test(a) && !this.app.nsfw.access().unlocked) throw new UserError('NSFW ist nicht freigegeben.');   // 6.0: 18+-Anfragen nur mit NSFW
         return this.call(a, body);
     }
 }

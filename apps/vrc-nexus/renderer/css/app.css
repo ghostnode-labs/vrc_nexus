@@ -1430,3 +1430,14 @@ html[data-scheme="light"] body.hi-contrast { --text-muted: #2f3b48; }
 .lic-facts { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; margin: 6px 0; font-size: 0.85rem; }
 .lic-facts dt { color: var(--text-muted); }
 .lic-facts dd { margin: 0; }
+
+/* 6.0: 18+-Anfragen & Consent-Check */
+.l18-bar { margin: 0 0 10px; gap: 6px; flex-wrap: wrap; }
+.l18-item { padding: 8px 0; border-bottom: 1px solid var(--line, rgba(255,255,255,.08)); }
+.l18-item:last-child { border-bottom: 0; }
+.l18-item .nc-row { margin-top: 6px; gap: 6px; flex-wrap: wrap; }
+.l18-sess, .l18-compat, .l18-consent { margin-top: 8px; padding: 8px 10px; border-radius: var(--r, 10px); border: 1px solid rgba(255,111,174,.35); background: rgba(255,111,174,.06); }
+.l18-sess.ready { border-color: rgba(80,200,120,.55); background: rgba(80,200,120,.07); }
+.l18-consent input[type=text] { width: 100%; margin: 6px 0; }
+.l18-consent .nc-row { gap: 10px; flex-wrap: wrap; align-items: center; }
+.l18-compat .vx-pill { margin: 3px 3px 0 0; }

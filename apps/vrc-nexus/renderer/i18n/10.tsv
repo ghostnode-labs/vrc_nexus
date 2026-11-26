@@ -1893,3 +1893,40 @@ Zum Verlängern bei der Besitzerin melden – du bekommst einen neuen Schlüssel
 Sperrliste aktualisiert.	Revocation list updated.	Liste de révocation mise à jour.	無効化リストを更新しました。
 Kein Freischalt-Schlüssel eingetragen.	No unlock key entered.	Aucune clé de déverrouillage saisie.	解除キーが入力されていません。
 Gesperrte Schlüssel erst entsperren.	Unrevoke the key first.	Débloque d'abord la clé.	先にキーの無効化を解除してください。
+18+-Anfragen	18+ requests	Demandes 18+	18+リクエスト
+gemerkt	saved	enregistré	保存済み
+18+-Anfrage senden	Send 18+ request	Envoyer une demande 18+	18+リクエストを送る
+Anfrage gesendet	Request sent	Demande envoyée	リクエスト送信済み
+Zurückziehen	Withdraw	Retirer	取り下げる
+Anfrage beantworten	Answer request	Répondre à la demande	リクエストに返信
+Kompatibilität	Compatibility	Compatibilité	相性
+Consent-Check	Consent check	Vérif. du consentement	同意チェック
+Grenzen für heute (optional), z. B. kein …	Limits for today (optional), e.g. no …	Limites du jour (facultatif), p. ex. pas de …	今日の限界（任意）、例：…なし
+Spielzeug erlaubt	Toys allowed	Jouets autorisés	トイOK
+Bereit	Ready	Prêt·e	準備OK
+Vorsichtig	Careful	Prudent·e	慎重に
+Heute nicht	Not today	Pas aujourd'hui	今日はなし
+Zustimmen	Agree	Accepter	同意する
+Consent-Check schicken	Send consent check	Envoyer la vérif. du consentement	同意チェックを送る
+Nein danke	No thanks	Non merci	結構です
+Anfragen gibt es nur zwischen Konten mit Verified 18+ und NSFW an. Erst wenn beide zustimmen, seid ihr verbunden – dann seht ihr Kompatibilität und könnt einen Consent-Check starten. Ablehnen bleibt anonym („nicht angenommen“).	Requests only work between accounts with Verified 18+ and NSFW on. Only when both agree are you connected – then you see compatibility and can start a consent check. Declining stays anonymous (“not accepted”).	Les demandes ne fonctionnent qu'entre comptes Verified 18+ avec NSFW activé. Vous n'êtes connecté·e·s que si les deux acceptent – vous voyez alors la compatibilité et pouvez lancer une vérif. du consentement. Un refus reste anonyme (« non acceptée »).	リクエストはVerified 18+かつNSFWオンのアカウント同士のみ。双方が同意して初めてつながり、相性の確認と同意チェックができます。お断りは匿名です（「未承認」）。
+Eingang	Inbox	Reçues	受信
+Keine offenen Anfragen.	No open requests.	Aucune demande en attente.	未対応のリクエストはありません。
+Lösen	Unlink	Délier	解除
+fragt einen Consent-Check an	asks for a consent check	demande une vérif. du consentement	が同意チェックを依頼しています
+Wartet auf Zustimmung	Waiting for agreement	En attente d'accord	同意待ち
+Session läuft	Session running	Session en cours	セッション中
+Safeword – sofort beenden	Safeword – stop now	Safeword – arrêter tout de suite	セーフワード – 今すぐ終了
+Noch keine Verbindungen – schick jemandem im 18+-Profil eine Anfrage.	No connections yet – send someone a request from their 18+ profile.	Pas encore de connexions – envoie une demande depuis un profil 18+.	まだつながりはありません – 18+プロフィールからリクエストを送ってください。
+Noch zu wenig ausgefüllt	Not filled in enough yet	Pas encore assez rempli	まだ情報が足りません
+du empfängst	you receive	tu reçois	受ける側
+du gibst	you give	tu donnes	する側
+Nur ein Gesprächsanfang – redet immer direkt über Grenzen.	Just a conversation starter – always talk about limits directly.	Juste un point de départ – parlez toujours directement des limites.	会話のきっかけにすぎません – 限界については必ず直接話してください。
+Kurze Nachricht zur Anfrage (optional):	Short message with the request (optional):	Petit message avec la demande (facultatif) :	リクエストへの短いメッセージ（任意）：
+Verbindung lösen? Laufende Consent-Checks enden dann.	Unlink? Running consent checks will end.	Délier ? Les vérifs. du consentement en cours prendront fin.	つながりを解除しますか？進行中の同意チェックは終了します。
+nicht angenommen	not accepted	non acceptée	未承認
+zurückgezogen	withdrawn	retirée	取り下げ
+gelöst	unlinked	déliée	解除済み
+Nur meine Verbindungen (angenommene Anfragen)	Only my connections (accepted requests)	Seulement mes connexions (demandes acceptées)	つながりのみ（承認済みリクエスト）
+NSFW-Avatare	NSFW avatars	Avatars NSFW	NSFWアバター
+NSFW-Welten	NSFW worlds	Mondes NSFW	NSFWワールド

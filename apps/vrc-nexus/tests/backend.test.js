@@ -4026,3 +4026,30 @@ test('5.2.3: Handy ↔ PC über die Uhr-Kopplung (feste Aktionsliste), Themen & 
     await pc.post({ act: 'watch_cfg', on: '0' }, {});
     pc.tools.stop(); mob.tools && mob.tools.stop && mob.tools.stop(); pc.heart && pc.heart.stop();
 });
+
+test('6.0: 18+-Anfragen & Consent-Check – VRChat-IDs als Text, Bedingungen als Objekt, nur mit NSFW', async () => {
+    const { Community } = require('../backend/community');
+    let unlocked = false; const sent = [];
+    const fake = { account: { current: () => ({ token: 'tok' }) }, nsfw: { serviceToken: () => '', roles: () => ({ roles: [] }), access: () => ({ unlocked }) } };
+    const c = new Community(fake);
+    const old = globalThis.fetch;
+    globalThis.fetch = async (url, o) => { sent.push({ a: new URL(url).searchParams.get('a'), body: JSON.parse(o.body) }); return { ok: true, status: 200, json: async () => ({ msg: 'ok' }) }; };
+    try {
+        const vid = 'usr_a1a1a1a1-1111-2222-3333-444444444444';
+        await assert.rejects(c.action('comm_req_send', { id: vid }), /NSFW ist nicht freigegeben/, 'ohne NSFW keine Anfragen');
+        await c.action('comm_follow', { id: vid, on: '1' });
+        assert.strictEqual(sent.pop().body.id, vid, '5.3-Fix: Folgen sendet die VRChat-ID, keine Zahl');
+        unlocked = true;
+        await c.action('comm_req_send', { id: vid, message: 'Hallo' });
+        let s = sent.pop(); assert.strictEqual(s.a, 'req_send'); assert.strictEqual(s.body.id, vid);
+        await c.action('comm_req_answer', { id: '7', accept: '1' });
+        s = sent.pop(); assert.deepStrictEqual([s.a, s.body.id, s.body.accept], ['req_answer', 7, '1']);
+        await c.action('comm_sess_start', { id: vid, terms: JSON.stringify({ light: 'green', safeword: 'Mango', minutes: 30, toys: true }) });
+        s = sent.pop(); assert.strictEqual(s.body.id, vid); assert.deepStrictEqual(s.body.terms, { light: 'green', safeword: 'Mango', minutes: 30, toys: true }, 'Bedingungen als Objekt');
+        await c.action('comm_sess_end', { id: '3', reason: 'safeword' });
+        s = sent.pop(); assert.deepStrictEqual([s.a, s.body.id, s.body.reason], ['sess_end', 3, 'safeword']);
+        await c.action('comm_compat', { id: vid }); assert.strictEqual(sent.pop().body.id, vid);
+        for (const a of ['comm_req_list', 'comm_req_withdraw', 'comm_sess_answer']) await c.action(a, { id: '1' });
+        assert.deepStrictEqual(sent.map(x => x.a), ['req_list', 'req_withdraw', 'sess_answer']);
+    } finally { globalThis.fetch = old; }
+});

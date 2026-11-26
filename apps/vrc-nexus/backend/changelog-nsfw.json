@@ -1,5 +1,10 @@
 [
  {
+  "version": "6.0.0",
+  "title": "NSFW major: 18+ requests, connections & consent check",
+  "body": "- 💌 **18+ requests** (Community → *💌 18+ requests*, in the profile and on Nexus Web): send someone with Verified 18+ and NSFW on a request with a short message. They accept or decline – a decline is shown to you only as “not accepted”. Limits: 20 requests a day, no duplicates, 30 days pause after a decline, open requests expire after 14 days.\n- 💞 **Connections:** after both agree you are connected. Your 18+ profile can now be shown **only to your connections** (new visibility option). Either side can unlink at any time – that also ends running consent checks.\n- 🧩 **Compatibility** (only between connections): your preferences (receive / give) are compared – 💚 match, 💛 maybe, 🚫 conflict, with a score. Just a conversation starter.\n- 🤝 **Consent check:** one side proposes – traffic light 🟢🟡🔴 (🔴 starts nothing), limits for today, safeword, duration (5–240 min) and whether toys are allowed. The other side agrees with their own terms; the **shorter duration wins** and both see each other's safeword and limits.\n- 🛑 **Safeword button** ends the session for both sides immediately and **stops all toys** in the app; “done” and “withdraw” as well.\n- Works the same in the app and on Nexus Web (same Nexus account); everything is checked on the server (Verified 18+, NSFW switch)."
+ },
+ {
   "version": "5.3.0",
   "title": "Panic from watch and phone switches NSFW off",
   "body": "- 🚨 Panic on the **Nexus Watch** and in the **paired phone app** now works exactly like the panic button at the top of the PC app: all panic actions run and **NSFW is switched off on your Nexus account** – the app leaves the NSFW page right away. If the GhostNode server can't be reached, NSFW is switched off locally anyway.\n- 🌐 Nexus Web: a separate 18+ / ERP area in the browser (NSFW feed, r/VRchatERP via the website, your 18+ profile text, safety rules) – only with Verified 18+ and NSFW switched on."

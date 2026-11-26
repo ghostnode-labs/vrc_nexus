@@ -6,14 +6,14 @@
     const esc = UI.esc, api = UI.api, toast = (m, bad) => UI.toast(m, bad);
     const T = s => (window.t ? window.t(s) : s);
     const when = ts => UI.ago ? UI.ago(ts) : new Date(ts * 1000).toLocaleString();
-    let filt = { q: '', tag: '' }, disc = null;   // 5.3: Suche/Hashtag im Feed, Entdecken (Trends + Antworten an mich)
+    let filt = { q: '', tag: '' }, disc = null, links18 = null, consentFor = '', compatOf = null;   // 6.0: 18+-Anfragen, Consent-Check   // 5.3: Suche/Hashtag im Feed, Entdecken (Trends + Antworten an mich)
     let box = null, sub = (window.NexusUI.store && window.NexusUI.store.get('cmtSub', 'feed')) || 'feed', me = null, items = [], openThread = {}, attach = [], modData = null, prof = null, profEdit = false, busy = false, acct = null, p18Edit = false, profTab = 'main';
     const md = t => (window.NexusMD ? window.NexusMD.render(t) : esc(t).replace(/\n/g, '<br>'));   // 3.2: Markdown (sicher, ohne HTML)
     const card = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '">' + (t ? '<h4>' + t + '</h4>' : '') + html + '</div>';
     const MOBILE = document.body.classList.contains('mobile');
     let chat = { list: null, uid: '', open: null, timer: null };
     const FEEDS = ['feed', 'nsfw', 'following', 'saved'];
-    const subs = () => [['feed', '🫂 ' + T('Feed')], ['following', '⭐ ' + T('Folge ich')], ['saved', '🔖 ' + T('Gemerkt')], ['discover', '🔥 ' + T('Entdecken') + (disc && disc.unread ? ' •' : '')], ...(me && me.nsfw ? [['nsfw', '🔞 ' + T('NSFW-Feed')]] : []), ['chat', '💬 ' + T('Chat') + (chat.list && chat.list.some(c => c.unread) ? ' •' : '')], ['profile', '👤 ' + T('Mein Profil')], ...(me && me.mod ? [['mod', '🛡 ' + T('Moderation')]] : [])];
+    const subs = () => [['feed', '🫂 ' + T('Feed')], ['following', '⭐ ' + T('Folge ich')], ['saved', '🔖 ' + T('Gemerkt')], ['discover', '🔥 ' + T('Entdecken') + (disc && disc.unread ? ' •' : '')], ...(me && me.nsfw ? [['nsfw', '🔞 ' + T('NSFW-Feed')], ['links18', '💌 ' + T('18+-Anfragen') + (links18 && links18.incoming.length ? ' •' : '')]] : []), ['chat', '💬 ' + T('Chat') + (chat.list && chat.list.some(c => c.unread) ? ' •' : '')], ['profile', '👤 ' + T('Mein Profil')], ...(me && me.mod ? [['mod', '🛡 ' + T('Moderation')]] : [])];
 
     function nav() {
         const n = document.getElementById('cmtSub');
@@ -60,6 +60,7 @@
         if (!me) { box.innerHTML = '<div class="vx-loading">' + esc(T('Lade …')) + '</div>'; return; }
         if (me.error) { box.innerHTML = card('🫂 Community', '<p class="small">' + esc(T(me.error)) + '</p><div id="cmtAcct"></div>'); if (window.NexusAccount) window.NexusAccount.render(box.querySelector('#cmtAcct')); return; }
         if (sub === 'discover') { box.innerHTML = discoverHtml(); return; }
+        if (sub === 'links18') { box.innerHTML = links18Html(); return; }
         if (FEEDS.includes(sub)) {
             // 3.2: Feed wie ein Chat – älteste oben, neueste unten, Eingabe unten, eigener Bereich mit Scrollen
             const old = box.querySelector('.cm-flow'), atEnd = !old || old.scrollHeight - old.scrollTop - old.clientHeight < 80, keep = old ? old.scrollHeight - old.scrollTop : 0;
@@ -294,8 +295,82 @@
         const canEdit = p.own && nsfwOn;   // ohne eingeschaltetes NSFW speichert der Server den 18+-Teil nicht
         if (canEdit && p18Edit) return card('🔞 ' + esc(T('18+-Profil bearbeiten')), P.nsfwEditor(p.nsfw_facts, p.nsfw_bio), 'cm-p18');
         if (p.own && !canEdit) return card('🔞 ' + esc(T('18+-Profil')), '<p class="small">' + esc(T('Schalte oben rechts NSFW ein, um dein 18+-Profil zu bearbeiten.')) + '</p>' + P.nsfwView(p.nsfw_facts, p.nsfw_bio), 'cm-p18');
-        return card('🔞 ' + esc(T('18+-Profil')) + (canEdit ? '<button type="button" class="btn btn-sm" data-p18e="1" style="margin-left:auto">✎ ' + esc(T('Bearbeiten')) + '</button>' : ''), P.nsfwView(p.nsfw_facts, p.nsfw_bio), 'cm-p18');
+        return card('🔞 ' + esc(T('18+-Profil')) + (canEdit ? '<button type="button" class="btn btn-sm" data-p18e="1" style="margin-left:auto">✎ ' + esc(T('Bearbeiten')) + '</button>' : ''), linkBar(p) + P.nsfwView(p.nsfw_facts, p.nsfw_bio), 'cm-p18');
     }
+    /** 6.0: Anfrage / Verbindung zu dieser Person */
+    function linkBar(p) {
+        if (p.own || !p.link18 || !(me && me.nsfw)) return '';
+        const l = p.link18;
+        const b = (a, label, gold) => '<button type="button" class="btn btn-sm' + (gold ? ' btn-gold' : '') + '" data-l18="' + a + '" data-vrc="' + esc(p.vrc_id) + '"' + (l.id ? ' data-rid="' + l.id + '"' : '') + '>' + label + '</button>';
+        return '<div class="nc-row l18-bar">' + (l.state === 'none' ? b('send', '💌 ' + esc(T('18+-Anfrage senden')), true)
+            : l.state === 'sent' ? '<span class="vx-pill">⏳ ' + esc(T('Anfrage gesendet')) + '</span>' + b('withdraw', esc(T('Zurückziehen')))
+            : l.state === 'received' ? b('open', '💌 ' + esc(T('Anfrage beantworten')), true)
+            : '<span class="vx-pill" style="--pc:#ff6fae">💞 ' + esc(T('Verbunden')) + '</span>' + b('compat', '💞 ' + esc(T('Kompatibilität'))) + b('consent', '🤝 ' + esc(T('Consent-Check')), true)) + '</div>';
+    }
+    /** 6.0: Seite „18+-Anfragen“ – Eingang, Gesendet, Verbindungen, Consent-Checks */
+    function links18Html() {
+        if (!links18) return '<div class="vx-loading">' + esc(T('Lade …')) + '</div>';
+        const d = links18, nm = x => esc(x.name || x.vrc_id.slice(0, 12)), dt = ts => new Date(ts * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE');
+        const prof = x => '<a href="#" data-cprof="' + esc(x.vrc_id) + '"><b>' + nm(x) + '</b></a>';
+        const sessFor = id => d.sessions.filter(s => s.with === id && ['proposed', 'ready'].includes(s.status));
+        const LIGHT = { green: '🟢', yellow: '🟡', red: '🔴' };
+        const terms = t => t ? LIGHT[t.light] + ' · ⏱ ' + t.minutes + ' min · 🛑 „' + esc(t.safeword) + '“' + (t.toys ? ' · 🎮 ' + esc(T('Spielzeug')) : '') + (t.limits ? '<div class="small">🚫 ' + esc(t.limits) + '</div>' : '') : '–';
+        const consentForm = (id, rid, answer) => '<form class="l18-consent" data-cf="' + esc(id) + '"' + (rid ? ' data-sid="' + rid + '"' : '') + '><div class="nc-row">'
+            + ['green', 'yellow', 'red'].map(l => '<label class="check"><input type="radio" name="light" value="' + l + '"' + (l === 'green' ? ' checked' : '') + '> ' + LIGHT[l] + ' ' + esc(T({ green: 'Bereit', yellow: 'Vorsichtig', red: 'Heute nicht' }[l])) + '</label>').join('') + '</div>'
+            + '<input type="text" name="limits" maxlength="500" placeholder="' + esc(T('Grenzen für heute (optional), z. B. kein …')) + '"><div class="nc-row"><input type="text" name="safeword" maxlength="40" placeholder="' + esc(T('Safeword')) + '" value="Rot" style="width:140px">'
+            + '<select name="minutes">' + [15, 30, 45, 60, 90, 120].map(m => '<option value="' + m + '"' + (m === 30 ? ' selected' : '') + '>' + m + ' min</option>').join('') + '</select><label class="check small"><input type="checkbox" name="toys"> 🎮 ' + esc(T('Spielzeug erlaubt')) + '</label></div>'
+            + '<div class="nc-row"><button class="btn btn-sm btn-gold">' + esc(T(answer ? 'Zustimmen' : 'Consent-Check schicken')) + '</button>' + (answer ? '<button type="button" class="btn btn-sm" data-l18="sdecline" data-sid="' + rid + '">' + esc(T('Nein danke')) + '</button>' : '') + '</div></form>';
+        return '<div class="tts-help">💌 ' + esc(T('Anfragen gibt es nur zwischen Konten mit Verified 18+ und NSFW an. Erst wenn beide zustimmen, seid ihr verbunden – dann seht ihr Kompatibilität und könnt einen Consent-Check starten. Ablehnen bleibt anonym („nicht angenommen“).')) + '</div>'
+            + '<div class="nc-grid">'
+            + card('📥 ' + esc(T('Eingang')) + ' (' + d.incoming.length + ')', d.incoming.length ? d.incoming.map(r => '<div class="l18-item">' + prof(r) + ' <span class="small muted">' + esc(dt(r.created)) + '</span>' + (r.message ? '<div class="cm-text">' + esc(r.message) + '</div>' : '')
+                + '<div class="nc-row"><button type="button" class="btn btn-sm btn-gold" data-l18="accept" data-rid="' + r.id + '">💞 ' + esc(T('Annehmen')) + '</button><button type="button" class="btn btn-sm" data-l18="decline" data-rid="' + r.id + '">' + esc(T('Ablehnen')) + '</button></div></div>').join('') : '<p class="small muted">' + esc(T('Keine offenen Anfragen.')) + '</p>')
+            + card('💞 ' + esc(T('Verbindungen')) + ' (' + d.connections.length + ')', d.connections.length ? d.connections.map(c => {
+                const ss = sessFor(c.vrc_id), open = ss.find(s => s.status === 'proposed' && !s.proposed_by_me), mine = ss.find(s => s.status === 'proposed' && s.proposed_by_me), ready = ss.find(s => s.status === 'ready');
+                return '<div class="l18-item">' + prof(c) + ' <span class="small muted">' + esc(T('seit')) + ' ' + esc(dt(c.since)) + '</span>'
+                    + '<div class="nc-row"><button type="button" class="btn btn-sm" data-l18="compat" data-vrc="' + esc(c.vrc_id) + '">💞 ' + esc(T('Kompatibilität')) + '</button>' + (!ss.length ? '<button type="button" class="btn btn-sm btn-gold" data-l18="consent" data-vrc="' + esc(c.vrc_id) + '">🤝 ' + esc(T('Consent-Check')) + '</button>' : '')
+                    + '<button type="button" class="btn btn-sm btn-danger" data-l18="unlink" data-rid="' + c.id + '">' + esc(T('Lösen')) + '</button></div>'
+                    + (compatOf && compatOf.id === c.vrc_id ? compatHtml(compatOf.d) : '')
+                    + (consentFor === c.vrc_id && !ss.length ? consentForm(c.vrc_id, 0, false) : '')
+                    + (open ? '<div class="l18-sess"><b>🤝 ' + nm(c) + ' ' + esc(T('fragt einen Consent-Check an')) + '</b><div class="small">' + terms(open.theirs) + '</div>' + consentForm(c.vrc_id, open.id, true) + '</div>' : '')
+                    + (mine ? '<div class="l18-sess">⏳ ' + esc(T('Wartet auf Zustimmung')) + ' – ' + terms(mine.mine) + ' <button type="button" class="btn btn-sm" data-l18="send_end" data-sid="' + mine.id + '" data-r="cancel">' + esc(T('Zurückziehen')) + '</button></div>' : '')
+                    + (ready ? '<div class="l18-sess ready"><b>✅ ' + esc(T('Session läuft')) + '</b> · ' + esc(T('bis')) + ' ' + esc(new Date(ready.ends * 1000).toLocaleTimeString(window.nxLoc ? nxLoc() : 'de-DE', { hour: '2-digit', minute: '2-digit' })) + '<div class="small">' + esc(T('Du')) + ': ' + terms(ready.mine) + '</div><div class="small">' + nm(c) + ': ' + terms(ready.theirs) + '</div>'
+                        + '<div class="nc-row"><button type="button" class="btn btn-sm btn-danger" data-l18="send_end" data-sid="' + ready.id + '" data-r="safeword">🛑 ' + esc(T('Safeword – sofort beenden')) + '</button><button type="button" class="btn btn-sm" data-l18="send_end" data-sid="' + ready.id + '" data-r="done">' + esc(T('Fertig')) + '</button></div></div>' : '')
+                    + '</div>';
+            }).join('') : '<p class="small muted">' + esc(T('Noch keine Verbindungen – schick jemandem im 18+-Profil eine Anfrage.')) + '</p>')
+            + card('📤 ' + esc(T('Gesendet')), d.outgoing.length ? d.outgoing.map(r => '<div class="l18-item">' + prof(r) + ' <span class="small muted">' + esc(dt(r.created)) + ' · ' + esc(T({ pending: 'wartet', not_accepted: 'nicht angenommen', withdrawn: 'zurückgezogen', expired: 'abgelaufen', ended: 'gelöst' }[r.status] || r.status)) + '</span>'
+                + (r.status === 'pending' ? ' <button type="button" class="btn btn-sm" data-l18="withdraw" data-rid="' + r.id + '">' + esc(T('Zurückziehen')) + '</button>' : '') + '</div>').join('') : '<p class="small muted">–</p>')
+            + '</div>';
+    }
+    function compatHtml(c) {
+        const K = {}; ((window.NexusProfile18 && window.NexusProfile18.KINKS) || []).forEach(([, l]) => l.forEach(([k, n]) => { K[k] = n; }));
+        const lst = (a, ico) => a.map(x => '<span class="vx-pill">' + ico + ' ' + esc(K[x.k] || x.k) + ' <small>' + (x.dir === 'me' ? '↙' : '↗') + '</small></span>').join('');
+        return '<div class="l18-compat"><b>💞 ' + (c.score === null ? esc(T('Noch zu wenig ausgefüllt')) : c.score + ' %') + '</b>' + (c.match.length ? '<div>' + lst(c.match, '💚') + '</div>' : '') + (c.maybe.length ? '<div>' + lst(c.maybe, '💛') + '</div>' : '')
+            + (c.conflict.length ? '<div>' + lst(c.conflict, '🚫') + '</div>' : '') + '<p class="small muted">' + esc(T(c.note || '')) + ' ↙ ' + esc(T('du empfängst')) + ' · ↗ ' + esc(T('du gibst')) + '</p></div>';
+    }
+    function loadLinks18() { return api('comm_req_list').then(d => { links18 = d; render(); }).catch(e => toast('⚠ ' + e.message, true)); }
+    function l18Click(t) {
+        const a = t.dataset.l18, rid = t.dataset.rid, vrc = t.dataset.vrc, sid = t.dataset.sid;
+        const done = d => { if (d && d.msg) toast(d.msg); if (sub === 'profile' && prof) loadProfile(prof.vrc_id); else loadLinks18(); };
+        const err = x => toast(x.message, true);
+        if (a === 'send') { const m = prompt(T('Kurze Nachricht zur Anfrage (optional):'), ''); if (m === null) return; return api('comm_req_send', { id: vrc, message: m }).then(done).catch(err); }
+        if (a === 'open') return go('links18');
+        if (a === 'accept' || a === 'decline') return api('comm_req_answer', { id: rid, accept: a === 'accept' ? '1' : '' }).then(done).catch(err);
+        if (a === 'withdraw') return api('comm_req_withdraw', { id: rid }).then(done).catch(err);
+        if (a === 'unlink') { if (!confirm(T('Verbindung lösen? Laufende Consent-Checks enden dann.'))) return; return api('comm_req_withdraw', { id: rid }).then(done).catch(err); }
+        if (a === 'compat') { if (sub !== 'links18') { go('links18'); } return api('comm_compat', { id: vrc }).then(d => { compatOf = { id: vrc, d }; render(); }).catch(err); }
+        if (a === 'consent') { consentFor = vrc; if (sub !== 'links18') go('links18'); else render(); return; }
+        if (a === 'sdecline') return api('comm_sess_answer', { id: sid, agree: '' }).then(done).catch(err);
+        if (a === 'send_end') {
+            if (t.dataset.r === 'safeword') api('toys_stop', { device: 'all' }).catch(() => {});   // Spielzeug sofort aus
+            return api('comm_sess_end', { id: sid, reason: t.dataset.r }).then(done).catch(err);
+        }
+    }
+    function l18Submit(f) {
+        const terms = { light: (f.querySelector('[name=light]:checked') || {}).value || 'yellow', limits: f.limits.value, safeword: f.safeword.value, minutes: +f.minutes.value, toys: f.toys.checked };
+        const p = f.dataset.sid ? api('comm_sess_answer', { id: f.dataset.sid, agree: '1', terms: JSON.stringify(terms) }) : api('comm_sess_start', { id: f.dataset.cf, terms: JSON.stringify(terms) });
+        p.then(d => { consentFor = ''; toast(d.msg); loadLinks18(); }).catch(x => toast(x.message, true));
+    }
+    function _p18end() { /* Ende der 6.0-Bausteine */ }
     const profBody = p => ({ bio: p.bio, pronouns: p.pronouns, languages: p.languages, interests: p.interests, links: p.links || [], nsfw_bio: p.nsfw_bio || '', avatar: p.avatar || '', banner: p.banner || '', theme: p.theme || '' });
     function modHtml() {
         if (!modData) return '<div class="vx-loading">…</div>';
@@ -330,6 +405,7 @@
         if (window.NexusUI.store) window.NexusUI.store.set('cmtSub', sub);   // 3.1: letzte Unterseite merken
         if (FEEDS.includes(sub)) { items = []; render(); loadFeed(); }
         else if (sub === 'discover') { disc = null; render(); loadDiscover(); }
+        else if (sub === 'links18') { if (!(me && me.nsfw)) { sub = 'feed'; return go('feed'); } compatOf = null; render(); loadLinks18(); }
         else if (sub === 'profile') { profEdit = false; p18Edit = false; loadProfile(arg); }
         else if (sub === 'mod') { modData = null; render(); loadMod(); }
         else if (sub === 'chat') { render(); chatLoad(true).then(() => { if (arg) chatOpen(arg); }); chatTimer(); }
@@ -364,6 +440,7 @@
         box.addEventListener('click', e => {
             const t = e.target;
             const pf = t.closest('[data-cprof]'); if (pf) { e.preventDefault(); return go('profile', pf.dataset.cprof); }
+            const l18 = t.closest('[data-l18]'); if (l18) { e.preventDefault(); return l18Click(l18); }   // 6.0
             const tg = t.closest('[data-ctag]'); if (tg) { e.preventDefault(); filt.tag = tg.dataset.ctag; filt.q = ''; return go(sub === 'nsfw' ? 'nsfw' : 'feed'); }
             if (t.closest('[data-ctagx]')) { filt.tag = ''; return go(sub); }
             const sv = t.closest('[data-csave]'); if (sv) { const on = !sv.classList.contains('on'); return api('comm_save', { id: sv.dataset.csave, on: on ? '1' : '' }).then(d => { toast(d.msg); items.forEach(x => { if (x.id === +sv.dataset.csave) x.saved = on; }); if (prof && prof.feed) prof.feed.forEach(x => { if (x.id === +sv.dataset.csave) x.saved = on; }); if (sub === 'saved' && !on) items = items.filter(x => x.id !== +sv.dataset.csave); render(); }).catch(x => toast(x.message, true)); }
@@ -448,6 +525,7 @@
         box.addEventListener('submit', e => {
             e.preventDefault();
             const f = e.target;
+            if (f.matches('.l18-consent')) return l18Submit(f);   // 6.0
             if (f.matches('.cm-comp')) {
                 const parent = +f.dataset.parent;
                 busy = true;

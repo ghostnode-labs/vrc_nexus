@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.0.0 – NSFW major update
+- 🔞 *** (details in the app under “About” when NSFW is unlocked)
+- 🫂 Community: fixed following people from the app (the VRChat ID was sent as a number)
+
 ### New in 5.6.0 – Licences 2.0
 - 🔑 **Your licence at a glance** (Settings → Advanced): roles, valid until, days left, status (valid / expires soon / expired / revoked), key ID and an **online check**
 - ⏳ **Reminders** 14, 7 and 1 day before a key expires

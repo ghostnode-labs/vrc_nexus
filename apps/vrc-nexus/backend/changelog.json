@@ -1,5 +1,10 @@
 [
  {
+  "version": "6.0.0",
+  "title": "NSFW major update",
+  "body": "- 🔞 *** (details in the app under “About” when NSFW is unlocked)\n- 🫂 Community: fixed following people from the app (the VRChat ID was sent as a number)"
+ },
+ {
   "version": "5.6.0",
   "title": "Licences 2.0",
   "body": "- 🔑 **Your licence at a glance** (Settings → Advanced): roles, valid until, days left, status (valid / expires soon / expired / revoked), key ID and an **online check**\n- ⏳ **Reminders** 14, 7 and 1 day before a key expires\n- ⛔ **Shared revocation list:** revoked keys now stop working in **every** app (checked every 6 hours), not only on the owner's PC; keys can also be revoked in the admin area of the GhostNode website\n- New roles 🎨 **Creator** and 🧪 **Beta tester**\n- Owner: ⏩ **extend** keys (same key ID, new date), issued and revoked keys are reported to the website automatically (only metadata – the private key never leaves the app)"
