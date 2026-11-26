@@ -5,6 +5,7 @@
  * Intime Parameter (OGB/SPS/PCS …) werden nie in Presets übernommen.
  */
 const { str, cut, UserError } = require('./util');
+const newId = () => 'p' + require('crypto').randomBytes(6).toString('hex');   // eindeutig, auch bei mehreren im selben Millisekunden-Takt
 const H = require('./haptics');
 
 const MAX_PER_AVATAR = 30, MAX_PARAMS = 256;
@@ -36,7 +37,7 @@ class Presets {
         const a = this.all(), list = a[cur.id] = a[cur.id] || [];
         const old = list.find(p => p.name.toLowerCase() === nm.toLowerCase());
         if (old) { old.values = values; old.at = Date.now(); }
-        else { if (list.length >= MAX_PER_AVATAR) throw new UserError('Höchstens ' + MAX_PER_AVATAR + ' Presets pro Avatar.'); list.push({ id: 'p' + Date.now().toString(36), name: nm, values, at: Date.now() }); }
+        else { if (list.length >= MAX_PER_AVATAR) throw new UserError('Höchstens ' + MAX_PER_AVATAR + ' Presets pro Avatar.'); list.push({ id: newId(), name: nm, values, at: Date.now() }); }
         this.saveAll(a);
         return Object.assign(this.list(), { msg: '💾 „' + nm + '“ gespeichert (' + Object.keys(values).length + ' Werte).' });
     }
@@ -88,7 +89,7 @@ class Presets {
                 values[cut(str(k), 128)] = { v, t: x.t };
             }
             if (!Object.keys(values).length) continue;
-            list.push({ id: 'p' + (Date.now() + n).toString(36), name: cut(str(p.name || 'Import'), 40), values, at: Date.now() }); n++;
+            list.push({ id: newId(), name: cut(str(p.name || 'Import'), 40), values, at: Date.now() }); n++;
         }
         this.saveAll(a);
         return Object.assign(this.list(), { msg: n + ' Preset(s) übernommen.' });
