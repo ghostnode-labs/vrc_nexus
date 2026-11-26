@@ -42,8 +42,7 @@
         b.classList.remove('menu-icons', 'menu-text', 'font-system', 'font-mono');
         if (s['ui.menu_style'] === 'icons') b.classList.add('menu-icons');
         if (s['ui.menu_style'] === 'text') b.classList.add('menu-text');
-        if (s['ui.font'] === 'system') b.classList.add('font-system');
-        if (s['ui.font'] === 'mono') b.classList.add('font-mono');
+        applyLook(s);   // 5.5: Schriften, Größe, Abstände, Ecken, Kontrast, Farbsehen
         if (window.NexusI18n && s['ui.lang'] && s['ui.lang'] !== window.NexusI18n.choice) window.NexusI18n.set(s['ui.lang'], false);
         const choice = THEMES[s['ui.theme']] ? s['ui.theme'] : 'neon';
         const theme = choice === 'auto' ? (LIGHT && LIGHT.matches ? 'snow' : 'neon') : choice;
@@ -63,6 +62,41 @@
         document.body.style.zoom = (Math.max(70, Math.min(150, +s['ui.zoom'] || 100)) / 100).toString();
         applyBg(s);
         ownFrame();
+    }
+    // ---------- 5.5: Oberfläche 2.0 ----------
+    const FONT_STACK = { system: '"Segoe UI Variable", "Segoe UI", system-ui, sans-serif', bahn: 'Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", sans-serif',
+        readable: 'Verdana, Tahoma, "DejaVu Sans", sans-serif', trebuchet: '"Trebuchet MS", "Segoe UI", sans-serif', serif: 'Cambria, Georgia, "Noto Serif", serif',
+        mono: '"Cascadia Mono", Consolas, "Roboto Mono", monospace', comic: '"Comic Sans MS", "Comic Neue", "Chalkboard SE", cursive', impact: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif',
+        custom: '"NexusCustom", "Segoe UI", sans-serif' };
+    const CVD = { protan: '0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0', deutan: '0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0',
+        tritan: '0.95 0.05 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0', gray: '0.299 0.587 0.114 0 0  0.299 0.587 0.114 0 0  0.299 0.587 0.114 0 0  0 0 0 1 0' };
+    function applyLook(s) {
+        const b = document.body, html = document.documentElement, r = html.style;
+        const font = FONT_STACK[s['ui.font']] ? s['ui.font'] : '', head = s['ui.font_head'] && s['ui.font_head'] !== 'same' && FONT_STACK[s['ui.font_head']] ? s['ui.font_head'] : '';
+        const useCustom = (font === 'custom' || head === 'custom') && /^local:\d+$/.test(s['ui.font_file'] || '');
+        let st = document.getElementById('uiFontFace');
+        if (useCustom) {
+            if (!st) { st = document.createElement('style'); st.id = 'uiFontFace'; document.head.appendChild(st); }
+            const css = '@font-face{font-family:"NexusCustom";src:url("nexus.php?uifont=1&v=' + encodeURIComponent(s['ui.font_file']) + '");font-display:swap}';
+            if (st.textContent !== css) st.textContent = css;
+        } else if (st) st.remove();
+        if (font && (font !== 'custom' || useCustom)) { r.setProperty('--ui-font', FONT_STACK[font]); b.classList.add('font-set'); } else { r.removeProperty('--ui-font'); b.classList.remove('font-set'); }
+        if (head && (head !== 'custom' || useCustom)) { r.setProperty('--ui-font-head', FONT_STACK[head]); b.classList.add('font-head-set'); } else { r.removeProperty('--ui-font-head'); b.classList.remove('font-head-set'); }
+        const ts = Math.max(85, Math.min(130, +s['ui.text_size'] || 100));
+        if (ts !== 100) r.setProperty('font-size', (16 * ts / 100) + 'px'); else r.removeProperty('font-size');
+        b.classList.toggle('density-compact', s['ui.density'] === 'compact');
+        b.classList.toggle('density-comfy', s['ui.density'] === 'comfy');
+        const rad = Math.max(0, Math.min(18, +s['ui.radius'] || 0));
+        b.classList.toggle('rounded', rad > 0); if (rad > 0) r.setProperty('--ui-radius', rad + 'px'); else r.removeProperty('--ui-radius');
+        b.classList.toggle('no-caps', s['ui.caps'] === false);
+        b.classList.toggle('wide-spacing', !!s['ui.spacing']);
+        b.classList.toggle('hi-contrast', !!s['ui.contrast']);
+        let svg = document.getElementById('cvdFilters');
+        if (CVD[s['ui.cvd']]) {
+            if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.id = 'cvdFilters'; svg.setAttribute('aria-hidden', 'true'); svg.style.cssText = 'position:absolute;width:0;height:0';
+                svg.innerHTML = Object.entries(CVD).map(([k, m]) => '<filter id="cvd-' + k + '"><feColorMatrix type="matrix" values="' + m + '"/></filter>').join(''); document.body.appendChild(svg); }
+            html.style.filter = 'url(#cvd-' + s['ui.cvd'] + ')';
+        } else html.style.removeProperty('filter');
     }
     /** 3.1.3: eigene Titelleiste (Windows) – Logo, Name, aktuelle Seite; Windows zeichnet die Fensterknöpfe in den Theme-Farben */
     let frameSent = '';
@@ -640,6 +674,8 @@
             case 'bgimg': { const u = bgUrl(v); return '<div class="set-bg">' + (u ? '<span class="set-bgprev" style="background-image:url(&quot;' + esc(u) + '&quot;)"></span>' : '<span class="set-bgprev none">–</span>')
                 + '<div class="set-bgbtns"><button type="button" class="btn btn-sm" data-act="bg:gal">🖼 Eigene &amp; Galerie</button><label class="btn btn-sm">📁 Datei …<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" id="bgFile" hidden></label>'
                 + '<button type="button" class="btn btn-sm" data-act="bg:url">🔗 Adresse</button>' + (u ? '<button type="button" class="btn btn-sm btn-danger" data-act="bg:off">✕ Entfernen</button>' : '') + '</div></div>'; }
+            case 'fontfile': return '<div class="set-bgbtns"><label class="btn btn-sm">📁 ' + esc(T('Schrift-Datei …')) + '<input type="file" accept=".ttf,.otf,.woff,.woff2,font/*" id="fontFile" hidden></label>'
+                + (v ? '<span class="vx-small" style="font-family:NexusCustom">Aa Bb 123 · ' + esc(T('eigene Schrift aktiv')) + '</span><button type="button" class="btn btn-sm btn-danger" data-act="font:off">✕ ' + esc(T('Entfernen')) + '</button>' : '') + '</div>';
             case 'time': return '<input type="time" data-k="' + k + '" value="' + esc(v) + '">';
             case 'textarea': return '<textarea data-k="' + k + '" rows="5" style="width:100%">' + esc(v) + '</textarea>';
             case 'secret': return '<div class="nx-row" style="margin:0"><input type="text" readonly value="' + esc(v) + '" style="flex:1"><button type="button" class="btn btn-sm" data-act="token">♻ Neu</button></div>';
@@ -766,6 +802,7 @@
         const act = a.dataset.act;
         if (act.startsWith('f:')) return run('tools_folder', { which: act.slice(2) }).catch(() => {});
         if (act === 'bg:off') return saveSet({ 'ui.bg_image': '' });
+        if (act === 'font:off') return api('ui_font_clear').then(d => { setData.settings = d.settings; window.VRCX.ui = Object.assign(window.VRCX.ui || {}, d.settings); applyUi(d.settings); toast(d.msg); renderSettings(); }).catch(x => toast(x.message, true));
         if (act === 'bg:url') { const u = prompt('Bildadresse (https://…):', /^https:/.test(setData.settings['ui.bg_image'] || '') ? setData.settings['ui.bg_image'] : ''); if (u !== null) saveSet({ 'ui.bg_image': u.trim() }); return; }
         if (act === 'bg:gal') return bgPicker();
         if (act === 'cleanup') { if (!confirm('Alte Einträge gemäß den eingestellten Zeiträumen jetzt löschen?')) return; a.disabled = true; return api('tools_cleanup').then(d => { toast(d.msg); dbRender(d); }).catch(x => toast(x.message, true)).finally(() => { a.disabled = false; }); }
@@ -811,8 +848,19 @@
         if (!el) return;
         const o = el.parentNode.querySelector('output'); if (o) o.textContent = el.value;
         if (el.dataset.k.startsWith('ui.bg_')) applyBg(Object.assign({}, setData.settings, { [el.dataset.k]: +el.value }));
+        if (el.dataset.k === 'ui.text_size' || el.dataset.k === 'ui.radius') applyLook(Object.assign({}, setData.settings, { [el.dataset.k]: +el.value }));
     });
     $('#setBox').addEventListener('change', e => {
+        if (e.target.id === 'fontFile') {   // 5.5: eigene Schrift
+            const f = e.target.files[0];
+            if (!f) return;
+            const body = new FormData(); body.append('act', 'ui_font_upload'); body.append('file', f);
+            fetch('nexus.php', { method: 'POST', credentials: 'same-origin', body }).then(r => r.json()).then(d => {
+                if (d.error) throw new Error(d.error);
+                setData.settings = d.settings; window.VRCX.ui = Object.assign(window.VRCX.ui || {}, d.settings); applyUi(d.settings); toast(d.msg); renderSettings();
+            }).catch(x => toast(x.message, true));
+            return;
+        }
         if (e.target.id === 'bgFile') {
             const f = e.target.files[0];
             if (!f) return;

@@ -119,6 +119,8 @@ class NexusApp {
             if (req.method === 'POST') return json(await this.post(req.form || {}, req.files || {}));
             if (q.has('bgimg')) { const b = this.db.setting('ui_bg_file', ''); const m = /^data:(image\/(png|jpeg|gif|webp));base64,(.+)$/.exec(b);
                 return m ? { status: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'private, max-age=31536000' }, body: Buffer.from(m[3], 'base64') } : { status: 404, headers: {}, body: '' }; }
+            if (q.has('uifont')) { const f = this.db.setting('ui_font_file', ''); const m = /^data:(font\/(ttf|otf|woff|woff2));base64,(.+)$/.exec(f);
+                return m ? { status: 200, headers: { 'Content-Type': m[1], 'Cache-Control': 'private, max-age=31536000' }, body: Buffer.from(m[3], 'base64') } : { status: 404, headers: {}, body: '' }; }
             if (q.has('img')) return await this.image(q.get('img'), int(q.get('v')) || 1, int(q.get('s')));
             if (q.has('cimg')) return await this.comm.image(q.get('cimg'));
             if (q.has('chimg')) { if (!this.chat) return { status: 404, headers: {}, body: '' }; try { return await this.chat.image(q.get('chimg')); } catch (e) { return { status: 404, headers: {}, body: '' }; } }   // 3.4: verschlüsselte Chat-Bilder
@@ -242,6 +244,8 @@ class NexusApp {
                 return { ok: true };
             }
             if (act === 'ui_bg_upload') return this.bgUpload(files);
+            if (act === 'ui_font_upload') return this.fontUpload(files);   // 5.5
+            if (act === 'ui_font_clear') { this.db.setSetting('ui_font_file', ''); return Object.assign(this.settings.save({ 'ui.font_file': '', 'ui.font': this.settings.get('ui.font') === 'custom' ? 'default' : this.settings.get('ui.font') }), { msg: 'Eigene Schrift entfernt.' }); }
             if (act === 'cancel_login') { this.vrc.pending = null; return { ok: true }; }
             if (act.startsWith('client_')) return await this.client(act, input);
             if (act.startsWith('cam_')) return await this.cam.action(act, input);
@@ -375,6 +379,18 @@ class NexusApp {
         if (!mime) throw new UserError('Bitte ein Bild (PNG, JPG, GIF oder WebP) wählen.');
         this.db.setSetting('ui_bg_file', 'data:' + mime + ';base64,' + b.toString('base64'));
         return Object.assign(this.settings.save({ 'ui.bg_image': 'local:' + Date.now() }), { msg: 'Hintergrundbild gesetzt.' });
+    }
+
+    /** 5.5: eigene Schrift – bleibt nur in der App-Datenbank auf diesem Gerät */
+    fontUpload(files) {
+        const f = files.file;
+        if (!f || !f.buffer || !f.buffer.length) throw new UserError('Keine Datei gewählt.');
+        if (f.buffer.length > 3 * 1048576) throw new UserError('Schrift zu groß (max. 3 MB).');
+        const b = f.buffer, m4 = b.subarray(0, 4).toString('latin1');
+        const mime = m4 === 'wOF2' ? 'font/woff2' : m4 === 'wOFF' ? 'font/woff' : m4 === 'OTTO' ? 'font/otf' : (b.readUInt32BE(0) === 0x00010000 || m4 === 'true') ? 'font/ttf' : '';
+        if (!mime) throw new UserError('Bitte eine Schrift-Datei (TTF, OTF, WOFF oder WOFF2) wählen.');
+        this.db.setSetting('ui_font_file', 'data:' + mime + ';base64,' + b.toString('base64'));
+        return Object.assign(this.settings.save({ 'ui.font_file': 'local:' + Date.now(), 'ui.font': 'custom' }), { msg: '🔤 Schrift übernommen.' });
     }
 
     /** Inhalt für das SteamVR-HUD: gewählte Infos + die letzten Untertitel */

@@ -36,7 +36,17 @@ const FIELDS = [
     ['ui.theme', 'ui', 'Aussehen', 'select', 'neon', 'Theme', 'Auch über 🎨 unten rechts umschaltbar.', [['neon', '🌃 Neon (dunkel, Standard)'], ['midnight', '🌌 Mitternacht (dunkel)'], ['snow', '❄️ Schnee (hell)'], ['sakura', '🌸 Sakura (hell)'], ['beach', '🌴 Neon Beach (dunkel, Sonnenuntergang)'], ['auto', '🌗 Automatisch (wie Windows/Android)']]],
     ['ui.accent', 'ui', 'Aussehen', 'color', '#38d5e6', 'Akzentfarbe', 'Bei #38d5e6 nimmt jedes Theme seine eigene Farbe.'],
     ['ui.zoom', 'ui', 'Aussehen', 'number', 100, 'Zoom (%)', '70–150 %', [70, 150]],
-    ['ui.font', 'ui', 'Aussehen', 'select', 'default', 'Schrift', '', [['default', 'Standard'], ['system', 'Windows-Systemschrift'], ['mono', 'Monospace']]],
+    ['ui.font', 'ui', 'Schrift & Darstellung', 'select', 'default', 'Schrift', 'Für alle Texte. Unter Android wird eine passende Ersatzschrift genommen.', [['default', 'Standard (GhostNode)'], ['system', 'Segoe UI (Windows)'], ['bahn', 'Bahnschrift (technisch, schmal)'], ['readable', 'Verdana (sehr gut lesbar)'], ['trebuchet', 'Trebuchet (freundlich)'], ['serif', 'Cambria / Georgia (mit Serifen)'], ['mono', 'Cascadia Mono (Monospace)'], ['comic', 'Comic Sans (verspielt)'], ['impact', 'Impact (nur Überschriften, kräftig)'], ['custom', '📁 Eigene Schrift-Datei']]],
+    // 5.5: Oberfläche 2.0
+    ['ui.font_head', 'ui', 'Schrift & Darstellung', 'select', 'same', 'Schrift für Überschriften', 'Menü-Gruppen, Seitentitel und Kartenköpfe.', [['same', 'wie oben']].concat([['default', 'Standard (GhostNode)'], ['system', 'Segoe UI (Windows)'], ['bahn', 'Bahnschrift (technisch, schmal)'], ['readable', 'Verdana (sehr gut lesbar)'], ['trebuchet', 'Trebuchet (freundlich)'], ['serif', 'Cambria / Georgia (mit Serifen)'], ['mono', 'Cascadia Mono (Monospace)'], ['comic', 'Comic Sans (verspielt)'], ['impact', 'Impact (nur Überschriften, kräftig)'], ['custom', '📁 Eigene Schrift-Datei']].slice(1))],
+    ['ui.font_file', 'ui', 'Schrift & Darstellung', 'fontfile', '', 'Eigene Schrift-Datei', 'TTF, OTF, WOFF oder WOFF2 (max. 3 MB) – bleibt nur auf diesem Gerät.'],
+    ['ui.text_size', 'ui', 'Schrift & Darstellung', 'range', 100, 'Textgröße (%)', 'Nur die Schrift – „Zoom“ vergrößert alles.', [85, 130]],
+    ['ui.density', 'ui', 'Schrift & Darstellung', 'select', 'normal', 'Abstände', '', [['compact', 'kompakt (mehr auf einen Blick)'], ['normal', 'normal'], ['comfy', 'großzügig (leichter zu treffen)']]],
+    ['ui.radius', 'ui', 'Schrift & Darstellung', 'range', 0, 'Abgerundete Ecken (px)', '0 = typische GhostNode-Kanten mit abgeschnittener Ecke.', [0, 18]],
+    ['ui.caps', 'ui', 'Schrift & Darstellung', 'bool', true, 'Überschriften in GROSSBUCHSTABEN', 'Aus = normale Schreibweise, ruhiger zu lesen.'],
+    ['ui.spacing', 'ui', 'Schrift & Darstellung', 'bool', false, 'Mehr Zeichen- und Wortabstand', 'Hilft bei Leseschwäche und auf kleinen Bildschirmen.'],
+    ['ui.contrast', 'ui', 'Schrift & Darstellung', 'bool', false, 'Hoher Kontrast', 'Hellere Nebentexte, kräftigere Rahmen.'],
+    ['ui.cvd', 'ui', 'Schrift & Darstellung', 'select', 'none', 'Farbsehen', 'Farbfilter für Farbschwächen – gilt für die ganze App.', [['none', 'normal'], ['protan', 'Rot-Schwäche (Protanopie)'], ['deutan', 'Grün-Schwäche (Deuteranopie)'], ['tritan', 'Blau-Schwäche (Tritanopie)'], ['gray', 'Graustufen']]],
     ['ui.animations', 'ui', 'Aussehen', 'bool', true, 'Animationen', ''],
     ['ui.decorations', 'ui', 'Aussehen', 'bool', true, 'Profil-Dekorationen', 'Rahmen ums Profilbild, Banner-Farbe und Namens-Effekt aus VRChat – überall, wo Profile angezeigt werden.'],
     ['ui.background', 'ui', 'Aussehen', 'bool', true, 'Hintergrund-Raster & Leuchten', ''],
@@ -260,6 +270,7 @@ class Settings {
                 case 'textarea': v = cut(str(raw).replace(/\r/g, '').trim(), 4000); break;
                 default: v = cut(str(raw).trim(), 400);
             }
+            if (k === 'ui.font_file' && v && !/^local:\d+$/.test(str(v))) throw new UserError('Schrift-Datei ungültig.');
             if (k === 'ui.bg_image' && v && !/^(https:\/\/\S+|nexus\.php\?img=file_[0-9a-f-]{36}&v=\d+|local:\d+|builtin:[a-z-]{2,30})$/i.test(v)) throw new UserError('Bildadresse ungültig (nur https, Galerie oder eigene Datei).');
             if (k === 'adv.api_base' && v && !/^https?:\/\/[\w.-]+(:\d+)?(\/[\w./-]*)?$/.test(v)) throw new UserError('API-Adresse ungültig.');
             if (k === 'int.webhook' && v && !/^https:\/\/(discord(app)?\.com|ptb\.discord\.com|canary\.discord\.com)\/api\/webhooks\/\d+\/[\w-]+$/.test(v)) throw new UserError('Das ist keine Discord-Webhook-URL.');

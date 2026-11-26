@@ -623,6 +623,26 @@ test('5.4: Client-API über WebSocket – Anmeldung, Status, Aktionen, Ereigniss
     } finally { app.tools.api.stop(); app.tools.stop(); }
 });
 
+test('5.5: Oberfläche 2.0 – Schriften, eigene Schrift-Datei (nur Schriften, max. 3 MB), Darstellungs-Einstellungen', async () => {
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
+    app.game.osc.stopListen();
+    const up = buf => app.post({ act: 'ui_font_upload' }, { file: { buffer: buf, name: 'x' } });
+    await assert.rejects(up(Buffer.from('<script>alert(1)</script>')), /Schrift-Datei/);
+    await assert.rejects(up(Buffer.concat([Buffer.from('wOF2'), Buffer.alloc(3 * 1048576)])), /zu groß/);
+    const r = await up(Buffer.concat([Buffer.from('wOF2'), Buffer.alloc(200)]));
+    assert.strictEqual(r.settings['ui.font'], 'custom'); assert.match(r.settings['ui.font_file'], /^local:\d+$/);
+    const f = await app.handle({ method: 'GET', query: new URLSearchParams('uifont=1') });
+    assert.strictEqual(f.status, 200); assert.strictEqual(f.headers['Content-Type'], 'font/woff2');
+    await assert.rejects(app.post({ act: 'tools_settings_save', data: JSON.stringify({ 'ui.font_file': 'https://boese.example/x.ttf' }) }, {}), /ungültig/);
+    const s = await app.post({ act: 'tools_settings_save', data: JSON.stringify({ 'ui.density': 'compact', 'ui.radius': 99, 'ui.cvd': 'quatsch', 'ui.text_size': 120 }) }, {});
+    assert.strictEqual(s.settings['ui.density'], 'compact'); assert.strictEqual(s.settings['ui.cvd'], 'none'); assert.strictEqual(s.settings['ui.text_size'], 120);
+    assert.ok(s.settings['ui.radius'] <= 18, 'Ecken begrenzt');
+    const c = await app.post({ act: 'ui_font_clear' }, {});
+    assert.strictEqual(c.settings['ui.font'], 'default'); assert.strictEqual((await app.handle({ method: 'GET', query: new URLSearchParams('uifont=1') })).status, 404);
+});
+
 test('1.8: Chatbox-Module (Status, Zeit, Wetter, Rechner, Netzwerk, Twitch, Puls, VR/Desktop)', async () => {
     const http = require('http');
     // Nachbildungen: Open-Meteo (Wetter + Orte), decapi.me (Twitch), Pulsoid
@@ -802,9 +822,9 @@ test('1.9: Sprachausgabe (Windows, Piper, Google, Azure, ElevenLabs, OpenAI) + n
     for (const k of ['NEXUS_GTTS_BASE', 'NEXUS_AZURE_BASE', 'NEXUS_EL_BASE', 'NEXUS_OPENAI_BASE', 'NEXUS_FAKE_SAPI', 'NEXUS_PIPER_BIN']) delete process.env[k];
 });
 
-test('Versionsschema: x.0–9.0–9 (keine x.10.x, kein x.y.10) und überall gleich', () => {
+test('Versionsschema: Major.Minor.Patch (je Stelle 0–99, ohne führende Null) und überall gleich', () => {
     const v = require('../backend/vrchat').VERSION;
-    assert.match(v, /^\d+\.\d\.\d$/, 'Version ' + v + ' – nach x.y.9 kommt x.(y+1).0, nach x.9.9 kommt (x+1).0.0');
+    assert.match(v, /^(0|[1-9]\d?)\.(0|[1-9]\d?)\.(0|[1-9]\d?)$/, 'Version ' + v + ' – Major.Minor.Patch, z. B. 5.10.0 (Android-versionCode erlaubt höchstens 99 je Stelle)');
     const pk = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8')).version;
     const lock = JSON.parse(fs.readFileSync(path.join(__dirname, '../package-lock.json'), 'utf8'));
     assert.strictEqual(pk, v, 'package.json'); assert.strictEqual(lock.version, v, 'package-lock.json'); assert.strictEqual(lock.packages[''].version, v, 'package-lock.json (packages)');

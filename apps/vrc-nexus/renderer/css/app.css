@@ -1399,3 +1399,23 @@ body.mobile .hm-tab em { display: none; }
 .cm-filter { margin: 0 0 8px; }
 .cm-inbox { border-left: 2px solid transparent; padding-left: 8px; margin-bottom: 8px; }
 .cm-inbox.new { border-left-color: var(--accent-gold); }
+
+/* ---------- 5.5: Oberfläche 2.0 – Schriften, Abstände, Ecken, Kontrast ---------- */
+body.font-set, body.font-set button, body.font-set input, body.font-set select, body.font-set textarea { font-family: var(--ui-font) !important; }
+body.font-head-set h1, body.font-head-set h2, body.font-head-set h3, body.font-head-set h4, body.font-head-set .panel-title, body.font-head-set .vx-sidebrand,
+body.font-head-set .vx-msec, body.font-head-set .vx-subhead, body.font-head-set .nc-card > h4 { font-family: var(--ui-font-head) !important; }
+body.no-caps .panel-title, body.no-caps .vx-hbtn, body.no-caps .hud-tag, body.no-caps .vx-msec, body.no-caps .btn, body.no-caps .vx-tabbtn, body.no-caps h1, body.no-caps h2, body.no-caps h3, body.no-caps .vx-sidebrand { text-transform: none !important; letter-spacing: 0.2px !important; }
+body.wide-spacing { letter-spacing: 0.03em; word-spacing: 0.12em; line-height: 1.6; }
+body.density-compact .panel, body.density-compact .nc-card { padding: 10px 12px; }
+body.density-compact .btn { padding: 4px 10px; }
+body.density-compact .vx-menu .vx-tabbtn, body.density-compact .vx-mtop { padding-top: 5px; padding-bottom: 5px; min-height: 0; }
+body.density-compact .set-row { padding-top: 4px; padding-bottom: 4px; }
+body.density-comfy .panel, body.density-comfy .nc-card { padding: 22px 24px; }
+body.density-comfy .btn { padding: 10px 18px; }
+body.density-comfy .vx-menu .vx-tabbtn, body.density-comfy .vx-mtop { padding-top: 11px; padding-bottom: 11px; }
+body.density-comfy .set-row { padding-top: 12px; padding-bottom: 12px; }
+body.rounded .panel, body.rounded .nc-card, body.rounded .btn, body.rounded input, body.rounded select, body.rounded textarea, body.rounded .vx-menu, body.rounded .vx-subnav,
+body.rounded .vx-tabbtn, body.rounded .vx-mtop, body.rounded .vx-mdrop, body.rounded .chip, body.rounded .vx-bar, body.rounded .modal-box, body.rounded .vx-toast { border-radius: var(--ui-radius) !important; clip-path: none !important; }
+body.hi-contrast { --text-muted: #c3cfdc; }
+body.hi-contrast .panel, body.hi-contrast .nc-card, body.hi-contrast input, body.hi-contrast select, body.hi-contrast textarea, body.hi-contrast .btn { border-color: rgba(var(--accent-rgb, 56, 213, 230), 0.75) !important; }
+html[data-scheme="light"] body.hi-contrast { --text-muted: #2f3b48; }

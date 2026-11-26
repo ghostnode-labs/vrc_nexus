@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.5.0",
+  "title": "Interface 2.0: fonts & display",
+  "body": "- 🔤 **Fonts:** nine fonts to choose from (Segoe UI, Bahnschrift, Verdana, Trebuchet, Cambria/Georgia, Cascadia Mono, Comic Sans, Impact …), a separate font for headings – or load **your own font file** (TTF, OTF, WOFF, WOFF2; stays on this device)\n- 📏 **Text size** independent of zoom, **spacing** compact / normal / roomy, **rounded corners** (0–18 px) instead of the cut GhostNode corners\n- 🔡 Headings in capitals or normal spelling, more letter and word spacing for easier reading\n- ♿ **High contrast** and **colour vision filters** (protanopia, deuteranopia, tritanopia, greyscale) for the whole app\n- Everything under Settings → Interface → *Font & display*; the menu and the GhostNode look stay the same"
+ },
+ {
   "version": "5.4.1",
   "title": "New Stream Deck keys",
   "body": "- 🎛 Stream Deck plugin 1.8 with five new keys: ❤️ **Heart rate** (live on the key), 💤 **Sleep mode** (on/off with optional alarm, lights up while you sleep), 👕 **Avatar preset** (load a saved outfit of the worn avatar), ⚠ **Warning list** (lights up red when someone from your list is in the instance), ⌚ **Find watch**\n- 🔌 Client API: the same new actions (`sleep`, `avpreset`, `watch_find`), fields of an action can go into `params` (so `id` stays the request number), status now includes sleep mode, avatar presets and the watch"

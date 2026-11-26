@@ -1835,3 +1835,46 @@ an/aus, optional mit Wecker – leuchtet, solange du schläfst	on/off, optionall
 gespeichertes Outfit des getragenen Avatars laden	load a saved outfit of the worn avatar	charger une tenue enregistrée de l'avatar porté	着用中アバターの保存した衣装を読み込む
 leuchtet rot, wenn jemand von der Warnliste in der Instanz ist	lights up red when someone from the warning list is in the instance	s'allume en rouge si quelqu'un de la liste d'alerte est dans l'instance	警告リストの人がインスタンスにいると赤く点灯
 Nexus Watch vibrieren lassen	make the Nexus Watch vibrate	faire vibrer la Nexus Watch	Nexus Watch を振動させる
+Schrift & Darstellung	Font & display	Police et affichage	フォントと表示
+Für alle Texte. Unter Android wird eine passende Ersatzschrift genommen.	For all text. On Android a matching substitute font is used.	Pour tous les textes. Sous Android, une police de remplacement est utilisée.	すべてのテキストに適用。Androidでは近い代替フォントを使用します。
+Standard (GhostNode)	Default (GhostNode)	Par défaut (GhostNode)	標準（GhostNode）
+Segoe UI (Windows)	Segoe UI (Windows)	Segoe UI (Windows)	Segoe UI（Windows）
+Bahnschrift (technisch, schmal)	Bahnschrift (technical, narrow)	Bahnschrift (technique, étroite)	Bahnschrift（技術的・細め）
+Verdana (sehr gut lesbar)	Verdana (very readable)	Verdana (très lisible)	Verdana（とても読みやすい）
+Trebuchet (freundlich)	Trebuchet (friendly)	Trebuchet (amicale)	Trebuchet（親しみやすい）
+Cambria / Georgia (mit Serifen)	Cambria / Georgia (serif)	Cambria / Georgia (avec empattements)	Cambria / Georgia（セリフ体）
+Cascadia Mono (Monospace)	Cascadia Mono (monospace)	Cascadia Mono (chasse fixe)	Cascadia Mono（等幅）
+Comic Sans (verspielt)	Comic Sans (playful)	Comic Sans (ludique)	Comic Sans（遊び心）
+Impact (nur Überschriften, kräftig)	Impact (headings only, bold)	Impact (titres uniquement, gras)	Impact（見出し向け・太字）
+📁 Eigene Schrift-Datei	📁 Own font file	📁 Fichier de police personnel	📁 自分のフォントファイル
+Schrift für Überschriften	Font for headings	Police des titres	見出しのフォント
+Menü-Gruppen, Seitentitel und Kartenköpfe.	Menu groups, page titles and card headers.	Groupes de menu, titres de page et en-têtes de cartes.	メニューグループ、ページタイトル、カード見出し。
+wie oben	same as above	comme ci-dessus	上と同じ
+Eigene Schrift-Datei	Own font file	Fichier de police personnel	自分のフォントファイル
+TTF, OTF, WOFF oder WOFF2 (max. 3 MB) – bleibt nur auf diesem Gerät.	TTF, OTF, WOFF or WOFF2 (max. 3 MB) – stays on this device only.	TTF, OTF, WOFF ou WOFF2 (max. 3 Mo) – reste uniquement sur cet appareil.	TTF・OTF・WOFF・WOFF2（最大3 MB）– この端末にのみ保存。
+Textgröße (%)	Text size (%)	Taille du texte (%)	文字サイズ（%）
+Nur die Schrift – „Zoom“ vergrößert alles.	Only the text – “Zoom” enlarges everything.	Seulement le texte – « Zoom » agrandit tout.	文字のみ –「ズーム」はすべてを拡大します。
+Abstände	Spacing	Espacements	余白
+kompakt (mehr auf einen Blick)	compact (more at a glance)	compact (plus d'infos d'un coup d'œil)	コンパクト（一目で多く表示）
+großzügig (leichter zu treffen)	roomy (easier to hit)	aéré (plus facile à toucher)	ゆったり（押しやすい）
+Abgerundete Ecken (px)	Rounded corners (px)	Coins arrondis (px)	角の丸み（px）
+0 = typische GhostNode-Kanten mit abgeschnittener Ecke.	0 = typical GhostNode edges with a cut corner.	0 = bords GhostNode typiques avec coin coupé.	0 = GhostNode らしい角カットの縁。
+Überschriften in GROSSBUCHSTABEN	Headings in CAPITALS	Titres en MAJUSCULES	見出しを大文字で表示
+Aus = normale Schreibweise, ruhiger zu lesen.	Off = normal spelling, calmer to read.	Désactivé = écriture normale, plus reposante.	オフ = 通常表記で読みやすい。
+Mehr Zeichen- und Wortabstand	More letter and word spacing	Plus d'espacement entre lettres et mots	文字と単語の間隔を広げる
+Hilft bei Leseschwäche und auf kleinen Bildschirmen.	Helps with dyslexia and on small screens.	Aide en cas de dyslexie et sur petits écrans.	読字障害や小さな画面で役立ちます。
+Hoher Kontrast	High contrast	Contraste élevé	ハイコントラスト
+Hellere Nebentexte, kräftigere Rahmen.	Brighter secondary text, stronger borders.	Textes secondaires plus clairs, bordures plus marquées.	補足テキストを明るく、枠線を強く。
+Farbsehen	Colour vision	Vision des couleurs	色覚
+Farbfilter für Farbschwächen – gilt für die ganze App.	Colour filter for colour vision deficiency – applies to the whole app.	Filtre de couleurs pour les daltonismes – s'applique à toute l'app.	色覚特性向けカラーフィルター – アプリ全体に適用。
+Rot-Schwäche (Protanopie)	Red weakness (protanopia)	Faiblesse du rouge (protanopie)	赤色弱（1型）
+Grün-Schwäche (Deuteranopie)	Green weakness (deuteranopia)	Faiblesse du vert (deutéranopie)	緑色弱（2型）
+Blau-Schwäche (Tritanopie)	Blue weakness (tritanopia)	Faiblesse du bleu (tritanopie)	青色弱（3型）
+Graustufen	Greyscale	Niveaux de gris	グレースケール
+Schrift-Datei …	Font file …	Fichier de police …	フォントファイル …
+eigene Schrift aktiv	own font active	police personnelle active	自分のフォントを使用中
+🔤 Schrift übernommen.	🔤 Font applied.	🔤 Police appliquée.	🔤 フォントを適用しました。
+Eigene Schrift entfernt.	Own font removed.	Police personnelle supprimée.	自分のフォントを削除しました。
+Schrift zu groß (max. 3 MB).	Font too large (max. 3 MB).	Police trop lourde (max. 3 Mo).	フォントが大きすぎます（最大3 MB）。
+Bitte eine Schrift-Datei (TTF, OTF, WOFF oder WOFF2) wählen.	Please choose a font file (TTF, OTF, WOFF or WOFF2).	Choisis un fichier de police (TTF, OTF, WOFF ou WOFF2).	フォントファイル（TTF・OTF・WOFF・WOFF2）を選んでください。
+Schrift-Datei ungültig.	Invalid font file.	Fichier de police invalide.	フォントファイルが無効です。
