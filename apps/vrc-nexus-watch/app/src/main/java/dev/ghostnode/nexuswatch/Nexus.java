@@ -66,7 +66,7 @@ final class Nexus {
     static JSONObject call(Context c, String host, int port, String path, JSONObject body) throws Exception {
         URL u = new URL("http://" + host + ":" + port + path);
         HttpURLConnection h = (HttpURLConnection) (wifi != null ? wifi.openConnection(u) : u.openConnection());
-        h.setConnectTimeout(4000); h.setReadTimeout(6000);
+        h.setConnectTimeout(5000); h.setReadTimeout(15000);
         h.setRequestProperty("Content-Type", "application/json");
         String tok = prefs(c).getString("token", "");
         if (!tok.isEmpty()) h.setRequestProperty("X-Nexus-Watch", tok);

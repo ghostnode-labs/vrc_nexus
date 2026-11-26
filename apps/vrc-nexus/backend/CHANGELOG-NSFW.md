@@ -2,6 +2,11 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 5.2.2 – Nexus Watch: emergency page
+
+- 🔞 **Emergency tile** in the watch menu: 🚨 panic (tap twice – can be switched off in the settings), ✅ all-clear / 🕶 private mode, consent light with the current colour, ⏹ stop toys.
+- **Panic stays reachable in private mode** (before, the 🔞 buttons disappeared after the first panic); the watch gets an answer after 2.5 s while slow parts (avatar switch, Wallpaper Engine, OBS) finish in the background.
+
 ### New in 5.2.0 – Nexus Watch
 
 - ⌚ On the watch (only while NSFW is unlocked and private mode is off): 🚨 **panic button** (with vibration), ✅ all-clear, 🕶 private mode, **consent light** 🟢🟡🔴 and ⏹ **stop toys** – the same rules as in the app apply (Verified 18+, NSFW switch).

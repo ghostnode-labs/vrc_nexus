@@ -22,6 +22,13 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.2.2 – Nexus Watch: main menu, settings & updater
+- ⌚ **Main menu** made for round screens: heart rate and status on top, round tiles for ♥ Heart rate, 💤 Comfort (sleep mode, sleep with 8 h alarm), ⚙ Settings and 🔞 ***
+- ⏱ **Heart rate is sent at a fixed interval** (1, 2, 5 or 10 s) – shows when it was last sent
+- ⚙ **Settings on the watch:** interval, start sending heart rate with the app, keep screen on, vibration, confirm with a second tap, automatic update check, PC address
+- ⬆ **Updater:** the watch finds new Nexus Watch versions in the releases, downloads and installs them (Android asks once to allow installs from Nexus Watch) – no adb needed any more
+- The watch now says why the 🔞 area is locked; longer timeout for slow actions; works on Wear OS 3/4 as well as 5
+
 ### New in 5.2.1 – Watch takes over heart rate
 - When Nexus Watch sends heart rate and the selected source delivers nothing (e.g. "HypeRate not reachable"), VRC Nexus switches to the watch automatically – no more manual switch needed
 - Pairing a watch also selects it as the heart-rate source unless another source is currently delivering

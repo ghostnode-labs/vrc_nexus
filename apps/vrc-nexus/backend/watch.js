@@ -126,11 +126,12 @@ class Watch {
 
     // ---------- Daten ----------
     state() {
-        const a = this.app, g = a.game, st = g.state || {}, h = a.heart, n = a.nsfw, acc = n ? n.access() : { unlocked: false };
-        const nsfw = !!(acc.unlocked && !(n && n.private)), t = a.toys;
+        const a = this.app, g = a.game, st = g.state || {}, h = a.heart, n = a.nsfw, acc = n ? n.access() : { unlocked: false, reason: '' };
+        // 5.2.2: 🔞-Knöpfe auch im Privat-Modus (Panik muss immer erreichbar sein) – nur Inhalte (Welt) werden im Privat-Modus ausgeblendet
+        const nsfw = !!acc.unlocked, t = a.toys;
         const ts = nsfw && t ? { connected: t.state === 'verbunden' || !!t.ws, devices: t.devices ? t.devices.size : 0, consent: t.consent || 'green' } : null;
         return { ok: true, t: Date.now(), world: n && n.private ? '' : cut(str(st.worldName), 60), players: st.players ? st.players.size : 0, running: !!st.running,
-            bpm: h && h.active ? h.bpm : 0, hr_src: h ? h.cfg().source : 'off', private: !!(n && n.private), nsfw, toys: ts,
+            bpm: h && h.active ? h.bpm : 0, hr_src: h ? h.cfg().source : 'off', private: !!(n && n.private), nsfw, nsfw_reason: nsfw ? '' : cut(str(acc.reason), 160), toys: ts,
             sleeping: !!(a.comfort && a.comfort.sleep) };
     }
     heart(b) {
@@ -149,7 +150,13 @@ class Watch {
         const post = (act, x) => this.app.post(Object.assign({ act }, x || {}), {});
         let r;
         switch (a) {
-            case 'panic': r = await post('nsfw_panic'); break;
+            case 'panic': {
+                // 5.2.2: Panik nicht von langsamen Teilen (VRChat-Avatar, Wallpaper Engine, OBS) aufhalten lassen – nach 2,5 s antworten, der Rest läuft weiter
+                const run = post('nsfw_panic');
+                run.catch(e => { this.lastError = e.message; });
+                r = await Promise.race([run, new Promise(ok => setTimeout(() => ok({ msg: '🚨 Panik ausgelöst' }), 2500))]);
+                break;
+            }
             case 'allclear': r = await post('nsfw_allclear'); break;
             case 'private': r = await post('nsfw_private', { on: b.on === false || b.on === '0' ? '0' : '1' }); break;
             case 'consent': if (!['green', 'yellow', 'red'].includes(str(b.light))) throw new UserError('Ampel: green, yellow oder red.'); r = await post('toys_consent', { light: str(b.light) }); break;

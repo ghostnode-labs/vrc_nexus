@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.2.2",
+  "title": "Nexus Watch: emergency page",
+  "body": "- 🔞 **Emergency tile** in the watch menu: 🚨 panic (tap twice – can be switched off in the settings), ✅ all-clear / 🕶 private mode, consent light with the current colour, ⏹ stop toys.\n- **Panic stays reachable in private mode** (before, the 🔞 buttons disappeared after the first panic); the watch gets an answer after 2.5 s while slow parts (avatar switch, Wallpaper Engine, OBS) finish in the background."
+ },
+ {
   "version": "5.2.0",
   "title": "Nexus Watch",
   "body": "- ⌚ On the watch (only while NSFW is unlocked and private mode is off): 🚨 **panic button** (with vibration), ✅ all-clear, 🕶 private mode, **consent light** 🟢🟡🔴 and ⏹ **stop toys** – the same rules as in the app apply (Verified 18+, NSFW switch).\n- In private mode the watch shows no world name."

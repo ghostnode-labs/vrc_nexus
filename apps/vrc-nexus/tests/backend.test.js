@@ -3731,7 +3731,11 @@ test('5.2: VRC Nexus Watch – Suche per UDP, Kopplung mit Code (Fehlversuche), 
     assert.strictEqual(x.j.bpm, 88); assert.strictEqual(x.j.nsfw, false); assert.strictEqual(x.j.toys, null, 'ohne 18+ keine Spielzeug-Daten');
     // Aktionen: 18+ nur mit Freigabe
     x = await call('/watch/action', { a: 'consent', light: 'red' }, tok); assert.strictEqual(x.status, 400); assert.match(x.j.error, /Nicht freigeschaltet/);
+    x = await call('/watch/state', undefined, tok); assert.match(x.j.nsfw_reason, /Nexus-Konto|Verified|NSFW/, 'Uhr sagt, warum 🔞 fehlt');
     grant18(app);
+    x = await call('/watch/action', { a: 'panic' }, tok); assert.ok(x.j.ok && /Panik/.test(x.j.msg)); assert.ok(app.nsfw.private, 'Panik schaltet Privat-Modus ein');
+    x = await call('/watch/state', undefined, tok); assert.ok(x.j.nsfw && x.j.private, '🔞-Knöpfe bleiben im Privat-Modus (Panik immer erreichbar)');
+    await call('/watch/action', { a: 'allclear' }, tok);
     x = await call('/watch/action', { a: 'private', on: true }, tok); assert.ok(x.j.ok && app.nsfw.private);
     x = await call('/watch/state', undefined, tok); assert.ok(x.j.private && x.j.world === '', 'Privat-Modus: keine Welt auf der Uhr');
     x = await call('/watch/action', { a: 'allclear' }, tok); assert.ok(x.j.ok && !app.nsfw.private);
