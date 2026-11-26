@@ -22,7 +22,7 @@ const TRUSTED = [
 /** Bereiche, die mit der NSFW-Freigabe (Verified 18+ + Schalter) gemeinsam frei werden */
 const FEATURES = { nsfw: 'NSFW-Werkzeuge', toys: 'Spielzeug-Steuerung (Intiface)', remote: 'Handy-Fernbedienung' };
 /** Rollen, die ein NXK1-Schlüssel vergeben kann (keine Altersfreigabe!) */
-const ROLES = { supporter: 'Supporter', mod: 'Moderator' };
+const ROLES = { supporter: 'Supporter', mod: 'Moderator', creator: 'Creator', beta: 'Beta-Tester' };   // 5.6: Creator und Beta dazu
 const b64u = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = s => Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 const hashId = id => crypto.createHash('sha256').update(str(id)).digest('hex');
@@ -74,7 +74,9 @@ class Nsfw {
         if (this.revoked().includes(p.id)) return { error: 'Der Schlüssel wurde gesperrt.' };
         return { payload: p };
     }
-    revoked() { try { return JSON.parse(this.app.db.setting('nsfw_revoked', '[]')) || []; } catch (e) { return []; } }
+    revokedLocal() { try { return JSON.parse(this.app.db.setting('nsfw_revoked', '[]')) || []; } catch (e) { return []; } }
+    /** 5.6: eigene Sperren + Sperrliste der Webseite (gilt in jeder App, nicht nur beim Besitzer) */
+    revoked() { const l = this.revokedLocal(); return this.app.license ? l.concat(this.app.license.remote().ids) : l; }
     myToken() {
         try { const t = this.crypt.decrypt(this.app.db.setting('nsfw_token', '')) || ''; if (t) return t; } catch (e) { /* weiter */ }
         // 3.4.1 Multiaccount: Schlüssel aus einem anderen Konto dieser App, wenn er (auch) für dieses VRChat-Konto gilt
@@ -145,12 +147,13 @@ class Nsfw {
         if (!name) { try { const u = await this.app.tools.call('GET', '/users/' + encodeURIComponent(uid)); name = str(u && u.displayName); } catch (e) { /* ohne Namen */ } }
         const days = int(input.days);
         const f = arr(String(input.features || 'supporter').split(',')).map(x => x.trim()).filter(x => ROLES[x]);
-        if (!f.length) throw new UserError('Mindestens eine Rolle wählen (Supporter oder Moderator).');
+        if (!f.length) throw new UserError('Mindestens eine Rolle wählen (Supporter, Moderator, Creator oder Beta-Tester).');
         const payload = { v: 1, id: crypto.randomBytes(6).toString('hex'), uid, f, iat: now(), exp: days > 0 ? now() + days * 86400 : 0, n: cut(str(input.note), 80) };
         const token = this.sign(payload);
         const l = this.issued(); l.unshift({ id: payload.id, uid, name, f: payload.f, iat: payload.iat, exp: payload.exp, note: payload.n, revoked: false });
         this.logPerm('Schlüssel erzeugt', (name || uid) + ' · ' + f.join(', '));
         this.app.db.setSetting('nsfw_issued', JSON.stringify(l.slice(0, 500)));
+        if (this.app.license) this.app.license.autoSync();   // 5.6: bei der Webseite eintragen
         return { token, entry: l[0], msg: 'Schlüssel für ' + (name || uid) + ' erzeugt.' };
     }
     revoke(id, on) {
@@ -159,10 +162,28 @@ class Nsfw {
         if (!e) throw new UserError('Nicht gefunden.');
         e.revoked = on !== false;
         this.app.db.setSetting('nsfw_issued', JSON.stringify(l));
-        const r = new Set(this.revoked()); if (e.revoked) r.add(e.id); else r.delete(e.id);
+        const r = new Set(this.revokedLocal()); if (e.revoked) r.add(e.id); else r.delete(e.id);
         this.logPerm(e.revoked ? 'Schlüssel gesperrt' : 'Schlüssel entsperrt', (e.name || e.uid) + ' · ' + e.id);
         this.app.db.setSetting('nsfw_revoked', JSON.stringify([...r]));
+        this.accessMemo = null;
+        if (this.app.license) this.app.license.autoSync();   // 5.6: Sperre gilt dann überall
         return { items: l };
+    }
+    /** 5.6: Schlüssel verlängern – gleiche ID (Sperren gelten weiter), neues Ablaufdatum, neuer Schlüssel zum Weitergeben */
+    extend(id, days) {
+        if (!this.isOwner()) throw new UserError('Nur für den Besitzer.');
+        const l = this.issued(), e = l.find(x => x.id === str(id));
+        if (!e) throw new UserError('Nicht gefunden.');
+        if (e.revoked) throw new UserError('Gesperrte Schlüssel erst entsperren.');
+        const d = int(days);
+        const base = e.exp && e.exp > now() ? e.exp : now();
+        const exp = d > 0 ? base + d * 86400 : 0;
+        const token = this.sign({ v: 1, id: e.id, uid: e.uid, f: e.f, iat: now(), exp, n: cut(str(e.note), 80) });
+        e.exp = exp; e.ext = (e.ext || 0) + 1;
+        this.app.db.setSetting('nsfw_issued', JSON.stringify(l));
+        this.logPerm('Schlüssel verlängert', (e.name || e.uid) + ' · ' + (exp ? new Date(exp * 1000).toISOString().slice(0, 10) : 'unbegrenzt'));
+        if (this.app.license) this.app.license.autoSync();
+        return { token, entry: e, items: l, msg: 'Verlängert – neuen Schlüssel an ' + (e.name || e.uid) + ' schicken (der alte gilt bis zu seinem Datum weiter).' };
     }
 
     // ---------- Werkzeuge ----------
@@ -244,7 +265,7 @@ class Nsfw {
     state() {
         const a = this.access(), c = this.cfg();
         const out = { access: a, private: this.private, features: FEATURES, roles: ROLES };
-        if (a.owner) { const k = this.ownerKey(); Object.assign(out, { owner_key: k ? k.pub : '', key_known: !!(k && TRUSTED.includes(k.pub)), issued: this.issued(), permlog: this.permLog().slice(0, 50) }); }
+        if (a.owner) { const k = this.ownerKey(); Object.assign(out, { owner_key: k ? k.pub : '', key_known: !!(k && TRUSTED.includes(k.pub)), issued: this.issued(), permlog: this.permLog().slice(0, 50), lic_synced: int(this.app.db.setting('lic_synced', '0')) }); }
         if (!a.unlocked) return out;
         Object.assign(out, { cfg: c, current_avatar: str(this.acc() && this.acc().me && this.acc().me.currentAvatar), toys: this.app.toys ? this.app.toys.status() : null, tremote: this.app.toyremote ? this.app.toyremote.status() : null, remote: this.app.remote ? this.app.remote.status() : null });
         return out;
@@ -273,6 +294,7 @@ class Nsfw {
                 case 'nsfw_admin_keypair': { const pub = this.makeOwnerKey(); return Object.assign(this.state(), { pub, msg: 'Schlüsselpaar erzeugt.' }); }
                 case 'nsfw_admin_issue': return Object.assign(await this.issue(input), { items: this.issued() });
                 case 'nsfw_admin_revoke': return this.revoke(input.id, input.on !== '0');
+                case 'nsfw_admin_extend': return this.extend(input.id, input.days);
                 case 'nsfw_admin_check': { const r = this.check(input.token, str(input.uid)); return r.error ? { ok: false, msg: r.error } : { ok: true, msg: '✔ gültig für ' + r.payload.uid, payload: r.payload }; }
             }
         }

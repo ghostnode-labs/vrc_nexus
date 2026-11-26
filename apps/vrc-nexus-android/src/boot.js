@@ -68,7 +68,7 @@ if (native) {
         restart: async () => { try { db.save(); await fs.__flush(); } catch (e) { /* egal */ } window.location.reload(); },   // 3.4: Konto-Wechsel
         speak: t => { if (window.speechSynthesis) speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(t), { lang: 'de-DE' })); },
     };
-    const app = new NexusApp({ db, crypt, host, notify, mobile: true });
+    const app = new NexusApp({ db, crypt, host, notify, mobile: true, licenseTimer: true });
     app.game.stop();
     app.game.osc.stopListen();
     app.game.watcher = null;

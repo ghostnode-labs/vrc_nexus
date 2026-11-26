@@ -88,6 +88,8 @@ class NexusApp {
         this.chatmods = new ChatMods(this, opts.crypt);   // 3.2.5: auch am Handy (nur Module ohne PC-Werte)
         this.subs = opts.mobile ? null : new (require('./subtitles').Subtitles)(this);
         this.nsfw = new (require('./nsfw').Nsfw)(this, opts.crypt);
+        this.license = new (require('./license').License)(this);   // 5.6: Lizenzen 2.0
+        if (opts.licenseTimer) this.license.start();   // nur im echten Programm (main.js / Handy), nie in Tests
         this.nsfwcol = new (require('./nsfwcol').NsfwCollection)(this, opts.crypt);   // NSFW 3.1: eigene Sammlung
         this.toys = opts.mobile ? null : new (require('./toys').Toys)(this);
         this.remote = opts.mobile ? null : new (require('./remote').Remote)(this);
@@ -254,6 +256,7 @@ class NexusApp {
             if (act === 'media_ctl') { if (!this.media) throw new UserError('Nur in der Windows-App.'); return this.media.control(str(input.cmd), str(input.id)); }
             if (act.startsWith('auto_')) return await this.auto.action(act, input);
             if (act === 'hud_state') return this.hudState();
+            if (act.startsWith('lic_')) return await this.license.action(act, input);
             if (act.startsWith('nsfw_')) return await this.nsfw.action(act, input);
             if (act.startsWith('nsfwc_')) return await this.nsfwcol.action(act, input);
             if (act.startsWith('admin_')) return await this.admin.action(act, input);

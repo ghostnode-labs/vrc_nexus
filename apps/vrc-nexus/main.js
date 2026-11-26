@@ -215,7 +215,7 @@ app.whenReady().then(async () => {
         app.exit(1);
         return;
     }
-    nexus = new NexusApp({ db, crypt, notify, host, oscquery: true });
+    nexus = new NexusApp({ db, crypt, notify, host, oscquery: true, licenseTimer: true });
     nexus.game.start(Number(nexus.settings.get('sys.log_poll_ms')) || 1000);
     nexus.tools.start();
     nexus.link.start();

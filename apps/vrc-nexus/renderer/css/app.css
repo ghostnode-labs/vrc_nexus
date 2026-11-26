@@ -1419,3 +1419,14 @@ body.rounded .vx-tabbtn, body.rounded .vx-mtop, body.rounded .vx-mdrop, body.rou
 body.hi-contrast { --text-muted: #c3cfdc; }
 body.hi-contrast .panel, body.hi-contrast .nc-card, body.hi-contrast input, body.hi-contrast select, body.hi-contrast textarea, body.hi-contrast .btn { border-color: rgba(var(--accent-rgb, 56, 213, 230), 0.75) !important; }
 html[data-scheme="light"] body.hi-contrast { --text-muted: #2f3b48; }
+
+/* ---------- 5.6: Lizenz-Karte ---------- */
+.lic-card { margin-top: 12px; border: 1px solid var(--border-color); border-left: 3px solid var(--accent-cyan); padding: 10px 14px; background: rgba(var(--panel-rgb, 10, 16, 24), 0.5); }
+.lic-card.lic-warn { border-left-color: var(--accent-gold); }
+.lic-card.lic-bad { border-left-color: var(--accent-red); }
+.lic-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.lic-st { font-size: 0.85rem; }
+.lic-roles { margin: 6px 0; }
+.lic-facts { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; margin: 6px 0; font-size: 0.85rem; }
+.lic-facts dt { color: var(--text-muted); }
+.lic-facts dd { margin: 0; }

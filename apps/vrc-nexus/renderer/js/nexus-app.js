@@ -682,6 +682,26 @@
             default: return '<input type="text" data-k="' + k + '" value="' + esc(v) + '" placeholder="' + esc(f.def) + '">';
         }
     }
+    /** 5.6: Lizenz-Übersicht (eigener Freischalt-Schlüssel) */
+    function licCard(d) {
+        const box = $('#licCard');
+        if (!box) return;
+        if (!d) return api('lic_get').then(licCard).catch(() => { box.innerHTML = ''; });
+        const l = d.license;
+        if (!l || !l.has) { box.innerHTML = ''; return; }
+        const ST = { ok: ['✔', T('gültig'), 'ok'], expiring: ['⏳', T('läuft bald ab'), 'warn'], expired: ['⌛', T('abgelaufen'), 'bad'], revoked: ['⛔', T('gesperrt'), 'bad'], invalid: ['⚠', T('ungültig'), 'bad'] }[l.status] || ['', l.status, ''];
+        const dt = ts => ts ? new Date(ts * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE') : '';
+        box.innerHTML = '<div class="lic-card lic-' + ST[2] + '"><div class="lic-head"><b>🔑 ' + esc(T('Deine Lizenz')) + '</b><span class="lic-st">' + ST[0] + ' ' + esc(ST[1]) + '</span></div>'
+            + '<div class="lic-roles">' + (l.role_names || []).map(n => '<span class="vx-pill">' + esc(n) + '</span>').join('') + (l.owner ? '<span class="vx-pill" style="--pc:#f3c262">👑 ' + esc(T('Besitzerin')) + '</span>' : '') + '</div>'
+            + (l.owner ? '' : '<dl class="lic-facts">' + (l.exp ? '<dt>' + esc(T('Gültig bis')) + '</dt><dd>' + esc(dt(l.exp)) + (l.days_left !== null && l.status !== 'expired' ? ' · ' + esc(T('noch')) + ' ' + l.days_left + ' ' + esc(T('Tage')) : '') + '</dd>' : '<dt>' + esc(T('Gültig bis')) + '</dt><dd>∞ ' + esc(T('unbegrenzt')) + '</dd>')
+                + (l.iat ? '<dt>' + esc(T('Ausgestellt')) + '</dt><dd>' + esc(dt(l.iat)) + '</dd>' : '') + (l.note ? '<dt>' + esc(T('Notiz')) + '</dt><dd>' + esc(l.note) + '</dd>' : '')
+                + '<dt>' + esc(T('Schlüssel-ID')) + '</dt><dd><code>' + esc(l.id || '–') + '</code></dd>'
+                + '<dt>' + esc(T('Online geprüft')) + '</dt><dd>' + (l.online && l.online.at ? (l.online.valid ? '✔ ' : '⚠ ') + esc(new Date(l.online.at).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE')) + (l.online.reason ? ' – ' + esc(l.online.reason) : '') : esc(T('noch nie'))) + '</dd></dl>')
+            + (l.reason ? '<p class="nx-hint">⚠ ' + esc(l.reason) + '</p>' : '')
+            + (l.owner ? '' : '<div class="nx-row"><button type="button" class="btn btn-sm" id="licCheck">🌐 ' + esc(T('Online prüfen')) + '</button>' + (l.status === 'expiring' || l.status === 'expired' ? '<span class="nx-hint">' + esc(T('Zum Verlängern bei der Besitzerin melden – du bekommst einen neuen Schlüssel.')) + '</span>' : '') + '</div>') + '</div>';
+        const b = $('#licCheck');
+        if (b) b.onclick = () => { b.disabled = true; api('lic_check').then(x => { toast(x.msg, !(x.online && x.online.valid)); licCard({ license: x.license }); }).catch(x => { toast(x.message, true); b.disabled = false; }); };
+    }
     /** fertige Adressen für OBS (Browser-Quelle) */
     /** ☁ Cloud-Sicherung: verschlüsselt ins eigene Dashboard */
     function backupPanel(msg) {
@@ -759,7 +779,7 @@
             int: '<div class="set-sec"><h3>Status</h3><p class="vx-small">Lokale Schnittstelle: ' + esc(d.status.api) + ' · Discord: ' + esc(d.status.rpc) + '</p></div>',
             adv: '<div class="set-sec"><h3>🪪 Nexus-Konto &amp; 🔞 NSFW</h3><div id="acctBox"></div></div>'
                 + '<div class="set-sec"><h3>🔑 Freischalt-Schlüssel (Supporter / Moderator)</h3><p class="nx-hint">Rollen wie 💖 Supporter oder 🛡 Moderator – den Schlüssel bekommst du von der Besitzerin. Er gilt nur für dein VRChat-Konto. NSFW wird darüber nicht freigeschaltet.</p>'
-                + '<form class="nx-row" id="nsUnlock"><input type="password" name="token" placeholder="NXK1.…" autocomplete="off" style="flex:1"><button class="btn btn-sm btn-gold">🔓 Freischalten</button><button type="button" class="btn btn-sm" id="nsLock">Entfernen</button></form><div class="nx-hint" id="nsUnlockMsg"></div></div>'
+                + '<form class="nx-row" id="nsUnlock"><input type="password" name="token" placeholder="NXK1.…" autocomplete="off" style="flex:1"><button class="btn btn-sm btn-gold">🔓 Freischalten</button><button type="button" class="btn btn-sm" id="nsLock">Entfernen</button></form><div class="nx-hint" id="nsUnlockMsg"></div><div id="licCard"></div></div>'
                 + '<div class="set-sec"><h3>Daten &amp; Wartung</h3><div class="nx-row"><button type="button" class="btn btn-sm" data-act="cache">🧹 Profil-Zwischenspeicher leeren</button><button type="button" class="btn btn-sm" data-act="vacuum">🗜 Datenbank optimieren</button>'
                 + '<a class="btn btn-sm" href="nexus.php?tools_export=settings">⬇ Einstellungen exportieren</a><label class="btn btn-sm">⬆ Importieren<input type="file" accept=".json" id="setImport" hidden></label>'
                 + '<button type="button" class="btn btn-sm btn-danger" data-act="reset">↺ Alles zurücksetzen</button></div></div>',
@@ -776,6 +796,7 @@
         if (setTab === 'link') { linkPanel(); if (!MOBILE) backupPanel(); }
         if (setTab === 'system') { dbPanel(); const sc = $('#setConn'); if (sc) sc.appendChild(connWrap()); }
         if (setTab === 'adv' && window.NexusAccount && $('#acctBox')) window.NexusAccount.render($('#acctBox'));
+        if (setTab === 'adv') licCard();
         if (setTab === 'about' && window.NexusAbout) window.NexusAbout.open();
         if (setTab === 'vr' && !MOBILE && window.NexusClient && window.NexusClient.cfgInto) window.NexusClient.cfgInto($('#setGameCfg'));
         if (UI.subnav) UI.subnav();     // 3.1.1: Menü links → Reiter der Einstellungen oben in der Leiste

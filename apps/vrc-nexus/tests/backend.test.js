@@ -643,6 +643,72 @@ test('5.5: Oberfläche 2.0 – Schriften, eigene Schrift-Datei (nur Schriften, m
     assert.strictEqual(c.settings['ui.font'], 'default'); assert.strictEqual((await app.handle({ method: 'GET', query: new URLSearchParams('uifont=1') })).status, 404);
 });
 
+test('5.6: Lizenzen 2.0 – Sperrliste der Webseite gilt überall, eigene Lizenz, Ablauf-Erinnerung, Verlängern, Abgleich (nur Mocks)', async () => {
+    const http = require('http');
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWNER = 'usr_' + 'e'.repeat(8) + '-1111-2222-3333-444444444444', FRIEND = 'usr_' + 'f'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const site = { revoked: [], synced: null, checks: 0 };
+    const srv = http.createServer((req, res) => {
+        let b = ''; req.on('data', d => b += d); req.on('end', () => {
+            const j = b ? JSON.parse(b) : {}, a = new URL(req.url, 'http://x').searchParams.get('a');
+            res.setHeader('Content-Type', 'application/json');
+            if (a === 'revoked') return res.end(JSON.stringify({ ids: site.revoked }));
+            if (a === 'check') { site.checks++; return res.end(JSON.stringify({ valid: true, reason: '' })); }
+            if (a === 'sync') { site.synced = j; return res.end(JSON.stringify({ count: j.entries.length, revoked: site.revoked })); }
+            res.statusCode = 400; res.end('{}');
+        });
+    });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    process.env.NEXUS_LIC_BASE = 'http://127.0.0.1:' + srv.address().port;
+    const alerts = [];
+    const mk = async uid => {
+        const db = await openDatabase(null);
+        const app = new NexusApp({ db, crypt: { encrypt: s => 'E:' + s, decrypt: s => String(s).replace(/^E:/, '') }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-560-')) } });
+        app.game.osc.stopListen();
+        app.vrc.account = () => ({ vrc_id: uid, me: {} });
+        app.tools.alert = (t, b) => alerts.push(b);
+        return app;
+    };
+    try {
+        const own = await mk(OWNER), fr = await mk(FRIEND);
+        const kp = await own.post({ act: 'nsfw_admin_keypair' }, {});
+        const iss = await own.post({ act: 'nsfw_admin_issue', uid: FRIEND, name: 'Foxy', days: '10', features: 'supporter,creator,beta' }, {});
+        assert.deepStrictEqual(iss.items[0].f, ['supporter', 'creator', 'beta'], 'neue Rollen Creator & Beta');
+        fr.nsfw.trusted.push(kp.pub);
+        await fr.post({ act: 'nsfw_unlock', token: iss.token }, {});
+        let l = (await fr.post({ act: 'lic_get' }, {})).license;
+        assert.strictEqual(l.status, 'expiring'); assert.strictEqual(l.days_left, 10); assert.deepStrictEqual(l.role_names, ['Supporter', 'Creator', 'Beta-Tester']);
+        // Erinnerung genau einmal je Stufe
+        fr.license.remind(); fr.license.remind();
+        assert.strictEqual(alerts.filter(a => /läuft in 10 Tagen ab/.test(a)).length, 1, 'Erinnerung 14 Tage vorher, nur einmal');
+        // Abgleich: Besitzer meldet Schlüssel, fremde Apps dürfen das nicht
+        const sy = await own.post({ act: 'lic_sync' }, {});
+        assert.strictEqual(sy.synced, 1); assert.strictEqual(site.synced.entries[0].uid, FRIEND); assert.ok(/^NXK1\./.test(site.synced.key), 'kurzlebiger Besitzer-Schlüssel');
+        assert.ok(!JSON.stringify(site.synced).includes(JSON.parse(own.db.setting('nsfw_owner_key', '').replace(/^E:/, '')).priv), 'privater Schlüssel geht nie raus');
+        await assert.rejects(fr.post({ act: 'lic_sync' }, {}), /Besitzer/);
+        // Verlängern: gleiche ID, neues Datum
+        const ex = await own.post({ act: 'nsfw_admin_extend', id: iss.entry.id, days: 90 }, {});
+        assert.ok(ex.entry.exp > iss.entry.exp + 89 * 86400);
+        await fr.post({ act: 'nsfw_unlock', token: ex.token }, {});
+        l = (await fr.post({ act: 'lic_get' }, {})).license;
+        assert.strictEqual(l.status, 'ok'); assert.strictEqual(l.id, iss.entry.id);
+        // Sperre auf der Webseite → gilt nach dem Abgleich auch in der App des Freundes
+        site.revoked = [iss.entry.id];
+        await fr.post({ act: 'lic_refresh' }, {});
+        l = (await fr.post({ act: 'lic_get' }, {})).license;
+        assert.strictEqual(l.status, 'revoked', 'Web-Sperre wirkt überall');
+        assert.strictEqual((await fr.post({ act: 'nsfw_state' }, {})).access.key, false, 'Rollen weg');
+        // Abgleich übernimmt Web-Sperren in die Liste der Besitzerin
+        const sy2 = await own.post({ act: 'lic_sync' }, {});
+        assert.ok(own.nsfw.issued()[0].revoked, 'Sperre aus der Webseite übernommen');
+        assert.ok(sy2.synced >= 1);
+        const ck = await fr.post({ act: 'lic_check' }, {});
+        assert.ok(ck.online && site.checks === 1, 'Online-Prüfung');
+    } finally { delete process.env.NEXUS_LIC_BASE; delete process.env.NEXUS_OWNER_HASH; srv.close(); }
+});
+
 test('1.8: Chatbox-Module (Status, Zeit, Wetter, Rechner, Netzwerk, Twitch, Puls, VR/Desktop)', async () => {
     const http = require('http');
     // Nachbildungen: Open-Meteo (Wetter + Orte), decapi.me (Twitch), Pulsoid
@@ -2285,7 +2351,7 @@ test('3.4.2: Schlüssel nur für Supporter/Moderator und je genau ein Konto, Rec
     try {
         const own = await mk(OWNER);
         const kp = await own.post({ act: 'nsfw_admin_keypair' }, {});
-        await assert.rejects(own.post({ act: 'nsfw_admin_issue', uid: MAIN, days: '30', features: 'nsfw,toys' }, {}), /Supporter oder Moderator/);
+        await assert.rejects(own.post({ act: 'nsfw_admin_issue', uid: MAIN, days: '30', features: 'nsfw,toys' }, {}), /Supporter, Moderator/);
         const iss = await own.post({ act: 'nsfw_admin_issue', uid: MAIN, name: 'Main', days: '30', features: 'mod', uids: ALT }, {});
         assert.ok(!iss.items[0].uids, 'kein Multiaccount-Feld mehr');
         const shared = fs.mkdtempSync(path.join(os.tmpdir(), 'nx-share-'));

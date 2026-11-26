@@ -26,6 +26,13 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 5.6.0 – Licences 2.0
+- 🔑 **Your licence at a glance** (Settings → Advanced): roles, valid until, days left, status (valid / expires soon / expired / revoked), key ID and an **online check**
+- ⏳ **Reminders** 14, 7 and 1 day before a key expires
+- ⛔ **Shared revocation list:** revoked keys now stop working in **every** app (checked every 6 hours), not only on the owner's PC; keys can also be revoked in the admin area of the GhostNode website
+- New roles 🎨 **Creator** and 🧪 **Beta tester**
+- Owner: ⏩ **extend** keys (same key ID, new date), issued and revoked keys are reported to the website automatically (only metadata – the private key never leaves the app)
+
 ### New in 5.5.0 – Interface 2.0: fonts & display
 - 🔤 **Fonts:** nine fonts to choose from (Segoe UI, Bahnschrift, Verdana, Trebuchet, Cambria/Georgia, Cascadia Mono, Comic Sans, Impact …), a separate font for headings – or load **your own font file** (TTF, OTF, WOFF, WOFF2; stays on this device)
 - 📏 **Text size** independent of zoom, **spacing** compact / normal / roomy, **rounded corners** (0–18 px) instead of the cut GhostNode corners

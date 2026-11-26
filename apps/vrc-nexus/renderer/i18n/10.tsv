@@ -1878,3 +1878,18 @@ Eigene Schrift entfernt.	Own font removed.	Police personnelle supprimée.	自分
 Schrift zu groß (max. 3 MB).	Font too large (max. 3 MB).	Police trop lourde (max. 3 Mo).	フォントが大きすぎます（最大3 MB）。
 Bitte eine Schrift-Datei (TTF, OTF, WOFF oder WOFF2) wählen.	Please choose a font file (TTF, OTF, WOFF or WOFF2).	Choisis un fichier de police (TTF, OTF, WOFF ou WOFF2).	フォントファイル（TTF・OTF・WOFF・WOFF2）を選んでください。
 Schrift-Datei ungültig.	Invalid font file.	Fichier de police invalide.	フォントファイルが無効です。
+gültig	valid	valide	有効
+läuft bald ab	expires soon	expire bientôt	まもなく期限切れ
+abgelaufen	expired	expirée	期限切れ
+Deine Lizenz	Your licence	Ta licence	あなたのライセンス
+Besitzerin	Owner	Propriétaire	オーナー
+Gültig bis	Valid until	Valable jusqu'au	有効期限
+Ausgestellt	Issued	Émise le	発行日
+Schlüssel-ID	Key ID	ID de clé	キーID
+Online geprüft	Checked online	Vérifiée en ligne	オンライン確認
+Online prüfen	Check online	Vérifier en ligne	オンラインで確認
+Zum Verlängern bei der Besitzerin melden – du bekommst einen neuen Schlüssel.	To extend it, contact the owner – you'll get a new key.	Pour la prolonger, contacte la propriétaire – tu recevras une nouvelle clé.	延長はオーナーに連絡してください – 新しいキーが届きます。
+✔ Online geprüft: gültig.	✔ Checked online: valid.	✔ Vérifiée en ligne : valide.	✔ オンライン確認：有効。
+Sperrliste aktualisiert.	Revocation list updated.	Liste de révocation mise à jour.	無効化リストを更新しました。
+Kein Freischalt-Schlüssel eingetragen.	No unlock key entered.	Aucune clé de déverrouillage saisie.	解除キーが入力されていません。
+Gesperrte Schlüssel erst entsperren.	Unrevoke the key first.	Débloque d'abord la clé.	先にキーの無効化を解除してください。
