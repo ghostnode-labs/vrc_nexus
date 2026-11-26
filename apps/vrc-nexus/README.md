@@ -22,6 +22,9 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.4.2 – Safer server switch
+- The app only switches to the new domain when the GhostNode services really answer there (signed marketplace catalog, relay health) – a default page or a website still in setup no longer counts
+
 ### New in 4.4.1 – New home: ghostnode-labs.dev
 - VRC Nexus now uses ghostnode-labs.dev (website, account, chat, community, marketplace) and hr.ghostnode-labs.dev (HypeRate) as soon as they answer – until then, and as a fallback, the previous addresses keep working
 - The app checks the right service (not just the domain) at start and every 15 minutes, on Windows and Android

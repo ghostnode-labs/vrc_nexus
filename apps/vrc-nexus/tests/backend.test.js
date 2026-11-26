@@ -3325,10 +3325,13 @@ test('4.4: Plugin-Marktplatz – signierter Katalog, Schlüssel merken, Prüfsum
     assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu', 'bis zur Bestätigung die bewährte Adresse');
     assert.strictEqual(servers.hyperate(), 'https://hr.sylvanclub.eu');
     // neue Domain zeigt nur die Plesk-Standardseite (nexus.php 404) → alte bleibt
-    await servers.check(async u => ({ status: u.startsWith('https://ghostnode-labs.dev') ? 404 : u.includes('hr.ghostnode') ? 0 : 200 }));
+    const okJ = u => ({ status: 200, json: async () => (u.includes('/health') ? { ok: true, service: 'vrc-nexus-hyperate-relay' } : { index: '{}', sig: 'x', key: 'k' }) });
+    await servers.check(async u => (u.startsWith('https://ghostnode-labs.dev') ? { status: 200, redirected: true, json: async () => null } : u.includes('hr.ghostnode') ? { status: 0 } : okJ(u)));
     assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu', 'Rückfall auf die alte Adresse');
     assert.strictEqual(servers.hyperate(), 'https://hr.sylvanclub.eu');
-    await servers.check(async () => ({ status: 200 }));
+    await servers.check(async u => ({ status: 200, json: async () => ({ html: true }) }));
+    assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu', 'Antwort ohne Katalog (z. B. Standardseite) zählt nicht');
+    await servers.check(async u => okJ(u));
     assert.strictEqual(servers.nexus(), 'https://ghostnode-labs.dev', 'neue Adresse hat Vorrang, sobald sie läuft');
     assert.strictEqual(servers.hyperate(), 'https://hr.ghostnode-labs.dev');
     await servers.check(async () => { throw new Error('offline'); });

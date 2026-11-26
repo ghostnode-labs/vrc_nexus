@@ -25,9 +25,12 @@ async function check(fetchFn = globalThis.fetch) {
         if (l.length < 2) continue;
         for (let i = 0; i < l.length; i++) {
             try {
-                // gezielt den Dienst prüfen (eine Domain-Standardseite reicht nicht): nexus.php darf nicht 404 sein, die Weiterleitung muss /health beantworten
-                const r = await fetchFn(trim(l[i]) + (kind === 'hyperate' ? '/health' : '/nexus.php'), { method: 'GET', signal: AbortSignal.timeout(5000) });
-                if (kind === 'hyperate' ? r.status === 200 : r.status !== 404 && r.status < 500 && r.status !== 0) { active[kind] = i; break; }
+                // gezielt den Dienst prüfen – eine Domain-Standardseite oder eine Website im Einrichtungsmodus (Umleitung auf admin.php) reicht nicht:
+                // Website: signierter Marktplatz-Katalog als JSON; Weiterleitung: /health mit eigener Dienst-Kennung
+                const r = await fetchFn(trim(l[i]) + (kind === 'hyperate' ? '/health' : '/market.php?api=index'), { method: 'GET', signal: AbortSignal.timeout(5000) });
+                if (!r || r.status !== 200 || r.redirected) continue;
+                const j = await r.json().catch(() => null);
+                if (kind === 'hyperate' ? j && j.service === 'vrc-nexus-hyperate-relay' : j && typeof j.index === 'string' && typeof j.sig === 'string') { active[kind] = i; break; }
             } catch (e) { /* nächste probieren */ }
         }   // keine erreichbar: bisherige Wahl bleiben lassen
     }
