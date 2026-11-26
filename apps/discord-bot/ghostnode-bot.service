@@ -1,0 +1,21 @@
+# systemd unit – copy to /etc/systemd/system/ghostnode-bot.service
+# Secrets go into /etc/ghostnode-bot.env (chmod 600), never into this file or Git.
+[Unit]
+Description=GhostNode Discord bot (VRC Nexus)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=nexus
+WorkingDirectory=/opt/ghostnode/discord-bot
+EnvironmentFile=/etc/ghostnode-bot.env
+ExecStart=/usr/bin/node bot.js
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/ghostnode/discord-bot
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

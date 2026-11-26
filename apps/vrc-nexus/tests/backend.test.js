@@ -3385,6 +3385,67 @@ test('4.4: Plugin-Marktplatz – signierter Katalog, Schlüssel merken, Prüfsum
     app.tools.stop();
 });
 
+test('4.4: Discord-Bot – Gateway (Identify, Heartbeat), Slash-Befehle, Release-Ankündigung (alles nachgestellt)', async () => {
+    const botFile = [path.join(__dirname, '..', '..', 'discord-bot', 'bot.js'), path.join(__dirname, '..', '..', 'apps', 'discord-bot', 'bot.js')].find(f => fs.existsSync(f));
+    if (!botFile || typeof WebSocket === 'undefined') { console.log('   (Discord-Bot nicht im Build-Ordner – Test übersprungen)'); return; }
+    const http = require('http'), { WebSocketServer } = require('ws');
+    const calls = [];
+    let release = { tag_name: 'vrc-nexus-4.4.0', html_url: 'https://github.com/x/releases/4.4.0', body: '- Marktplatz\n- Server' };
+    const srv = http.createServer((q, s) => {
+        let b = ''; q.on('data', c => { b += c; }); q.on('end', () => {
+            calls.push([q.method, q.url, b ? JSON.parse(b) : null, q.headers.authorization]);
+            const j = d => { s.writeHead(200, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(d)); };
+            if (q.url.startsWith('/gh/repos/')) return j(release);
+            if (q.url === '/nx/market.php?api=index') return j({ index: JSON.stringify({ format: 1, plugins: [{ id: 'a', name: 'Hello Chat', version: '1.0.0', description: 'Hallo', icon: '👋' }] }) });
+            if (q.url === '/hr/health') return j({ ok: true, clients: 2 });
+            if (q.url.startsWith('/hr/hr/')) { s.writeHead(200, { 'Content-Type': 'text/event-stream' }); s.write('retry: 5000\n\n'); setTimeout(() => s.end('data: {"hr":77,"at":1}\n\n'), 20); return; }
+            if (q.url.startsWith('/nx/p.php/club.png')) { s.writeHead(200); return s.end(); }
+            if (q.url.startsWith('/nx/')) { s.writeHead(q.url.includes('p.php') ? 404 : 200); return s.end(); }
+            if (q.method === 'PUT' || q.method === 'POST' || q.method === 'PATCH') return j({ id: '1' });
+            s.writeHead(404); s.end();
+        });
+    });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    const B = 'http://127.0.0.1:' + srv.address().port;
+    const wss = new WebSocketServer({ port: 0 }); await new Promise(r => wss.on('listening', r));
+    let identify = null, beats = 0, sock = null;
+    wss.on('connection', ws => { sock = ws; ws.send(JSON.stringify({ op: 10, d: { heartbeat_interval: 60 } }));
+        ws.on('message', m => { const j = JSON.parse(String(m)); if (j.op === 1) { beats++; ws.send(JSON.stringify({ op: 11 })); } if (j.op === 2) { identify = j.d; ws.send(JSON.stringify({ op: 0, s: 1, t: 'READY', d: { session_id: 'S', resume_gateway_url: 'ws://127.0.0.1:' + wss.address().port, user: { username: 'bot' } } })); } }); });
+    const st = path.join(os.tmpdir(), 'nx-bot-state-' + process.pid + '.json');
+    Object.assign(process.env, { BOT_NO_AUTOSTART: '1', DISCORD_TOKEN: 'test-token', DISCORD_APP_ID: '123', DISCORD_GUILD_ID: '456', DISCORD_API: B + '/api', DISCORD_GATEWAY: 'ws://127.0.0.1:' + wss.address().port,
+        NEXUS_BASE: B + '/nx', HYPERATE_RELAY: B + '/hr', GITHUB_API: B + '/gh', RELEASE_CHANNEL_ID: '789', BOT_STATE: st });
+    delete require.cache[require.resolve(botFile)];
+    const bot = require(botFile);
+    await bot.registerCommands();
+    const put = calls.find(c => c[0] === 'PUT');
+    assert.ok(put[1] === '/api/applications/123/guilds/456/commands' && put[2].some(c => c.name === 'puls') && put[3] === 'Bot test-token');
+    const gw = new bot.Gateway(); gw.connect();
+    for (let i = 0; i < 50 && !gw.ready; i++) await U.sleep(20);
+    await U.sleep(200);
+    assert.ok(gw.ready && identify && identify.token === 'test-token' && identify.intents === 1, 'Identify ohne privilegierte Intents');
+    assert.ok(beats >= 2, 'Heartbeat läuft');
+    // Slash-Befehle über das Gateway
+    const run = async (name, options) => { calls.length = 0; sock.send(JSON.stringify({ op: 0, s: 2, t: 'INTERACTION_CREATE', d: { id: 'I', token: 'T', type: 2, data: { name, options } } }));
+        for (let i = 0; i < 100 && !calls.some(c => c[0] === 'PATCH'); i++) await U.sleep(20); return calls.find(c => c[0] === 'PATCH'); };
+    let r = await run('release');
+    assert.ok(calls[0][1] === '/api/interactions/I/T/callback' && calls[0][2].type === 5, 'erst „denkt nach“');
+    assert.ok(r[1] === '/api/webhooks/123/T/messages/@original' && r[2].embeds[0].title === '🥽 VRC Nexus 4.4.0' && r[2].allowed_mentions.parse.length === 0);
+    r = await run('status'); assert.ok(/4\.4\.0/.test(r[2].embeds[0].fields[0].value) && /2 verbunden/.test(r[2].embeds[0].fields[2].value));
+    r = await run('marktplatz', [{ name: 'suche', value: 'hello' }]); assert.ok(/Hello Chat/.test(r[2].embeds[0].description));
+    r = await run('puls', [{ name: 'id', value: 'abc12' }]); assert.strictEqual(r[2].content, '💓 **77 bpm**');
+    r = await run('poster', [{ name: 'name', value: '../etc' }]); assert.match(r[2].content, /Ungültiger/);
+    r = await run('poster', [{ name: 'name', value: 'club' }]); assert.ok(r[2].embeds[0].image.url.includes('/nx/p.php/club.png'));
+    // Release-Ankündigung: erster Lauf merkt sich nur den Stand, neue Version wird gepostet
+    calls.length = 0; assert.strictEqual(await bot.checkRelease(), false);
+    release = Object.assign({}, release, { tag_name: 'vrc-nexus-4.4.1' });
+    assert.strictEqual(await bot.checkRelease(), true);
+    const post = calls.find(c => c[0] === 'POST' && c[1] === '/api/channels/789/messages');
+    assert.ok(post && post[2].embeds[0].title === '🥽 VRC Nexus 4.4.1');
+    assert.strictEqual(await bot.checkRelease(), false, 'nicht doppelt');
+    gw.stop(); wss.close(); srv.close(); try { fs.unlinkSync(st); } catch (e) { /* egal */ }
+    for (const k of ['BOT_NO_AUTOSTART', 'DISCORD_TOKEN', 'DISCORD_APP_ID', 'DISCORD_GUILD_ID', 'DISCORD_API', 'DISCORD_GATEWAY', 'NEXUS_BASE', 'HYPERATE_RELAY', 'GITHUB_API', 'RELEASE_CHANNEL_ID', 'BOT_STATE']) delete process.env[k];
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {
