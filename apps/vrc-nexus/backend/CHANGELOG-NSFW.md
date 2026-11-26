@@ -2,6 +2,17 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 5.1.0 – NSFW 3.1: your own collection & 18+ profile
+
+- 🗂 **Own NSFW collection** (new tab *🗂 Collection*): worlds and avatars in your own lists – separate from the normal favourites and stored **encrypted on this device only**. Tags, private notes, 1–5 star rating, search, filter by list/tag/rating, sort by newest, name, rating, most or recently used.
+- ➕ **Add from anywhere:** world and avatar windows get a **🔞 Collection** chip next to the local favourites; or paste an ID/link. Name, picture and author are fetched automatically.
+- 💡 **Suggestions:** worlds you visit and avatars you wear with VRChat 18+ content tags (`content_sex`, `content_adult` …) are suggested – never added automatically; "don't suggest again" is remembered.
+- 📈 **Usage:** visits and wearing are counted automatically (can be switched off).
+- 🎲 **Random pick** (weighted towards good ratings and places you haven't been for a while), **🚪 invite instance / 🔞 18+ group instance** in one click, **🎭 wear** avatars directly.
+- 👤 **NSFW avatars & worlds in your 18+ profile:** mark up to 12 avatars and 12 worlds with 👤 and publish them to your GhostNode community 18+ profile (only ID, name and note – visible only to Verified 18+ with NSFW on). Saving the 18+ profile editor keeps them.
+- 🕶 **Private mode / panic:** the collection is hidden until you show it on purpose; nothing goes to chatbox, Discord or OBS.
+- ⇩⇧ **Export / import** as JSON (without usage data).
+
 ### New in 5.0.0 – NSFW 3.0
 
 NSFW 2.0 was skipped – everything planned for it is in 3.0. New tab **✨ Extras** (toys unlocked, Intiface connected). The consent light, panic button, private mode and per-device limits apply to every new source.

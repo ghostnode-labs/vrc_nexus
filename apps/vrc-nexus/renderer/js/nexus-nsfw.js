@@ -70,12 +70,13 @@
         let h = '<div class="ns-top"><span class="muted small">🚨 ' + esc(T('Panik-Knopf: oben in der Kopfzeile')) + '</span>'
             + '<button type="button" class="btn ' + (st.private ? 'btn-gold' : '') + '" data-ns="private">🕶 Privat-Modus ' + (st.private ? 'AN' : 'aus') + '</button>'
             + '<span class="muted small">' + (a.owner ? '👑 Besitzer' : '🔓 freigeschaltet' + (a.exp ? ' bis ' + esc(new Date(a.exp * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE')) : '')) + '</span></div>';
-        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
+        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['col', '🗂 Sammlung', has('nsfw') && window.NexusNsfwCol], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
         if (!tabs.some(x => x[0] === sub)) sub = 'main';
         h += '<div class="chips ns-sub">' + tabs.map(([k, n]) => '<button type="button" class="chip' + (sub === k ? ' on' : '') + '" data-nsub="' + k + '">' + n + '</button>').join('') + '</div>';
         h += '<div class="nc-grid">';
         if (sub === 'fun') h += funHtml(t, has('toys')) + (has('toys') && t && window.NexusNsfw2 ? window.NexusNsfw2.funHtml(t) : '');
         if (sub === 'lust' && has('toys') && t && window.NexusNsfw2) h += window.NexusNsfw2.lustHtml(t);
+        if (sub === 'col' && window.NexusNsfwCol) h += window.NexusNsfwCol.html();
         if (sub === 'x3' && has('toys') && t && window.NexusNsfw3) h += window.NexusNsfw3.html(t);
         if (sub === 'net' && st.tremote) h += netHtml(st.tremote, t);
         if (sub === 'main') {

@@ -3607,3 +3607,82 @@ test('NSFW 3.0: Funscript (Vibration/Stroker), Spiele, Aufnahme & Wiedergabe, Pr
     assert.strictEqual(app.toyremote.cfg().recv_on, false); assert.ok(sent.filter(m => m.StopAllDevices).length > nStop, 'alles gestoppt');
     app.tools.stop(); app.toyremote.stop && app.toyremote.stop();
 });
+
+test('NSFW 3.1: Sammlung – verschlüsselt, Listen/Tags/Bewertung, Vorschläge aus 18+-Tags, Besuche, Privat-Modus, Zufall, Tragen, 18+-Profil, Export/Import', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWNER = 'usr_' + 'f'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => 'enc:' + Buffer.from(s).toString('base64'), decrypt: s => Buffer.from(s.slice(4), 'base64').toString() }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-n31-')) } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    const W1 = 'wrld_' + '1'.repeat(8) + '-2222-3333-4444-555555555555', W2 = 'wrld_' + '2'.repeat(8) + '-2222-3333-4444-555555555555', W3 = 'wrld_' + '3'.repeat(8) + '-2222-3333-4444-555555555555';
+    const A1 = 'avtr_' + 'a'.repeat(8) + '-2222-3333-4444-555555555555';
+    const calls = [];
+    app.tools.call = async (m, p, q, b) => {
+        calls.push([m, p, b]);
+        if (p.startsWith('/worlds/')) { const id = decodeURIComponent(p.slice(8)); return { id, name: id === W2 ? 'Club After Dark' : id === W3 ? 'Ruhige Wiese' : 'Lounge', authorName: 'Ersteller', thumbnailImageUrl: 'https://img.example/' + id.slice(5, 9) + '.png', tags: id === W3 ? ['system_approved'] : ['content_sex'] }; }
+        if (p.startsWith('/avatars/') && m === 'GET') return { id: A1, name: 'Spicy', authorName: 'Ich', thumbnailImageUrl: 'https://img.example/a.png', tags: ['content_adult'] };
+        return {};
+    };
+    const post = (act, x) => app.post(Object.assign({ act }, x || {}), {});
+    await assert.rejects(post('nsfwc_list'), /Nicht freigeschaltet/, 'ohne 18+-Freigabe gesperrt');
+    grant18(app);
+    let r = await post('nsfwc_add', { kind: 'world', id: W1.toUpperCase().replace('WRLD', 'wrld') });
+    assert.strictEqual(r.item.name, 'Lounge'); assert.strictEqual(r.item.image, 'https://img.example/1111.png'); assert.strictEqual(r.counts.world, 1);
+    const raw = db.setting('nsfw_collection', '');
+    assert.ok(raw.startsWith('enc:') && !raw.includes('Lounge'), 'verschlüsselt gespeichert');
+    await assert.rejects(post('nsfwc_add', { kind: 'world', id: 'wrld_kaputt' }), /Ungültige Welt-ID/);
+    r = await post('nsfwc_update', { kind: 'world', id: W1, tags: '#Club, chill , Club, ung ültig!', rating: '9', note: 'Freitags', list: 'Lieblinge' });
+    assert.deepStrictEqual(r.item.tags, ['club', 'chill']); assert.strictEqual(r.item.rating, 5); assert.ok(r.lists.world.includes('Lieblinge'));
+    assert.strictEqual((await post('nsfwc_list', { kind: 'world', tag: 'club' })).items.length, 1);
+    assert.strictEqual((await post('nsfwc_list', { kind: 'world', q: 'freitag' })).items.length, 1, 'Suche in Notizen');
+    assert.strictEqual((await post('nsfwc_list', { kind: 'world', tag: 'nix' })).items.length, 0);
+    // Vorschläge: nur Welten/Avatare mit 18+-Inhalts-Tags, Besuche zählen
+    await app.nsfwcol.onGameEvent({ kind: 'world_join', world_id: W2, world_name: 'Club After Dark' });
+    await app.nsfwcol.onGameEvent({ kind: 'world_join', world_id: W3, world_name: 'Ruhige Wiese' });
+    await app.nsfwcol.onGameEvent({ kind: 'world_join', world_id: W1, world_name: 'Lounge' });
+    r = await post('nsfwc_list', {});
+    assert.deepStrictEqual(r.suggest.map(s => s.id), [W2], 'nur die 18+-Welt wird vorgeschlagen');
+    assert.strictEqual(r.items.find(x => x.id === W1).count, 1, 'Besuch gezählt');
+    await app.nsfwcol.onAvatar(A1);
+    r = await post('nsfwc_list', { kind: 'avatar' }); assert.strictEqual(r.suggest[0].id, A1);
+    r = await post('nsfwc_add', { kind: 'avatar', id: A1 }); assert.strictEqual(r.suggest.length, 0, 'übernommen → kein Vorschlag mehr');
+    await post('nsfwc_dismiss', { id: W2 }); app.nsfwcol.checked.clear();
+    await app.nsfwcol.onGameEvent({ kind: 'world_join', world_id: W2 });
+    assert.strictEqual((await post('nsfwc_list', {})).suggest.length, 0, 'abgelehnt bleibt abgelehnt');
+    // Privat-Modus verbirgt, bewusst einblenden geht
+    app.nsfw.private = true;
+    r = await post('nsfwc_list', { kind: 'world' }); assert.ok(r.hidden && !r.items.length);
+    await assert.rejects(post('nsfwc_random', { kind: 'world' }), /verborgen/);
+    r = await post('nsfwc_reveal', { on: '1', kind: 'world' }); assert.ok(!r.hidden && r.items.length === 1);
+    await post('nsfwc_reveal', { on: '0' }); app.nsfw.private = false;
+    // Zufall, Tragen, Beitreten
+    assert.strictEqual((await post('nsfwc_random', { kind: 'world' })).item.id, W1);
+    await assert.rejects(post('nsfwc_random', { kind: 'world', tag: 'nix' }), /Nichts passt/);
+    calls.length = 0; await post('nsfwc_wear', { id: A1 });
+    assert.deepStrictEqual(calls[0].slice(0, 2), ['PUT', '/avatars/' + A1 + '/select']);
+    assert.strictEqual(app.nsfwcol.find('avatar', A1).count, 1);
+    // Listen: umbenennen, löschen (Einträge wandern)
+    await post('nsfwc_list_op', { kind: 'world', op: 'rename', name: 'Lieblinge', to: 'Top' });
+    assert.strictEqual(app.nsfwcol.find('world', W1).list, 'Top');
+    await post('nsfwc_list_op', { kind: 'world', op: 'delete', name: 'Top' });
+    assert.strictEqual(app.nsfwcol.find('world', W1).list, 'Sammlung');
+    await assert.rejects(post('nsfwc_list_op', { kind: 'world', op: 'delete', name: 'Sammlung' }), /letzte Liste/);
+    // 18+-Profil: nur markierte Einträge, nur ID/Name/Notiz
+    await post('nsfwc_update', { kind: 'avatar', id: A1, profile: '1', note: 'mein Liebling' });
+    let sent = null; app.comm.call = async (a, b) => { sent = [a, b]; return { avatars: b.avatars, worlds: b.worlds }; };
+    r = await post('nsfwc_profile');
+    assert.strictEqual(sent[0], 'profile_items'); assert.deepStrictEqual(sent[1].avatars, [{ id: A1, name: 'Spicy', note: 'mein Liebling' }]); assert.deepStrictEqual(sent[1].worlds, []);
+    assert.match(r.msg, /1 Avatare, 0 Welten/);
+    // Export/Import
+    const ex = await post('nsfwc_export'); assert.strictEqual(ex.items.length, 2); assert.ok(!('count' in ex.items[0]), 'keine Nutzungsdaten im Export');
+    await post('nsfwc_remove', { kind: 'world', id: W1 });
+    r = await post('nsfwc_import', { json: JSON.stringify(ex) }); assert.match(r.msg, /^1 Einträge/);
+    assert.deepStrictEqual(app.nsfwcol.find('world', W1).tags, ['club', 'chill']);
+    await assert.rejects(post('nsfwc_import', { json: '{"x":1}' }), /Keine gültige/);
+    // neu laden aus der Datenbank
+    app.nsfwcol.cache = null; assert.strictEqual(app.nsfwcol.load().items.length, 2);
+    app.tools.stop();
+});

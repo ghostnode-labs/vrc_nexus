@@ -22,6 +22,10 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.1.0 – 🔞 ***
+- 🔞 ***
+- World and avatar windows get one more chip next to the local favourites (only visible when the matching area is unlocked)
+
 ### New in 5.0.0 – Presets, comfort, OBS & creator tools
 - 🎭 **Avatar presets** under OSC: save the current state of the worn avatar (outfit, hair, colours …) and load it with one click – per avatar, up to 30 presets, export/import as JSON, also as a macro step (`preset Name`). VRChat's own and intimate parameters are never stored
 - 🌙 **Comfort**: sleep mode with one click (status, chatbox text with rotation paused, toys stopped, optional avatar parameter, alarm), friendly break reminders after long sessions and heart-rate warnings (too high / too low for a while, with cooldown)

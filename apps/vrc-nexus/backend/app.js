@@ -47,7 +47,7 @@ class NexusApp {
         this.settings = new Settings(opts.db);
         this.vrc = new Vrc(opts.db, opts.crypt);
         this.x = new Extra(this.vrc); this.x.settings = this.settings;
-        this.game = new GameLog(opts.db, { onEvent: e => { if (this.tools) this.tools.onGameEvent(e); if (this.auto) this.auto.onGameEvent(e); if (this.plugins) this.plugins.onGameEvent(e); if (this.warn) this.warn.onGameEvent(e); if (this.obs) this.obs.onGameEvent(e); if (this.toys && e.kind === 'nexus_toy') this.toys.onWorldEvent(e); if (opts.onGameEvent) opts.onGameEvent(e); } });
+        this.game = new GameLog(opts.db, { onEvent: e => { if (this.tools) this.tools.onGameEvent(e); if (this.auto) this.auto.onGameEvent(e); if (this.plugins) this.plugins.onGameEvent(e); if (this.warn) this.warn.onGameEvent(e); if (this.obs) this.obs.onGameEvent(e); if (this.nsfwcol) this.nsfwcol.onGameEvent(e).catch(() => {}); if (this.toys && e.kind === 'nexus_toy') this.toys.onWorldEvent(e); if (opts.onGameEvent) opts.onGameEvent(e); } });
         this.tr = new Translator(opts.db, opts.crypt, this.settings);
         this.link = new DashLink(this);
         this.updater = new Updater(this);
@@ -86,6 +86,7 @@ class NexusApp {
         this.chatmods = new ChatMods(this, opts.crypt);   // 3.2.5: auch am Handy (nur Module ohne PC-Werte)
         this.subs = opts.mobile ? null : new (require('./subtitles').Subtitles)(this);
         this.nsfw = new (require('./nsfw').Nsfw)(this, opts.crypt);
+        this.nsfwcol = new (require('./nsfwcol').NsfwCollection)(this, opts.crypt);   // NSFW 3.1: eigene Sammlung
         this.toys = opts.mobile ? null : new (require('./toys').Toys)(this);
         this.remote = opts.mobile ? null : new (require('./remote').Remote)(this);
         this.toyremote = opts.mobile ? null : new (require('./toyremote').ToyRemote)(this);
@@ -248,6 +249,7 @@ class NexusApp {
             if (act.startsWith('auto_')) return await this.auto.action(act, input);
             if (act === 'hud_state') return this.hudState();
             if (act.startsWith('nsfw_')) return await this.nsfw.action(act, input);
+            if (act.startsWith('nsfwc_')) return await this.nsfwcol.action(act, input);
             if (act.startsWith('admin_')) return await this.admin.action(act, input);
             if (act.startsWith('toys_') || act.startsWith('toys3_')) { if (!this.toys) throw new UserError('Nur in der Windows-App.'); return await this.toys.action(act, input); }
             if (act.startsWith('tremote_')) { if (!this.toyremote) throw new UserError('Nur in der Windows-App.'); return await this.toyremote.action(act, input); }

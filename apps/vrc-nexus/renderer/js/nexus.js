@@ -1253,6 +1253,7 @@
             const cur = d.current;
             const remote = kind === 'friend' && !isFriend ? '' : '<label>♥ VRChat-Favorit <select data-fpremote><option value="">– keiner –</option>' + d.groups.map(g => '<option value="' + esc(g.name) + '"' + (cur && cur.group === g.name ? ' selected' : '') + '>' + esc(g.display) + '</option>').join('') + '</select></label>';
             box.innerHTML = remote + '<span class="vx-fplocal">📌 Lokal: ' + d.local_groups.map(g => '<button type="button" class="vx-fpchip' + (d.local.includes(g.name) ? ' on' : '') + '" data-fplocal="' + esc(g.name) + '">' + (d.local.includes(g.name) ? '✓ ' : '＋ ') + esc(g.name) + '</button>').join('') + '<button type="button" class="vx-fpchip new" data-fpnew>＋ neue Gruppe</button></span>';
+            if (window.NexusNsfwCol) window.NexusNsfwCol.picker(kind, id, meta, box.querySelector('.vx-fplocal'));   // NSFW 3.1
             const sel = box.querySelector('[data-fpremote]');
             if (sel) sel.addEventListener('change', () => {
                 const p = sel.value ? api('fav_set', { kind, id, target: 'remote:' + sel.value, fav_id: cur ? cur.fav_id : '' }) : api('fav_remove', { kind, id, fav_id: cur ? cur.fav_id : '' });

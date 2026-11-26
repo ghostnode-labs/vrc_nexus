@@ -1718,3 +1718,51 @@ Funscript läuft	Funscript playing	Funscript en cours	Funscript 再生中
 Spiel gestartet	Game started	Partie lancée	ゲーム開始
 Wiedergabe	Playback	Lecture	再生
 Profil gelöscht	Profile deleted	Profil supprimé	プロファイルを削除しました
+// NSFW 3.1 – Sammlung
+im 18+-Profil	in the 18+ profile	dans le profil 18+	18+プロフィールに表示
+Tags, mit Komma getrennt	Tags, separated by commas	Tags, séparés par des virgules	タグ(カンマ区切り)
+Notiz (nur für dich)	Note (only for you)	Note (rien que pour toi)	メモ(自分だけ)
+im 18+-Profil zeigen	show in the 18+ profile	afficher dans le profil 18+	18+プロフィールに表示する
+Einladungs-Instanz erstellen	Create invite instance	Créer une instance sur invitation	招待インスタンスを作成
+18+-Gruppeninstanz erstellen	Create 18+ group instance	Créer une instance de groupe 18+	18+グループインスタンスを作成
+Sammlung verborgen	Collection hidden	Collection masquée	コレクション非表示
+Der Privat-Modus ist an – die Sammlung bleibt verborgen, bis du sie bewusst einblendest	Private mode is on – the collection stays hidden until you show it on purpose	Le mode privé est activé – la collection reste masquée jusqu’à ce que tu l’affiches volontairement	プライベートモード中 – 自分で表示するまでコレクションは隠れたままです
+Trotzdem einblenden	Show anyway	Afficher quand même	それでも表示
+wieder verbergen	hide again	masquer à nouveau	再び隠す
+Welt-ID oder Link (wrld_…)	World ID or link (wrld_…)	ID ou lien du monde (wrld_…)	ワールドIDまたはリンク(wrld_…)
+Avatar-ID oder Link (avtr_…)	Avatar ID or link (avtr_…)	ID ou lien de l’avatar (avtr_…)	アバターIDまたはリンク(avtr_…)
+Suchen (Name, Ersteller, Notiz, Tags)	Search (name, author, note, tags)	Rechercher (nom, auteur, note, tags)	検索(名前、作者、メモ、タグ)
+alle Listen	all lists	toutes les listes	すべてのリスト
+Bewertung	Rating	Note	評価
+am meisten genutzt	most used	les plus utilisés	よく使う順
+zuletzt genutzt	recently used	utilisés récemment	最近使った順
+jede Bewertung	any rating	toute note	すべての評価
+Zufällige Welt	Random world	Monde au hasard	ランダムなワールド
+Zufälliger Avatar	Random avatar	Avatar au hasard	ランダムなアバター
+Liste umbenennen	Rename list	Renommer la liste	リスト名を変更
+Liste löschen	Delete list	Supprimer la liste	リストを削除
+18+-Profil aktualisieren	Update 18+ profile	Mettre à jour le profil 18+	18+プロフィールを更新
+Vorschläge	Suggestions	Suggestions	おすすめ
+mit 18+-Inhalts-Tags besucht oder getragen	visited or worn with 18+ content tags	visités ou portés avec des tags de contenu 18+	18+コンテンツタグ付きで訪問/着用
+In die Sammlung	Add to collection	Ajouter à la collection	コレクションに追加
+Nicht mehr vorschlagen	Don’t suggest again	Ne plus suggérer	今後おすすめしない
+Nichts passt zum Filter	Nothing matches the filter	Rien ne correspond au filtre	条件に一致するものはありません
+Noch leer – IDs oben eintragen oder in Welt-/Avatar-Fenstern auf „🔞 Sammlung“ tippen	Still empty – enter IDs above or tap “🔞 Collection” in world/avatar windows	Encore vide – saisis des ID ci-dessus ou touche « 🔞 Collection » dans les fenêtres de monde/avatar	まだ空です – 上にIDを入力するか、ワールド/アバター画面で「🔞 コレクション」をタップ
+Welten/Avatare mit 18+-Inhalts-Tags vorschlagen	Suggest worlds/avatars with 18+ content tags	Suggérer les mondes/avatars avec des tags de contenu 18+	18+コンテンツタグ付きのワールド/アバターをおすすめ
+Besuche und Tragen automatisch zählen	Count visits and wearing automatically	Compter automatiquement les visites et le port	訪問と着用を自動でカウント
+im Privat-Modus verbergen	hide in private mode	masquer en mode privé	プライベートモードで隠す
+Die Sammlung liegt verschlüsselt nur auf diesem Gerät. Im 18+-Profil erscheinen nur Einträge mit 👤 – sichtbar nur für Verified 18+ mit NSFW an	The collection is stored encrypted on this device only. Only entries with 👤 appear in the 18+ profile – visible only to Verified 18+ with NSFW on	La collection est stockée chiffrée uniquement sur cet appareil. Seules les entrées avec 👤 apparaissent dans le profil 18+ – visibles uniquement par les Verified 18+ avec NSFW activé	コレクションはこの端末にのみ暗号化して保存されます。18+プロフィールには 👤 付きの項目だけが表示され、NSFW をオンにした Verified 18+ のみが閲覧できます
+Ungültige Welt-ID (wrld_…)	Invalid world ID (wrld_…)	ID de monde invalide (wrld_…)	無効なワールドID(wrld_…)
+Ungültige Avatar-ID (avtr_…)	Invalid avatar ID (avtr_…)	ID d’avatar invalide (avtr_…)	無効なアバターID(avtr_…)
+Name der neuen Liste:	Name of the new list:	Nom de la nouvelle liste :	新しいリストの名前:
+Liste löschen? Die Einträge wandern in die erste Liste	Delete list? Its entries move to the first list	Supprimer la liste ? Ses entrées passent dans la première liste	リストを削除しますか? 項目は最初のリストへ移動します
+Die Sammlung ist voll (#)	The collection is full (#)	La collection est pleine (#)	コレクションがいっぱいです(#)
+Höchstens # Listen	At most # lists	Au maximum # listes	リストは最大#個
+Höchstens # im 18+-Profil	At most # in the 18+ profile	Au maximum # dans le profil 18+	18+プロフィールには最大#件
+Nicht in der Sammlung	Not in the collection	Pas dans la collection	コレクションにありません
+Aus der Sammlung entfernt	Removed from the collection	Retiré de la collection	コレクションから削除しました
+Liste nicht gefunden	List not found	Liste introuvable	リストが見つかりません
+Diesen Namen gibt es schon	This name already exists	Ce nom existe déjà	この名前は既にあります
+Die letzte Liste bleibt	The last list stays	La dernière liste reste	最後のリストは削除できません
+Keine gültige Sammlungs-Datei	Not a valid collection file	Fichier de collection invalide	有効なコレクションファイルではありません
+18+-Profil aktualisiert	18+ profile updated	Profil 18+ mis à jour	18+プロフィールを更新しました

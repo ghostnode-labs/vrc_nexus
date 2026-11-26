@@ -428,7 +428,7 @@
                     .then(d => { toast(T(d.msg)); f.reset(); if (!parent) { attach = []; items.unshift(d.post); } else if (openThread[parent]) { openThread[parent].replies.push(d.post); const p = items.find(x => x.id === parent); if (p) p.replies++; } })
                     .catch(x => toast(x.message, true)).finally(() => { busy = false; render(); });
             }
-            if (f.matches('.p18-edit')) return api('comm_profile_save', Object.assign(profBody(prof), { nsfw_bio: f.nsfw_bio.value, nsfw_facts: JSON.stringify(window.NexusProfile18.readNsfw(f)) }))
+            if (f.matches('.p18-edit')) return api('comm_profile_save', Object.assign(profBody(prof), { nsfw_bio: f.nsfw_bio.value, nsfw_facts: JSON.stringify(Object.assign({ avatars: (prof.nsfw_facts || {}).avatars || [], worlds: (prof.nsfw_facts || {}).worlds || [] }, window.NexusProfile18.readNsfw(f))) }))
                 .then(d => { toast(d.msg); const feed = prof.feed; prof = d.profile; prof.feed = feed; p18Edit = false; render(); }).catch(x => toast(x.message, true));
             if (f.matches('.cm-pform')) return api('comm_profile_save', Object.assign(profBody(prof), { theme: f.theme ? f.theme.value : (prof.theme || ''), bio: f.bio.value, pronouns: f.pronouns.value, languages: f.languages.value, interests: f.interests.value, links: f.links.value.split(',').map(x => x.trim()).filter(Boolean) },
                 window.NexusProfile18 ? { facts: JSON.stringify(window.NexusProfile18.readFacts(f)) } : {}))

@@ -1327,3 +1327,28 @@ body.mobile .hm-tab em { display: none; }
 .n2-check { margin: 8px 0; padding-left: 4px; list-style: none; } .n2-check li { margin: 3px 0; font-size: .86rem; }
 .cf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 8px 0; } .cf-txt span { display: block; } .cf-txt input, .cf-num input { width: 100%; } .cf-num input { max-width: 110px; }
 .ob-rules { width: 100%; margin: 6px 0; } .ob-rules td { padding: 3px; } .ob-rules input, .ob-rules select { width: 100%; }
+
+/* NSFW 3.1 – Sammlung */
+.n31 .nc-row { flex-wrap: wrap; gap: 6px; }
+.n31 .n31-head input[type=text], .n31 .n31-head input[type=search] { flex: 1 1 220px; min-width: 0; }
+.n31-list { display: flex; flex-direction: column; gap: 8px; }
+.n31-item { display: grid; grid-template-columns: 96px 1fr auto; gap: 10px; align-items: start; padding: 8px; border-radius: 10px; background: rgba(255,255,255,.03); }
+.n31-item.edit { outline: 1px solid var(--gold, #c9a227); }
+.n31-img { width: 96px; height: 72px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.n31-img img { width: 100%; height: 100%; object-fit: cover; }
+.n31-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.n31-body b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.n31-acts { display: flex; flex-direction: column; gap: 4px; }
+.n31-stars { display: flex; gap: 1px; }
+.n31-star { background: none; border: 0; padding: 0 1px; cursor: pointer; color: rgba(255,255,255,.25); font-size: 15px; line-height: 1; }
+.n31-star.on { color: var(--gold, #e3b341); }
+.n31-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0; }
+.n31-note { white-space: pre-wrap; opacity: .85; }
+.n31-form { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.n31-sug { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.n31-sug img { width: 48px; height: 36px; object-fit: cover; border-radius: 6px; }
+.n31-sug b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.n31-pick.on { border-color: #d64b7a; }
+.p18-items { margin-top: 10px; }
+.p18-items .chips { margin-top: 4px; flex-wrap: wrap; }
+@media (max-width: 560px) { .n31-item { grid-template-columns: 64px 1fr; } .n31-img { width: 64px; height: 48px; } .n31-acts { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; } }

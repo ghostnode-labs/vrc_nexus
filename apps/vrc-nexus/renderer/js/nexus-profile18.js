@@ -61,6 +61,13 @@
         const v = n => form.elements[n] ? form.elements[n].value : '';
         return { gender: [...form.querySelectorAll('[name=pf_gender]:checked')].map(x => x.value), gender_other: v('pf_gender_other'), orientation: v('pf_orientation'), relationship: v('pf_relationship'), looking: v('pf_looking') };
     }
+    /** 5.1: NSFW-Avatare und -Welten im 18+-Profil (aus der eigenen Sammlung, Bilder öffnet der Dialog) */
+    function items(nf) {
+        const av = nf.avatars || [], wo = nf.worlds || [];
+        const row = (list, icon, attr) => list.map(x => '<button type="button" class="chip p18-item" ' + attr + '="' + esc(x.id) + '" title="' + esc(x.note || '') + '">' + icon + ' ' + esc(x.name || x.id) + '</button>').join('');
+        return (av.length ? '<div class="p18-items"><b>🎭 ' + esc(T('NSFW-Avatare')) + '</b><div class="chips">' + row(av, '🎭', 'data-p18av') + '</div></div>' : '')
+            + (wo.length ? '<div class="p18-items"><b>🌍 ' + esc(T('NSFW-Welten')) + '</b><div class="chips">' + row(wo, '🌍', 'data-world') + '</div></div>' : '');
+    }
     /** 🔞 18+-Teil – Anzeige (nur gesetzte Kinks, nach Bereich) */
     function nsfwView(nf, bio) {
         nf = nf || {};
@@ -73,7 +80,8 @@
             + (rows.length ? '<div class="p18-facts">' + rows.map(r => '<div><i>🔥</i><span>' + esc(T(r[0])) + '</span><b>' + esc(r[1]) + '</b></div>').join('') + '</div>' : '')
             + (cats.length ? '<div class="p18-legend small muted">' + esc(T('Erhalten')) + ' · ' + esc(T('Geben')) + ' — ♥ ' + esc(T('liebe ich')) + ' · 👍 ' + esc(T('mag ich')) + ' · 〜 ' + esc(T('vielleicht')) + ' · 👎 ' + esc(T('nein')) + '</div>'
                 + cats.map(([cat, list]) => '<details class="p18-cat" open><summary>' + esc(T(cat)) + ' <small>' + list.length + '</small></summary>' + list.map(([k, l]) => '<div class="p18-k"><span>' + esc(l) + '</span>' + rate(kk[k][0]) + rate(kk[k][1]) + '</div>').join('') + '</details>').join('') : '')
-            + (!bio && !rows.length && !cats.length ? '<p class="vx-empty">' + esc(T('Noch nichts angegeben.')) + '</p>' : '');
+            + items(nf)
+            + (!bio && !rows.length && !cats.length && !(nf.avatars || []).length && !(nf.worlds || []).length ? '<p class="vx-empty">' + esc(T('Noch nichts angegeben.')) + '</p>' : '');
     }
     /** 🔞 18+-Teil – Bearbeiten (Kinks: antippen wechselt ♥ → 👍 → 〜 → 👎 → leer) */
     function nsfwEditor(nf, bio) {
@@ -98,6 +106,7 @@
         });
         return out;
     }
+    document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('[data-p18av]'); if (a && UI.openAvatar) { e.preventDefault(); UI.openAvatar(a.dataset.p18av); } });
     // Antippen im Editor: Bewertung weiterschalten
     document.addEventListener('click', e => {
         const b = e.target.closest('.p18-rb');
