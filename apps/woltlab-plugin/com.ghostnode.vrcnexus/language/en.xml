@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/6.0/language.xsd" languagecode="en">
+<import>
+	<category name="wcf.vrcnexus">
+		<item name="wcf.vrcnexus.kind.world"><![CDATA[World]]></item>
+		<item name="wcf.vrcnexus.kind.avatar"><![CDATA[Avatar]]></item>
+		<item name="wcf.vrcnexus.kind.group"><![CDATA[Group]]></item>
+		<item name="wcf.vrcnexus.by"><![CDATA[by]]></item>
+		<item name="wcf.vrcnexus.open"><![CDATA[Open on VRChat]]></item>
+	</category>
+	<category name="wcf.acp.option">
+		<item name="wcf.acp.option.category.message.vrcnexus"><![CDATA[VRC Nexus]]></item>
+		<item name="wcf.acp.option.vrcnexus_info_url"><![CDATA[Info source (URL)]]></item>
+		<item name="wcf.acp.option.vrcnexus_info_url.description"><![CDATA[Optional: HTTPS address that returns name, author, image etc. for a VRChat ID as JSON (?kind=world|avatar|group&id=…). Empty = cards with ID and link only.]]></item>
+		<item name="wcf.acp.option.vrcnexus_cache_minutes"><![CDATA[Cache (minutes)]]></item>
+	</category>
+</import>
+</language>

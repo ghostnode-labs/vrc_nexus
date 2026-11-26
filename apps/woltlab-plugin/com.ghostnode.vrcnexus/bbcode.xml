@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data xmlns="http://www.woltlab.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.woltlab.com http://www.woltlab.com/XSD/6.0/bbcode.xsd">
+	<import>
+		<bbcode name="vrcworld">
+			<classname>wcf\system\bbcode\VrcNexusBBCode</classname>
+			<isBlockElement>1</isBlockElement>
+			<attributes>
+				<attribute name="0">
+					<validationpattern><![CDATA[^(https?://\S+|wrld_[0-9a-fA-F-]{36}\S*)$]]></validationpattern>
+					<required>0</required>
+				</attribute>
+			</attributes>
+		</bbcode>
+		<bbcode name="vrcavatar">
+			<classname>wcf\system\bbcode\VrcNexusBBCode</classname>
+			<isBlockElement>1</isBlockElement>
+			<attributes>
+				<attribute name="0">
+					<validationpattern><![CDATA[^(https?://\S+|avtr_[0-9a-fA-F-]{36})$]]></validationpattern>
+					<required>0</required>
+				</attribute>
+			</attributes>
+		</bbcode>
+		<bbcode name="vrcgroup">
+			<classname>wcf\system\bbcode\VrcNexusBBCode</classname>
+			<isBlockElement>1</isBlockElement>
+			<attributes>
+				<attribute name="0">
+					<validationpattern><![CDATA[^(https?://\S+|grp_[0-9a-fA-F-]{36})$]]></validationpattern>
+					<required>0</required>
+				</attribute>
+			</attributes>
+		</bbcode>
+	</import>
+</data>
