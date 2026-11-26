@@ -66,7 +66,7 @@ class Toys {
         this.lust = { v: 0, at: Date.now(), hist: [], ext: false, climaxAt: 0, climaxes: 0, edgeHold: false, releaseUntil: 0 };
         this.voiceLv = 0; this.voiceAt = 0; this.consent = 'green'; this.scene = null; this.session = { start: 0, last: 0, due: false, total: 0 };
         this.server = { name: '', ping: 0, version: 3 }; this.scanning = false; this.retry = 0;
-        this.linkTimer = setInterval(() => this.compute(), 250); if (this.linkTimer.unref) this.linkTimer.unref();
+        this.linkTimer = setInterval(() => this.safeCompute(), 250); if (this.linkTimer.unref) this.linkTimer.unref();
         this.driveTimer = setInterval(() => this.driveAll(), 50); if (this.driveTimer.unref) this.driveTimer.unref();
         if (app.game && app.game.osc) { app.game.osc.taps = app.game.osc.taps || new Set(); app.game.osc.taps.add((a, v) => this.onOsc(a, v)); }
         this.timer = setInterval(() => this.idle(), 1000); if (this.timer.unref) this.timer.unref();
@@ -595,6 +595,18 @@ class Toys {
         if (c.heart.on && hit(c.heart.device)) x = Math.max(x, this.heartLevel());
         if (c.voice.on && hit(c.voice.device)) x = Math.max(x, this.voiceLevel());
         return x;
+    }
+    /** 5.1.1: ein Fehler in der Schleife darf die App nicht abstürzen lassen – melden, 30 s Pause, weiter */
+    safeCompute() {
+        if (this.pauseUntil && Date.now() < this.pauseUntil) return;
+        try { this.compute(); this.loopErrors = 0; }
+        catch (e) {
+            this.loopErrors = (this.loopErrors || 0) + 1;
+            this.pauseUntil = Date.now() + (this.loopErrors > 3 ? 30000 : 2000);
+            this.error = 'Interner Fehler in der Spielzeug-Schleife: ' + (e && e.message || e);
+            console.error('[toys] compute:', e);
+            if (this.loopErrors === 4 && this.app.tools && this.app.tools.alert) this.app.tools.alert('⚠ Spielzeug-Steuerung pausiert', 'Ein interner Fehler ist aufgetreten – Nexus versucht es in 30 s erneut. Details im Protokoll.');
+        }
     }
     compute() {
         const c = this.cfg();

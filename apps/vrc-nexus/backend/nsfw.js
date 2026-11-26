@@ -99,7 +99,16 @@ class Nsfw {
         return { key: true, roles: arr(r.payload.f).filter(f => ROLES[f]), exp: int(r.payload.exp), note: str(r.payload.n) };
     }
     /** Was ist für das eingeloggte Konto freigeschaltet? NSFW nur mit Verified 18+ + Schalter (account.js) */
+    /** 5.1.1: wird bei jeder OSC-Nachricht und 4×/s von der Spielzeug-Schleife gefragt → 1 s zwischenspeichern
+     *  (sonst jedes Mal entschlüsseln, Schlüsseldateien lesen und die Signatur prüfen) */
     access() {
+        const uid = this.myId(), m = this.accessMemo;
+        if (m && m.uid === uid && Date.now() - m.at < 1000) return Object.assign({}, m.v, { features: m.v.features.slice(), roles: m.v.roles.slice() });
+        const v = this.accessNow();
+        this.accessMemo = { uid, at: Date.now(), v };
+        return Object.assign({}, v, { features: v.features.slice(), roles: v.roles.slice() });
+    }
+    accessNow() {
         const uid = this.myId();
         if (!uid) return { owner: false, unlocked: false, features: [], roles: [], reason: 'Nicht bei VRChat angemeldet.' };
         const owner = this.isOwner(uid), k = this.roles();
@@ -226,6 +235,7 @@ class Nsfw {
         return out;
     }
     async action(act, input) {
+        this.accessMemo = null;
         switch (act) {
             case 'nsfw_state': return this.state();
             case 'nsfw_unlock': {

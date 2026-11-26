@@ -22,6 +22,10 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.1.1 – Stability fix
+- Fixed a crash in the main process ("JavaScript error … memory") while toys or OSC were active: settings are now kept in memory instead of being read from the database hundreds of times per second (about 1000× fewer database calls), and the database is written to disk at most every 5 seconds
+- Errors in background loops no longer crash the app: they are logged to `crash.log` in the data folder, a short notice is shown once and the loop retries
+
 ### New in 5.1.0 – 🔞 ***
 - 🔞 ***
 - World and avatar windows get one more chip next to the local favourites (only visible when the matching area is unlocked)

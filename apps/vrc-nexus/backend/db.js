@@ -76,6 +76,7 @@ class Statement {
         const st = this.db.raw.prepare(this.sql);
         try { st.run(this._bind(params)); } finally { st.free(); }
         const changes = this.db.raw.getRowsModified();
+        if (/\bsettings\b/i.test(this.sql)) this.db.cache.clear();
         this.db.dirty();
         return { changes, lastId: this.db.lastId() };
     }
@@ -101,12 +102,14 @@ class Database {
         this.raw = data ? new SQL.Database(data) : new SQL.Database();
         this.timer = null;
         this.depth = 0;
+        this.cache = new Map();     // 5.1.1: Einstellungen im Speicher – Schleifen (Spielzeug 4×/s) fragen sonst ständig sql.js ab
+        this.savedAt = 0;
         this.raw.exec(SCHEMA);
         this.raw.exec('PRAGMA user_version = ' + SCHEMA_VERSION);
         this.dirty();
     }
     prepare(sql) { return new Statement(this, sql); }
-    exec(sql) { this.raw.exec(sql); this.dirty(); }
+    exec(sql) { this.raw.exec(sql); if (/\bsettings\b/i.test(sql)) this.cache.clear(); this.dirty(); }
     lastId() { const r = this.raw.exec('SELECT last_insert_rowid()'); return r.length ? r[0].values[0][0] : 0; }
     /** Transaktion (verschachtelt erlaubt) */
     tx(fn) {
@@ -116,7 +119,10 @@ class Database {
     }
     dirty() {
         if (!this.file || this.timer) return;
-        this.timer = setTimeout(() => { this.timer = null; this.save(); }, 1500);
+        // 5.1.1: höchstens alle 5 s auf die Platte (export() kopiert die ganze Datenbank im sql.js-Speicher)
+        const wait = Math.max(1500, 5000 - (Date.now() - this.savedAt));
+        this.timer = setTimeout(() => { this.timer = null; try { this.save(); } catch (e) { console.error('Speichern fehlgeschlagen:', e && e.message); } }, wait);
+        if (this.timer.unref) this.timer.unref();
     }
     save() {
         if (!this.file) return;
@@ -125,11 +131,18 @@ class Database {
         const tmp = this.file + '.tmp';
         fs.writeFileSync(tmp, Buffer.from(this.raw.export()));
         fs.renameSync(tmp, this.file);
+        this.savedAt = Date.now();
     }
     close() { this.save(); this.raw.close(); }
     // ---- Einstellungen ----
-    setting(key, def = '') { const v = this.prepare('SELECT value FROM settings WHERE key = ?').value(key); return v === undefined ? def : v; }
-    setSetting(key, value) { this.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, String(value)); }
+    setting(key, def = '') {
+        if (this.cache.has(key)) { const c = this.cache.get(key); return c === undefined ? def : c; }
+        const v = this.prepare('SELECT value FROM settings WHERE key = ?').value(key);
+        if (this.cache.size > 2000) this.cache.clear();
+        this.cache.set(key, v);
+        return v === undefined ? def : v;
+    }
+    setSetting(key, value) { this.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, String(value)); this.cache.set(key, String(value)); }
 }
 
 async function openDatabase(file) {

@@ -12,6 +12,20 @@ const { spawn } = require('child_process');
 const { openDatabase } = require('./backend/db');
 const { NexusApp, handleWebRequest } = require('./backend/app');
 
+// 5.1.1: Fehler im Hauptprozess nicht als Absturz-Dialog zeigen, sondern protokollieren (userData/crash.log) und einmal kurz melden
+let crashNoticeAt = 0;
+function logCrash(kind, e) {
+    const msg = '[' + new Date().toISOString() + '] ' + kind + ': ' + (e && e.stack || e) + '\n';
+    try { fs.appendFileSync(path.join(app.getPath('userData'), 'crash.log'), msg); } catch (x) { /* egal */ }
+    console.error(msg);
+    if (Date.now() - crashNoticeAt > 600000 && Notification.isSupported()) {
+        crashNoticeAt = Date.now();
+        try { new Notification({ title: 'VRC Nexus', body: 'Ein interner Fehler wurde abgefangen – Nexus läuft weiter. Details: crash.log im Datenordner.' }).show(); } catch (x) { /* egal */ }
+    }
+}
+process.on('uncaughtException', e => logCrash('uncaughtException', e));
+process.on('unhandledRejection', e => logCrash('unhandledRejection', e));
+
 const RENDERER = path.join(__dirname, 'renderer');
 const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.ico': 'image/x-icon', '.svg': 'image/svg+xml' };
 

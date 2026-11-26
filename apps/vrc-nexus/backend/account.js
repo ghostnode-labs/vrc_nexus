@@ -20,8 +20,13 @@ class Account {
         this.error = ''; this.at = 0; this.busy = null;
     }
     // ---------- Speicher (Token verschlüsselt) ----------
-    load() { try { return JSON.parse(this.crypt.decrypt(this.app.db.setting('nexus_acct', '')) || '{}') || {}; } catch (e) { return {}; } }
-    store(o) { this.app.db.setSetting('nexus_acct', o && o.token ? this.crypt.encrypt(JSON.stringify(o)) : ''); }
+    load() {
+        const raw = this.app.db.setting('nexus_acct', '');
+        // 5.1.1: nicht bei jedem Aufruf neu entschlüsseln (Spielzeug-Schleife fragt 4×/s); Kopie zurückgeben, damit niemand den Zwischenspeicher verändert
+        if (!this.memo || this.memo.raw !== raw) { let j = '{}'; try { j = this.crypt.decrypt(raw) || '{}'; JSON.parse(j); } catch (e) { j = '{}'; } this.memo = { raw, j }; }
+        try { return JSON.parse(this.memo.j) || {}; } catch (e) { return {}; }
+    }
+    store(o) { this.app.db.setSetting('nexus_acct', o && o.token ? this.crypt.encrypt(JSON.stringify(o)) : ''); if (this.app.nsfw) this.app.nsfw.accessMemo = null; }
     myId() { const a = this.app.vrc.account(); return a ? str(a.vrc_id).toLowerCase() : ''; }
     /** gespeichertes Konto – nur wenn es zum angemeldeten VRChat-Konto gehört */
     current() { const o = this.load(); return o.token && o.account && o.account.vrc_id === this.myId() ? o : null; }
