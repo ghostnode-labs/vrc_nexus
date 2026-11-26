@@ -1766,3 +1766,15 @@ Diesen Namen gibt es schon	This name already exists	Ce nom existe déjà	この�
 Die letzte Liste bleibt	The last list stays	La dernière liste reste	最後のリストは削除できません
 Keine gültige Sammlungs-Datei	Not a valid collection file	Fichier de collection invalide	有効なコレクションファイルではありません
 18+-Profil aktualisiert	18+ profile updated	Profil 18+ mis à jour	18+プロフィールを更新しました
+// 5.2 – VRC Nexus Watch
+VRC Nexus Watch	VRC Nexus Watch	VRC Nexus Watch	VRC Nexus Watch
+Wear-OS-Uhr im Heimnetz (z. B. Galaxy Watch)	Wear OS watch on your home network (e.g. Galaxy Watch)	Montre Wear OS sur le réseau local (p. ex. Galaxy Watch)	ホームネットワーク上の Wear OS ウォッチ(例: Galaxy Watch)
+Uhr-Verbindung im Heimnetz erlauben	Allow watch connection on the home network	Autoriser la connexion de la montre sur le réseau local	ホームネットワークでのウォッチ接続を許可
+Kopplungscode	Pairing code	Code d’appairage	ペアリングコード
+Neuer Code	New code	Nouveau code	新しいコード
+In der Uhr-App „Koppeln“ tippen und den Code eingeben – die Uhr findet den PC von selbst. Sonst Adresse eintragen:	Tap “Koppeln” in the watch app and enter the code – the watch finds the PC by itself. Otherwise enter the address:	Touche « Koppeln » dans l’app de la montre et saisis le code – la montre trouve le PC toute seule. Sinon, saisis l’adresse :	ウォッチアプリで「Koppeln」をタップしてコードを入力 – PC は自動で見つかります。見つからない場合はアドレスを入力:
+Puls vom Uhr-Sensor, Panik-Knopf, Consent-Ampel, Spielzeug-Stopp und Schlafmodus direkt am Handgelenk. Die App gibt es bei den Downloads (VRC-Nexus-Watch-…apk).	Heart rate from the watch sensor, panic button, consent light, toy stop and sleep mode right on your wrist. Get the app from the downloads (VRC-Nexus-Watch-…apk).	Pouls du capteur de la montre, bouton panique, feu de consentement, arrêt des jouets et mode sommeil au poignet. L’app se trouve dans les téléchargements (VRC-Nexus-Watch-…apk).	ウォッチのセンサーの心拍、パニックボタン、同意ライト、トイ停止、スリープモードを手首から。アプリはダウンロードにあります(VRC-Nexus-Watch-…apk)。
+noch nicht verbunden	not connected yet	pas encore connectée	まだ接続されていません
+Diese Uhr entfernen? Sie muss danach neu gekoppelt werden.	Remove this watch? It will need to be paired again.	Retirer cette montre ? Il faudra l’appairer à nouveau.	このウォッチを削除しますか? 再度ペアリングが必要になります。
+Uhr entfernt	Watch removed	Montre retirée	ウォッチを削除しました
+Die Uhr-App verbindet sich nur mit der Windows-App	The watch app only connects to the Windows app	L’app montre se connecte uniquement à l’application Windows	ウォッチアプリは Windows アプリにのみ接続します

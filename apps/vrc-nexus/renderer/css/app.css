@@ -1352,3 +1352,8 @@ body.mobile .hm-tab em { display: none; }
 .p18-items { margin-top: 10px; }
 .p18-items .chips { margin-top: 4px; flex-wrap: wrap; }
 @media (max-width: 560px) { .n31-item { grid-template-columns: 64px 1fr; } .n31-img { width: 64px; height: 48px; } .n31-acts { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; } }
+
+/* 5.2: VRC Nexus Watch */
+.hr-pin { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.hr-pin b { font-size: 1.8rem; letter-spacing: 4px; font-variant-numeric: tabular-nums; color: var(--gold, #e3b341); }
+.hr-watches { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }

@@ -22,6 +22,11 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.2.0 – Nexus Watch (Wear OS)
+- ⌚ **Nexus Watch**, a new app for Wear OS watches (Galaxy Watch 4 and newer, Pixel Watch …) – download `VRC-Nexus-Watch-…-wearos.apk` from the release
+- ♥ Heart rate straight from the watch sensor as a new heart-rate source (no HypeRate/Pulsoid account needed), 💤 sleep mode and 🔞 *** from your wrist
+- Connects directly to the Windows app on your home network: pairing with a 6-digit code (under 💓 Heart rate), automatic discovery, one key per watch, removable at any time
+
 ### New in 5.1.1 – Stability fix
 - Fixed a crash in the main process ("JavaScript error … memory") while toys or OSC were active: settings are now kept in memory instead of being read from the database hundreds of times per second (about 1000× fewer database calls), and the database is written to disk at most every 5 seconds
 - Errors in background loops no longer crash the app: they are logged to `crash.log` in the data folder, a short notice is shown once and the loop retries

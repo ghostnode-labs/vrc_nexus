@@ -2,6 +2,11 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 5.2.0 – Nexus Watch
+
+- ⌚ On the watch (only while NSFW is unlocked and private mode is off): 🚨 **panic button** (with vibration), ✅ all-clear, 🕶 private mode, **consent light** 🟢🟡🔴 and ⏹ **stop toys** – the same rules as in the app apply (Verified 18+, NSFW switch).
+- In private mode the watch shows no world name.
+
 ### New in 5.1.0 – NSFW 3.1: your own collection & 18+ profile
 
 - 🗂 **Own NSFW collection** (new tab *🗂 Collection*): worlds and avatars in your own lists – separate from the normal favourites and stored **encrypted on this device only**. Tags, private notes, 1–5 star rating, search, filter by list/tag/rating, sort by newest, name, rating, most or recently used.

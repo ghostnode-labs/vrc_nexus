@@ -4,7 +4,8 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = (a, d) => UI.api(a, d), toast = (m, bad) => UI.toast(m, bad);
-    const SRC = [['off', '⏸ Aus', 'Kein Puls'], ['pulsoid', '💗 Pulsoid', 'Brustgurt oder Uhr über die Pulsoid-App'], ['hyperate', '💜 HypeRate', 'Uhr oder Gurt über HypeRate'], ['osc', '⌚ OSC / Smartwatch', 'App schickt den Puls schon an VRChat']];
+    const SRC = [['off', '⏸ Aus', 'Kein Puls'], ['pulsoid', '💗 Pulsoid', 'Brustgurt oder Uhr über die Pulsoid-App'], ['hyperate', '💜 HypeRate', 'Uhr oder Gurt über HypeRate'], ['osc', '⌚ OSC / Smartwatch', 'App schickt den Puls schon an VRChat'], ['watch', '⌚ VRC Nexus Watch', 'Wear-OS-Uhr im Heimnetz (z. B. Galaxy Watch)']];
+    let w = null;   // 5.2: Uhr-Kopplung
     let box = null, d = null, timer = null;
 
     /** kleine Kurve: hist = [[sekunden_vor_jetzt (≤0), bpm], …] */
@@ -47,17 +48,31 @@
                 + row('Bereich (bpm)', inp('min', c.min, '', 'number', '80px') + '–' + inp('max', c.max, '', 'number', '80px'))
                 + '<div class="nc-row"><button class="btn btn-sm btn-gold">' + esc(t('Speichern')) + '</button></div>'
                 + '<p class="small muted">' + esc(t('Gesendet werden HR, HRPercent, isHRActive, isHRConnected, onesHR, tensHR, hundredsHR und der eigene Name (Int + Float) – passt zu gängigen Puls-Anzeigen auf Avataren.')) + '</p></form>' : '')
+            // 5.2: VRC Nexus Watch
+            + (w ? '<div class="nc-card"><h4>⌚ ' + esc(t('VRC Nexus Watch')) + '</h4>'
+                + '<label class="check"><input type="checkbox" data-wcfg="on"' + (w.cfg.on ? ' checked' : '') + '> ' + esc(t('Uhr-Verbindung im Heimnetz erlauben')) + '</label>'
+                + (w.cfg.on ? '<div class="hr-pin"><span class="small">' + esc(t('Kopplungscode')) + '</span><b>' + esc(w.pin.slice(0, 3) + ' ' + w.pin.slice(3)) + '</b><button type="button" class="btn btn-sm" data-wnew title="' + esc(t('Neuer Code')) + '">↻</button></div>'
+                    + '<p class="small muted">' + esc(t('In der Uhr-App „Koppeln“ tippen und den Code eingeben – die Uhr findet den PC von selbst. Sonst Adresse eintragen:')) + ' <code>' + esc((w.addresses[0] || '?') + ':' + w.cfg.port) + '</code></p>'
+                    + (w.error ? '<p class="small bad">⚠ ' + esc(t(w.error)) + '</p>' : '') : '<p class="small muted">' + esc(t('Puls vom Uhr-Sensor, Panik-Knopf, Consent-Ampel, Spielzeug-Stopp und Schlafmodus direkt am Handgelenk. Die App gibt es bei den Downloads (VRC-Nexus-Watch-…apk).')) + '</p>')
+                + (w.devices.length ? '<ul class="hr-watches">' + w.devices.map(x => '<li>⌚ <b>' + esc(x.name) + '</b> <span class="small muted">' + (x.last ? esc(t('zuletzt')) + ' ' + new Date(x.last).toLocaleTimeString(window.nxLoc ? nxLoc() : 'de-DE', { hour: '2-digit', minute: '2-digit' }) : esc(t('noch nicht verbunden'))) + '</span> <button type="button" class="btn btn-sm" data-wdel="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>' : '')
+                + '</div>' : '')
             // Nutzen
             + '<div class="nc-card"><h4>🧩 ' + esc(t('Verwenden')) + '</h4>'
             + '<p class="small">' + esc(t('Platzhalter für Chatbox, Rotator, Makros und Stream Deck:')) + '</p><div class="nc-row"><code>{puls}</code><code>{puls_min}</code><code>{puls_max}</code><code>{puls_schnitt}</code></div>'
             + '<div class="tts-help">' + esc(t('SteamVR-HUD: „puls“ unter Einstellungen → VR → Infos.')) + '</div></div>'
             + '</div>';
     }
-    function load(refresh) { return api('hr_get', refresh ? { refresh: '1' } : {}).then(r => { d = r; if (box) render(); }).catch(e => { if (box) box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
+    function load(refresh) { api('watch_get').then(r => { w = r; }).catch(() => { w = null; }); return api('hr_get', refresh ? { refresh: '1' } : {}).then(r => { d = r; if (box) render(); }).catch(e => { if (box) box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
     const save = data => api('hr_save', data).then(r => { d = r; render(); if (r.msg) toast(r.msg); }).catch(e => toast('⚠ ' + e.message, true));
 
     function bind() {
-        box.addEventListener('click', e => { const b = e.target.closest('[data-src]'); if (b) save({ source: b.dataset.src }); });
+        box.addEventListener('click', e => {
+            const b = e.target.closest('[data-src]'); if (b) return save({ source: b.dataset.src });
+            if (e.target.closest('[data-wnew]')) return api('watch_newpin').then(r => { w = r; render(); }).catch(er => toast('⚠ ' + er.message, true));
+            const x = e.target.closest('[data-wdel]');
+            if (x && confirm(t('Diese Uhr entfernen? Sie muss danach neu gekoppelt werden.'))) api('watch_remove', { id: x.dataset.wdel }).then(r => { w = r; render(); toast(r.msg); }).catch(er => toast('⚠ ' + er.message, true));
+        });
+        box.addEventListener('change', e => { const c = e.target.closest('[data-wcfg]'); if (c) api('watch_cfg', { on: c.checked ? '1' : '0' }).then(r => { w = r; render(); }).catch(er => toast('⚠ ' + er.message, true)); });
         box.addEventListener('submit', e => {
             e.preventDefault();
             const f = e.target, k = f.dataset.f;

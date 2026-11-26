@@ -1,0 +1,30 @@
+plugins { id 'com.android.application' }
+
+// Version aus der Android-App (gleiche Versionsnummer wie VRC Nexus)
+def pkg = new groovy.json.JsonSlurper().parse(file('../../vrc-nexus-android/package.json'))
+def (va, vb, vc) = pkg.version.tokenize('.').collect { it as int }
+
+android {
+    namespace 'dev.ghostnode.nexuswatch'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'dev.ghostnode.nexuswatch'
+        minSdk 30          // Wear OS 3+ (Galaxy Watch 4 und neuer)
+        targetSdk 34
+        versionCode va * 10000 + vb * 100 + vc
+        versionName pkg.version
+    }
+    signingConfigs {
+        nexus {
+            def ks = System.getenv('NEXUS_KEYSTORE')
+            if (ks) { storeFile file(ks); storePassword 'android'; keyAlias 'androiddebugkey'; keyPassword 'android' }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig System.getenv('NEXUS_KEYSTORE') ? signingConfigs.nexus : signingConfigs.debug
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}

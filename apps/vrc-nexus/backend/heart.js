@@ -10,7 +10,7 @@
  */
 const { str, int, cut, UserError } = require('./util');
 
-const SOURCES = ['off', 'pulsoid', 'hyperate', 'osc'];
+const SOURCES = ['off', 'pulsoid', 'hyperate', 'osc', 'watch'];   // 5.2: watch = VRC Nexus Watch (Wear OS, Heimnetz)
 const DEF = { source: '', send_osc: true, param: 'HeartRate', min: 50, max: 180, osc_in: 'HR, HeartRate, Heartrate, HeartRateInt, BPM', hyperate_id: '' };
 const STALE = 20000;          // ohne neuen Wert nach 20 s gilt der Puls als weg
 const KEEP = 10 * 60000;      // Verlauf: 10 Minuten

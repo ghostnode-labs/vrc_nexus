@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.2.0",
+  "title": "Nexus Watch",
+  "body": "- ⌚ On the watch (only while NSFW is unlocked and private mode is off): 🚨 **panic button** (with vibration), ✅ all-clear, 🕶 private mode, **consent light** 🟢🟡🔴 and ⏹ **stop toys** – the same rules as in the app apply (Verified 18+, NSFW switch).\n- In private mode the watch shows no world name."
+ },
+ {
   "version": "5.1.0",
   "title": "NSFW 3.1: your own collection & 18+ profile",
   "body": "- 🗂 **Own NSFW collection** (new tab *🗂 Collection*): worlds and avatars in your own lists – separate from the normal favourites and stored **encrypted on this device only**. Tags, private notes, 1–5 star rating, search, filter by list/tag/rating, sort by newest, name, rating, most or recently used.\n- ➕ **Add from anywhere:** world and avatar windows get a **🔞 Collection** chip next to the local favourites; or paste an ID/link. Name, picture and author are fetched automatically.\n- 💡 **Suggestions:** worlds you visit and avatars you wear with VRChat 18+ content tags (`content_sex`, `content_adult` …) are suggested – never added automatically; \"don't suggest again\" is remembered.\n- 📈 **Usage:** visits and wearing are counted automatically (can be switched off).\n- 🎲 **Random pick** (weighted towards good ratings and places you haven't been for a while), **🚪 invite instance / 🔞 18+ group instance** in one click, **🎭 wear** avatars directly.\n- 👤 **NSFW avatars & worlds in your 18+ profile:** mark up to 12 avatars and 12 worlds with 👤 and publish them to your GhostNode community 18+ profile (only ID, name and note – visible only to Verified 18+ with NSFW on). Saving the 18+ profile editor keeps them.\n- 🕶 **Private mode / panic:** the collection is hidden until you show it on purpose; nothing goes to chatbox, Discord or OBS.\n- ⇩⇧ **Export / import** as JSON (without usage data)."

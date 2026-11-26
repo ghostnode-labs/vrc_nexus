@@ -3686,3 +3686,63 @@ test('NSFW 3.1: Sammlung – verschlüsselt, Listen/Tags/Bewertung, Vorschläge 
     app.nsfwcol.cache = null; assert.strictEqual(app.nsfwcol.load().items.length, 2);
     app.tools.stop();
 });
+
+test('5.2: VRC Nexus Watch – Suche per UDP, Kopplung mit Code (Fehlversuche), Puls von der Uhr, Status, Aktionen, Entfernen', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const dgram = require('dgram');
+    const OWNER = 'usr_' + '9'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-w-')) } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'Luna' });
+    app.tools.alert = () => {};
+    app.game.osc.send = async () => {};
+    const PORT = 17000 + Math.floor(Math.random() * 800);
+    let r = await app.post({ act: 'watch_cfg', on: '1', port: String(PORT) }, {});
+    for (let i = 0; i < 50 && !app.watch.server.listening; i++) await U.sleep(10);
+    assert.ok(r.cfg.on && /^\d{6}$/.test(r.pin));
+    // Suche per UDP
+    const found = await new Promise(ok => {
+        const s = dgram.createSocket('udp4'); const to = setTimeout(() => { s.close(); ok(null); }, 1500);
+        s.on('message', m => { clearTimeout(to); s.close(); ok(JSON.parse(String(m))); });
+        s.send('NXW?1', 17873, '127.0.0.1');
+    });
+    if (found) { assert.strictEqual(found.port, PORT); assert.strictEqual(found.name, 'Luna'); }
+    const B = 'http://127.0.0.1:' + PORT;
+    const call = (p, body, tok) => fetch(B + p, { method: body === undefined ? 'GET' : 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { 'X-Nexus-Watch': tok } : {}), body: body === undefined ? undefined : JSON.stringify(body) }).then(async x => ({ status: x.status, j: await x.json() }));
+    assert.strictEqual((await call('/watch/state')).status, 401, 'ohne Kopplung nichts');
+    assert.match((await call('/watch/pair', { pin: '000000' === r.pin ? '111111' : '000000' })).j.error, /Falscher Code/);
+    const pin = app.watch.pin;
+    let x = await call('/watch/pair', { pin, name: 'Galaxy Watch' });
+    assert.ok(x.j.ok && /^[a-f0-9]{64}$/.test(x.j.token)); const tok = x.j.token;
+    assert.notStrictEqual(app.watch.pin, pin, 'Code wechselt nach der Kopplung');
+    assert.ok(!JSON.stringify(db.setting('watch_cfg', '')).includes(tok), 'Schlüssel nur als Hash gespeichert');
+    assert.strictEqual(app.heart.cfg().source, 'watch', 'erste Uhr wird Puls-Quelle');
+    // Puls
+    x = await call('/watch/heart', { bpm: 88 }, tok); assert.ok(x.j.ok);
+    assert.strictEqual(app.heart.bpm, 88); assert.strictEqual(app.heart.from, 'watch');
+    assert.strictEqual((await call('/watch/heart', { bpm: 400 }, tok)).j.ok, false, 'unmögliche Werte nicht übernehmen');
+    x = await call('/watch/state', undefined, tok);
+    assert.strictEqual(x.j.bpm, 88); assert.strictEqual(x.j.nsfw, false); assert.strictEqual(x.j.toys, null, 'ohne 18+ keine Spielzeug-Daten');
+    // Aktionen: 18+ nur mit Freigabe
+    x = await call('/watch/action', { a: 'consent', light: 'red' }, tok); assert.strictEqual(x.status, 400); assert.match(x.j.error, /Nicht freigeschaltet/);
+    grant18(app);
+    x = await call('/watch/action', { a: 'private', on: true }, tok); assert.ok(x.j.ok && app.nsfw.private);
+    x = await call('/watch/state', undefined, tok); assert.ok(x.j.private && x.j.world === '', 'Privat-Modus: keine Welt auf der Uhr');
+    x = await call('/watch/action', { a: 'allclear' }, tok); assert.ok(x.j.ok && !app.nsfw.private);
+    x = await call('/watch/action', { a: 'sleep', on: true }, tok); assert.ok(x.j.state.sleeping);
+    await call('/watch/action', { a: 'sleep', on: false }, tok);
+    assert.strictEqual((await call('/watch/action', { a: 'rm -rf' }, tok)).status, 400);
+    // Fehlversuche begrenzt
+    for (let i = 0; i < 5; i++) await call('/watch/pair', { pin: 'abcdef' });
+    assert.match((await call('/watch/pair', { pin: app.watch.pin })).j.error, /Zu viele/);
+    // Entfernen
+    r = await app.post({ act: 'watch_remove', id: x.j.state ? app.watch.cfg().devices[0].id : '' }, {});
+    assert.strictEqual(r.devices.length, 0);
+    assert.strictEqual((await call('/watch/state', undefined, tok)).status, 401, 'entfernte Uhr ist ausgesperrt');
+    await app.post({ act: 'watch_cfg', on: '0' }, {});
+    assert.ok(!app.watch.server);
+    app.tools.stop(); app.heart && app.heart.stop();
+});
