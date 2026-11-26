@@ -591,6 +591,20 @@ test('5.4: Client-API über WebSocket – Anmeldung, Status, Aktionen, Ereigniss
         app.game.state.worldName = 'Testwelt'; app.game.state.running = true;
         const ev = await wait(a.msgs, m => m.event === 'game' && m.data.world === 'Testwelt');
         assert.strictEqual(ev.data.running, true);
+        // 5.4: neue Stream-Deck-Aktionen über dieselbe Schnittstelle
+        a.ws.send(JSON.stringify({ id: 6, op: 'action', action: 'sleep' }));
+        const sl = await wait(a.msgs, m => m.id === 6);
+        assert.ok(sl.ok && sl.result.value === true && app.comfort.sleep, 'Schlafmodus an');
+        a.ws.send(JSON.stringify({ id: 7, op: 'action', action: 'sleep' }));
+        assert.strictEqual((await wait(a.msgs, m => m.id === 7)).result.value, false);
+        assert.ok(!app.comfort.sleep, 'Schlafmodus wieder aus');
+        a.ws.send(JSON.stringify({ id: 8, op: 'action', action: 'avpreset', params: { id: 'gibtsnicht' } }));
+        const ap = await wait(a.msgs, m => m.id === 8);
+        assert.strictEqual(ap.ok, false); assert.doesNotMatch(ap.error, /\b8\b/, 'params.id statt Anfragenummer');
+        a.ws.send(JSON.stringify({ id: 9, op: 'action', action: 'watch_find' }));
+        assert.ok((await wait(a.msgs, m => m.id === 9)).ok, 'Uhr finden');
+        const st2 = app.tools.apiState();
+        assert.ok(st2.comfort && st2.watch && st2.avpresets, 'neue Felder im Status');
         a.ws.send('kein json');
         await wait(a.msgs, m => m.error === 'Ungültiges JSON.');
         a.ws.close();

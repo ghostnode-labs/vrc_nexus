@@ -611,6 +611,8 @@
                     ['🎮', 'OSC-Eingabe', 'Springen, Stummschalten, Quick-Menü …'], ['🔄', 'Chatbox-Rotator', 'an/aus'], ['🧩', 'Chatbox-Module', 'alle oder ein einzelnes Modul an/aus'],
                     ['🎵', 'Medien', '⏯ ⏭ ⏮ für das, was Windows abspielt – zeigt den Titel'], ['🔊', 'Vorlesen', 'Text über die Sprachausgabe sprechen'], ['🎙', 'Spracheingabe', 'drücken bzw. halten → Chatbox'],
                     ['ℹ️', 'Info-Anzeige', 'beliebige Platzhalter auf der Taste, z. B. {zeit}, {ping}, {akku}, {countdown_rest}'],
+                    ['❤️', 'Puls', 'zeigt deinen Puls live auf der Taste'], ['💤', 'Schlafmodus', 'an/aus, optional mit Wecker – leuchtet, solange du schläfst'],
+                    ['👕', 'Avatar-Preset', 'gespeichertes Outfit des getragenen Avatars laden'], ['⚠', 'Warnliste', 'leuchtet rot, wenn jemand von der Warnliste in der Instanz ist'], ['⌚', 'Uhr finden', 'Nexus Watch vibrieren lassen'],
                     ['👥', 'Freunde online / Spieler in der Instanz', 'Live-Anzeige'], ['🧑', 'Freund', 'Profilbild mit Statusring – kurz: beitreten, halten: einladen'],
                     ['🔔', 'Benachrichtigungen', 'Zähler'], ['📷', 'Kamera', 'Foto, Timer, Serie, Vorlage, Zoom'], ['⚡', 'Makro', 'OSC-Makro ausführen'], ['🎭', 'Avatar wechseln', 'zeigt das Avatarbild auf der Taste'], ['➕', 'Instanz erstellen + einladen', 'neue Instanz (aktuelle oder feste Welt) und Einladung an dich'],
                     ['🥽', 'SteamVR-Overlay', 'ein/aus'], ['▶', 'VRChat starten / Instanz neu betreten', ''], ['🧭', 'VRC Nexus öffnen', 'beliebige Seite'], ['🎛', 'Drehregler (Stream Deck +)', 'Parameter, Kamera-Zoom/Belichtung']]

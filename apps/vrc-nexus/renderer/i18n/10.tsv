@@ -1829,3 +1829,9 @@ Noch nichts gemerkt – bei einem Beitrag auf 🔖 tippen.	Nothing saved yet –
 Client-API (WebSocket)	Client API (WebSocket)	API client (WebSocket)	クライアントAPI（WebSocket）
 Für eigene Skripte, Bots und Overlays: Befehle senden und Live-Ereignisse (Welt, Puls, Freunde …) empfangen. Nur vom eigenen PC erreichbar.	For your own scripts, bots and overlays: send commands and receive live events (world, heart rate, friends …). Only reachable from your own PC.	Pour tes scripts, bots et overlays : envoyer des commandes et recevoir des événements en direct (monde, pouls, amis …). Accessible uniquement depuis ton PC.	自作スクリプト・ボット・オーバーレイ向け：コマンド送信とライブイベント（ワールド、心拍、フレンド…）の受信。自分のPCからのみ接続可能。
 Doku	Docs	Doc	ドキュメント
+Avatar-Preset	Avatar preset	Préréglage d'avatar	アバタープリセット
+zeigt deinen Puls live auf der Taste	shows your heart rate live on the key	affiche ton pouls en direct sur la touche	心拍数をキーにライブ表示
+an/aus, optional mit Wecker – leuchtet, solange du schläfst	on/off, optionally with an alarm – lights up while you sleep	activé/désactivé, avec réveil en option – s'allume pendant que tu dors	オン/オフ（アラーム任意）– 睡眠中は点灯
+gespeichertes Outfit des getragenen Avatars laden	load a saved outfit of the worn avatar	charger une tenue enregistrée de l'avatar porté	着用中アバターの保存した衣装を読み込む
+leuchtet rot, wenn jemand von der Warnliste in der Instanz ist	lights up red when someone from the warning list is in the instance	s'allume en rouge si quelqu'un de la liste d'alerte est dans l'instance	警告リストの人がインスタンスにいると赤く点灯
+Nexus Watch vibrieren lassen	make the Nexus Watch vibrate	faire vibrer la Nexus Watch	Nexus Watch を振動させる

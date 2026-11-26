@@ -7,7 +7,8 @@
  *   op "hello"                         → Version, verfügbare Befehle und Themen (geht auch ohne Anmeldung)
  *   op "auth"      { token }           → anmelden (alternativ ?token=… in der Adresse)
  *   op "state"                         → kompletter Status (wie GET /api/state)
- *   op "action"    { action, … }       → Aktion ausführen (wie POST /api/action: status, chatbox, param, toggle, preset, macro, avatar, …)
+ *   op "action"    { action, params }  → Aktion ausführen (wie POST /api/action: status, chatbox, param, toggle, preset, macro, avatar, …);
+ *                                        Felder in „params“ – ohne params werden die Felder der Nachricht genommen (dann ist „id“ die Anfragenummer)
  *   op "subscribe" { topics: [...] }   → Ereignisse abonnieren; danach kommen { "event": "<thema>", "data": … } ohne id
  *   op "unsubscribe" { topics: [...] }
  *   op "ping"                          → { pong: Zeit }
@@ -114,7 +115,10 @@ class WsApi {
             if (op === 'auth') { conn.authed = this.tokenOk(m.token); if (!conn.authed) { reply(false, 'Falscher Zugangsschlüssel.'); return this.close(conn, 4001); } return reply(true, { authed: true }); }
             if (!conn.authed) return reply(false, 'Erst anmelden: {"op":"auth","token":"…"}');
             if (op === 'state') return reply(true, this.tools.apiState());
-            if (op === 'action') { const d = m && typeof m === 'object' ? m : {}; return reply(true, await this.tools.apiAction(str(d.action), d)); }
+            if (op === 'action') {   // Felder der Aktion in „params“ (empfohlen – „id“ ist sonst die Nummer der Anfrage) oder direkt in der Nachricht
+                const d = m.params && typeof m.params === 'object' && !Array.isArray(m.params) ? m.params : m;
+                return reply(true, await this.tools.apiAction(str(m.action), d));
+            }
             if (op === 'subscribe' || op === 'unsubscribe') {
                 const list = (Array.isArray(m.topics) ? m.topics : [m.topics]).map(str).filter(t => TOPICS.includes(t));
                 for (const t of list) op === 'subscribe' ? conn.topics.add(t) : conn.topics.delete(t);

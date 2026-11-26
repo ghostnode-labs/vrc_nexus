@@ -112,7 +112,7 @@ function render(ctx) {
     const c = contexts.get(ctx);
     if (!c) return;
     const s = c.settings || {}, st = lastState, kind = c.action.slice(PREFIX.length);
-    if (!st) { if (['friends', 'players'].includes(kind)) setTitle(ctx, '–'); return; }
+    if (!st) { if (['friends', 'players', 'heart', 'warn'].includes(kind)) setTitle(ctx, '–'); return; }
     switch (kind) {
         case 'friends': {
             const f = st.friends || {};
@@ -120,6 +120,16 @@ function render(ctx) {
             break;
         }
         case 'players': setTitle(ctx, st.game && st.game.running ? st.game.players + '\nSpieler' : 'VRChat\naus'); break;
+        case 'heart': {   // 5.4: Puls live
+            const h = st.heart;
+            if (!h || !h.on) { setTitle(ctx, '♥\naus'); break; }
+            setTitle(ctx, h.active && h.bpm ? '♥ ' + h.bpm + '\nbpm' : '♥\n–');
+            break;
+        }
+        case 'sleep': { const on = !!(st.comfort && st.comfort.sleeping); setState(ctx, on ? 1 : 0); if (!s.title) setTitle(ctx, on ? (st.comfort.wake_at ? '⏰ ' + new Date(st.comfort.wake_at).toTimeString().slice(0, 5) : 'schläft') : 'Schlafen'); break; }
+        case 'avpreset': if (!s.title) setTitle(ctx, wrapKey(((st.avpresets && st.avpresets.list) || []).find(p => p.id === s.id || p.name === s.id) ? ((st.avpresets.list.find(p => p.id === s.id || p.name === s.id)).name) : (s.id ? 'nicht für\ndiesen Avatar' : 'Preset'), 9, 2)); break;
+        case 'warn': { const w = st.warn || { present: 0 }; setState(ctx, w.present ? 1 : 0); setTitle(ctx, w.present ? '⚠ ' + w.present + '\n' + wrapKey((w.names || [])[0] || '', 9, 1) : 'Warnliste\nok'); break; }
+        case 'watchfind': if (!s.title) setTitle(ctx, st.watch && st.watch.devices ? 'Uhr\nfinden' : 'keine\nUhr'); break;
         case 'status': {
             const cur = st.me && st.me.status;
             setState(ctx, cur === (s.status || 'join me') ? 1 : 0);
@@ -320,6 +330,11 @@ async function keyDown(ctx, action, s) {
         case 'rotator': { const r = await act('rotator'); setState(ctx, r.value ? 1 : 0); return r; }
         case 'friends': return act('open', { tab: s.tab || 'locations' });
         case 'players': return act('open', { tab: 'players' });
+        case 'heart': return act('open', { tab: 'tools' });
+        case 'sleep': { const r = await act('sleep', { wake: Number(s.wake) || 0 }); setState(ctx, r.value ? 1 : 0); return r; }
+        case 'avpreset': if (!s.id) throw new Error('Kein Preset eingetragen.'); return act('avpreset', { id: s.id });
+        case 'warn': return act('open', { tab: 'warn' });
+        case 'watchfind': return act('watch_find');
         case 'launch': return act('launch');
         case 'rejoin': return act('rejoin');
         case 'open': return act('open', { tab: s.tab || '' });

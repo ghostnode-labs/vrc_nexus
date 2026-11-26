@@ -131,6 +131,28 @@ def draw(name, d, n, on=False):
         d.ellipse(P((14, 14), (86, 86)), outline=col, width=w)
         d.ellipse(P((45, 24), (55, 34)), fill=GOLD)
         d.line(P((50, 44), (50, 74)), fill=GOLD, width=w + 2)
+    elif name == 'heart':
+        d.polygon(P((50, 84), (16, 50), (14, 34), (22, 20), (36, 16), (50, 28), (64, 16), (78, 20), (86, 34), (84, 50)), fill=RED if not on else GOLD)
+        d.line(P((22, 50), (38, 50), (44, 38), (52, 62), (58, 50), (78, 50)), fill=WHITE, width=max(2, w - 2))
+    elif name == 'sleep':
+        d.ellipse(P((18, 18), (78, 78)), fill=col)
+        d.ellipse(P((34, 10), (92, 66)), fill=BG + (255,))
+        for x, y, r in ((70, 70, 4), (82, 52, 3)):
+            d.ellipse(P((x - r, y - r), (x + r, y + r)), fill=GOLD)
+    elif name == 'avpreset':
+        d.polygon(P((30, 16), (42, 24), (58, 24), (70, 16), (88, 30), (78, 44), (70, 40), (70, 86), (30, 86), (30, 40), (22, 44), (12, 30)), outline=col, width=w)
+        d.ellipse(P((44, 50), (56, 62)), fill=GOLD)
+    elif name == 'warn':
+        d.polygon(P((50, 12), (90, 84), (10, 84)), outline=RED if on else col, width=w, fill=(RED + (90,)) if on else None)
+        d.line(P((50, 36), (50, 62)), fill=RED if on else GOLD, width=w + 1)
+        d.ellipse(P((46, 68), (54, 76)), fill=RED if on else GOLD)
+    elif name == 'watchfind':
+        d.rounded_rectangle(P((32, 8), (68, 22)), radius=3 * s, fill=col)
+        d.rounded_rectangle(P((32, 78), (68, 92)), radius=3 * s, fill=col)
+        d.ellipse(P((24, 22), (76, 78)), outline=col, width=w)
+        d.line(P((50, 34), (50, 50), (60, 58)), fill=GOLD, width=w)
+        for x in (12, 88):
+            d.arc(P((x - 10, 36), (x + 10, 64)), 300 if x > 50 else 120, 60 if x > 50 else 240, fill=GOLD, width=max(2, w - 3))
     elif name == 'plugin':
         d.polygon(P((50, 8), (88, 30), (88, 70), (50, 92), (12, 70), (12, 30)), outline=CYAN, width=w)
         d.line(P((34, 66), (34, 34), (66, 66), (66, 34)), fill=GOLD, width=w + 2)
@@ -144,12 +166,12 @@ def save(name, size, key, on=False, suffix=''):
 
 os.makedirs(OUT, exist_ok=True)
 for name in ('status', 'chatbox', 'param', 'input', 'rotator', 'friends', 'players', 'launch', 'rejoin', 'open', 'camera', 'macro', 'avatar', 'friend', 'notifs', 'overlay', 'speech', 'dial',
-             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance'):
+             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance', 'heart', 'sleep', 'avpreset', 'warn', 'watchfind'):
     save(name, 20, False, suffix='_icon')
     save(name, 40, False, suffix='_icon@2x')
     save(name, 72, True, suffix='_key')
     save(name, 144, True, suffix='_key@2x')
-    if name in ('param', 'rotator', 'status', 'camera', 'macro', 'friend', 'notifs', 'overlay', 'speech', 'media', 'record', 'chatmods'):
+    if name in ('param', 'rotator', 'status', 'camera', 'macro', 'friend', 'notifs', 'overlay', 'speech', 'media', 'record', 'chatmods', 'sleep', 'warn'):
         save(name, 72, True, True, '_key_on')
         save(name, 144, True, True, '_key_on@2x')
 save('plugin', 28, False, suffix='_category')

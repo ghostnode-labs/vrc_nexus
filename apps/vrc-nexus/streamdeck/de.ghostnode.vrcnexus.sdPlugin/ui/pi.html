@@ -152,13 +152,17 @@
     <div class="hint">Installiert die Plugin-Version, die mit deiner VRC-Nexus-App kommt. Die Stream-Deck-App fragt einmal nach – bestätigen, fertig. Deine Tasten bleiben erhalten.</div>
 </details>
 
+<div id="sec-sleep" hidden><div class="row"><label>Wecker</label><select data-s="wake"><option value="0">kein Wecker</option><option value="30">30 min</option><option value="60">1 h</option><option value="120">2 h</option><option value="240">4 h</option><option value="480">8 h</option></select></div>
+    <p class="hint">Was beim Schlafen passiert (Status, Chatbox, Spielzeug, Parameter), stellst du in VRC Nexus unter Komfort ein.</p></div>
+<div id="sec-avpreset" hidden><div class="row"><label>Preset</label><input type="text" data-s="id" placeholder="Name oder ID des Presets"></div>
+    <p class="hint">Presets speicherst du in VRC Nexus unter OSC → Avatar-Presets. Die Taste zeigt den Namen, wenn das Preset zum getragenen Avatar gehört.</p></div>
 <script>
 let sock = null, uuid = '', actionInfo = {}, settings = {}, globals = {};
 const $ = s => document.querySelector(s);
 const kind = () => (actionInfo.action || '').split('.').pop();
 const INFO = { rotator: 'Schaltet den Chatbox-Rotator aus „Spiel & OSC“ an oder aus.', players: 'Zeigt die Spielerzahl deiner Instanz. Drücken öffnet die Spielerliste.',
     launch: 'Startet VRChat mit den Startoptionen aus VRC Nexus (Werkzeuge → Startoptionen).', rejoin: 'Betritt die Instanz, in der du gerade bist, neu.',
-    notifs: 'Zeigt die Zahl ungelesener Benachrichtigungen. Drücken öffnet sie in VRC Nexus.', overlay: 'Blendet das VRC-Nexus-Overlay in SteamVR ein oder aus (nur Windows-App).' };
+    notifs: 'Zeigt die Zahl ungelesener Benachrichtigungen. Drücken öffnet sie in VRC Nexus.', heart: 'Zeigt deinen Puls live (Quelle wie in VRC Nexus eingestellt). Drücken öffnet die Puls-Seite.', warn: 'Leuchtet rot, wenn jemand von deiner Warnliste in der Instanz ist, und zeigt den ersten Namen. Drücken öffnet die Warnliste.', watchfind: 'Lässt die gekoppelte Nexus Watch vibrieren (beim nächsten Abruf, bis zu 5 s).', overlay: 'Blendet das VRC-Nexus-Overlay in SteamVR ein oder aus (nur Windows-App).' };
 function send(event, payload) { sock.send(JSON.stringify(Object.assign({ event, context: uuid }, payload !== undefined ? { payload } : {}))); }
 function showDeps() {
     document.querySelectorAll('[data-show]').forEach(el => {

@@ -2,7 +2,7 @@
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "UUID": "de.ghostnode.vrcnexus",
   "Name": "VRC Nexus",
-  "Version": "1.7.0.0",
+  "Version": "1.8.0.0",
   "Author": "GHOST NODE",
   "Description": "Steuert VRChat über die VRC-Nexus-App: Status, Chatbox, Avatar-Parameter, Eingaben, Rotator, Makros, Kamera, Avatar wechseln, Freunde beitreten/einladen, Benachrichtigungen, SteamVR-Overlay, Spracheingabe, Drehregler.",
   "Category": "VRC Nexus",
@@ -535,6 +535,96 @@
           "FontSize": 10
         }
       ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/heart_icon",
+      "Name": "Puls",
+      "States": [
+        {
+          "Image": "imgs/heart_key",
+          "FontSize": 14,
+          "TitleAlignment": "middle"
+        }
+      ],
+      "Tooltip": "Zeigt deinen Puls live auf der Taste (Farbe nach Bereich); Druck öffnet die Puls-Seite",
+      "UUID": "de.ghostnode.vrcnexus.heart",
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/sleep_icon",
+      "Name": "Schlafmodus",
+      "States": [
+        {
+          "Image": "imgs/sleep_key",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "imgs/sleep_key_on",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Tooltip": "Schlafmodus an/aus – Status, Chatbox und Spielzeug wie in VRC Nexus eingestellt, optional mit Wecker",
+      "UUID": "de.ghostnode.vrcnexus.sleep",
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/avpreset_icon",
+      "Name": "Avatar-Preset",
+      "States": [
+        {
+          "Image": "imgs/avpreset_key",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Tooltip": "Lädt ein gespeichertes Avatar-Preset (Outfit, Haare, Farben …) des getragenen Avatars",
+      "UUID": "de.ghostnode.vrcnexus.avpreset",
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/warn_icon",
+      "Name": "Warnliste",
+      "States": [
+        {
+          "Image": "imgs/warn_key",
+          "FontSize": 12,
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/warn_key_on",
+          "FontSize": 12,
+          "TitleAlignment": "middle"
+        }
+      ],
+      "Tooltip": "Zeigt, ob jemand von der Warnliste in deiner Instanz ist (leuchtet rot); Druck öffnet die Warnliste",
+      "UUID": "de.ghostnode.vrcnexus.warn",
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/watchfind_icon",
+      "Name": "Uhr finden",
+      "States": [
+        {
+          "Image": "imgs/watchfind_key",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Tooltip": "Lässt die gekoppelte Nexus Watch vibrieren",
+      "UUID": "de.ghostnode.vrcnexus.watchfind",
       "Controllers": [
         "Keypad"
       ]

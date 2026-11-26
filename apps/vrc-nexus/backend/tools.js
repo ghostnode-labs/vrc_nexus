@@ -1101,6 +1101,9 @@ class Tools {
             warn: this.app.warn ? (() => { const p = this.app.warn.present(); return { present: p.length, names: p.map(x => x.name).slice(0, 5), recent: this.app.warn.recent.filter(x => Date.now() - x.at < 600000).length }; })() : null,
             heart: this.app.heart ? (() => { const h = this.app.heart.status(); return { on: h.cfg.source !== 'off', bpm: h.bpm, active: h.active, min: h.stats.min, max: h.stats.max, hist: h.hist.slice(-30).map(x => x[1]) }; })() : null,
             chatmods: this.app.chatmods ? (() => { const c = this.app.chatmods.cfg(); return { on: !!c.on, mods: Object.fromEntries(Object.entries(c.mods).map(([k, m]) => [k, !!m.on])) }; })() : null,
+            comfort: this.app.comfort ? { sleeping: !!this.app.comfort.sleep, wake_at: this.app.comfort.sleep ? this.app.comfort.sleep.wake : 0 } : null,   // 5.4
+            avpresets: this.app.presets ? (() => { try { const l = this.app.presets.list(); return { avatar: l.avatar ? l.avatar.name : '', list: l.presets.map(p => ({ id: p.id, name: p.name })) }; } catch (e) { return null; } })() : null,
+            watch: this.app.watch ? (() => { try { const c = this.app.watch.cfg(); return { on: !!c.on, devices: c.devices.length }; } catch (e) { return null; } })() : null,
             vars: (() => { try { const v = this.app.game.values(); return Object.fromEntries(Object.entries(v).filter(([, x]) => typeof x === 'string' || typeof x === 'number').slice(0, 150).map(([k, x]) => [k, String(x).slice(0, 80)])); } catch (e) { return {}; } })() };
     }
     /** Profilbild eines Freundes (für Stream-Deck-Tasten) → { mime, b64 } */
@@ -1208,6 +1211,21 @@ class Tools {
             }
             case 'macro': return Object.assign({ ok: true }, await this.app.macros.run(str(d.id || d.script)));
             case 'macro_stop': this.app.macros.stop(); return { ok: true };
+            // 5.4: neue Stream-Deck-Tasten
+            case 'sleep': {
+                const c = this.app.comfort; if (!c) throw new UserError('Komfort-Funktionen fehlen.');
+                const on = d.on === undefined || d.on === null || d.on === '' ? !c.sleep : !!d.on && d.on !== '0';
+                return Object.assign({ ok: true, value: on }, await this.app.post({ act: 'comfort_sleep', on: on ? '1' : '0', wake: String(int(d.wake) || 0) }, {}));
+            }
+            case 'avpreset': {
+                if (!this.app.presets) throw new UserError('Presets fehlen.');
+                const r = await this.app.presets.action('preset_apply', { id: str(d.id || d.name) });
+                return Object.assign({ ok: true }, r);
+            }
+            case 'watch_find': {
+                if (!this.app.watch) throw new UserError('Nexus Watch gibt es nur in der Windows-App.');
+                return Object.assign({ ok: true }, await this.app.watch.actionUi('watch_find', {}));
+            }
             case 'plugin_update': {
                 const f = this.host.pluginFile;
                 if (!f || !fs.existsSync(f)) throw new UserError('Plugin-Datei nicht gefunden – erst VRC Nexus aktualisieren (Einstellungen → Über).');
