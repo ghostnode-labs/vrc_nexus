@@ -1,8 +1,8 @@
 {
   "name": "ghostnode-discord-bot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "GhostNode Discord bot for VRC Nexus – no dependencies",
+  "description": "GhostNode community Discord bot – levels, moderation, AutoMod, roles, polls, giveaways, tickets; no dependencies",
   "main": "bot.js",
   "scripts": { "start": "node bot.js" },
   "engines": { "node": ">=22" },
