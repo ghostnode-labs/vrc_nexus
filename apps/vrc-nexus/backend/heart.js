@@ -16,7 +16,7 @@ const STALE = 20000;          // ohne neuen Wert nach 20 s gilt der Puls als weg
 const KEEP = 10 * 60000;      // Verlauf: 10 Minuten
 const base = (env, def) => ((typeof process !== 'undefined' && process.env && process.env[env]) || def).replace(/\/+$/, '');
 /* 4.2.3: HypeRate läuft über die Weiterleitung des Projekts (Schlüssel bleibt auf dem Server, siehe apps/hyperate-relay) */
-const RELAY = 'https://hr.sylvanclub.eu';
+const RELAY = () => require('./servers').hyperate();
 const RELAY_ERR = { bad_id: 'HypeRate: Device-ID ungültig', join_rejected: 'HypeRate: Device-ID unbekannt – ID in der HypeRate-App prüfen', relay_no_key: 'HypeRate-Weiterleitung noch nicht eingerichtet',
     too_many_connections: 'HypeRate-Weiterleitung: zu viele Verbindungen von dieser Adresse', relay_full: 'HypeRate-Weiterleitung ausgelastet – gleich nochmal' };
 const normName = s => str(s).toLowerCase().replace(/^\/?avatar\/parameters\//, '').replace(/[^a-z0-9]/g, '');
@@ -184,7 +184,7 @@ class Heart {
         if (Date.now() < (this.relayRetryAt || 0)) return;
         const ctl = new AbortController();
         this.relay = ctl; this.relayKey = sig;
-        const url = base('NEXUS_HYPERATE_RELAY', RELAY) + '/hr/' + encodeURIComponent(c.hyperate_id);
+        const url = base('NEXUS_HYPERATE_RELAY', RELAY()) + '/hr/' + encodeURIComponent(c.hyperate_id);
         (async () => {
             let got = false;
             try {

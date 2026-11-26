@@ -1574,3 +1574,18 @@ Entwarnung	All clear	Fin d'alerte	解除
 Privat-Modus aus, Chatbox-Rotation frei, Wallpaper zurück	private mode off, chatbox rotation on again, wallpaper restored	mode privé désactivé, rotation de la chatbox réactivée, fond d'écran restauré	プライベートモード解除、チャットボックスのローテーション再開、壁紙を元に戻す
 Wallpaper Engine nicht gefunden – Pfad zu wallpaper64.exe eintragen.	Wallpaper Engine not found – enter the path to wallpaper64.exe.	Wallpaper Engine introuvable – saisissez le chemin de wallpaper64.exe.	Wallpaper Engineが見つかりません – wallpaper64.exeのパスを入力してください。
 Bitte den Pfad zu wallpaper64.exe eintragen.	Please enter the path to wallpaper64.exe.	Veuillez saisir le chemin de wallpaper64.exe.	wallpaper64.exeのパスを入力してください。
+Plugins suchen …	Search plugins …	Rechercher des plugins …	プラグインを検索…
+Alle Plugins hier wurden vor der Veröffentlichung geprüft. Der Katalog ist signiert, jedes Paket wird vor der Installation auf Echtheit geprüft – die Rechte bestätigst du trotzdem selbst.	All plugins here were reviewed before publishing. The catalog is signed and every package is verified before installation – you still confirm the permissions yourself.	Tous les plugins ici ont été vérifiés avant publication. Le catalogue est signé et chaque paquet est vérifié avant l'installation – vous confirmez toujours vous-même les autorisations.	ここにあるプラグインはすべて公開前に審査済みです。カタログは署名され、各パッケージはインストール前に検証されます – 権限の確認はご自身で行ってください。
+braucht	needs	nécessite	必要
+Update auf	Update to	Mettre à jour vers	更新先
+Installieren	Install	Installer	インストール
+Kein Treffer.	No match.	Aucun résultat.	該当なし。
+Im Marktplatz sind noch keine Plugins.	There are no plugins in the marketplace yet.	Il n'y a pas encore de plugins sur le marketplace.	マーケットプレイスにはまだプラグインがありません。
+Katalog-Schlüssel	Catalog key	Clé du catalogue	カタログキー
+Schlüssel neu lernen	Re-learn key	Réapprendre la clé	キーを再取得
+Nur tun, wenn der Schlüsselwechsel angekündigt war. Neu lernen?	Only do this if the key change was announced. Re-learn?	À faire uniquement si le changement de clé a été annoncé. Réapprendre ?	キーの変更が告知されている場合のみ実行してください。再取得しますか？
+Der Marktplatz-Schlüssel wird beim nächsten Abruf neu gelernt.	The marketplace key will be re-learned on the next fetch.	La clé du marketplace sera réapprise lors du prochain chargement.	次回の取得時にマーケットプレイスのキーを再取得します。
+Marktplatz nicht erreichbar.	Marketplace unreachable.	Marketplace injoignable.	マーケットプレイスに接続できません。
+Marktplatz: Signatur ungültig – Katalog abgelehnt.	Marketplace: invalid signature – catalog rejected.	Marketplace : signature invalide – catalogue refusé.	マーケットプレイス：署名が無効です – カタログを拒否しました。
+Paket: Prüfsumme stimmt nicht – Installation abgebrochen.	Package: checksum mismatch – installation cancelled.	Paquet : somme de contrôle incorrecte – installation annulée.	パッケージ：チェックサムが一致しません – インストールを中止しました。
+Website	Website	Site web	ウェブサイト

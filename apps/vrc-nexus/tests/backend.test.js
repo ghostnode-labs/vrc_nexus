@@ -3318,6 +3318,73 @@ test('4.3: Panik-Knopf steuert Wallpaper Engine (Profil/Pause/Ton), Entwarnung h
     app.tools.stop(); if (app.toys) app.toys.stop();
 });
 
+test('4.4: Plugin-Marktplatz – signierter Katalog, Schlüssel merken, Prüfsumme, Rechte-Dialog, Updates; Server-Adressen zentral', async () => {
+    const crypto = require('crypto');
+    const { writeZip } = require('../backend/nxp');
+    const servers = require('../backend/servers');
+    assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu');
+    // Rückfall: erste Adresse tot, zweite antwortet
+    servers.LISTS.nexus.unshift('https://neu.example');
+    await servers.check(async u => { if (u.startsWith('https://neu.example')) throw new Error('down'); return { status: 200 }; });
+    assert.strictEqual(servers.nexus(), 'https://privat.sylvanclub.eu', 'Rückfall auf die alte Adresse');
+    await servers.check(async () => ({ status: 200 }));
+    assert.strictEqual(servers.nexus(), 'https://neu.example', 'neue Adresse hat Vorrang');
+    servers.LISTS.nexus.shift(); servers._active.nexus = 0;
+    // nachgestellter Marktplatz
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+    const rawPub = publicKey.export({ format: 'der', type: 'spki' }).subarray(12).toString('base64');
+    const pkg = writeZip({ 'plugin.json': JSON.stringify({ format: 1, id: 'hello-chat', name: 'Hello Chat', version: '1.1.0', permissions: ['chatbox'] }), 'main.js': 'nexus.on("start",()=>{})' });
+    const B = 'https://market.test';
+    let entry = { id: 'hello-chat', name: 'Hello Chat', version: '1.1.0', author: 'T', description: 'Hallo', icon: '👋', permissions: ['chatbox'], size: pkg.length,
+        sha256: crypto.createHash('sha256').update(pkg).digest('hex'), url: B + '/market.php?dl=hello-chat&v=1.1.0', nexus: '>=4.0.0', downloads: 3 };
+    let keyPair = [publicKey, privateKey, rawPub], body = pkg;
+    const sign = () => { const index = JSON.stringify({ format: 1, generated: 1, plugins: [entry] }); return { index, sig: crypto.sign(null, Buffer.from(index), keyPair[1]).toString('base64'), key: keyPair[2] }; };
+    const fake = async u => u.endsWith('api=index') ? { ok: true, json: async () => sign() } : { ok: true, status: 200, arrayBuffer: async () => body };
+    process.env.NEXUS_MARKET_BASE = B;
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-44-')) } });
+    app.game.osc.stopListen();
+    if (!app.plugins) { const { Plugins } = require('../backend/plugins'); app.plugins = new Plugins(app); }
+    const pl = app.plugins; pl.mk().fetch = fake;
+    let r = await pl.action('plug_market', {});
+    assert.strictEqual(r.items[0].id, 'hello-chat'); assert.ok(r.items[0].fits && !r.items[0].installed);
+    assert.strictEqual(db.setting('market_key', ''), rawPub, 'Schlüssel beim ersten Mal gemerkt');
+    const chk = await pl.action('plug_market_get', { id: 'hello-chat' });
+    assert.ok(chk.token && chk.market && chk.perms.some(p => p.id === 'chatbox'), 'Rechte-Dialog wie bei .nxp');
+    // manipuliertes Paket
+    body = Buffer.concat([pkg, Buffer.from('x')]);
+    await assert.rejects(pl.action('plug_market_get', { id: 'hello-chat' }), /Größe|Prüfsumme/);
+    body = Buffer.from(pkg); body[body.length - 30] ^= 1;
+    await assert.rejects(pl.action('plug_market_get', { id: 'hello-chat' }), /Prüfsumme/);
+    body = pkg;
+    // fremde Download-Adresse
+    entry.url = 'https://evil.test/x.nxp'; pl.mk().index = null;
+    await assert.rejects(pl.action('plug_market_get', { id: 'hello-chat' }), /nicht erlaubt/);
+    entry.url = B + '/market.php?dl=hello-chat&v=1.1.0';
+    // Signatur kaputt
+    const realSign = sign; let broken = true;
+    pl.mk().fetch = async u => u.endsWith('api=index') ? { ok: true, json: async () => { const j = realSign(); if (broken) j.index = j.index.replace('Hallo', 'HALLO'); return j; } } : fake(u);
+    await assert.rejects(pl.action('plug_market', { refresh: '1' }), /Signatur ungültig/);
+    broken = false; pl.mk().fetch = fake;
+    // Schlüsselwechsel → abgelehnt, bis „neu lernen“
+    const kp2 = crypto.generateKeyPairSync('ed25519');
+    keyPair = [kp2.publicKey, kp2.privateKey, kp2.publicKey.export({ format: 'der', type: 'spki' }).subarray(12).toString('base64')];
+    await assert.rejects(pl.action('plug_market', { refresh: '1' }), /Signaturschlüssel hat sich geändert/);
+    await pl.action('plug_market_relearn', {});
+    r = await pl.action('plug_market', { refresh: '1' }); assert.strictEqual(r.items.length, 1);
+    // zu neue Mindestversion
+    entry.nexus = '>=99.0.0'; pl.mk().index = null;
+    r = await pl.action('plug_market', {}); assert.ok(!r.items[0].fits);
+    await assert.rejects(pl.action('plug_market_get', { id: 'hello-chat' }), /braucht VRC Nexus/);
+    // Update-Erkennung
+    entry.nexus = ''; pl.mk().index = null;
+    pl.manifest = id => (id === 'hello-chat' ? { version: '1.0.0' } : null);
+    r = await pl.action('plug_market', {}); assert.ok(r.items[0].update && r.updates === 1);
+    delete process.env.NEXUS_MARKET_BASE;
+    app.tools.stop();
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {

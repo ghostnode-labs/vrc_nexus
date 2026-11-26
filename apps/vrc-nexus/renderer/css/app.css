@@ -1110,6 +1110,9 @@ body.nav-side .i18n-fab.i18n-admin { flex: 0 0 36px; }   /* klein in der Mitte â
 
 /* 3.6 Plugins */
 .pl-card { margin-top: 10px; } .pl-card.off { opacity: .7; }
+.pl-mk { margin-top: 10px; } .pl-mk input[type=search] { max-width: 260px; }
+.pl-mkgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin: 10px 0; }
+.pl-mkcard { border: 1px solid var(--border-color); padding: 12px; display: flex; flex-direction: column; gap: 8px; justify-content: space-between; } .pl-mkcard:hover { border-color: var(--accent-cyan); }
 .pl-top { display: flex; gap: 12px; align-items: flex-start; }
 .pl-ic { font-size: 28px; line-height: 1; }
 .pl-meta { flex: 1; min-width: 0; }

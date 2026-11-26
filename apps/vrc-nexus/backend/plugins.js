@@ -105,6 +105,7 @@ class Plugins {
     saveState(s) { this.app.db.setSetting('plugins_state', JSON.stringify(s)); }
     manifest(id) { try { return JSON.parse(fs.readFileSync(path.join(this.codeDir(id), '.manifest.json'), 'utf8')); } catch (e) { return null; } }
     version() { return require('./vrchat').VERSION; }
+    mk() { if (!this.market) { const { Market } = require('./market'); this.market = new Market(this.app); } return this.market; }
 
     // ---------------- Installieren ----------------
     inspect(buf) {
@@ -362,6 +363,10 @@ class Plugins {
                 if (!buf) throw new UserError('Bitte eine .nxp-Datei auswählen.');
                 return this.inspect(buf);
             }
+            // 4.4: Marktplatz
+            case 'plug_market': return await this.mk().list(input.refresh === '1');
+            case 'plug_market_get': return await this.mk().get(str(input.id));
+            case 'plug_market_relearn': return this.mk().relearn();
             case 'plug_install': { const m = await this.install(input.token); return { items: this.list(), msg: m.name + ' ' + m.version + ' installiert.' }; }
             case 'plug_toggle': {
                 const id = str(input.id), s = this.state();

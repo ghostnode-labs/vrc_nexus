@@ -24,7 +24,7 @@ const DEF = { recv_on: false, allow: [], max: 60, lan: true, web: true, pub: fal
 const VIAS = ['auto', 'lan', 'web', 'pub'];
 const CMDS = ['ping', 'set', 'pattern', 'surprise', 'stop'];
 const UDP_PORT = () => int(process.env.NEXUS_TOY_UDP) || 17873;
-const RELAY = () => (process.env.NEXUS_RELAY_BASE || 'https://privat.sylvanclub.eu').replace(/\/+$/, '');
+const RELAY = () => (process.env.NEXUS_RELAY_BASE || require('./servers').nexus()).replace(/\/+$/, '');
 const PUB = () => (process.env.NEXUS_NTFY_BASE || 'https://ntfy.sh').replace(/\/+$/, '');
 const sha = s => crypto.createHash('sha256').update(s).digest('hex');
 const uidHash = u => sha('vrcnx-toy|' + str(u).toLowerCase());

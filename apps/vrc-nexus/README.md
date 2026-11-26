@@ -22,6 +22,11 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 4.4.0 – Plugin marketplace
+- 🛒 **Plugin marketplace** under Plugins: browse reviewed plugins from the GhostNode website, install or update with one click (update badge)
+- Every plugin is reviewed before it is published; the catalog is signed (Ed25519) and each package is checked (size, SHA-256) before the usual permission dialog
+- Server addresses in one place with automatic fallback – preparation for the move to ghostnode-labs.dev
+
 ### New in 4.3.0 – 🔞 Panic button update
 - 🔞 *** (only visible in the app when NSFW is unlocked)
 

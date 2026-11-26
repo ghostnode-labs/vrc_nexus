@@ -13,7 +13,7 @@ const { str, int, cut, now, UserError } = require('./util');
 
 const REASONS = { crasher: ['💥', 'Crasher'], ripper: ['🏴‍☠️', 'Ripper'], troll: ['🧌', 'Troll'], other: ['⚠', 'Sonstiges'] };
 const UID = /^(?:usr_[0-9a-f-]{36}|[0-9a-z]{10})$/i;   // auch kurze IDs älterer Konten
-const BASE = () => (process.env.NEXUS_WARN_BASE || process.env.NEXUS_RELAY_BASE || 'https://privat.sylvanclub.eu').replace(/\/+$/, '');
+const BASE = () => (process.env.NEXUS_WARN_BASE || process.env.NEXUS_RELAY_BASE || require('./servers').nexus()).replace(/\/+$/, '');
 const REFRESH = 10 * 60000;
 
 class WarnList {

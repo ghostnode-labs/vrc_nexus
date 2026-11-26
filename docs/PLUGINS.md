@@ -148,3 +148,12 @@ node apps/vrc-nexus/scripts/plugin-pack.js path/to/my-plugin [out.nxp]
 
 Without arguments the script builds the bundled example `apps/vrc-nexus/plugins/src/text-plugin` →
 `apps/vrc-nexus/plugins/text-plugin.nxp`. In the app: 🧩 Plugins → 📦 Install plugin (.nxp).
+
+## Marketplace (from 4.4.0)
+
+Plugins can be published on the GhostNode website (`market.php`) and installed from the app under **Plugins → 🛒 Marketplace**.
+
+- **Submit:** users with the permission *market.submit* upload a `.nxp`; it is checked with the same rules as the app (paths, sizes, `plugin.json`, permissions). Same `id` + higher `version` = update.
+- **Review:** users with *market.manage* download the package, read the code and approve or reject it (with a reason). Only approved versions are public.
+- **Catalog:** `market.php?api=index` returns the catalog signed with Ed25519. The key is created once on the server (`data/market/sign.key`, never in Git). The app remembers the public key on first use and rejects the catalog if it changes (users can re-learn it after an announced change).
+- **Install:** the app only downloads from the marketplace address, checks size and SHA-256 against the signed catalog and then shows the normal permission dialog. Updates are shown with a badge.

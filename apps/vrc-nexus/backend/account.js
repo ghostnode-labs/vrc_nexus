@@ -11,7 +11,7 @@
  */
 const { str, int, now, UserError } = require('./util');
 
-const BASE = () => (process.env.NEXUS_ACCT_BASE || process.env.NEXUS_RELAY_BASE || 'https://privat.sylvanclub.eu').replace(/\/+$/, '');
+const BASE = () => (process.env.NEXUS_ACCT_BASE || process.env.NEXUS_RELAY_BASE || require('./servers').nexus()).replace(/\/+$/, '');
 const REFRESH = 3 * 3600 * 1000;
 
 class Account {
