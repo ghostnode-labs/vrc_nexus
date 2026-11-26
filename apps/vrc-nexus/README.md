@@ -20,6 +20,10 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 - 🥽 SteamVR overlay, 🎛 Stream Deck plugin, 📺 stream bot
 - Keeps running in the **tray** (closing the window minimises), optional **start with Windows**
 
+## Versioning
+
+Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generation (6.0.0, 7.0.0 …), **Minor** for new features, **Patch** for fixes. Minor and patch simply keep counting – `5.9.0` is followed by `5.10.0`, not `6.0.0` (each part up to 99).
+
 ## Changelog
 
 ### New in 5.4.1 – New Stream Deck keys
