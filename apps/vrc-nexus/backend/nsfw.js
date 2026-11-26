@@ -186,6 +186,7 @@ class Nsfw {
         }
         if (c.panic_avatar && c.safe_avatar) { await this.selectAvatar(c.safe_avatar).catch(e => done.push('⚠ Avatar: ' + e.message)); done.push('sicherer Avatar'); }
         if (c.panic_we && c.panic_we !== 'off') { try { const m = await this.we().panic(c); if (m) done.push(m); } catch (e) { done.push('⚠ Wallpaper: ' + e.message); } }
+        if (this.app.obs) { const m = await this.app.obs.onPanic(); if (m) done.push(m); }   // 5.0
         if (this.app.tools.rpc) this.app.tools.rpc.setActivity(null);
         return { ok: true, msg: '🚨 Panik: ' + done.join(' · '), private: this.private };
     }

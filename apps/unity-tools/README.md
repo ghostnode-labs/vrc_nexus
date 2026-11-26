@@ -1,0 +1,54 @@
+# VRC Nexus – Unity tools
+
+Small, dependency-free helpers for creators who want their avatars or worlds to work with VRC Nexus.
+Own implementation; only Unity and the official VRChat SDK are required.
+
+| Folder | Project type | What it does |
+| --- | --- | --- |
+| `Editor/` | Avatar project (VRChat SDK 3 – Avatars) | **Tools ▸ VRC Nexus ▸ Avatar-Setup** window |
+| `World/` | World project (VRChat SDK 3 – Worlds + UdonSharp) | `NexusToyBridge` behaviour for world triggers |
+
+## Installation
+
+Copy the folder you need into your Unity project's `Assets/` (for example `Assets/VRC Nexus/Editor`).
+Each script is wrapped in compile guards, so copying the wrong folder into a project does not break compilation –
+it simply does nothing there.
+
+## Avatar-Setup window (`Editor/NexusAvatarTool.cs`)
+
+Select an avatar with a *VRC Avatar Descriptor* in the scene, then open **Tools ▸ VRC Nexus ▸ Avatar-Setup**.
+
+- **Check** – synced parameter budget (bits used of 256), detected VRCFury plug/socket components, OGB/OscGB
+  components and PCS parameters (detected by name only, no dependency on those packages), existing `NX/*`
+  parameters, FX layers, and warnings (missing FX controller, mixed Write Defaults, `NX/*` only in the FX controller).
+- **Create parameters** – adds the parameters VRC Nexus reads and writes, with Undo:
+
+  | Parameter | Type | Meaning |
+  | --- | --- | --- |
+  | `NX/Toy` | Float | current device intensity 0–1, sent by VRC Nexus |
+  | `NX/Lust` | Float | a 0–1 value for your own effects (see the in-app help) |
+  | `NX/Consent` | Int | traffic light: 0 green, 1 yellow, 2 red |
+
+  Each parameter can be local (costs no budget – VRC Nexus sets it via OSC) or synced (others see the effect,
+  recommended for `NX/Consent`). Optionally the parameters are also added to the FX controller.
+- **Consent layer** (optional) – creates an FX layer `NX Consent` with three states that switch your own
+  green/yellow/red indicator objects (Write Defaults off, clips saved next to the controller).
+
+Nothing is uploaded or sent anywhere; the window only edits your local assets.
+
+## World bridge (`World/NexusToyBridge.cs`)
+
+An UdonSharp behaviour that writes one line into the VRChat log for the **local** player only:
+
+```
+[NexusToy] pulse <intensity 0–1> <seconds>
+[NexusToy] set <intensity 0–1> [seconds]
+[NexusToy] stop
+```
+
+Put it on an object with a trigger collider (enter → pulse, exit → stop) or call `Pulse()`, `Hold()`, `Stop()` or
+`PulseWith(level, seconds)` from your own Udon scripts.
+
+VRC Nexus only reacts when the player has enabled the world bridge themselves, caps the intensity with their own
+maximum, ignores old log lines, and always honours the consent light and the panic button. Players without VRC Nexus
+are not affected at all.

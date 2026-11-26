@@ -70,12 +70,13 @@
         let h = '<div class="ns-top"><span class="muted small">🚨 ' + esc(T('Panik-Knopf: oben in der Kopfzeile')) + '</span>'
             + '<button type="button" class="btn ' + (st.private ? 'btn-gold' : '') + '" data-ns="private">🕶 Privat-Modus ' + (st.private ? 'AN' : 'aus') + '</button>'
             + '<span class="muted small">' + (a.owner ? '👑 Besitzer' : '🔓 freigeschaltet' + (a.exp ? ' bis ' + esc(new Date(a.exp * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE')) : '')) + '</span></div>';
-        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['fun', '🎲 Spielereien'], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
+        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
         if (!tabs.some(x => x[0] === sub)) sub = 'main';
         h += '<div class="chips ns-sub">' + tabs.map(([k, n]) => '<button type="button" class="chip' + (sub === k ? ' on' : '') + '" data-nsub="' + k + '">' + n + '</button>').join('') + '</div>';
         h += '<div class="nc-grid">';
         if (sub === 'fun') h += funHtml(t, has('toys')) + (has('toys') && t && window.NexusNsfw2 ? window.NexusNsfw2.funHtml(t) : '');
         if (sub === 'lust' && has('toys') && t && window.NexusNsfw2) h += window.NexusNsfw2.lustHtml(t);
+        if (sub === 'x3' && has('toys') && t && window.NexusNsfw3) h += window.NexusNsfw3.html(t);
         if (sub === 'net' && st.tremote) h += netHtml(st.tremote, t);
         if (sub === 'main') {
         // Avatar-Paare
@@ -160,6 +161,8 @@
         const c = x.cfg, L = x.listen, a = x.active, k = x.ctrl, ack = k.ack;
         const dot = (o, label) => '<span class="small ' + (o.ok ? 'ok' : o.err ? 'bad' : 'muted') + '">' + (o.ok ? '✔ ' : o.err ? '⚠ ' : '○ ') + label + (o.err ? ' – ' + esc(o.err) : '') + '</span>';
         let h = sec('📥 Mich steuern lassen', chk('tr_recv_on', c.recv_on, '<b>Fernsteuerung empfangen</b>')
+            + ' <button type="button" class="btn btn-sm ns-stop" data-ns="tr_safe" title="Sofort alles aus, Empfang aus">🛑 Safeword</button>'
+            + '<div class="nc-row"><span class="small">⌛ Zeitlimit (min, 0 = ohne)</span><input type="number" min="0" max="480" value="' + (c.limit_min || 0) + '" data-tr="limit_min" style="width:80px"></div>'
             + (c.recv_on ? '<p class="nc-row">' + dot(L.lan, 'Heimnetz') + dot(L.web, 'Internet (GhostNode)') + '</p>' : '')
             + '<div class="nc-row"><span class="small">Deine User-ID</span><code class="ns-url">' + esc(x.my_uid || '–') + '</code>' + (x.my_uid ? '<button type="button" class="vx-copy" data-copy="' + esc(x.my_uid) + '">⧉</button>' : '') + '</div>'
             + '<p class="muted small">Die gibst du deinem Partner – sonst muss niemand etwas eintragen. Verbindung im selben WLAN direkt, sonst automatisch über deine GhostNode-Seite.</p>'
@@ -209,6 +212,7 @@
         if (simple[a]) return api(simple[a]).then(d => { toast(d.msg); refreshAccess(); }).catch(x => toast(x.message, true));
         if (a === 'avatar') return api('nsfw_avatar', { i: b.dataset.i }).then(d => { toast(d.msg); refreshAccess(); }).catch(x => toast(x.message, true));
         if (a === 'tr_allow') return trCfg({ allow: $v('#trAllow') });
+        if (a === 'tr_safe') return api('tremote_safeword').then(d => { st.tremote = d; toast(d.msg); render(); }).catch(x => toast(x.message, true));
         if (a === 'tr_kick') return api('tremote_kick').then(d => { st.tremote = d; toast(d.msg); render(); }).catch(x => toast(x.message, true));
         if (a === 'tr_ping') return api('tremote_cfg', { t_uid: $v('#trUid') }).then(() => trSend('ping')).catch(x => toast(x.message, true));
         if (a === 'tr_self') { const i = box.querySelector('#trUid'); if (i && st.tremote) i.value = st.tremote.my_uid; return; }

@@ -1589,3 +1589,132 @@ Marktplatz nicht erreichbar.	Marketplace unreachable.	Marketplace injoignable.	�
 Marktplatz: Signatur ungültig – Katalog abgelehnt.	Marketplace: invalid signature – catalog rejected.	Marketplace : signature invalide – catalogue refusé.	マーケットプレイス：署名が無効です – カタログを拒否しました。
 Paket: Prüfsumme stimmt nicht – Installation abgebrochen.	Package: checksum mismatch – installation cancelled.	Paquet : somme de contrôle incorrecte – installation annulée.	パッケージ：チェックサムが一致しません – インストールを中止しました。
 Website	Website	Site web	ウェブサイト
+// 5.0 – Avatar-Presets, Komfort, OBS
+Presets	Presets	Préréglages	プリセット
+Zustände dieses Avatars speichern und mit einem Klick laden – auch als Makro: preset Name	Save states of this avatar and load them with one click – also as a macro: preset Name	Enregistrer les états de cet avatar et les charger en un clic – aussi en macro : preset Nom	このアバターの状態を保存してワンクリックで読み込み – マクロでも: preset 名前
+Werte	values	valeurs	個の値
+Noch keine Presets	No presets yet	Pas encore de préréglages	プリセットはまだありません
+Name, z. B. Outfit Party	Name, e.g. Party outfit	Nom, p. ex. Tenue soirée	名前(例: パーティー衣装)
+Aktuellen Zustand speichern	Save current state	Enregistrer l’état actuel	現在の状態を保存
+Import	Import	Importer	インポート
+Preset löschen?	Delete preset?	Supprimer le préréglage ?	プリセットを削除しますか?
+In die Zwischenablage kopiert	Copied to clipboard	Copié dans le presse-papiers	クリップボードにコピーしました
+Preset-JSON einfügen:	Paste preset JSON:	Coller le JSON du préréglage :	プリセットJSONを貼り付け:
+Bitte einen Namen angeben	Please enter a name	Veuillez saisir un nom	名前を入力してください
+Keine Werte bekannt – Avatar einmal neu laden, dann sendet VRChat alle Werte	No values known – reload the avatar once, then VRChat sends all values	Aucune valeur connue – rechargez l’avatar une fois, VRChat enverra alors toutes les valeurs	値が不明です – アバターを一度再読み込みすると VRChat がすべての値を送信します
+Preset nicht gefunden	Preset not found	Préréglage introuvable	プリセットが見つかりません
+Preset gelöscht	Preset deleted	Préréglage supprimé	プリセットを削除しました
+Kein gültiges Preset-JSON	Not a valid preset JSON	JSON de préréglage invalide	有効なプリセットJSONではありません
+Höchstens # Presets pro Avatar	At most # presets per avatar	Au maximum # préréglages par avatar	アバターごとに最大#個のプリセット
+Schlafmodus	Sleep mode	Mode sommeil	スリープモード
+Aktiv seit	Active since	Actif depuis	開始
+Aufwachen	Wake up	Se réveiller	起きる
+Schlafen gehen	Go to sleep	Aller dormir	寝る
+ohne Wecker	no alarm	sans réveil	アラームなし
+Status-Text	Status text	Texte de statut	ステータス文
+Avatar-Parameter (an/aus, optional)	Avatar parameter (on/off, optional)	Paramètre d’avatar (on/off, facultatif)	アバターパラメーター(オン/オフ、任意)
+Chatbox-Text zeigen und Rotation pausieren	Show chatbox text and pause rotation	Afficher le texte de la chatbox et mettre la rotation en pause	チャットボックスの文を表示してローテーションを一時停止
+Spielzeug stoppen	Stop toys	Arrêter les jouets	トイを停止
+Pausen-Hinweise	Break reminders	Rappels de pause	休憩リマインダー
+Nach längerer Spielzeit an eine Pause erinnern	Remind me to take a break after playing for a while	Rappeler de faire une pause après une longue session	長時間プレイしたら休憩を促す
+nach Minuten	after minutes	après minutes	分後
+am Stück	in a row	d’affilée	連続
+nächster Hinweis in	next reminder in	prochain rappel dans	次のリマインダーまで
+Puls-Warnungen	Heart rate warnings	Alertes de fréquence cardiaque	心拍数の警告
+Warnen, wenn der Puls länger zu hoch oder zu niedrig ist	Warn when the heart rate stays too high or too low	Avertir si la fréquence cardiaque reste trop haute ou trop basse	心拍数が高すぎる/低すぎる状態が続いたら警告
+zu hoch ab (bpm)	too high from (bpm)	trop haute à partir de (bpm)	高すぎる(bpm 以上)
+zu niedrig unter (bpm)	too low below (bpm)	trop basse en dessous de (bpm)	低すぎる(bpm 未満)
+für Sekunden	for seconds	pendant secondes	秒間
+höchstens alle Minuten	at most every minutes	au plus toutes les minutes	最短間隔(分)
+Quelle ist der Puls unter 💓 Puls. Keine medizinische Überwachung	Source is the heart rate under 💓 Heart rate. Not medical monitoring	La source est la fréquence cardiaque sous 💓 Pouls. Pas une surveillance médicale	ソースは 💓 心拍 の心拍数です。医療用の監視ではありません
+Schläft 💤	Sleeping 💤	Dort 💤	睡眠中 💤
+Spielzeug gestoppt	toys stopped	jouets arrêtés	トイ停止
+Schlafmodus an	Sleep mode on	Mode sommeil activé	スリープモード オン
+Schlafmodus aus	Sleep mode off	Mode sommeil désactivé	スリープモード オフ
+Guten Morgen!	Good morning!	Bonjour !	おはようございます!
+Pause?	Break?	Pause ?	休憩しますか?
+Puls hoch	Heart rate high	Fréquence cardiaque élevée	心拍数が高い
+Puls niedrig	Heart rate low	Fréquence cardiaque basse	心拍数が低い
+Pausen-Uhr neu gestartet	Break timer restarted	Minuteur de pause relancé	休憩タイマーを再開しました
+Ungültiger Parametername	Invalid parameter name	Nom de paramètre invalide	無効なパラメーター名
+In OBS: Werkzeuge → WebSocket-Server-Einstellungen → Server aktivieren (Port 4455) und ein Passwort setzen	In OBS: Tools → WebSocket Server Settings → enable the server (port 4455) and set a password	Dans OBS : Outils → Paramètres du serveur WebSocket → activer le serveur (port 4455) et définir un mot de passe	OBS で: ツール → WebSocket サーバー設定 → サーバーを有効化(ポート 4455)してパスワードを設定
+Mit OBS verbinden	Connect to OBS	Se connecter à OBS	OBS に接続
+aus OBS kopieren	copy from OBS	copier depuis OBS	OBS からコピー
+Szenen	Scenes	Scènes	シーン
+nicht verbunden	not connected	non connecté	未接続
+Szene je Welt	Scene per world	Scène par monde	ワールドごとのシーン
+Teil des Weltnamens → Szene. „*“ passt auf jede Welt	Part of the world name → scene. “*” matches every world	Partie du nom du monde → scène. « * » correspond à tous les mondes	ワールド名の一部 → シーン。「*」はすべてのワールドに一致
+– Szene –	– scene –	– scène –	– シーン –
+– keine –	– none –	– aucune –	– なし –
+Panik-Szene	Panic scene	Scène panique	パニックシーン
+Beim Panik-Knopf wechselt OBS sofort auf diese Szene	On the panic button, OBS switches to this scene immediately	Avec le bouton panique, OBS passe immédiatement à cette scène	パニックボタンで OBS がすぐにこのシーンへ切り替わります
+Textquelle	Text source	Source de texte	テキストソース
+Name der Textquelle in OBS	Name of the text source in OBS	Nom de la source de texte dans OBS	OBS のテキストソース名
+alle Sekunden	every seconds	toutes les secondes	秒ごと
+Platzhalter wie in der Chatbox: {puls}, {welt}, {spieler}, {zeit} … Im Privat-Modus wird nichts gesendet	Placeholders as in the chatbox: {puls}, {welt}, {spieler}, {zeit} … Nothing is sent in private mode	Espaces réservés comme dans la chatbox : {puls}, {welt}, {spieler}, {zeit} … Rien n’est envoyé en mode privé	チャットボックスと同じプレースホルダー: {puls}, {welt}, {spieler}, {zeit} … プライベートモードでは何も送信しません
+Ungültiger Rechnername	Invalid host name	Nom d’hôte invalide	無効なホスト名
+OBS nicht erreichbar	OBS not reachable	OBS injoignable	OBS に接続できません
+OBS nicht erreichbar (läuft OBS, ist der WebSocket-Server an?)	OBS not reachable (is OBS running, is the WebSocket server on?)	OBS injoignable (OBS est-il lancé, le serveur WebSocket est-il activé ?)	OBS に接続できません(OBS は起動中? WebSocket サーバーはオン?)
+OBS verlangt ein Passwort	OBS requires a password	OBS exige un mot de passe	OBS はパスワードを要求しています
+OBS: Passwort falsch	OBS: wrong password	OBS : mot de passe incorrect	OBS: パスワードが違います
+OBS getrennt	OBS disconnected	OBS déconnecté	OBS 切断
+OBS ist nicht verbunden	OBS is not connected	OBS n’est pas connecté	OBS は接続されていません
+OBS antwortet nicht	OBS does not respond	OBS ne répond pas	OBS が応答しません
+Text aktualisiert	Text updated	Texte mis à jour	テキストを更新しました
+OBS gibt es nur in der Windows-App	OBS is only available in the Windows app	OBS n’est disponible que dans l’application Windows	OBS は Windows アプリでのみ利用できます
+// NSFW 3.0
+Extras	Extras	Extras	エクストラ
+Safeword	Safeword	Mot de sécurité	セーフワード
+Sofort alles aus, Empfang aus	Everything off immediately, receiving off	Tout couper immédiatement, réception désactivée	すぐにすべてオフ、受信オフ
+Zeitlimit (min, 0 = ohne)	Time limit (min, 0 = none)	Limite de temps (min, 0 = aucune)	時間制限(分、0 = なし)
+Safeword – alles gestoppt	Safeword – everything stopped	Mot de sécurité – tout est arrêté	セーフワード – すべて停止
+Alles gestoppt, Fernsteuerung aus	Everything stopped, remote control off	Tout est arrêté, télécommande désactivée	すべて停止、リモート操作オフ
+Funscript	Funscript	Funscript	Funscript
+.funscript-Datei laden: Vibration folgt der Bewegungsgeschwindigkeit, Stroker folgen den Positionen	Load a .funscript file: vibration follows the movement speed, strokers follow the positions	Charger un fichier .funscript : la vibration suit la vitesse du mouvement, les strokers suivent les positions	.funscript ファイルを読み込み: 振動は動きの速さに、ストローカーは位置に追従
+Datei wählen	Choose file	Choisir un fichier	ファイルを選択
+wiederholen	repeat	répéter	リピート
+Spiele	Games	Jeux	ゲーム
+Runde	Round	Manche	ラウンド
+Halt!	Hold!	Stop !	ストップ!
+Beenden	End	Terminer	終了
+Würfel	Dice	Dés	サイコロ
+Roulette	Roulette	Roulette	ルーレット
+Edging-Spiel	Edging game	Jeu d’edging	エッジングゲーム
+Würfel: zufällige Stärke und Dauer je Runde · Roulette: ein zufälliges Gerät · Edging: Stärke steigt – rechtzeitig „Halt!“ drücken gibt Punkte, über die Grenze kostet die Runde	Dice: random intensity and duration per round · Roulette: one random device · Edging: intensity rises – pressing “Hold!” in time scores points, going over the edge costs the round	Dés : intensité et durée aléatoires à chaque manche · Roulette : un appareil au hasard · Edging : l’intensité monte – appuyer sur « Stop ! » à temps rapporte des points, dépasser la limite coûte la manche	サイコロ: ラウンドごとにランダムな強さと時間 · ルーレット: ランダムな1台 · エッジング: 強さが上がる – 間に合うように「ストップ!」でポイント、限界を超えるとラウンド失敗
+Letztes Spiel	Last game	Dernière partie	前回のゲーム
+Spur(en)	track(s)	piste(s)	トラック
+Nimmt auf, was deine Geräte gerade machen (10 Werte pro Sekunde, max. 10 min) – später genauso abspielen	Records what your devices are doing (10 values per second, max. 10 min) – play it back exactly later	Enregistre ce que font tes appareils (10 valeurs par seconde, 10 min max.) – à rejouer à l’identique plus tard	デバイスの動きを記録(毎秒10値、最大10分) – 後で同じように再生
+Profil je Avatar	Profile per avatar	Profil par avatar	アバターごとのプロファイル
+Für den getragenen Avatar ist ein Profil gespeichert	A profile is saved for the worn avatar	Un profil est enregistré pour l’avatar porté	着用中のアバターのプロファイルが保存されています
+Für den getragenen Avatar ist noch kein Profil gespeichert	No profile saved for the worn avatar yet	Aucun profil enregistré pour l’avatar porté	着用中のアバターのプロファイルはまだありません
+Aktuelle Einstellungen für diesen Avatar speichern	Save current settings for this avatar	Enregistrer les réglages actuels pour cet avatar	現在の設定をこのアバター用に保存
+Profil löschen	Delete profile	Supprimer le profil	プロファイルを削除
+beim Avatarwechsel automatisch laden (Verknüpfungen, PCS, Puls, Stimme, Geräte)	load automatically when changing avatar (links, PCS, heart rate, voice, devices)	charger automatiquement au changement d’avatar (liens, PCS, pouls, voix, appareils)	アバター変更時に自動で読み込み(リンク、PCS、心拍、声、デバイス)
+Welt-Brücke	World bridge	Pont de monde	ワールドブリッジ
+Welten dürfen Spielzeug auslösen	Worlds may trigger toys	Les mondes peuvent déclencher les jouets	ワールドがトイを起動できる
+höchstens	at most	au maximum	最大
+Welten mit dem VRC-Nexus-Baustein schreiben „[NexusToy] pulse 0.6 2“ ins VRChat-Log. Nur frische Zeilen zählen, Consent-Ampel und Panik gelten immer	Worlds with the VRC Nexus building block write “[NexusToy] pulse 0.6 2” into the VRChat log. Only fresh lines count, consent light and panic always apply	Les mondes avec le module VRC Nexus écrivent « [NexusToy] pulse 0.6 2 » dans le journal VRChat. Seules les lignes récentes comptent, le feu de consentement et la panique s’appliquent toujours	VRC Nexus モジュール付きワールドは VRChat ログに「[NexusToy] pulse 0.6 2」と書き込みます。新しい行のみ有効、同意ライトとパニックは常に優先
+Musik (System-Ton) steuert Spielzeug	Music (system audio) drives toys	La musique (son système) pilote les jouets	音楽(システム音声)でトイを操作
+Ton-Erfassung starten	Start audio capture	Démarrer la capture audio	音声キャプチャ開始
+Ton-Erfassung beenden	Stop audio capture	Arrêter la capture audio	音声キャプチャ停止
+Gemessen wird nur die Lautstärke – nichts wird aufgenommen oder gesendet	Only the volume is measured – nothing is recorded or sent	Seul le volume est mesuré – rien n’est enregistré ni envoyé	測定するのは音量のみ – 録音も送信もしません
+kein Ton freigegeben	no audio shared	aucun son partagé	音声が共有されていません
+Keine Ton-Erfassung	No audio capture	Pas de capture audio	音声キャプチャなし
+Datei zu groß	File too large	Fichier trop volumineux	ファイルが大きすぎます
+Keine gültige .funscript-Datei	Not a valid .funscript file	Fichier .funscript invalide	有効な .funscript ファイルではありません
+Das Funscript enthält zu wenige Bewegungen	The funscript has too few movements	Le funscript contient trop peu de mouvements	Funscript の動きが少なすぎます
+Funscript zu groß	Funscript too large	Funscript trop volumineux	Funscript が大きすぎます
+Erst ein Funscript laden	Load a funscript first	Charge d’abord un funscript	先に Funscript を読み込んでください
+Unbekanntes Spiel	Unknown game	Jeu inconnu	不明なゲーム
+Gerade läuft keine Edging-Runde	No edging round is running right now	Aucune manche d’edging en cours	エッジングラウンドは実行されていません
+Aufnahme läuft schon	Recording is already running	Enregistrement déjà en cours	すでに録画中です
+Aufnahme zu kurz	Recording too short	Enregistrement trop court	録画が短すぎます
+Aufnahme nicht gefunden	Recording not found	Enregistrement introuvable	録画が見つかりません
+Aufnahme läuft	Recording	Enregistrement en cours	録画中
+Spielzeug-Profil für diesen Avatar gespeichert	Toy profile saved for this avatar	Profil de jouets enregistré pour cet avatar	このアバターのトイプロファイルを保存しました
+Spielzeug-Profil	Toy profile	Profil de jouets	トイプロファイル
+Für diesen Avatar geladen	Loaded for this avatar	Chargé pour cet avatar	このアバター用に読み込みました
+Funscript läuft	Funscript playing	Funscript en cours	Funscript 再生中
+Spiel gestartet	Game started	Partie lancée	ゲーム開始
+Wiedergabe	Playback	Lecture	再生
+Profil gelöscht	Profile deleted	Profil supprimé	プロファイルを削除しました

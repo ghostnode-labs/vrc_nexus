@@ -51,6 +51,8 @@
                 <button type="button" class="chip" data-sub="osctools">🧰 OSC-Werkzeuge</button>
                 <button type="button" class="chip" data-sub="mods">🧩 Chatbox-Module</button>
                 <button type="button" class="chip" data-sub="heart">💓 Puls</button>
+                <button type="button" class="chip" data-sub="comfort">🌙 Komfort</button>
+                <button type="button" class="chip nc-pc-only" data-sub="obs">🎥 OBS</button>
                 <button type="button" class="chip nc-pc-only" data-sub="space">🚀 VR-Bewegung</button>
                 <button type="button" class="chip" data-sub="cam">📷 Kamera</button>
                 <button type="button" class="chip" data-sub="macros">⚡ Makros</button>
@@ -107,10 +109,13 @@
                     <button type="button" class="btn btn-sm" id="ncPReload">↻</button>
                 </div>
                 <div class="muted small" id="ncPInfo"></div>
+                <div class="nc-card nc-presets5" id="ncPresetBar"></div>
                 <div class="nc-pgrid" id="ncPList"></div>
             </div>
             <div class="nc-pane" data-p="space" hidden><div id="spBox"></div></div>
             <div class="nc-pane" data-p="heart" hidden><div id="hrBox" class="hr-box"></div></div>
+            <div class="nc-pane" data-p="comfort" hidden><div id="cfBox"></div></div>
+            <div class="nc-pane" data-p="obs" hidden><div id="obsBox"></div></div>
             <div class="nc-pane" data-p="mods" hidden><div id="cmBox"></div>
                 <section class="cm-row nc-rotrow" id="ncRotRow"><span class="cm-ic">🔁</span>
                     <div class="cm-txt"><b>Chatbox-Rotator</b> <small class="cm-note" id="ncRotNote"></small><p>Eigene Texte im Wechsel in die Chatbox – mit Platzhaltern wie {zeit}, {welt}, {spieler}. Läuft, wenn die Module oben aus sind.</p></div>
@@ -359,6 +364,8 @@
         if (name === 'osctools' && window.NexusOscTools) window.NexusOscTools.open();
         if (name === 'space' && window.NexusSpace) window.NexusSpace.open(document.getElementById('spBox'));
         if (name === 'heart' && window.NexusHeart) window.NexusHeart.open(document.getElementById('hrBox'));
+        if (name === 'comfort' && window.NexusComfort) window.NexusComfort.open(document.getElementById('cfBox'));
+        if (name === 'obs' && window.NexusObs) window.NexusObs.open(document.getElementById('obsBox'));
         if (name === 'mods' && window.NexusChatMods) window.NexusChatMods.open(document.getElementById('cmBox'));
         if (name === 'tts' && window.NexusTts) window.NexusTts.open(document.getElementById('ttsBox'));
         if (name === 'debug' && window.NexusOscDebug) window.NexusOscDebug.open(document.getElementById('odBox'));
@@ -516,10 +523,33 @@
     }
 
     // ---------- 🎚 Avatar-Parameter (aus der OSC-Konfiguration von VRChat) ----------
-    let pData = null, pBound = false;
+    let pData = null, pBound = false, pPresets = null, pPresetAt = 0;
+    // 5.0: Avatar-Presets (Outfits, Farben … mit einem Klick)
+    const PT = x => (window.t ? window.t(x) : x);
+    function loadAvPresets() { pPresetAt = Date.now(); return api('preset_list').then(d => { pPresets = d; renderAvPresets(); }).catch(() => {}); }
+    function renderAvPresets() {
+        const el = $('#ncPresetBar'), d = pPresets;
+        if (!el || !d) return;
+        if (!d.avatar) { el.innerHTML = '<b>🎭 ' + esc(PT('Presets')) + '</b> <span class="muted small">' + esc(PT('Kein getragener Avatar erkannt.')) + '</span>'; return; }
+        el.innerHTML = '<div class="nc-row"><b>🎭 ' + esc(PT('Presets')) + '</b><span class="muted small">' + esc(PT('Zustände dieses Avatars speichern und mit einem Klick laden – auch als Makro: preset Name')) + '</span></div>'
+            + '<div class="nc-row">' + (d.presets.length ? d.presets.map(p => '<span class="nc-preset"><button type="button" class="btn btn-sm btn-gold" data-papply="' + esc(p.id) + '" title="' + p.count + ' ' + esc(PT('Werte')) + '">▶ ' + esc(p.name) + '</button><button type="button" class="btn btn-sm" data-pdel="' + esc(p.id) + '" title="' + esc(PT('Löschen')) + '">✕</button></span>').join('') : '<span class="muted small">' + esc(PT('Noch keine Presets.')) + '</span>') + '</div>'
+            + '<div class="nc-row"><input type="text" id="ncPresetName" maxlength="40" placeholder="' + esc(PT('Name, z. B. Outfit Party')) + '"><button type="button" class="btn btn-sm" data-psave="1"' + (d.savable ? '' : ' disabled') + '>💾 ' + esc(PT('Aktuellen Zustand speichern')) + ' (' + d.savable + ')</button>'
+            + '<button type="button" class="btn btn-sm" data-pexp="1">⇪ ' + esc(PT('Export')) + '</button><button type="button" class="btn btn-sm" data-pimp="1">⇩ ' + esc(PT('Import')) + '</button></div>';
+    }
+    document.addEventListener('click', e => {
+        const t = e.target;
+        if (!t.closest || !t.closest('#ncPresetBar')) return;
+        const a = t.closest('[data-papply]'), dl = t.closest('[data-pdel]');
+        if (a) return api('preset_apply', { id: a.dataset.papply }).then(r => toast(r.msg)).catch(fail);
+        if (dl) { if (!confirm(PT('Preset löschen?'))) return; return api('preset_delete', { id: dl.dataset.pdel }).then(d => { pPresets = d; renderAvPresets(); }).catch(fail); }
+        if (t.closest('[data-psave]')) return api('preset_save', { name: $('#ncPresetName').value }).then(d => { pPresets = d; renderAvPresets(); toast(d.msg); }).catch(fail);
+        if (t.closest('[data-pexp]')) return api('preset_export').then(d => { (window.NexusUI && window.NexusUI.copy ? window.NexusUI.copy(JSON.stringify(d)) : navigator.clipboard.writeText(JSON.stringify(d))); toast(PT('In die Zwischenablage kopiert.')); }).catch(fail);
+        if (t.closest('[data-pimp]')) { const j = prompt(PT('Preset-JSON einfügen:')); if (!j) return; return api('preset_import', { json: j }).then(d => { pPresets = d; renderAvPresets(); toast(d.msg); }).catch(fail); }
+    });
     const pVal = p => p.value === null ? '' : p.type === 'float' ? Number(p.value).toFixed(2) : String(p.value);
     function loadParams() {
         bindParams();
+        if (!pPresetAt || Date.now() - pPresetAt > 15000) loadAvPresets();
         return api('client_params').then(d => { pData = d; renderParams(); }).catch(fail);
     }
     function bindParams() {

@@ -20,7 +20,7 @@ const dgram = require('dgram');
 const { str, int, cut, arr, now, UserError } = require('./util');
 
 const UIDRE = /^(?:usr_[0-9a-f-]{36}|[0-9a-z]{10})$/i;
-const DEF = { recv_on: false, allow: [], max: 60, lan: true, web: true, pub: false, web_url: '', code: '', lan_port: 17872, t_uid: '', t_via: 'auto', t_addr: '', t_url: '', t_code: '' };
+const DEF = { recv_on: false, allow: [], max: 60, limit_min: 0, lan: true, web: true, pub: false, web_url: '', code: '', lan_port: 17872, t_uid: '', t_via: 'auto', t_addr: '', t_url: '', t_code: '' };
 const VIAS = ['auto', 'lan', 'web', 'pub'];
 const CMDS = ['ping', 'set', 'pattern', 'surprise', 'stop'];
 const UDP_PORT = () => int(process.env.NEXUS_TOY_UDP) || 17873;
@@ -68,7 +68,9 @@ class ToyRemote {
     saveCfg(c) {
         const n = this.cfg();
         const b = v => v === true || v === '1' || v === 'true';
+        if (c.recv_on !== undefined && b(c.recv_on) && !n.recv_on) this.recvSince = Date.now();   // NSFW 3.0: Zeitlimit zählt ab Einschalten
         for (const k of ['recv_on', 'lan', 'web', 'pub']) if (c[k] !== undefined) n[k] = b(c[k]);
+        if (c.limit_min !== undefined) n.limit_min = Math.max(0, Math.min(480, int(c.limit_min)));
         if (c.max !== undefined) n.max = Math.max(5, Math.min(100, int(c.max)));
         if (c.lan_port !== undefined) { const p = int(c.lan_port); if (p < 1024 || p > 65535) throw new UserError('Port 1024–65535.'); n.lan_port = p; }
         if (c.web_url !== undefined) n.web_url = normUrl(c.web_url);
@@ -235,6 +237,13 @@ class ToyRemote {
         throw new UserError('Unbekannter Befehl.');
     }
     tick() {
+        // NSFW 3.0: Zeitlimit für den Empfang
+        const lc = this.cfg();
+        if (lc.recv_on && !this.recvSince) this.recvSince = Date.now();
+        if (lc.recv_on && lc.limit_min > 0 && this.recvSince && Date.now() - this.recvSince > lc.limit_min * 60000) {
+            this.saveCfg({ recv_on: '0' }); this.remoteLv = 0; if (this.app.toys) this.app.toys.set('all', 0).catch(() => {});
+            this.note('Zeitlimit', '⌛ ' + lc.limit_min + ' min vorbei – Empfang aus');
+        }
         // Regler vom Partner ohne Lebenszeichen → aus
         if (this.remoteLv > 0 && Date.now() - this.remoteAt > 15000 && this.app.toys) { this.remoteLv = 0; this.app.toys.set('all', 0).catch(() => {}); this.note(this.active ? this.active.name : '?', '⌛ kein Signal mehr → aus'); }
         // eigener Regler: Lebenszeichen alle 5 s
@@ -321,6 +330,13 @@ class ToyRemote {
             case 'tremote_new_code': { const c = this.cfg(); c.code = newCode(); this.app.db.setSetting('toyremote_cfg', JSON.stringify(c)); this.apply(); return Object.assign(this.status(), { msg: 'Neuer Kopplungscode – dem Partner geben.' }); }
             case 'tremote_find': { const c = this.cfg(); if (!UIDRE.test(c.t_uid)) throw new UserError('Erst die User-ID eintragen.'); const a = await this.discover(c.t_uid); this.ctrl.addr = a; return Object.assign(this.status(), { msg: a ? '✔ gefunden: ' + a : 'Nicht gefunden.' }); }
             case 'tremote_send': { const r = await this.send(str(input.c), { lv: input.lv, id: input.id, speed: input.speed, strength: input.strength, seconds: input.seconds }).catch(e => { this.ctrl.err = e.message; this.ctrl.ack = null; throw e; }); return Object.assign(this.status(), { msg: r.msg || 'gesendet' }); }
+            case 'tremote_safeword': {   // NSFW 3.0: Safeword – sofort alles aus, Empfang aus, Partner wird abgewiesen
+                this.saveCfg({ recv_on: '0' }); this.remoteLv = 0; this.ctrl.lv = 0;
+                if (this.app.toys) await this.app.toys.stopAll().catch(() => {});
+                this.note('Du', '🛑 Safeword – alles gestoppt');
+                if (this.app.tools && this.app.tools.alert) this.app.tools.alert('🛑 Safeword', 'Alles gestoppt, Fernsteuerung aus.');
+                return Object.assign(this.status(), { msg: '🛑 Safeword – alles gestoppt.' });
+            }
             case 'tremote_kick': { this.saveCfg({ recv_on: '0' }); if (this.app.toys) await this.app.toys.set('all', 0); this.remoteLv = 0; this.note('Du', '🚫 Fernsteuerung beendet'); return Object.assign(this.status(), { msg: '🚫 Fernsteuerung aus.' }); }
         }
         throw new UserError('Unbekannte Aktion.');

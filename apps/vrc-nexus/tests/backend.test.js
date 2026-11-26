@@ -3396,6 +3396,127 @@ test('4.4: Plugin-Marktplatz – signierter Katalog, Schlüssel merken, Prüfsum
 
 
 
+test('5.0: Avatar-Presets – speichern (ohne VRChat-eigene/intime/unbekannte), laden typrichtig, Makro „preset“, Export/Import, Grenzen', async () => {
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-50p-')) } });
+    app.game.osc.stopListen();
+    const sent = []; app.game.osc.sendParam = async (n, v, t) => { sent.push([n, v, t]); };
+    const A = 'avtr_' + 'c'.repeat(8) + '-1111-2222-3333-444444444444';
+    let params = [];
+    app.params.list = () => ({ current: A, avatar: { id: A, name: 'Fuchs' }, live: true, params });
+    params = [{ name: 'Outfit', type: 'int', input: true, value: 2 }, { name: 'Hue', type: 'float', input: true, value: 0.25 }, { name: 'Ears', type: 'bool', input: true, value: true },
+        { name: 'Unbekannt', type: 'int', input: true, value: null }, { name: 'Viseme', type: 'int', input: true, value: 3, builtin: true }, { name: 'OGB/Enabled', type: 'bool', input: true, value: true },
+        { name: 'NurAusgabe', type: 'float', input: false, value: 1 }];
+    const post = (act, d) => app.post(Object.assign({ act }, d || {}), {});
+    let r = await post('preset_list'); assert.strictEqual(r.savable, 3);
+    await assert.rejects(post('preset_save', { name: ' ' }), /Namen/);
+    r = await post('preset_save', { name: 'Party' });
+    assert.ok(/3 Werte/.test(r.msg) && r.presets[0].name === 'Party');
+    assert.deepStrictEqual(Object.keys(app.presets.all()[A][0].values).sort(), ['Ears', 'Hue', 'Outfit']);
+    // Avatar ändert Werte → Preset laden sendet nur Abweichungen, mit Typ
+    app.game.osc.params = { Outfit: 0, Hue: 0.25, Ears: false };
+    r = await post('preset_apply', { name: 'party' });
+    assert.deepStrictEqual(sent.sort(), [['Ears', true, 'bool'], ['Outfit', 2, 'int']]);
+    // Makro
+    sent.length = 0; app.game.osc.params = { Outfit: 1 };
+    await app.macros.run('preset Party');
+    for (let i = 0; i < 20 && !sent.length; i++) await U.sleep(10);
+    assert.ok(sent.some(x => x[0] === 'Outfit' && x[1] === 2), 'Makro-Schritt preset');
+    await assert.rejects(post('preset_apply', { name: 'Gibtsnicht' }), /gibt es für diesen Avatar nicht/);
+    // gleicher Name überschreibt, Export/Import ohne intime Parameter
+    r = await post('preset_save', { name: 'PARTY' }); assert.strictEqual(r.presets.length, 1);
+    const ex = await post('preset_export');
+    ex.presets[0].values['OGB/Socket/X/DepthOthers'] = { v: 1, t: 'float' }; ex.presets[0].values.Bad = { v: 'x', t: 'float' };
+    r = await post('preset_import', { json: JSON.stringify(ex) });
+    assert.ok(/1 Preset/.test(r.msg) && r.presets.length === 2);
+    assert.ok(!('OGB/Socket/X/DepthOthers' in app.presets.all()[A][1].values) && !('Bad' in app.presets.all()[A][1].values));
+    await assert.rejects(post('preset_import', { json: '{kaputt' }), /JSON/);
+    r = await post('preset_delete', { id: r.presets[1].id }); assert.strictEqual(r.presets.length, 1);
+    // ohne Avatar
+    app.params.list = () => ({ current: '', avatar: null, params: [] });
+    await assert.rejects(post('preset_save', { name: 'x' }), /Kein getragener Avatar/);
+    app.tools.stop();
+});
+
+test('5.0: Komfort – Schlafmodus (Status, Chatbox, Spielzeug, Parameter, Wecker), Pausen-Hinweis, Puls-Warnung mit Abklingzeit', async () => {
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-50c-')) } });
+    app.game.osc.stopListen(); app.comfort.stop();
+    const st = [], chat = [], par = [], alerts = []; let stopped = 0;
+    app.tools.setStatus = async (s, d) => { st.push([s, d]); };
+    app.game.osc.chatbox = async t => { chat.push(t); }; app.game.osc.sendParam = async (n, v) => { par.push([n, v]); };
+    app.tools.alert = (a, b) => alerts.push(a + ' ' + b);
+    if (app.toys) app.toys.stopAll = async () => { stopped++; };
+    const post = (act, d) => app.post(Object.assign({ act }, d || {}), {});
+    await assert.rejects(post('comfort_cfg', { sleep_param: 'bad name!' }), /Parameter/);
+    await post('comfort_cfg', { sleep_param: 'Sleep', sleep_status: 'busy', break_on: '1', break_min: '30', hr_on: '1', hr_high: '120', hr_secs: '10', hr_cooldown: '5' });
+    let r = await post('comfort_sleep', { on: '1', wake: '60' });
+    assert.ok(r.sleeping && /Wecker in 60 min/.test(r.msg));
+    assert.deepStrictEqual(st[0], ['busy', 'Schläft 💤']); assert.ok(chat[0].includes('schläft') && app.game.suppressRotator && par[0][0] === 'Sleep' && par[0][1] === true);
+    if (app.toys) assert.strictEqual(stopped, 1);
+    // Wecker
+    await app.comfort.tick(Date.now() + 61 * 60000);
+    assert.ok(!app.comfort.sleep && alerts.some(a => /Guten Morgen/.test(a)) && st.pop()[0] === 'active' && par.pop()[1] === false && !app.game.suppressRotator);
+    // Pausen-Hinweis nach 30 min Spielzeit
+    app.game.state.running = true; const t0 = Date.now();
+    await app.comfort.tick(t0); alerts.length = 0;
+    await app.comfort.tick(t0 + 29 * 60000); assert.strictEqual(alerts.length, 0);
+    await app.comfort.tick(t0 + 31 * 60000); assert.ok(/Pause/.test(alerts[0]));
+    await app.comfort.tick(t0 + 32 * 60000); assert.strictEqual(alerts.length, 1, 'nicht sofort wieder');
+    // Puls-Warnung erst nach 10 s, dann 5 min Ruhe
+    if (app.heart) {
+        alerts.length = 0; app.heart.push(130, 'osc');
+        await app.comfort.tick(t0 + 40 * 60000); assert.strictEqual(alerts.length, 0);
+        app.heart.push(131, 'osc'); await app.comfort.tick(t0 + 40 * 60000 + 11000); assert.ok(/Puls hoch.*131/.test(alerts[0]));
+        app.heart.push(132, 'osc'); await app.comfort.tick(t0 + 40 * 60000 + 60000); assert.strictEqual(alerts.length, 1, 'Abklingzeit');
+    }
+    app.tools.stop();
+});
+
+test('5.0: OBS – obs-websocket 5 (Passwort-Challenge), Szenen-Liste, Szene je Welt, Panik-Szene, Textquelle, falsches Passwort', async () => {
+    const { WebSocketServer } = require('ws');
+    const { sha } = require('../backend/obs');
+    const PW = 'geheim', salt = 'c2FsdA==', challenge = 'Y2hhbA==';
+    const wss = new WebSocketServer({ port: 0 }); await new Promise(r => wss.on('listening', r));
+    const reqs = [];
+    wss.on('connection', ws => {
+        ws.send(JSON.stringify({ op: 0, d: { obsWebSocketVersion: '5.5.0', rpcVersion: 1, authentication: { salt, challenge } } }));
+        ws.on('message', m => { const j = JSON.parse(String(m));
+            if (j.op === 1) { if (j.d.authentication !== sha(sha(PW + salt) + challenge)) return ws.close(4009); return ws.send(JSON.stringify({ op: 2, d: { negotiatedRpcVersion: 1 } })); }
+            if (j.op === 6) { reqs.push([j.d.requestType, j.d.requestData]);
+                const data = j.d.requestType === 'GetSceneList' ? { scenes: [{ sceneName: 'Panik' }, { sceneName: 'Club' }, { sceneName: 'Chill' }] } : {};
+                ws.send(JSON.stringify({ op: 7, d: { requestType: j.d.requestType, requestId: j.d.requestId, requestStatus: { result: true, code: 100 }, responseData: data } })); } });
+    });
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => 'enc:' + s, decrypt: s => s.replace(/^enc:/, '') }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-50o-')) } });
+    app.game.osc.stopListen();
+    const post = (act, d) => app.post(Object.assign({ act }, d || {}), {});
+    // falsches Passwort
+    await post('obs_cfg', { port: String(wss.address().port), password: 'falsch' });
+    let r = await post('obs_cfg', { on: '1' }); for (let i = 0; i < 50 && !/Passwort falsch/.test(app.obs.status().error); i++) await U.sleep(20);
+    assert.match(app.obs.status().error, /Passwort falsch/);
+    assert.ok(db.setting('obs_pw', '').startsWith('enc:'), 'Passwort verschlüsselt');
+    await post('obs_cfg', { password: PW });
+    for (let i = 0; i < 100 && !app.obs.status().connected; i++) await U.sleep(20);
+    r = await post('obs_get');
+    assert.ok(r.connected && r.scenes.join() === 'Chill,Club,Panik' && !r.error);
+    await post('obs_cfg', { rules: JSON.stringify([{ match: 'club', scene: 'Club' }, { match: '', scene: 'x' }]), panic_scene: 'Panik', text_source: 'NexusText', text_tpl: 'Puls {puls} · {welt}' });
+    assert.strictEqual(app.obs.cfg().rules.length, 1);
+    reqs.length = 0;
+    app.obs.onGameEvent({ kind: 'world_join', world_name: 'The Black Cat Club' }); await U.sleep(80);
+    assert.deepStrictEqual(reqs.pop(), ['SetCurrentProgramScene', { sceneName: 'Club' }]);
+    app.obs.onGameEvent({ kind: 'world_join', world_name: 'Home' }); await U.sleep(50); assert.strictEqual(reqs.length, 0, 'keine Regel → keine Szene');
+    assert.strictEqual(await app.obs.onPanic(), 'OBS-Szene „Panik“');
+    reqs.length = 0; await post('obs_text');
+    assert.strictEqual(reqs[0][0], 'SetInputSettings'); assert.strictEqual(reqs[0][1].inputName, 'NexusText'); assert.match(reqs[0][1].inputSettings.text, /^Puls /);
+    app.nsfw.private = true; reqs.length = 0; await app.obs.updateText(true); assert.strictEqual(reqs.length, 0, 'Privat-Modus sendet nichts'); app.nsfw.private = false;
+    await post('obs_cfg', { on: '0' }); assert.ok(!app.obs.status().connected);
+    app.obs.stop(); app.tools.stop(); wss.close();
+});
+
 (async () => {
     let ok = 0;
     for (const [name, fn] of tests) {
@@ -3405,3 +3526,84 @@ test('4.4: Plugin-Marktplatz – signierter Katalog, Schlüssel merken, Prüfsum
     console.log(ok + '/' + tests.length + ' Tests bestanden');
     process.exit(process.exitCode || 0);
 })();
+
+test('NSFW 3.0: Funscript (Vibration/Stroker), Spiele, Aufnahme & Wiedergabe, Profile je Avatar, Welt-Brücke, Musik, Safeword & Zeitlimit', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWNER = 'usr_' + 'e'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-n3-')) } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    grant18(app);
+    const t = app.toys, p3 = t.play3, sent = [];
+    t.ws = { readyState: 1, send() {} };
+    t.req = async m => { sent.push(m); return {}; };
+    t.addDevice({ DeviceIndex: 0, DeviceName: 'Vib', DeviceMessageTimingGap: 0, DeviceMessages: { ScalarCmd: [{ StepCount: 20, ActuatorType: 'Vibrate' }], LinearCmd: [{ StepCount: 100 }] } });
+    await U.sleep(50);
+    const d = t.devices.get(0), post = (act, x) => app.post(Object.assign({ act }, x || {}), {});
+    // Funscript
+    await assert.rejects(post('toys3_fun_load', { name: 'x', json: '{"actions":[{"at":0,"pos":0}]}' }), /zu wenige/);
+    const fs1 = JSON.stringify({ actions: [{ at: 0, pos: 0 }, { at: 250, pos: 100 }, { at: 1250, pos: 0 }, { at: 1500, pos: 0 }] });
+    let r = await post('toys3_fun_load', { name: 'Demo', json: fs1 });
+    assert.ok(r.fun.loaded && r.fun.name === 'Demo');
+    p3.funStart(0, false); const s0 = p3.fun.start;
+    assert.strictEqual(p3.funLevel(s0 + 100), 1, 'volle Länge in 0,25 s = 100 %');
+    assert.strictEqual(p3.funLevel(s0 + 600), 0.25, '100 in 1 s = 25 %');
+    const lin = p3.funLinear(s0 + 100); assert.strictEqual(lin.position, 1); assert.strictEqual(lin.duration, 150);
+    assert.strictEqual(p3.funLevel(s0 + 2000), 0, 'ohne Wiederholung endet das Funscript'); assert.strictEqual(p3.fun, null);
+    p3.funStart(0, true); assert.strictEqual(p3.funLevel(p3.fun.start + 1600), 1, 'Wiederholung beginnt von vorn');
+    p3.funStop();
+    // Spiele
+    let g = p3.startGame('dice', { rounds: 2 }); assert.strictEqual(g.rounds, 2);
+    const lv1 = p3.gameLevel(d, Date.now()); assert.ok(lv1 >= 0.15 && lv1 <= 1 && p3.game.rolls.length === 1);
+    p3.game.next = 0; p3.gameLevel(d, Date.now()); p3.game.next = 0; assert.strictEqual(p3.gameLevel(d, Date.now()), 0); assert.strictEqual(p3.game, null, 'nach allen Runden vorbei');
+    assert.strictEqual(p3.lastGame.rolls.length, 2);
+    p3.startGame('edge', { rounds: 2, ramp: 20 });
+    p3.game.start = Date.now() - 20000;
+    r = await post('toys3_hold'); assert.match(r.msg, /100 %/); assert.strictEqual(r.game.score, 100);
+    await assert.rejects(post('toys3_hold'), /keine Edging-Runde/, 'Pause nach dem Halten');
+    p3.game.pauseUntil = 0; t.lust.v = 0.98; assert.strictEqual(p3.gameLevel(d, Date.now()), 0); assert.ok(p3.game.log.pop().lost, 'zu weit → Runde verloren'); t.lust.v = 0;
+    await post('toys3_game_stop'); assert.strictEqual(p3.game, null);
+    assert.throws(() => p3.startGame('poker'), /Unbekanntes Spiel/);
+    // Aufnahme & Wiedergabe
+    p3.recStart(); for (let i = 0; i < 20; i++) p3.sample({ Vib: i < 10 ? 0.5 : 1 });
+    r = await post('toys3_rec_stop', { name: 'Test' }); assert.strictEqual(r.rec.list.length, 1); assert.strictEqual(r.rec.list[0].secs, 2);
+    p3.recStart(); assert.throws(() => p3.recStop(''), /zu kurz/);
+    r = await post('toys3_play', { id: r.rec.list[0].id });
+    assert.ok(Math.abs(p3.playLevel(d, p3.play.start + 50) - 0.5) < 0.01); assert.strictEqual(p3.playLevel(d, p3.play.start + 1500), 1);
+    assert.strictEqual(p3.playLevel(d, p3.play.start + 5000), 0); assert.strictEqual(p3.play, null, 'Wiedergabe endet');
+    await post('toys3_rec_delete', { id: p3.recordings()[0].id }); assert.strictEqual(p3.recordings().length, 0);
+    // Profile je Avatar
+    const AV = 'avtr_' + '1'.repeat(8) + '-2222-3333-4444-555555555555';
+    await assert.rejects(post('toys3_profile_save', { avatar: 'kaputt' }), /Kein getragener Avatar/);
+    t.saveCfg({ links_on: '1' }); await post('toys3_profile_save', { avatar: AV });
+    t.saveCfg({ links_on: '0' }); app.tools.alert = () => {};
+    assert.strictEqual(p3.onAvatar(AV), true); assert.strictEqual(t.cfg().links_on, true, 'Profil beim Avatarwechsel geladen');
+    assert.strictEqual(p3.onAvatar(AV), false, 'gleicher Avatar → nichts');
+    // Welt-Brücke
+    assert.strictEqual(t.onWorldEvent({ ts: Date.now() / 1000, detail: 'pulse 0.9 2' }), false, 'ohne Freigabe nichts');
+    await post('toys3_cfg', { world_bridge: '1', world_max: '50' });
+    assert.strictEqual(t.onWorldEvent({ ts: Date.now() / 1000 - 60, detail: 'pulse 0.9 2' }), false, 'alte Log-Zeilen zählen nicht');
+    assert.strictEqual(t.onWorldEvent({ ts: Date.now() / 1000, detail: 'pulse 0.9 2' }), true);
+    assert.strictEqual(p3.level(d), 0.5, 'Obergrenze der Welt');
+    t.onWorldEvent({ ts: Date.now() / 1000, detail: 'stop' }); assert.strictEqual(p3.level(d), null);
+    const ev = new LogParser().feed('2026.11.27 13:00:00 Log        -  [NexusToy] pulse 0.6 3\r');
+    assert.strictEqual(ev[0].kind, 'nexus_toy'); assert.strictEqual(ev[0].detail, 'pulse 0.6 3');
+    // Musik
+    await post('toys3_cfg', { music_on: '1', music_gain: '200' }); await post('toys3_music', { lv: '0.3' });
+    assert.ok(Math.abs(p3.level(d) - 0.6) < 1e-9, 'Lautstärke × Verstärkung');
+    // stopAll räumt alles ab
+    p3.funStart(0, true); await t.stopAll();
+    assert.ok(!p3.fun && !p3.game && !p3.play && !p3.world && !p3.musicActive());
+    // Fernsteuerung: Safeword und Zeitlimit
+    await post('tremote_cfg', { recv_on: '1', limit_min: '5' });
+    assert.strictEqual(app.toyremote.cfg().limit_min, 5);
+    app.toyremote.recvSince = Date.now() - 6 * 60000; app.toyremote.tick();
+    assert.strictEqual(app.toyremote.cfg().recv_on, false, 'Zeitlimit schaltet Empfang aus');
+    await post('tremote_cfg', { recv_on: '1' }); const nStop = sent.filter(m => m.StopAllDevices).length;
+    r = await post('tremote_safeword'); assert.match(r.msg, /Safeword/);
+    assert.strictEqual(app.toyremote.cfg().recv_on, false); assert.ok(sent.filter(m => m.StopAllDevices).length > nStop, 'alles gestoppt');
+    app.tools.stop(); app.toyremote.stop && app.toyremote.stop();
+});

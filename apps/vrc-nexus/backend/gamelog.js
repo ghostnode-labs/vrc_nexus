@@ -41,6 +41,7 @@ const P = {
     auth: new RegExp('User Authenticated: (.+?) \\(' + USR + '\\)'),
     notification: new RegExp('Received Notification: <Notification from username:(.*?), sender user id:' + USR + '.*?of type:\\s*(\\w+)'),
     quit: /VRCApplication: (?:OnApplicationQuit|HandleApplicationQuit)/,
+    nexustoy: /\[NexusToy\]\s+(pulse|set|stop)(?:\s+([\d.]+))?(?:\s+([\d.]+))?/i,   // NSFW 3.0: Welt-Brücke (Udon Debug.Log)
 };
 
 class SessionState {
@@ -107,6 +108,7 @@ class LogParser {
                 return [this.ev(t, kind, { player_id: uid, player_name: name })];
             }
         }
+        if ((p = P.nexustoy.exec(msg))) return [this.ev(t, 'nexus_toy', { detail: [p[1].toLowerCase(), p[2] || '', p[3] || ''].join(' ') })];   // wird nicht gespeichert
         if ((p = P.avatar.exec(msg))) {
             const who = p[1].trim(), av = p[2].trim();
             if (st.displayName && who === st.displayName) { st.avatar = av; return [this.ev(t, 'avatar', { player_name: who, detail: av })]; }

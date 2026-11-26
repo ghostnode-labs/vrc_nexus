@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.0.0",
+  "title": "Presets, comfort, OBS & creator tools",
+  "body": "- 🎭 **Avatar presets** under OSC: save the current state of the worn avatar (outfit, hair, colours …) and load it with one click – per avatar, up to 30 presets, export/import as JSON, also as a macro step (`preset Name`). VRChat's own and intimate parameters are never stored\n- 🌙 **Comfort**: sleep mode with one click (status, chatbox text with rotation paused, toys stopped, optional avatar parameter, alarm), friendly break reminders after long sessions and heart-rate warnings (too high / too low for a while, with cooldown)\n- 🎥 **OBS** (Windows): built-in obs-websocket 5 client without extra packages – scene per world, panic scene, live text source with chatbox placeholders; the password is stored encrypted and nothing is sent in private mode\n- 🧰 **Unity tools for creators** (`apps/unity-tools`): an editor window that checks the parameter budget and adds the VRC Nexus parameters to an avatar, plus an UdonSharp building block for worlds\n- 🔞 ***"
+ },
+ {
   "version": "4.4.2",
   "title": "Safer server switch",
   "body": "- The app only switches to the new domain when the GhostNode services really answer there (signed marketplace catalog, relay health) – a default page or a website still in setup no longer counts"

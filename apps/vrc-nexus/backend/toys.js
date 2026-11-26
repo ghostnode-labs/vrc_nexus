@@ -57,6 +57,7 @@ const yes = v => v === true || v === '1' || v === 1 || v === 'true';
 
 class Toys {
     constructor(app) {
+        this.play3 = new (require('./toyplay').ToyPlay)(app, this);   // NSFW 3.0
         this.app = app; this.ws = null; this.id = 1; this.wait = new Map(); this.devices = new Map(); this.state = 'aus'; this.error = '';
         this.level = new Map(); this.sentAt = 0; this.pending = null; this.lastParam = 0;
         this.zones = { plugs: {}, sockets: {}, touch: {} }; this.pvals = {}; this.linkSent = new Map(); this.linkLevel = new Map();
@@ -392,8 +393,10 @@ class Toys {
             const rv = Math.round(cur * d.rot[0].steps) / d.rot[0].steps, key = rv + '|' + cw;
             if (key !== d.rotKey || now) { d.rotKey = key; msgs.push({ RotateCmd: { DeviceIndex: d.index, Rotations: d.rot.map(r => ({ Index: r.index, Speed: rv, Clockwise: cw })) } }); }
         }
-        if (d.lin.length && cur <= 0.02 && d.linOn) { d.linOn = false; msgs.push({ StopDeviceCmd: { DeviceIndex: d.index } }); }
-        if (d.lin.length && cur > 0.02 && t >= d.linNext) {
+        const fl = d.lin.length && this.play3.fun ? this.play3.funLinear(t) : null;   // NSFW 3.0: Stroker folgen dem Funscript
+        if (fl) { if (fl.key !== d.funKey && this.consent !== 'red') { d.funKey = fl.key; d.linOn = true; msgs.push({ LinearCmd: { DeviceIndex: d.index, Vectors: d.lin.map(l => ({ Index: l.index, Duration: fl.duration, Position: Math.round(fl.position * 100) / 100 })) } }); } }
+        else if (d.lin.length && cur <= 0.02 && d.linOn) { d.linOn = false; msgs.push({ StopDeviceCmd: { DeviceIndex: d.index } }); }
+        if (!fl && d.lin.length && cur > 0.02 && t >= d.linNext) {
             d.linOn = true;   // T4/T5: Stärke → Hubtempo, im eingestellten Bereich
             const dur = Math.round(1600 - 1350 * cur);
             d.linPos = d.linPos > 0.5 ? 0 : 1;
@@ -418,6 +421,7 @@ class Toys {
     }
     async stopAll() {
         this.level.clear(); this.cur.clear(); this.rule = {}; this.linkSent.clear(); this.pat = null; this.motorOv.clear(); this.manual.clear(); this.scene = null;
+        if (this.play3) this.play3.stopAll();   // NSFW 3.0: Funscript/Spiel/Wiedergabe/Welt aus
         for (const d of this.devices.values()) { d.sentKey = ''; d.rotKey = ''; }
         if (this.cfg().links_on) this.saveCfg({ links_on: false });   // Not-Aus: Verknüpfungen erst wieder von Hand einschalten
         if (this.ws && this.ws.readyState === 1) await this.req({ StopAllDevices: {} }).catch(() => {});
@@ -434,6 +438,7 @@ class Toys {
 
     // ---------- Avatar-Parameter (OSC) ----------
     onOsc(address, args) {
+        if (address === '/avatar/change' && args && args.length) this.play3.onAvatar(String(args[0]));   // NSFW 3.0: Profil je Avatar
         const c = this.cfg();
         if (!address.startsWith('/avatar/parameters/')) return;
         const name = address.slice(19), v = args[0];
@@ -598,7 +603,7 @@ class Toys {
         if (this.app.nsfw && !this.app.nsfw.access().features.includes('toys')) { this.pat = null; return; }
         const pl = this.patternLevel();
         const simple = c.pcs.on || c.heart.on || c.voice.on;
-        if (!c.links_on && pl === null && !simple && !this.sceneLevel()) return;
+        if (!c.links_on && pl === null && !simple && !this.sceneLevel() && !this.play3.active()) return;
         const fresh = Date.now() - Math.max(1, c.idle_stop || 3) * 1000;
         for (const d of this.devices.values()) {
             const links = c.links_on ? c.links[d.name] : null, byPat = pl !== null && (this.pat.device === 'all' || this.pat.device === String(d.index));
@@ -606,13 +611,16 @@ class Toys {
             if (links) this.linkLevel.set(d.name, Math.round(lv * 100));
             if (byPat) lv = Math.max(lv, pl);
             if (simple) lv = Math.max(lv, this.simpleSources(d));
-            if (!links && !byPat && !simple) continue;
+            const x3 = this.play3.level(d);   // NSFW 3.0: Funscript, Spiele, Aufnahme, Welt, Musik
+            if (x3 !== null) lv = Math.max(lv, x3);
+            if (!links && !byPat && !simple && x3 === null) continue;
             if (this.manual.has(d.index) && Date.now() - this.manual.get(d.index).at < 1500) lv = Math.max(lv, this.manual.get(d.index).lv);
             const last = this.linkSent.get(d.index);
             if (last !== undefined && Math.abs(last - lv) < 0.02) continue;
             this.linkSent.set(d.index, lv);
             this.set(String(d.index), lv).catch(() => {});
         }
+        if (this.play3.rec && Date.now() - (this.recAt || 0) >= 100) { this.recAt = Date.now(); this.play3.sample(Object.fromEntries([...this.devices.values()].map(d => [d.name, this.linkSent.get(d.index) || 0]))); }
     }
     sceneLevel() { return this.scene && Date.now() < this.scene.until; }
     flush() {
@@ -734,8 +742,16 @@ class Toys {
         if (file) for (const p of file.params) names.add(p.name);
         return Object.assign(H.detect([...names], osc.params || {}), { avatar: (file && file.current) || osc.avatarId || '', params: names.size, ogb_enabled_sent: !!this.ogbOn });
     }
+    /** NSFW 3.0: Welt-Brücke – nur frische Zeilen (kein Nachspielen alter Logs), Consent und Freigabe gelten */
+    onWorldEvent(e) {
+        if (Math.abs(Date.now() / 1000 - Number(e.ts)) > 15) return false;
+        if (this.app.nsfw && !this.app.nsfw.access().features.includes('toys')) return false;
+        const [cmd, a, b] = String(e.detail || '').split(' ');
+        return this.play3.onWorld(cmd, a, b);
+    }
     async action(act, input) {
         if (this.app.nsfw) this.app.nsfw.need('toys');
+        if (act.startsWith('toys3_')) return await this.play3.action(act, input);
         switch (act) {
             case 'toys_status': return this.status();
             case 'toys_check': return Object.assign(this.status(), { check: this.avatarCheck() });

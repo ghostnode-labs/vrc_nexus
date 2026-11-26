@@ -47,7 +47,7 @@ class NexusApp {
         this.settings = new Settings(opts.db);
         this.vrc = new Vrc(opts.db, opts.crypt);
         this.x = new Extra(this.vrc); this.x.settings = this.settings;
-        this.game = new GameLog(opts.db, { onEvent: e => { if (this.tools) this.tools.onGameEvent(e); if (this.auto) this.auto.onGameEvent(e); if (this.plugins) this.plugins.onGameEvent(e); if (this.warn) this.warn.onGameEvent(e); if (opts.onGameEvent) opts.onGameEvent(e); } });
+        this.game = new GameLog(opts.db, { onEvent: e => { if (this.tools) this.tools.onGameEvent(e); if (this.auto) this.auto.onGameEvent(e); if (this.plugins) this.plugins.onGameEvent(e); if (this.warn) this.warn.onGameEvent(e); if (this.obs) this.obs.onGameEvent(e); if (this.toys && e.kind === 'nexus_toy') this.toys.onWorldEvent(e); if (opts.onGameEvent) opts.onGameEvent(e); } });
         this.tr = new Translator(opts.db, opts.crypt, this.settings);
         this.link = new DashLink(this);
         this.updater = new Updater(this);
@@ -61,6 +61,9 @@ class NexusApp {
         if ((opts.oscquery || opts.mobile) && !process.env.NEXUS_NO_SERVER_CHECK) { const sv = require('./servers'), chk = () => sv.check().catch(() => {}); chk(); const t2 = setInterval(chk, 900000); if (t2.unref) t2.unref(); }
         this.cam = new Camera(this);
         this.macros = new Macros(this);
+        this.presets = new (require('./presets').Presets)(this);   // 5.0
+        this.comfort = new (require('./comfort').Comfort)(this);   // 5.0: Schlafmodus, Pausen, Puls-Warnungen
+        this.obs = opts.mobile ? null : new (require('./obs').Obs)(this, opts.crypt);   // 5.0: OBS-Anbindung
         this.auto = new Automation(this);
         this.home = new Home(this);
         this.speech = opts.mobile ? null : new Speech(this, opts.crypt);
@@ -246,7 +249,7 @@ class NexusApp {
             if (act === 'hud_state') return this.hudState();
             if (act.startsWith('nsfw_')) return await this.nsfw.action(act, input);
             if (act.startsWith('admin_')) return await this.admin.action(act, input);
-            if (act.startsWith('toys_')) { if (!this.toys) throw new UserError('Nur in der Windows-App.'); return await this.toys.action(act, input); }
+            if (act.startsWith('toys_') || act.startsWith('toys3_')) { if (!this.toys) throw new UserError('Nur in der Windows-App.'); return await this.toys.action(act, input); }
             if (act.startsWith('tremote_')) { if (!this.toyremote) throw new UserError('Nur in der Windows-App.'); return await this.toyremote.action(act, input); }
             if (act.startsWith('remote_')) { if (!this.remote) throw new UserError('Nur in der Windows-App.'); return this.remote.action(act, input); }
             // Dashboard-Verbindung & Cloud-Sicherung: nur für den Besitzer
@@ -285,6 +288,9 @@ class NexusApp {
             if (act.startsWith('chat_')) { if (!this.chat) throw new UserError('Der verschlüsselte Chat kommt für Android später.'); return await this.chat.action(act, input, files); }
             if (act.startsWith('warn_')) return await this.warn.action(act, input);
             if (act.startsWith('pulse_')) return await this.pulse.action(act, input);
+            if (act.startsWith('preset_')) return await this.presets.action(act, input);
+            if (act.startsWith('comfort_')) return await this.comfort.action(act, input);
+            if (act.startsWith('obs_')) { if (!this.obs) throw new UserError('OBS gibt es nur in der Windows-App.'); return await this.obs.action(act, input); }
             if (act.startsWith('hr_')) { if (!this.heart) throw new UserError('Den Puls gibt es nur in der Windows-App.'); return await this.heart.action(act, input); }
             if (act.startsWith('cm_')) { if (!this.chatmods) throw new UserError('Chatbox-Module gibt es nur in der Windows-App.'); return await this.chatmods.action(act, input); }
             if (act.startsWith('backup_')) return await this.backup.action(act, input);

@@ -15,7 +15,7 @@
  */
 const { str, int, cut, sleep, UserError } = require('./util');
 
-const KINDS = ['webhook', 'chatbox', 'param', 'toggle', 'wait', 'input', 'cam', 'status', 'avatar', 'rotator', 'typing', 'speak', 'notify'];
+const KINDS = ['webhook', 'chatbox', 'param', 'toggle', 'wait', 'input', 'cam', 'status', 'avatar', 'rotator', 'typing', 'speak', 'notify', 'preset'];
 const yes = v => /^(1|an|on|ja|true|ein)$/i.test(str(v).trim());
 
 function parse(script) {
@@ -103,6 +103,7 @@ class Macros {
                         break;
                     }
                     case 'notify': this.app.tools.alert('VRC Nexus', g.fill(s.arg, vars)); break;
+                    case 'preset': await this.app.presets.apply(s.arg); break;   // 5.0: Avatar-Preset laden
                 }
                 n++;
             }

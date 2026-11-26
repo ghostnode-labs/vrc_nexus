@@ -197,6 +197,7 @@ body.menu-icons .vx-menu .vx-tabbtn .vx-badge, body.mobile .vx-menu .vx-tabbtn .
 
 /* ---------- Parameter & Kamera ---------- */
 .nc-pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 6px; margin-top: 8px; }
+.nc-presets5 { margin: 8px 0; } .nc-presets5 .nc-row { gap: 6px; flex-wrap: wrap; margin: 4px 0; } .nc-preset { display: inline-flex; gap: 2px; } .nc-presets5 input[type=text] { flex: 1 1 200px; max-width: 320px; }
 .nc-prow { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line, var(--line)); background: rgba(var(--ink-rgb), 0.02); }
 .nc-prow.builtin { opacity: 0.6; }
 .nc-pname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1324,3 +1325,5 @@ body.mobile .hm-tab em { display: none; }
 .n2-sp { flex: 1; }
 .nc-card > .ns-bar { flex: none; margin: 6px 0; }
 .n2-check { margin: 8px 0; padding-left: 4px; list-style: none; } .n2-check li { margin: 3px 0; font-size: .86rem; }
+.cf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 8px 0; } .cf-txt span { display: block; } .cf-txt input, .cf-num input { width: 100%; } .cf-num input { max-width: 110px; }
+.ob-rules { width: 100%; margin: 6px 0; } .ob-rules td { padding: 3px; } .ob-rules input, .ob-rules select { width: 100%; }

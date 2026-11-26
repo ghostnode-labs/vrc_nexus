@@ -2,6 +2,19 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 5.0.0 – NSFW 3.0
+
+NSFW 2.0 was skipped – everything planned for it is in 3.0. New tab **✨ Extras** (toys unlocked, Intiface connected). The consent light, panic button, private mode and per-device limits apply to every new source.
+
+- 📜 **Funscript player:** load a `.funscript` – vibration follows the movement speed (full stroke in 0.25 s = 100 %), strokers (LinearCmd) follow the positions directly; start, stop, loop. Inverted scripts are supported.
+- 🎲 **Game modes:** *Dice* (random intensity and duration per round), *Roulette* (one random device per round), *Edging game* (intensity rises – press **✋ Hold!** in time for points; reaching the edge (lust ≥ 97 %) loses the round). Last result is shown.
+- ⏺ **Record & playback:** records what your devices actually do (10 values per second and device, up to 10 minutes, 10 recordings) and plays it back later – another device plays the first track.
+- 🧸 **Profiles per avatar:** save links, PCS, heart, voice, OGB and device settings for the worn avatar – loaded automatically when you switch to that avatar.
+- 🌍 **World bridge:** worlds with the VRC Nexus UdonSharp block (`apps/unity-tools/World`) write `[NexusToy] pulse 0.6 2` / `set` / `stop` into the VRChat log; Nexus reacts only if you switched the bridge on, caps it with your own maximum (default 60 %) and ignores old log lines.
+- 🎵 **Music:** system audio (loopback, nothing recorded or sent – only the volume is measured) drives toys, with gain and device choice.
+- 🛑 **Remote 2.0:** **Safeword** button (everything off at once, receiving off, partner is rejected) and a **time limit** for receiving (minutes, 0 = none).
+- 🧰 **Unity editor tool** (`apps/unity-tools/Editor`): adds `NX/Toy`, `NX/Lust`, `NX/Consent` (local or synced, budget check), detects SPS plugs/sockets, OGB and PCS, lists FX layers, warns about mixed Write Defaults and can create an `NX Consent` FX layer for your own traffic-light indicator.
+
 ### New in 4.3.0 – Panic button: Wallpaper Engine & all-clear
 
 - 🖼 **Wallpaper Engine in the panic button:** switch to a harmless profile (e.g. "Brav"), pause the wallpaper or just mute it – Wallpaper Engine is found automatically via Steam (all libraries), or enter the path to `wallpaper64.exe`.
