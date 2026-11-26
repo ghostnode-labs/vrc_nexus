@@ -559,6 +559,56 @@ test('1.4: Stream-Bot (Twitch-Zeilen, Punkte, Befehle, Belohnungen), Cloud-Siche
     app.tools.api.stop(); sb.stop(); app.tools.stop();
 });
 
+test('5.4: Client-API über WebSocket – Anmeldung, Status, Aktionen, Ereignisse, Grenzen (nur lokal)', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { frame } = require('../backend/wsapi');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
+    app.game.osc.stopListen();
+    app.settings.save({ 'int.api': true, 'int.api_port': 17993 });
+    app.tools.api.apply();
+    await U.sleep(100);
+    const tok = app.settings.get('int.api_token');
+    const open = q => new Promise((ok, bad) => { const ws = new WebSocket('ws://127.0.0.1:17993/ws' + q); const msgs = []; ws.onmessage = e => msgs.push(JSON.parse(e.data)); ws.onopen = () => ok({ ws, msgs }); ws.onerror = () => bad(new Error('WS-Fehler')); });
+    const wait = async (msgs, pred) => { for (let i = 0; i < 60; i++) { const m = msgs.find(pred); if (m) return m; await U.sleep(50); } throw new Error('keine Antwort'); };
+    try {
+        // ohne Schlüssel: nur hello, sonst Hinweis
+        const a = await open('');
+        const w = await wait(a.msgs, m => m.event === 'welcome');
+        assert.strictEqual(w.data.authed, false); assert.ok(w.data.topics.includes('heart'));
+        a.ws.send(JSON.stringify({ id: 1, op: 'state' }));
+        assert.match((await wait(a.msgs, m => m.id === 1)).error, /anmelden/);
+        a.ws.send(JSON.stringify({ id: 2, op: 'auth', token: tok }));
+        assert.strictEqual((await wait(a.msgs, m => m.id === 2)).ok, true);
+        a.ws.send(JSON.stringify({ id: 3, op: 'state' }));
+        const st = await wait(a.msgs, m => m.id === 3);
+        assert.ok(st.ok && st.result.version && st.result.game);
+        a.ws.send(JSON.stringify({ id: 4, op: 'action', action: 'gibtsnicht' }));
+        assert.match((await wait(a.msgs, m => m.id === 4)).error, /Unbekannte Aktion/);
+        a.ws.send(JSON.stringify({ id: 5, op: 'subscribe', topics: ['game', 'heart', 'quatsch'] }));
+        assert.deepStrictEqual((await wait(a.msgs, m => m.id === 5)).result.topics.sort(), ['game', 'heart']);
+        await wait(a.msgs, m => m.event === 'game');
+        app.game.state.worldName = 'Testwelt'; app.game.state.running = true;
+        const ev = await wait(a.msgs, m => m.event === 'game' && m.data.world === 'Testwelt');
+        assert.strictEqual(ev.data.running, true);
+        a.ws.send('kein json');
+        await wait(a.msgs, m => m.error === 'Ungültiges JSON.');
+        a.ws.close();
+        // falscher Schlüssel → Verbindung zu
+        const b = await open('?token=falsch');
+        const closed = new Promise(r => { b.ws.onclose = r; });
+        b.ws.send(JSON.stringify({ id: 1, op: 'auth', token: 'falsch' }));
+        await closed;
+        // Browser-Seiten (Origin) und unmaskierte Frames werden abgewiesen
+        const net = require('net');
+        const raw = (head, extra) => new Promise(r => { const c = net.connect(17993, '127.0.0.1', () => { c.write(head); if (extra) setTimeout(() => c.write(extra), 50); }); let d = ''; c.on('data', x => { d += x.toString('latin1'); }); c.on('close', () => r(d)); setTimeout(() => { c.destroy(); r(d); }, 800); });
+        const hs = o => 'GET /ws?token=' + tok + ' HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n' + (o || '') + '\r\n';
+        assert.match(await raw(hs('Origin: https://boese.example\r\n')), /403/);
+        const r2 = await raw(hs(), frame(1, Buffer.from('{"op":"ping"}')));   // Server-Frame-Form = unmaskiert → Protokollfehler
+        assert.match(r2, /101 Switching/); assert.ok(r2.includes('\x88'), 'Close-Frame nach unmaskierter Nachricht');
+    } finally { app.tools.api.stop(); app.tools.stop(); }
+});
+
 test('1.8: Chatbox-Module (Status, Zeit, Wetter, Rechner, Netzwerk, Twitch, Puls, VR/Desktop)', async () => {
     const http = require('http');
     // Nachbildungen: Open-Meteo (Wetter + Orte), decapi.me (Twitch), Pulsoid

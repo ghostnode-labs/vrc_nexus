@@ -603,6 +603,7 @@
                 + '<div class="set-row"><div><b>Port</b></div><input type="number" id="sdPort" value="' + s['int.api_port'] + '"></div>'
                 + '<div class="set-row"><div><b>Zugangsschlüssel</b><div class="nx-hint">Nicht weitergeben – damit kann man deinen Status ändern und Chatbox-Nachrichten senden.</div></div><div class="nx-row" style="margin:0"><input type="text" readonly value="' + esc(s['int.api_token']) + '" id="sdTok" style="flex:1">'
                 + '<button type="button" class="btn btn-sm" id="sdCopy">📋</button><button type="button" class="btn btn-sm" id="sdNew" title="Neuen Schlüssel erzeugen">♻</button></div></div>'
+                + '<div class="set-row"><div><b>' + esc(T('Client-API (WebSocket)')) + '</b><div class="nx-hint">' + esc(T('Für eigene Skripte, Bots und Overlays: Befehle senden und Live-Ereignisse (Welt, Puls, Freunde …) empfangen. Nur vom eigenen PC erreichbar.')) + '</div></div><div class="nx-row" style="margin:0"><code style="flex:1">ws://127.0.0.1:' + esc(s['int.api_port']) + '/ws</code><button type="button" class="btn btn-sm" id="sdDocs">' + esc(T('Doku')) + ' ↗</button></div></div>'
                 + '<h3 style="margin-top:16px">Aktionen im Plugin</h3><ul class="vx-small sd-list" style="line-height:1.7">'
                 + [['🟢', 'Status setzen', 'Join Me / Online / Ask Me / Beschäftigt, mit Text – leuchtet, wenn aktiv'], ['💬', 'Chatbox-Nachricht', 'eigener Text oder gespeicherte OSC-Vorlage'],
                     ['⚡', 'Schnelltext', 'gespeicherten Schnelltext senden – oder die letzte Nachricht erneut'], ['🎚', 'Avatar-Parameter', 'umschalten, halten oder setzen (zeigt den Zustand)'],
@@ -615,6 +616,7 @@
                     ['🥽', 'SteamVR-Overlay', 'ein/aus'], ['▶', 'VRChat starten / Instanz neu betreten', ''], ['🧭', 'VRC Nexus öffnen', 'beliebige Seite'], ['🎛', 'Drehregler (Stream Deck +)', 'Parameter, Kamera-Zoom/Belichtung']]
                     .map(([i, n, d]) => '<li>' + i + ' <b>' + n + '</b>' + (d ? ' – ' + d : '') + '</li>').join('') + '</ul>';
             const save = () => run('tools_settings_save', { data: JSON.stringify({ 'int.api': $('#sdOn').checked, 'int.api_port': $('#sdPort').value }) }, () => setTimeout(toolStreamDeck, 400)).catch(() => {});
+            if ($('#sdDocs')) $('#sdDocs').onclick = () => window.open('https://ghostnode-labs.dev/api.php#client', '_blank', 'noopener');
             $('#sdInstall').onclick = () => run('tools_streamdeck_install', {}).catch(() => {});
             $('#sdOn').onchange = save; $('#sdPort').onchange = save;
             $('#sdCopy').onclick = () => navigator.clipboard.writeText($('#sdTok').value).then(() => toast('Kopiert.'));

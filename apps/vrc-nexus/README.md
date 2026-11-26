@@ -22,6 +22,11 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.4.0 – Client API over WebSocket
+- 🔌 **Client API (WebSocket)** at `ws://127.0.0.1:<port>/ws` (same port and access key as the Stream Deck interface): send every Stream Deck action as a command and subscribe to live events – world & instance, heart rate, friends, your status, media, chatbox, notifications, warning list and avatar parameters
+- Own implementation without extra packages; only reachable from your PC, browser pages are rejected, wrong keys close the connection, size and rate limits; nothing from the 🔞 area and nothing in private mode
+- Documentation with examples (Node, Python): https://ghostnode-labs.dev/api.php – the GhostNode website also has a new **Web API** with personal API keys
+
 ### New in 5.3.0 – Community: follow, save, hashtags, discover
 - ⭐ **Follow** people from their community profile – *Following* shows only their posts; profiles show followers and following
 - 🔖 **Save** posts to your own list (*Saved*)

@@ -3,6 +3,7 @@
  * Lokale Schnittstelle (nur 127.0.0.1) für das Stream-Deck-Plugin und eigene Skripte.
  *   GET  /api/state            → Status, Freunde online, Instanz, OSC, Rotator
  *   POST /api/action  {action} → status, chatbox, preset, param, toggle, input, rotator, launch, open, rejoin, typing
+ *   WS   /ws                   → 5.4: Client-API über WebSocket (Befehle + Ereignisse), siehe wsapi.js
  * Jede Anfrage braucht den Zugangsschlüssel im Kopf „X-Nexus-Token“ (oder ?token=).
  */
 const http = require('http');
@@ -10,7 +11,7 @@ const crypto = require('crypto');
 const { str, int, UserError } = require('./util');
 
 class LocalApi {
-    constructor(tools) { this.tools = tools; this.server = null; this.port = 0; this.error = ''; }
+    constructor(tools) { this.tools = tools; this.server = null; this.port = 0; this.error = ''; this.ws = new (require('./wsapi').WsApi)(tools); }
 
     apply() {
         const s = this.tools.settings;
@@ -20,11 +21,12 @@ class LocalApi {
         this.stop();
         if (!want) return;
         this.server = http.createServer((req, res) => this.handle(req, res).catch(e => this.send(res, e instanceof UserError ? 400 : 500, { error: e.message || 'Fehler' })));
+        this.ws.attach(this.server);
         this.server.on('error', e => { this.error = e.code === 'EADDRINUSE' ? 'Port ' + want + ' ist schon belegt.' : e.message; this.server = null; this.port = 0; });
         this.server.listen(want, '127.0.0.1', () => { this.error = ''; });
         this.port = want;
     }
-    stop() { if (this.server) this.server.close(); this.server = null; this.port = 0; }
+    stop() { this.ws.stop(); if (this.server) this.server.close(); this.server = null; this.port = 0; }
     status() { return this.server ? 'läuft auf 127.0.0.1:' + this.port : this.error || 'aus'; }
 
     obsState() {

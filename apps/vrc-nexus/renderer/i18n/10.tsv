@@ -1826,3 +1826,6 @@ Aktiv	Active	Actifs	アクティブ
 Meistbeachtet	Most noticed	Les plus remarqués	注目の投稿
 Du folgst noch niemandem – im Profil einer Person auf ⭐ Folgen tippen.	You don't follow anyone yet – tap ⭐ Follow on someone's profile.	Tu ne suis encore personne – touche ⭐ Suivre sur un profil.	まだ誰もフォローしていません – プロフィールで ⭐ フォローをタップ。
 Noch nichts gemerkt – bei einem Beitrag auf 🔖 tippen.	Nothing saved yet – tap 🔖 on a post.	Rien d'enregistré – touche 🔖 sur une publication.	まだ保存はありません – 投稿の 🔖 をタップ。
+Client-API (WebSocket)	Client API (WebSocket)	API client (WebSocket)	クライアントAPI（WebSocket）
+Für eigene Skripte, Bots und Overlays: Befehle senden und Live-Ereignisse (Welt, Puls, Freunde …) empfangen. Nur vom eigenen PC erreichbar.	For your own scripts, bots and overlays: send commands and receive live events (world, heart rate, friends …). Only reachable from your own PC.	Pour tes scripts, bots et overlays : envoyer des commandes et recevoir des événements en direct (monde, pouls, amis …). Accessible uniquement depuis ton PC.	自作スクリプト・ボット・オーバーレイ向け：コマンド送信とライブイベント（ワールド、心拍、フレンド…）の受信。自分のPCからのみ接続可能。
+Doku	Docs	Doc	ドキュメント
