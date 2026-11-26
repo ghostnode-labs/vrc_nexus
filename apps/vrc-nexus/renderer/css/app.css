@@ -1391,3 +1391,11 @@ body.mobile .hm-tab em { display: none; }
 .pc-bpm { font-size: 2rem; font-weight: 800; color: #888; margin: 6px 0; } .pc-bpm.on { color: #ff5577; }
 .pc-panic { width: 100%; font-size: 1.1rem; padding: 12px; margin-bottom: 8px; }
 .pc-light .btn { font-size: 1.1rem; }
+
+/* 5.3: Community – Hashtags, Merken, Suche, Entdecken */
+.cm-tag { color: var(--accent-gold); text-decoration: none; }
+.cm-tag:hover { text-decoration: underline; }
+.cm-post .nc-link.on { color: var(--accent-cyan); }
+.cm-filter { margin: 0 0 8px; }
+.cm-inbox { border-left: 2px solid transparent; padding-left: 8px; margin-bottom: 8px; }
+.cm-inbox.new { border-left-color: var(--accent-gold); }

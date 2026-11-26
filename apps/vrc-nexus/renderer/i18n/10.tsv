@@ -65,7 +65,6 @@ Zurück zum Shop	Back to shop	Retour à la boutique	ショップに戻る
 Gemerkt	Saved	Enregistré	保存済み
 ★ Gemerkt	★ Saved	★ Enregistré	★ 保存済み
 ☆ Shop merken	☆ Save shop	☆ Enregistrer la boutique	☆ ショップを保存
-Merken	Save	Enregistrer	保存
 Nicht mehr merken	Remove from saved	Retirer des favoris	保存を解除
 ★ Gemerkt.	★ Saved.	★ Enregistré.	★ 保存しました。
 Nicht mehr gemerkt.	Removed from saved.	Retiré des favoris.	保存を解除しました。
@@ -1342,7 +1341,6 @@ Neueste VRChat-News und Patchnotes	Latest VRChat news and patch notes	Dernières
 Verknüpfungen bearbeiten	Edit shortcuts	Modifier les raccourcis	ショートカットを編集
 Du bist in keiner Gruppe.	You're not in any group.	Tu n'es dans aucun groupe.	グループに参加していません。
 Credits	Credits	Crédits	クレジット
-gemerkt	saved	enregistrés	保存済み
 Nexus Pulse ist aus.	Nexus Pulse is off.	Nexus Pulse est désactivé.	Nexus Pulseはオフです。
 Nur https-Links.	Only https links.	Liens https uniquement.	httpsリンクのみ。
 Profil-Thema	Profile theme	Thème du profil	プロフィールテーマ
@@ -1813,3 +1811,18 @@ Wald	Forest	Forêt	フォレスト
 Sonnenuntergang	Sunset	Coucher de soleil	サンセット
 keiner	none	aucun	なし
 Alles zur Uhr: Werkzeuge → Nexus Watch	Everything about the watch: Tools → Nexus Watch	Tout sur la montre : Outils → Nexus Watch	ウォッチのすべて: ツール → Nexus Watch
+Folge ich	Following	Abonnements	フォロー中
+Entdecken	Discover	Découvrir	見つける
+Beiträge durchsuchen …	Search posts …	Rechercher des publications …	投稿を検索 …
+Folgende	followers	abonnés	フォロワー
+folgt	following	abonnements	フォロー
+Folgen	Follow	Suivre	フォローする
+Antworten an mich	Replies to me	Réponses à moi	自分への返信
+zum Beitrag	to the post	vers la publication	投稿へ
+Noch keine Antworten.	No replies yet.	Pas encore de réponses.	まだ返信はありません。
+Trends (7 Tage)	Trends (7 days)	Tendances (7 jours)	トレンド（7日間）
+Noch keine Hashtags diese Woche.	No hashtags this week yet.	Pas encore de hashtags cette semaine.	今週のハッシュタグはまだありません。
+Aktiv	Active	Actifs	アクティブ
+Meistbeachtet	Most noticed	Les plus remarqués	注目の投稿
+Du folgst noch niemandem – im Profil einer Person auf ⭐ Folgen tippen.	You don't follow anyone yet – tap ⭐ Follow on someone's profile.	Tu ne suis encore personne – touche ⭐ Suivre sur un profil.	まだ誰もフォローしていません – プロフィールで ⭐ フォローをタップ。
+Noch nichts gemerkt – bei einem Beitrag auf 🔖 tippen.	Nothing saved yet – tap 🔖 on a post.	Rien d'enregistré – touche 🔖 sur une publication.	まだ保存はありません – 投稿の 🔖 をタップ。

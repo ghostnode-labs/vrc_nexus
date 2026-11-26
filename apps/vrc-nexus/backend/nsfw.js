@@ -199,6 +199,21 @@ class Nsfw {
         if (this.app.tools.rpc) this.app.tools.rpc.setActivity(null);
         return { ok: true, msg: '🚨 Panik: ' + done.join(' · '), private: this.private };
     }
+    /** 5.3: Panik wie der Knopf oben im Client – Panik-Aktionen UND NSFW am Nexus-Konto aus (Uhr, Handy, Client gleich).
+     *  Ist der Server nicht erreichbar, wird NSFW lokal aus gemerkt, damit die Freischaltung trotzdem sofort weg ist. */
+    async panicFull() {
+        const r = await this.panic();
+        let off = 'NSFW aus';
+        try { await this.app.account.action('acct_nsfw', { on: '0' }); }
+        catch (e) {
+            const c = this.app.account.current && this.app.account.current();
+            if (c && c.account) this.app.account.save(Object.assign({}, c.account, { nsfw_on: false }));
+            off = 'NSFW lokal aus (Server: ' + e.message + ')';
+        }
+        this.accessMemo = null;
+        if (this.app.tools && this.app.tools.nsfwOffUi) { try { this.app.tools.nsfwOffUi(); } catch (e) { /* Oberfläche zu */ } }
+        return Object.assign(r, { msg: r.msg + ' · ' + off, nsfw_off: true });
+    }
     we() { if (!this.app.wallpaper) { const { Wallpaper } = require('./wallpaper'); this.app.wallpaper = new Wallpaper(this.app); } return this.app.wallpaper; }
     /** 4.3: Entwarnung – Privat-Modus aus, Chatbox-Rotation wieder frei, Wallpaper zurück */
     async allClear() {
@@ -265,6 +280,7 @@ class Nsfw {
         switch (act) {
             case 'nsfw_cfg': return Object.assign(this.state(), { cfg: this.saveCfg(input), msg: 'Gespeichert.' });
             case 'nsfw_panic': return await this.panic();
+            case 'nsfw_panic_full': return await this.panicFull();
             case 'nsfw_allclear': return await this.allClear();
             case 'nsfw_private': { this.private = input.on === undefined ? !this.private : input.on === '1' || input.on === true; if (this.private && this.app.tools.rpc) this.app.tools.rpc.setActivity(null); return { ok: true, private: this.private, msg: this.private ? '🕶 Privat-Modus an' : 'Privat-Modus aus' }; }
             case 'nsfw_avatar': return await this.toggleAvatar(input.i);

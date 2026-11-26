@@ -6,12 +6,14 @@
     const esc = UI.esc, api = UI.api, toast = (m, bad) => UI.toast(m, bad);
     const T = s => (window.t ? window.t(s) : s);
     const when = ts => UI.ago ? UI.ago(ts) : new Date(ts * 1000).toLocaleString();
+    let filt = { q: '', tag: '' }, disc = null;   // 5.3: Suche/Hashtag im Feed, Entdecken (Trends + Antworten an mich)
     let box = null, sub = (window.NexusUI.store && window.NexusUI.store.get('cmtSub', 'feed')) || 'feed', me = null, items = [], openThread = {}, attach = [], modData = null, prof = null, profEdit = false, busy = false, acct = null, p18Edit = false, profTab = 'main';
     const md = t => (window.NexusMD ? window.NexusMD.render(t) : esc(t).replace(/\n/g, '<br>'));   // 3.2: Markdown (sicher, ohne HTML)
     const card = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '">' + (t ? '<h4>' + t + '</h4>' : '') + html + '</div>';
     const MOBILE = document.body.classList.contains('mobile');
     let chat = { list: null, uid: '', open: null, timer: null };
-    const subs = () => [['feed', '🫂 ' + T('Feed')], ...(me && me.nsfw ? [['nsfw', '🔞 ' + T('NSFW-Feed')]] : []), ['chat', '💬 ' + T('Chat') + (chat.list && chat.list.some(c => c.unread) ? ' •' : '')], ['profile', '👤 ' + T('Mein Profil')], ...(me && me.mod ? [['mod', '🛡 ' + T('Moderation')]] : [])];
+    const FEEDS = ['feed', 'nsfw', 'following', 'saved'];
+    const subs = () => [['feed', '🫂 ' + T('Feed')], ['following', '⭐ ' + T('Folge ich')], ['saved', '🔖 ' + T('Gemerkt')], ['discover', '🔥 ' + T('Entdecken') + (disc && disc.unread ? ' •' : '')], ...(me && me.nsfw ? [['nsfw', '🔞 ' + T('NSFW-Feed')]] : []), ['chat', '💬 ' + T('Chat') + (chat.list && chat.list.some(c => c.unread) ? ' •' : '')], ['profile', '👤 ' + T('Mein Profil')], ...(me && me.mod ? [['mod', '🛡 ' + T('Moderation')]] : [])];
 
     function nav() {
         const n = document.getElementById('cmtSub');
@@ -25,14 +27,16 @@
             + (acct && acct.age && acct.age.verified ? '<label class="cm-nsfwsw" title="' + esc(T('NSFW-Inhalte und -Werkzeuge anzeigen (freiwillig, jederzeit abschaltbar)')) + '"><input type="checkbox" data-cnsfw="1"' + (acct.age.nsfw_on ? ' checked' : '') + '><span></span>🔞 NSFW</label>' : '');
     }
     const imgs = media => (media || []).length ? '<div class="cm-imgs">' + media.map(id => '<img loading="lazy" src="nexus.php?cimg=' + esc(id) + '" alt="" data-cimg="' + esc(id) + '">').join('') + '</div>' : '';
+    /** 5.3: #Hashtags im fertigen HTML klickbar (nur nach Leerzeichen/Tag-Ende – nicht in Links oder &#…;) */
+    const tags = h => h.replace(/(^|[\s>(])#([\p{L}\p{N}_]{2,32})/gu, (m, a, g) => a + '<a href="#" class="cm-tag" data-ctag="' + g.toLowerCase() + '">#' + g + '</a>');
     function post(p, reply) {
         const reacts = (me ? me.reactions : []).map(e => { const n = (p.reactions || {})[e] || 0, on = (p.mine || []).includes(e); return n || !reply ? '<button type="button" class="cm-re' + (on ? ' on' : '') + '" data-cre="' + esc(e) + '" data-id="' + p.id + '">' + e + (n ? ' <b>' + n + '</b>' : '') + '</button>' : ''; }).join('');
         return '<article class="cm-post' + (reply ? ' reply' : '') + (p.own ? ' mine' : '') + (p.status !== 'visible' ? ' st-' + esc(p.status) : '') + '" data-pid="' + p.id + '">'
             + '<header><a href="#" data-cprof="' + esc(p.author) + '"><b>' + esc(p.name || p.author) + '</b></a> <span class="muted small">' + esc(when(p.created)) + (p.edited ? ' · ' + esc(T('bearbeitet')) : '') + '</span>'
             + (p.rating === 'nsfw' ? ' <span class="vx-pill" style="--pc:#ff5c8a">🔞</span>' : '') + (p.status === 'pending' ? ' <span class="vx-pill rep">⏳ ' + esc(T('wartet auf Freigabe')) + '</span>' : p.status === 'hidden' ? ' <span class="vx-pill">' + esc(T('ausgeblendet')) + '</span>' : '') + '</header>'
-            + (p.text ? '<div class="cm-text md">' + md(p.text) + '</div>' + (window.NexusCards ? window.NexusCards.html(p.text) : '') : '') + imgs(p.media)
+            + (p.text ? '<div class="cm-text md">' + tags(md(p.text)) + '</div>' + (window.NexusCards ? window.NexusCards.html(p.text) : '') : '') + imgs(p.media)
             + '<footer><span class="cm-reacts">' + reacts + '</span>'
-            + (!reply ? '<button type="button" class="nc-link" data-cthread="' + p.id + '">💬 ' + (p.replies || 0) + '</button>' : '')
+            + (!reply ? '<button type="button" class="nc-link" data-cthread="' + p.id + '">💬 ' + (p.replies || 0) + '</button><button type="button" class="nc-link' + (p.saved ? ' on' : '') + '" data-csave="' + p.id + '" title="' + esc(T('Merken')) + '">🔖' + (p.saved ? ' ' + esc(T('gemerkt')) : '') + '</button>' : '')
             + (p.own ? '<button type="button" class="nc-link" data-cedit="' + p.id + '">✎</button><button type="button" class="nc-link" data-cdel="' + p.id + '">🗑</button>' : '<button type="button" class="nc-link" data-crep="' + p.id + '" title="' + esc(T('Melden')) + '">⚑</button>')
             + (me && me.mod && !p.own ? '<button type="button" class="nc-link" data-cmod="hide" data-id="' + p.id + '" title="' + esc(T('Ausblenden')) + '">🛡</button>' : '') + '</footer>'
             + (!reply && openThread[p.id] ? '<div class="cm-thread">' + (openThread[p.id].replies || []).map(r => post(r, true)).join('') + composer(p.id) + '</div>' : '')
@@ -55,14 +59,17 @@
         nav();
         if (!me) { box.innerHTML = '<div class="vx-loading">' + esc(T('Lade …')) + '</div>'; return; }
         if (me.error) { box.innerHTML = card('🫂 Community', '<p class="small">' + esc(T(me.error)) + '</p><div id="cmtAcct"></div>'); if (window.NexusAccount) window.NexusAccount.render(box.querySelector('#cmtAcct')); return; }
-        if (sub === 'feed' || sub === 'nsfw') {
+        if (sub === 'discover') { box.innerHTML = discoverHtml(); return; }
+        if (FEEDS.includes(sub)) {
             // 3.2: Feed wie ein Chat – älteste oben, neueste unten, Eingabe unten, eigener Bereich mit Scrollen
             const old = box.querySelector('.cm-flow'), atEnd = !old || old.scrollHeight - old.scrollTop - old.clientHeight < 80, keep = old ? old.scrollHeight - old.scrollTop : 0;
             box.innerHTML = '<div class="cm-feed chatlike">' + (sub === 'nsfw' ? '<div class="tts-help">🔞 ' + esc(T('Getrennter NSFW-Feed – nur für Verified 18+ mit eingeschaltetem NSFW. Nichts davon erscheint in der normalen Timeline.')) + '</div>' : '')
+                + '<div class="nc-row cm-filter"><input type="search" data-cq="1" placeholder="🔍 ' + esc(T('Beiträge durchsuchen …')) + '" value="' + esc(filt.q) + '" style="flex:1">' + (filt.tag ? '<button type="button" class="chip on" data-ctagx="1">#' + esc(filt.tag) + ' ✕</button>' : '') + '</div>'
                 + '<div class="cm-flow">' + (items.length >= 30 ? '<button type="button" class="btn btn-sm cm-older" data-cmore="1">↑ ' + esc(T('Ältere laden')) + '</button>' : '')
-                + (items.length ? items.slice().reverse().map(p => post(p)).join('') : '<p class="vx-empty">' + esc(T('Noch keine Beiträge.')) + '</p>') + '</div>'
-                + (me.sanction && (me.sanction.banned || me.sanction.mute_until > Date.now() / 1000) ? '<p class="small bad">⚠ ' + esc(T(me.sanction.banned ? 'Du bist in der Community gesperrt.' : 'Du bist gerade stummgeschaltet.')) + '</p>' : card('', composer(0), 'cm-dock'))
+                + (items.length ? items.slice().reverse().map(p => post(p)).join('') : '<p class="vx-empty">' + esc(T(sub === 'following' ? 'Du folgst noch niemandem – im Profil einer Person auf ⭐ Folgen tippen.' : sub === 'saved' ? 'Noch nichts gemerkt – bei einem Beitrag auf 🔖 tippen.' : 'Noch keine Beiträge.')) + '</p>') + '</div>'
+                + (sub === 'following' || sub === 'saved' ? '' : me.sanction && (me.sanction.banned || me.sanction.mute_until > Date.now() / 1000) ? '<p class="small bad">⚠ ' + esc(T(me.sanction.banned ? 'Du bist in der Community gesperrt.' : 'Du bist gerade stummgeschaltet.')) + '</p>' : card('', composer(0), 'cm-dock'))
                 + '</div>';
+            const fq = box.querySelector('[data-cq]'); if (fq && filt.focus) { fq.focus(); fq.setSelectionRange(fq.value.length, fq.value.length); filt.focus = false; }
             const flow = box.querySelector('.cm-flow');
             fitFeed();
             if (flow) flow.scrollTop = atEnd ? flow.scrollHeight : flow.scrollHeight - keep;
@@ -238,12 +245,24 @@
             + window.NexusPride.stripe(p.theme) + card('', '<div class="cm-phead">' + (p.avatar ? '<img class="cm-pav" src="nexus.php?cimg=' + esc(p.avatar) + '" alt="">' : '<span class="cm-pav">👤</span>') + '<div><h3>' + esc(p.name) + '</h3>'
                 + '<div class="small muted">' + [p.pronouns, p.languages].filter(Boolean).map(esc).join(' · ') + '</div>'
                 + (window.NexusProfile18 ? window.NexusProfile18.factsView(p.facts) : '')
-                + '<div>' + (p.verified18 ? '<span class="vx-pill" style="--pc:#51e57e">✔ Verified 18+</span>' : '') + '<span class="vx-pill">' + p.posts + ' ' + esc(T('Beiträge')) + '</span></div></div>'
-                + (p.own ? '<button type="button" class="btn btn-sm" data-cpedit="1" style="margin-left:auto">✎ ' + esc(T('Bearbeiten')) + '</button>' : '<button type="button" class="btn btn-sm" data-user="' + esc(p.vrc_id) + '" style="margin-left:auto">VRChat-' + esc(T('Profil')) + '</button>') + '</div>'
+                + '<div>' + (p.verified18 ? '<span class="vx-pill" style="--pc:#51e57e">✔ Verified 18+</span>' : '') + '<span class="vx-pill">' + p.posts + ' ' + esc(T('Beiträge')) + '</span>' + (p.followers !== undefined ? '<span class="vx-pill">' + p.followers + ' ' + esc(T('Folgende')) + '</span><span class="vx-pill">' + esc(T('folgt')) + ' ' + p.following + '</span>' : '') + '</div></div>'
+                + (p.own ? '<button type="button" class="btn btn-sm" data-cpedit="1" style="margin-left:auto">✎ ' + esc(T('Bearbeiten')) + '</button>' : '<button type="button" class="btn btn-sm' + (p.i_follow ? '' : ' btn-gold') + '" data-cfollow="' + esc(p.vrc_id) + '" data-on="' + (p.i_follow ? '' : '1') + '" style="margin-left:auto">' + esc(p.i_follow ? '✓ ' + T('Folge ich') : '⭐ ' + T('Folgen')) + '</button><button type="button" class="btn btn-sm" data-user="' + esc(p.vrc_id) + '">VRChat-' + esc(T('Profil')) + '</button>') + '</div>'
                 + (p.bio ? '<p>' + esc(p.bio).replace(/\n/g, '<br>') + '</p>' : '') + (p.interests ? '<p class="small">✨ ' + esc(p.interests) + '</p>' : '')
                 + ((p.links || []).length ? '<p class="small">' + p.links.map(l => '<a href="' + esc(l) + '" target="_blank" rel="noopener noreferrer nofollow">' + esc(l.replace(/^https:\/\//, '')) + '</a>').join(' · ') + '</p>' : '')
 )
             + (p.feed && p.feed.length ? p.feed.map(x => post(x)).join('') : '') + '</div>' + (p.own ? vrcCard() : '') + '</div>';
+    }
+    /** 5.3: Entdecken – Antworten an mich, Trends der Woche (Hashtags, meistbeachtet, aktiv) */
+    function discoverHtml() {
+        if (!disc) return '<div class="vx-loading">' + esc(T('Lade …')) + '</div>';
+        const t = disc.trends || { tags: [], top: [], people: [] }, ib = disc.inbox || { items: [], seen: 0 };
+        return '<div class="cm-pgrid two"><div>' + card('💬 ' + esc(T('Antworten an mich')), ib.items.length ? ib.items.slice(0, 20).map(r => '<div class="cm-inbox' + (r.id > ib.seen ? ' new' : '') + '">' + post(r, true) + '<button type="button" class="nc-link" data-copen="' + r.parent + '">→ ' + esc(T('zum Beitrag')) + '</button></div>').join('') : '<p class="small muted">' + esc(T('Noch keine Antworten.')) + '</p>')
+            + '</div><div>' + card('🔥 ' + esc(T('Trends (7 Tage)')), (t.tags.length ? '<div class="nc-row" style="flex-wrap:wrap">' + t.tags.map(x => '<button type="button" class="chip" data-ctag="' + esc(x.tag) + '">#' + esc(x.tag) + ' <small>' + x.n + '</small></button>').join('') + '</div>' : '<p class="small muted">' + esc(T('Noch keine Hashtags diese Woche.')) + '</p>')
+                + (t.people.length ? '<h4>' + esc(T('Aktiv')) + '</h4>' + t.people.map(x => '<a href="#" class="chip" data-cprof="' + esc(x.vrc_id) + '">👤 ' + esc(x.name || x.vrc_id.slice(0, 12)) + ' · ' + x.n + '</a>').join(' ') : ''))
+            + (t.top.length ? card('⭐ ' + esc(T('Meistbeachtet')), t.top.map(p => post(p)).join('')) : '') + '</div></div>';
+    }
+    function loadDiscover() {
+        return Promise.all([api('comm_trends', { rating: 'sfw' }), api('comm_inbox', { seen: '1' })]).then(([trends, inbox]) => { disc = { trends, inbox, unread: 0 }; render(); }).catch(e => toast('⚠ ' + e.message, true));
     }
     /** 3.2.3: eigenes VRChat-Profil (alles aus dem Profil) neben dem Community-Profil */
     let vrcMe = null, vrcBusy = false;
@@ -301,7 +320,7 @@
     function loadMe() { return Promise.all([api('comm_me').then(d => { me = d; }).catch(e => { me = { error: e.message }; }), api('acct_get').then(d => { acct = d; }).catch(() => {})]); }
     function loadFeed(more) {
         const before = more && items.length ? items[items.length - 1].id : 0;
-        return api('comm_feed', { rating: sub === 'nsfw' ? 'nsfw' : 'sfw', before }).then(d => { items = more ? items.concat(d.items) : d.items; render(); }).catch(e => toast('⚠ ' + e.message, true));
+        return api('comm_feed', { rating: sub === 'nsfw' ? 'nsfw' : 'sfw', before, q: filt.q, tag: filt.tag, mode: sub === 'following' || sub === 'saved' ? sub : '' }).then(d => { items = more ? items.concat(d.items) : d.items; render(); }).catch(e => toast('⚠ ' + e.message, true));
     }
     function loadProfile(id) { prof = null; render(); return api('comm_profile', id ? { id } : {}).then(d => { prof = d.profile; return api('comm_feed', { rating: 'sfw', author: prof.vrc_id }); }).then(d => { prof.feed = d.items; render(); }).catch(e => toast('⚠ ' + e.message, true)); }
     function loadMod() { return api('comm_mod_queue').then(d => { modData = d; render(); }).catch(e => toast('⚠ ' + e.message, true)); }
@@ -309,7 +328,8 @@
         sub = s; openThread = {};
         if (s === 'nsfw' && !(me && me.nsfw)) sub = 'feed';
         if (window.NexusUI.store) window.NexusUI.store.set('cmtSub', sub);   // 3.1: letzte Unterseite merken
-        if (sub === 'feed' || sub === 'nsfw') { items = []; render(); loadFeed(); }
+        if (FEEDS.includes(sub)) { items = []; render(); loadFeed(); }
+        else if (sub === 'discover') { disc = null; render(); loadDiscover(); }
         else if (sub === 'profile') { profEdit = false; p18Edit = false; loadProfile(arg); }
         else if (sub === 'mod') { modData = null; render(); loadMod(); }
         else if (sub === 'chat') { render(); chatLoad(true).then(() => { if (arg) chatOpen(arg); }); chatTimer(); }
@@ -323,7 +343,9 @@
 
     function bind() {
         // 3.7.3: Freundesliste im Chat beim Tippen filtern (ohne neu zu zeichnen)
+        let qTimer;
         box.addEventListener('input', e => {
+            if (e.target.matches('[data-cq]')) { clearTimeout(qTimer); qTimer = setTimeout(() => { filt.q = e.target.value.trim(); filt.focus = true; loadFeed(); }, 400); return; }   // 5.3: Suche im Feed
             if (!e.target.matches('.ch-new [name=uid]')) return;
             const q = e.target.value.trim().toLowerCase(), isId = /^usr_|vrchat\.com/.test(q);
             if (q && !isId && !chat.showOff && box.querySelectorAll('.ch-pick .ch-fr').length && ![...box.querySelectorAll('.ch-pick .ch-fr')].some(b => b.dataset.fname.includes(q))) { chat.showOff = true; render(); const inp = box.querySelector('.ch-new [name=uid]'); if (inp) { inp.value = e.target.value; inp.focus(); } }
@@ -342,6 +364,11 @@
         box.addEventListener('click', e => {
             const t = e.target;
             const pf = t.closest('[data-cprof]'); if (pf) { e.preventDefault(); return go('profile', pf.dataset.cprof); }
+            const tg = t.closest('[data-ctag]'); if (tg) { e.preventDefault(); filt.tag = tg.dataset.ctag; filt.q = ''; return go(sub === 'nsfw' ? 'nsfw' : 'feed'); }
+            if (t.closest('[data-ctagx]')) { filt.tag = ''; return go(sub); }
+            const sv = t.closest('[data-csave]'); if (sv) { const on = !sv.classList.contains('on'); return api('comm_save', { id: sv.dataset.csave, on: on ? '1' : '' }).then(d => { toast(d.msg); items.forEach(x => { if (x.id === +sv.dataset.csave) x.saved = on; }); if (prof && prof.feed) prof.feed.forEach(x => { if (x.id === +sv.dataset.csave) x.saved = on; }); if (sub === 'saved' && !on) items = items.filter(x => x.id !== +sv.dataset.csave); render(); }).catch(x => toast(x.message, true)); }
+            const fo = t.closest('[data-cfollow]'); if (fo) return api('comm_follow', { id: fo.dataset.cfollow, on: fo.dataset.on }).then(d => { toast(d.msg); loadProfile(fo.dataset.cfollow); }).catch(x => toast(x.message, true));
+            const op = t.closest('[data-copen]'); if (op) return api('comm_thread', { id: +op.dataset.copen }).then(d => { sub = 'feed'; items = [d.post]; openThread = { [d.post.id]: d }; render(); }).catch(x => toast(x.message, true));
             const u = t.closest('[data-user]'); if (u) { e.preventDefault(); return UI.openUser(u.dataset.user); }
             const re = t.closest('[data-cre]'); if (re) return api('comm_react', { id: re.dataset.id, emoji: re.dataset.cre }).then(d => { replace(d.post); if (prof && prof.feed) prof.feed = prof.feed.map(x => x.id === d.post.id ? d.post : x); render(); }).catch(x => toast(x.message, true));
             const th = t.closest('[data-cthread]'); if (th) { const id = +th.dataset.cthread; if (openThread[id]) { delete openThread[id]; return render(); } return api('comm_thread', { id }).then(d => { openThread[id] = d; replace(d.post); render(); }).catch(x => toast(x.message, true)); }

@@ -8,7 +8,8 @@ const { str, int, UserError } = require('./util');
 
 const BASE = () => (process.env.NEXUS_COMM_BASE || process.env.NEXUS_ACCT_BASE || process.env.NEXUS_RELAY_BASE || require('./servers').nexus()).replace(/\/+$/, '');
 const ACTS = { comm_me: 'me', comm_feed: 'feed', comm_thread: 'thread', comm_post: 'post', comm_edit: 'edit', comm_delete: 'delete', comm_react: 'react', comm_report: 'report',
-    comm_profile: 'profile', comm_profile_save: 'profile_save', comm_mod_queue: 'mod_queue', comm_mod: 'mod', comm_world: 'world', comm_world_note: 'world_note' };
+    comm_profile: 'profile', comm_profile_save: 'profile_save', comm_mod_queue: 'mod_queue', comm_mod: 'mod', comm_world: 'world', comm_world_note: 'world_note',
+    comm_save: 'save', comm_follow: 'follow', comm_follows: 'follows', comm_trends: 'trends', comm_inbox: 'inbox' };   // 5.3
 const MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 class Community {

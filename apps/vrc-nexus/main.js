@@ -128,6 +128,8 @@ const host = {
         }
         setTimeout(() => { quitting = true; app.quit(); }, 1200);
     },
+    /** 5.3: Panik von Uhr/Handy → Oberfläche verlässt NSFW sofort */
+    nsfwOffUi: () => { if (win) win.webContents.executeJavaScript('window.NexusNsfw && NexusNsfw.offUi && NexusNsfw.offUi()').catch(() => {}); },
     /** Spracheingabe: Aufnahme in der Oberfläche starten/stoppen */
     speechCmd: op => { if (win) win.webContents.executeJavaScript('window.NexusSpeech && NexusSpeech.cmd(' + JSON.stringify(op) + ')').catch(() => {}); },
     /** globale Taste für die Spracheingabe (auch wenn VRChat im Vordergrund ist) */

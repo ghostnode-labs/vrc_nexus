@@ -26,7 +26,7 @@ const THEMES = {
 };
 const BG_KINDS = ['none', 'gradient', 'image'], BG_MAX = 3 * 1024 * 1024;
 /** 5.2.3: was ein gekoppeltes Handy am PC auslösen darf (feste Liste, 🔞-Aktionen prüfen ihre Freigabe selbst) */
-const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_allclear', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'nsfw_consent', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise',
+const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfw_allclear', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'nsfw_consent', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise',
     'toys_pattern', 'toys_pattern_stop', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop', 'toys3_get', 'toys3_game', 'toys3_hold', 'toys3_game_stop',
     'comfort_get', 'comfort_sleep', 'preset_list', 'preset_apply', 'client_macros', 'client_macro_run', 'client_osc', 'hr_get']);
 const DISC_PORT = 17873, MAX_DEV = 5, MAX_BODY = 4096;
@@ -202,7 +202,7 @@ class Watch {
         switch (a) {
             case 'panic': {
                 // 5.2.2: Panik nicht von langsamen Teilen (VRChat-Avatar, Wallpaper Engine, OBS) aufhalten lassen – nach 2,5 s antworten, der Rest läuft weiter
-                const run = post('nsfw_panic');
+                const run = post('nsfw_panic_full');   // 5.3: wie der Panik-Knopf im Client – NSFW danach ganz aus
                 run.catch(e => { this.lastError = e.message; });
                 r = await Promise.race([run, new Promise(ok => setTimeout(() => ok({ msg: '🚨 Panik ausgelöst' }), 2500))]);
                 break;

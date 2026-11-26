@@ -59,7 +59,7 @@
             const mc = e.target.closest('[data-pcmac]'); if (mc) return act('client_macro_run', { id: mc.dataset.pcmac }).catch(() => {});
             const b = e.target.closest('[data-pc]'); if (!b) return;
             const k = b.dataset.pc;
-            if (k === 'panic') { if (!confirm(T('Panik auslösen?'))) return; return act('nsfw_panic').catch(() => {}); }
+            if (k === 'panic') { if (!confirm(T('Panik auslösen?'))) return; return act('nsfw_panic_full').catch(() => {}); }
             if (k === 'allclear') return act('nsfw_allclear').catch(() => {});
             if (k === 'private') return act('nsfw_private', { on: '1' }).catch(() => {});
             if (k === 'toys_stop') return act('toys_stop', { device: 'all' }).catch(() => {});

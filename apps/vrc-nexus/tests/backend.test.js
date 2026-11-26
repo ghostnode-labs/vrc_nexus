@@ -3776,7 +3776,12 @@ test('5.2: VRC Nexus Watch – Suche per UDP, Kopplung mit Code (Fehlversuche), 
     x = await call('/watch/action', { a: 'consent', light: 'red' }, tok); assert.strictEqual(x.status, 400); assert.match(x.j.error, /Nicht freigeschaltet/);
     x = await call('/watch/state', undefined, tok); assert.match(x.j.nsfw_reason, /Nexus-Konto|Verified|NSFW/, 'Uhr sagt, warum 🔞 fehlt');
     grant18(app);
+    process.env.NEXUS_ACCT_BASE = 'http://127.0.0.1:9';   // Konto-Server nicht erreichbar → NSFW wird lokal aus gemerkt
     x = await call('/watch/action', { a: 'panic' }, tok); assert.ok(x.j.ok && /Panik/.test(x.j.msg)); assert.ok(app.nsfw.private, 'Panik schaltet Privat-Modus ein');
+    for (let i = 0; i < 50 && app.nsfw.access().unlocked; i++) await new Promise(r => setTimeout(r, 100));
+    assert.strictEqual(app.nsfw.access().unlocked, false, '5.3: Panik von der Uhr schaltet NSFW ganz aus (wie der Knopf im Client)');
+    delete process.env.NEXUS_ACCT_BASE;
+    grant18(app);
     x = await call('/watch/state', undefined, tok); assert.ok(x.j.nsfw && x.j.private, '🔞-Knöpfe bleiben im Privat-Modus (Panik immer erreichbar)');
     await call('/watch/action', { a: 'allclear' }, tok);
     x = await call('/watch/action', { a: 'private', on: true }, tok); assert.ok(x.j.ok && app.nsfw.private);

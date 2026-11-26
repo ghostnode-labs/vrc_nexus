@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.3.0",
+  "title": "Community: follow, save, hashtags, discover",
+  "body": "- ⭐ **Follow** people from their community profile – *Following* shows only their posts; profiles show followers and following\n- 🔖 **Save** posts to your own list (*Saved*)\n- \\# **Hashtags** are clickable and filter the feed; 🔍 full-text search right above the feed\n- 🔥 **Discover**: replies to your posts (new ones marked), trending hashtags of the week, most noticed posts and active people\n- 🌐 The same community, Nexus Pulse and the 18+ area now also work in the browser on the GhostNode website (Nexus Web), in the app's design\n- 🔞 ***"
+ },
+ {
   "version": "5.2.5",
   "title": "Reddit works again",
   "body": "- 📰 Nexus Pulse: Reddit now blocks anonymous feed requests (HTTP 403/404). The app still tries the direct way first and otherwise switches automatically to the GhostNode website, which reads r/VRChat (new/hot/top + comments) through the official Reddit API – the API key lives only on the server, responses are cached for 10 minutes. r/VRchatERP via the website only with a signed-in Nexus account (Verified 18+ and NSFW on)"

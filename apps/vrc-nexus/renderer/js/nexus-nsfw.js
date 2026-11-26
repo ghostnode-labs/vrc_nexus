@@ -32,14 +32,18 @@
             head.insertBefore(p, document.getElementById('me'));
             p.addEventListener('click', () => {
                 p.disabled = true;
-                api('nsfw_panic').then(d => toast(d.msg)).catch(x => toast(x.message, true))
-                    .then(() => api('acct_nsfw', { on: '0' })).then(d => { if (d && d.msg) toast(d.msg); }).catch(x => toast(x.message, true))
-                    .finally(() => { p.disabled = false; refreshAccess(); if (window.NexusAccount) window.NexusAccount.refresh(); const a = document.querySelector('#tabs .vx-tabbtn.active'); if (a && a.dataset.tab === 'nsfw') UI.tab('home'); });
+                api('nsfw_panic_full').then(d => toast(d.msg)).catch(x => toast(x.message, true))
+                    .finally(() => { p.disabled = false; offUi(); });
             });
         }
         return p;
     }
 
+    /** 5.3: nach einer Panik (auch von Uhr/Handy) – Freischaltung neu lesen, NSFW-Seite verlassen */
+    function offUi() {
+        refreshAccess(); if (window.NexusAccount) window.NexusAccount.refresh();
+        const a = document.querySelector('#tabs .vx-tabbtn.active'); if (a && a.dataset.tab === 'nsfw') UI.tab('home');
+    }
     /** Menüpunkt zeigen/verstecken – beim Start und nach dem Freischalten */
     function refreshAccess() {
         return api('nsfw_state').then(d => {
@@ -293,6 +297,6 @@
     }
     function onSubmit() { /* Schlüssel werden im 👑 Admin-Bereich erzeugt */ }
     if (window.NexusToyLinks) window.NexusToyLinks.bind(d => { if (st) st.toys = d; });
-    window.NexusNsfw = { open, refresh: refreshAccess };
+    window.NexusNsfw = { open, refresh: refreshAccess, offUi };
     setTimeout(refreshAccess, 1500);
 })();

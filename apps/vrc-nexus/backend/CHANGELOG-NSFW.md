@@ -2,6 +2,11 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 5.3.0 – Panic from watch and phone switches NSFW off
+
+- 🚨 Panic on the **Nexus Watch** and in the **paired phone app** now works exactly like the panic button at the top of the PC app: all panic actions run and **NSFW is switched off on your Nexus account** – the app leaves the NSFW page right away. If the GhostNode server can't be reached, NSFW is switched off locally anyway.
+- 🌐 Nexus Web: a separate 18+ / ERP area in the browser (NSFW feed, r/VRchatERP via the website, your 18+ profile text, safety rules) – only with Verified 18+ and NSFW switched on.
+
 ### New in 5.2.3 – Emergency from the phone
 
 - 📱 The paired Android app gets an emergency card: 🚨 panic (with confirmation), ✅ all-clear / 🕶 private mode, consent light 🟢🟡🔴 and ⏹ stop toys – same unlock rules as on the PC; when locked the app shows why.
