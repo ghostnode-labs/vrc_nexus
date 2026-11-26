@@ -55,7 +55,7 @@
                     + '<p class="small muted">' + esc(t('In der Uhr-App „Koppeln“ tippen und den Code eingeben – die Uhr findet den PC von selbst. Sonst Adresse eintragen:')) + ' <code>' + esc((w.addresses[0] || '?') + ':' + w.cfg.port) + '</code></p>'
                     + (w.error ? '<p class="small bad">⚠ ' + esc(t(w.error)) + '</p>' : '') : '<p class="small muted">' + esc(t('Puls vom Uhr-Sensor, Panik-Knopf, Consent-Ampel, Spielzeug-Stopp und Schlafmodus direkt am Handgelenk. Die App gibt es bei den Downloads (VRC-Nexus-Watch-…apk).')) + '</p>')
                 + (w.devices.length ? '<ul class="hr-watches">' + w.devices.map(x => '<li>⌚ <b>' + esc(x.name) + '</b> <span class="small muted">' + (x.last ? esc(t('zuletzt')) + ' ' + new Date(x.last).toLocaleTimeString(window.nxLoc ? nxLoc() : 'de-DE', { hour: '2-digit', minute: '2-digit' }) : esc(t('noch nicht verbunden'))) + '</span> <button type="button" class="btn btn-sm" data-wdel="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>' : '')
-                + '</div>' : '')
+                + '<p class="small"><a href="#" data-nwtool>🧰 ' + esc(t('Alles zur Uhr: Werkzeuge → Nexus Watch')) + '</a></p></div>' : '')
             // Nutzen
             + '<div class="nc-card"><h4>🧩 ' + esc(t('Verwenden')) + '</h4>'
             + '<p class="small">' + esc(t('Platzhalter für Chatbox, Rotator, Makros und Stream Deck:')) + '</p><div class="nc-row"><code>{puls}</code><code>{puls_min}</code><code>{puls_max}</code><code>{puls_schnitt}</code></div>'
@@ -68,6 +68,7 @@
     function bind() {
         box.addEventListener('click', e => {
             const b = e.target.closest('[data-src]'); if (b) return save({ source: b.dataset.src });
+            if (e.target.closest('[data-nwtool]')) { e.preventDefault(); if (window.NexusOpenTool) window.NexusOpenTool('watch'); return; }
             if (e.target.closest('[data-wnew]')) return api('watch_newpin').then(r => { w = r; render(); }).catch(er => toast('⚠ ' + er.message, true));
             const x = e.target.closest('[data-wdel]');
             if (x && confirm(t('Diese Uhr entfernen? Sie muss danach neu gekoppelt werden.'))) api('watch_remove', { id: x.dataset.wdel }).then(r => { w = r; render(); toast(r.msg); }).catch(er => toast('⚠ ' + er.message, true));

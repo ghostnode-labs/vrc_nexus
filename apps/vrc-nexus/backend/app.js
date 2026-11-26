@@ -84,6 +84,7 @@ class NexusApp {
         this.chat = new (require('./chat').Chat)(this, opts.crypt);   // 3.5: auch am Handy (Krypto über @noble im Android-Shim)
         this.heart = opts.mobile ? null : new (require('./heart').Heart)(this, opts.crypt);
         this.watch = opts.mobile || opts.noWatch ? null : new (require('./watch').Watch)(this);   // 5.2: Wear-OS-App
+        this.pclink = opts.mobile ? new (require('./pclink').PcLink)(this, opts.crypt) : null;   // 5.2.3: Handy ↔ PC
         this.chatmods = new ChatMods(this, opts.crypt);   // 3.2.5: auch am Handy (nur Module ohne PC-Werte)
         this.subs = opts.mobile ? null : new (require('./subtitles').Subtitles)(this);
         this.nsfw = new (require('./nsfw').Nsfw)(this, opts.crypt);
@@ -293,6 +294,7 @@ class NexusApp {
             if (act.startsWith('pulse_')) return await this.pulse.action(act, input);
             if (act.startsWith('preset_')) return await this.presets.action(act, input);
             if (act.startsWith('comfort_')) return await this.comfort.action(act, input);
+            if (act.startsWith('pclink_')) { if (!this.pclink) throw new UserError('Nur in der Handy-App.'); return await this.pclink.action(act, input); }
             if (act.startsWith('watch_')) { if (!this.watch) throw new UserError('Die Uhr-App verbindet sich nur mit der Windows-App.'); return await this.watch.actionUi(act, input); }
             if (act.startsWith('obs_')) { if (!this.obs) throw new UserError('OBS gibt es nur in der Windows-App.'); return await this.obs.action(act, input); }
             if (act.startsWith('hr_')) { if (!this.heart) throw new UserError('Den Puls gibt es nur in der Windows-App.'); return await this.heart.action(act, input); }

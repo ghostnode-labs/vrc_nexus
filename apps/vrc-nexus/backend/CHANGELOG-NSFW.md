@@ -2,6 +2,10 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 5.2.3 – Emergency from the phone
+
+- 📱 The paired Android app gets an emergency card: 🚨 panic (with confirmation), ✅ all-clear / 🕶 private mode, consent light 🟢🟡🔴 and ⏹ stop toys – same unlock rules as on the PC; when locked the app shows why.
+
 ### New in 5.2.2 – Nexus Watch: emergency page
 
 - 🔞 **Emergency tile** in the watch menu: 🚨 panic (tap twice – can be switched off in the settings), ✅ all-clear / 🕶 private mode, consent light with the current colour, ⏹ stop toys.

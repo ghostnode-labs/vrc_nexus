@@ -34,7 +34,13 @@ import java.util.concurrent.Executors;
 
 /** Nexus Watch – Hauptseite (Puls, Status, schnelle Knöpfe), Koppeln, Einstellungen und Updater. */
 public class MainActivity extends Activity {
-    private static final int CYAN = 0xFF38D5E6, GOLD = 0xFFF3C262, RED = 0xFFFF5555, BG = 0xFF0B1016, MUTED = 0xFF8A93A6, GREEN = 0xFF3DDC84;
+    // Farben kommen aus dem Thema (am PC unter Werkzeuge → Nexus Watch oder hier in den Einstellungen)
+    private int CYAN = 0xFF38D5E6, GOLD = 0xFFF3C262, RED = 0xFFFF5555, BG = 0xFF0B1016, MUTED = 0xFF8A93A6;
+    private static final int GREEN = 0xFF3DDC84;
+    private static final String[] THEMES = { "cyber", "neon", "ocean", "forest", "sunset", "amoled" };
+    private static final String[] THEME_NAMES = { "Cyber", "Neon", "Ozean", "Wald", "Sonnenuntergang", "AMOLED" };
+    private ScrollView sv;
+    private long lastBuzz = 0;
     private static final int[] INTERVALS = { 1, 2, 5, 10 };
     private final ExecutorService net = Executors.newSingleThreadExecutor();
     private final Handler ui = new Handler(Looper.getMainLooper());
@@ -51,7 +57,7 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         Nexus.wantWifi(this);
-        ScrollView sv = new ScrollView(this);
+        sv = new ScrollView(this);
         sv.setBackgroundColor(BG);
         sv.setFillViewport(true);
         root = new LinearLayout(this);
@@ -62,6 +68,8 @@ public class MainActivity extends Activity {
         sv.addView(root);
         setContentView(sv);
         applyScreenOn();
+        try { String lk = p().getString("look", ""); if (!lk.isEmpty()) applyLook(new JSONObject(lk), false); } catch (Exception ignored) { }
+        UpdateJob.schedule(this);
         // Puls automatisch starten (Einstellung)
         if (Nexus.paired(this) && p().getBoolean("auto_heart", false) && !HeartService.running
             && checkSelfPermission(Manifest.permission.BODY_SENSORS) == PackageManager.PERMISSION_GRANTED) startForegroundService(new Intent(this, HeartService.class));
@@ -79,6 +87,48 @@ public class MainActivity extends Activity {
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
+    // ---------- Design (Thema & Hintergrund) ----------
+    private static int col(JSONObject c, String k, int def) { try { return Color.parseColor(c.getString(k)); } catch (Exception e) { return def; } }
+    private void applyLook(JSONObject look, boolean fetch) {
+        if (look == null) return;
+        JSONObject c = look.optJSONObject("colors");
+        if (c != null) { BG = col(c, "bg", BG); CYAN = col(c, "accent", CYAN); GOLD = col(c, "hi", GOLD); RED = col(c, "danger", RED); MUTED = col(c, "muted", MUTED); }
+        p().edit().putString("look", look.toString()).apply();
+        String bg = look.optString("bg", "none"), rev = look.optString("bg_rev");
+        int dim = Math.max(0, Math.min(85, look.optInt("bg_dim", 55)));
+        android.graphics.drawable.Drawable base;
+        if ("gradient".equals(bg) && c != null) {
+            org.json.JSONArray g = c.optJSONArray("grad");
+            int a = BG, b = BG; try { a = Color.parseColor(g.getString(0)); b = Color.parseColor(g.getString(1)); } catch (Exception ignored) { }
+            GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{ b, a });
+            gd.setGradientType(GradientDrawable.RADIAL_GRADIENT); gd.setGradientRadius(getResources().getDisplayMetrics().widthPixels * 0.75f);
+            gd.setGradientCenter(0.5f, 0.2f);
+            base = gd;
+        } else if ("image".equals(bg) && !rev.isEmpty()) {
+            java.io.File f = new java.io.File(getFilesDir(), "bg.img");
+            if (rev.equals(p().getString("bg_rev", "")) && f.exists()) {
+                android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options(); o.inSampleSize = 1;
+                android.graphics.Bitmap bm = android.graphics.BitmapFactory.decodeFile(f.getPath(), o);
+                base = bm != null ? new android.graphics.drawable.BitmapDrawable(getResources(), bm) : new android.graphics.drawable.ColorDrawable(BG);
+            } else {
+                base = new android.graphics.drawable.ColorDrawable(BG);
+                if (fetch) net.execute(() -> {   // neues Bild vom PC holen
+                    try {
+                        byte[] b = Nexus.bytes(this, "/watch/bg");
+                        try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) { o.write(b); }
+                        p().edit().putString("bg_rev", rev).apply();
+                        ui.post(() -> applyLook(look, false));
+                    } catch (Exception ignored) { }
+                });
+            }
+        } else base = new android.graphics.drawable.ColorDrawable(BG);
+        if (!"none".equals(bg) && dim > 0) {
+            android.graphics.drawable.ColorDrawable shade = new android.graphics.drawable.ColorDrawable(Color.argb(Math.round(dim * 2.55f), 0, 0, 0));
+            sv.setBackground(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{ base, shade }));
+        } else sv.setBackground(base);
+    }
+    private String themeKey() { try { return new JSONObject(p().getString("look", "{}")).optString("theme", "cyber"); } catch (Exception e) { return "cyber"; } }
+
     // ---------- kleine Bausteine ----------
     private int dp(int v) { return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, getResources().getDisplayMetrics()); }
     private TextView text(String s, int sp, int color, boolean bold) {
@@ -93,7 +143,7 @@ public class MainActivity extends Activity {
         Button btn = new Button(this);
         btn.setText(s); btn.setAllCaps(false); btn.setTextSize(14); btn.setTextColor(color == GOLD ? BG : Color.WHITE);
         GradientDrawable g = new GradientDrawable();
-        g.setCornerRadius(dp(22)); g.setColor(color == GOLD ? GOLD : 0xFF16202B); g.setStroke(dp(1), color);
+        g.setCornerRadius(dp(22)); g.setColor(color == GOLD ? GOLD : 0xD016202B); g.setStroke(dp(1), color);
         btn.setBackground(g);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.topMargin = dp(6);
@@ -131,7 +181,7 @@ public class MainActivity extends Activity {
     private void tile(LinearLayout r, String icon, String label, String sub, int color, View.OnClickListener l) {
         LinearLayout t = new LinearLayout(this);
         t.setOrientation(LinearLayout.VERTICAL); t.setGravity(Gravity.CENTER);
-        GradientDrawable g = new GradientDrawable(); g.setShape(GradientDrawable.OVAL); g.setColor(0xFF16202B); g.setStroke(dp(2), color);
+        GradientDrawable g = new GradientDrawable(); g.setShape(GradientDrawable.OVAL); g.setColor(0xD016202B); g.setStroke(dp(2), color);
         t.setBackground(g);
         int size = dp(74);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size); lp.leftMargin = dp(5); lp.rightMargin = dp(5);
@@ -258,11 +308,15 @@ public class MainActivity extends Activity {
             int i = 0; while (i < INTERVALS.length && INTERVALS[i] != cur) i++;
             p().edit().putInt("interval", INTERVALS[(i + 1) % INTERVALS.length]).apply(); render();
         });
+        String tk = themeKey(); int ti = 0; while (ti < THEMES.length && !THEMES[ti].equals(tk)) ti++;
+        final int next = (ti + 1) % THEMES.length;
+        button("🎨 Thema: " + THEME_NAMES[ti % THEMES.length], CYAN, v -> act("theme", "theme", THEMES[next]));
         toggle("Puls beim Start senden", "auto_heart", false, null);
         toggle("Bildschirm anlassen", "screen_on", false, this::applyScreenOn);
         toggle("Vibration", "vibrate", true, null);
         toggle("Panik doppelt tippen", "panic_confirm", true, null);
         toggle("Updates automatisch suchen", "auto_update", true, null);
+        toggle("Updates im Hintergrund installieren", "auto_install", true, () -> UpdateJob.schedule(this));
 
         text("PC-Adresse", 11, MUTED, false);
         EditText host = new EditText(this);
@@ -332,7 +386,20 @@ public class MainActivity extends Activity {
         net.execute(() -> {
             try { state = Nexus.call(this, "/watch/state", null); err = ""; }
             catch (Exception e) { err = String.valueOf(e.getMessage()); }
-            ui.post(() -> { if (!"settings".equals(screen)) render(); });
+            ui.post(() -> {
+                if (state != null) {
+                    JSONObject lk = state.optJSONObject("look");
+                    if (lk != null && !lk.toString().equals(p().getString("look", ""))) applyLook(lk, true);
+                    else if (lk != null && "image".equals(lk.optString("bg")) && !lk.optString("bg_rev").equals(p().getString("bg_rev", ""))) applyLook(lk, true);
+                    long bz = state.optLong("buzz", 0);
+                    if (bz > 0 && bz != lastBuzz) {   // 🔔 „Uhr finden“ vom PC
+                        lastBuzz = bz;
+                        try { getSystemService(Vibrator.class).vibrate(VibrationEffect.createWaveform(new long[]{ 0, 400, 200, 400, 200, 800 }, -1)); } catch (Exception ignored) { }
+                        toast("🔔 Hier bin ich!");
+                    }
+                }
+                if (!"settings".equals(screen)) render();
+            });
         });
     }
     private void panic() {
@@ -352,6 +419,8 @@ public class MainActivity extends Activity {
                 else { b.put("a", a); if (key != null) b.put(key, val); }
                 JSONObject r = Nexus.call(this, "/watch/action", b);
                 if (r.has("state")) state = r.getJSONObject("state");
+                JSONObject lk = state != null ? state.optJSONObject("look") : null;
+                if (lk != null) ui.post(() -> applyLook(lk, true));
                 String m = r.optString("msg"); err = "";
                 ui.post(() -> { if (!m.isEmpty()) toast(m); render(); });
             } catch (Exception e) { err = String.valueOf(e.getMessage()); ui.post(() -> { buzz(200); render(); }); }

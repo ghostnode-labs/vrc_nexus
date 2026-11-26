@@ -1,5 +1,10 @@
 [
  {
+  "version": "5.2.3",
+  "title": "Emergency from the phone",
+  "body": "- 📱 The paired Android app gets an emergency card: 🚨 panic (with confirmation), ✅ all-clear / 🕶 private mode, consent light 🟢🟡🔴 and ⏹ stop toys – same unlock rules as on the PC; when locked the app shows why."
+ },
+ {
   "version": "5.2.2",
   "title": "Nexus Watch: emergency page",
   "body": "- 🔞 **Emergency tile** in the watch menu: 🚨 panic (tap twice – can be switched off in the settings), ✅ all-clear / 🕶 private mode, consent light with the current colour, ⏹ stop toys.\n- **Panic stays reachable in private mode** (before, the 🔞 buttons disappeared after the first panic); the watch gets an answer after 2.5 s while slow parts (avatar switch, Wallpaper Engine, OBS) finish in the background."

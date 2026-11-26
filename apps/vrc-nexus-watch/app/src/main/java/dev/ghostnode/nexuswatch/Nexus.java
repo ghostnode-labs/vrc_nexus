@@ -70,6 +70,7 @@ final class Nexus {
         h.setRequestProperty("Content-Type", "application/json");
         String tok = prefs(c).getString("token", "");
         if (!tok.isEmpty()) h.setRequestProperty("X-Nexus-Watch", tok);
+        h.setRequestProperty("X-Nexus-Watch-Version", Updater.installedName(c));
         if (body != null) {
             h.setRequestMethod("POST"); h.setDoOutput(true);
             try (OutputStream o = h.getOutputStream()) { o.write(body.toString().getBytes(StandardCharsets.UTF_8)); }
@@ -95,6 +96,22 @@ final class Nexus {
             prefs(c).edit().putString("host", d.optString("host")).putInt("port", d.optInt("port", DEF_PORT)).apply();
             return call(c, d.optString("host"), d.optInt("port", DEF_PORT), path, body);
         }
+    }
+
+    /** Hintergrundbild vom PC holen (nur gekoppelt), höchstens 4 MB */
+    static byte[] bytes(Context c, String path) throws Exception {
+        URL u = new URL("http://" + host(c) + ":" + port(c) + path);
+        HttpURLConnection h = (HttpURLConnection) (wifi != null ? wifi.openConnection(u) : u.openConnection());
+        h.setConnectTimeout(5000); h.setReadTimeout(20000);
+        h.setRequestProperty("X-Nexus-Watch", prefs(c).getString("token", ""));
+        try {
+            if (h.getResponseCode() != 200) throw new Exception("Bild nicht verfügbar (" + h.getResponseCode() + ")");
+            try (InputStream in = h.getInputStream()) {
+                ByteArrayOutputStream bo = new ByteArrayOutputStream(); byte[] b = new byte[16384]; int n;
+                while ((n = in.read(b)) > 0) { bo.write(b, 0, n); if (bo.size() > 4 * 1024 * 1024) throw new Exception("Bild zu groß."); }
+                return bo.toByteArray();
+            }
+        } finally { h.disconnect(); }
     }
 
     static JSONObject pair(Context c, String host, int port, String pin) throws Exception {

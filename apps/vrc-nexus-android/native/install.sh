@@ -8,6 +8,8 @@ cp -r native/res/* "$SRC/res/"
 grep -q 'NexusWidget' "$SRC/AndroidManifest.xml" || sed -i 's#</application>#    <receiver android:name=".NexusWidget" android:exported="true" android:label="VRC Nexus">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/nexus_widget_info" />\n        </receiver>\n    </application>#' "$SRC/AndroidManifest.xml"
 # Updates selbst installieren dürfen (Android fragt den Nutzer trotzdem)
 grep -q 'REQUEST_INSTALL_PACKAGES' "$SRC/AndroidManifest.xml" || sed -i 's#<application#<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application#' "$SRC/AndroidManifest.xml"
+# 5.2.3: Handy ↔ PC im Heimnetz läuft über http://PC:17874 – Klartext-Verbindungen erlauben (Kopplung mit eigenem Schlüssel je Gerät)
+grep -q 'usesCleartextTraffic' "$SRC/AndroidManifest.xml" || sed -i 's#<application#<application android:usesCleartextTraffic="true"#' "$SRC/AndroidManifest.xml"
 # FileProvider von Capacitor muss den Cache-Ordner freigeben (dort landet die heruntergeladene APK)
 FP="$SRC/res/xml/file_paths.xml"
 if [ -f "$FP" ] && ! grep -q 'cache-path' "$FP"; then sed -i 's#</paths>#    <cache-path name="nexus_cache" path="." />\n</paths>#' "$FP"; fi

@@ -13,7 +13,15 @@ public class InstallReceiver extends BroadcastReceiver {
         int st = i.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);
         if (st == PackageInstaller.STATUS_PENDING_USER_ACTION) {
             Intent confirm = (Intent) i.getParcelableExtra(Intent.EXTRA_INTENT);
-            if (confirm != null) { confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); c.startActivity(confirm); }
+            if (confirm == null) return;
+            confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try { c.startActivity(confirm); } catch (Exception ignored) { /* aus dem Hintergrund nicht erlaubt → Benachrichtigung */ }
+            // zusätzlich als Benachrichtigung (Hintergrund-Updates dürfen keine Fenster öffnen)
+            android.app.NotificationManager nm = c.getSystemService(android.app.NotificationManager.class);
+            nm.createNotificationChannel(new android.app.NotificationChannel("update", "Updates", android.app.NotificationManager.IMPORTANCE_DEFAULT));
+            android.app.PendingIntent pi = android.app.PendingIntent.getActivity(c, 2, confirm, android.app.PendingIntent.FLAG_IMMUTABLE | android.app.PendingIntent.FLAG_UPDATE_CURRENT);
+            nm.notify(2, new android.app.Notification.Builder(c, "update").setSmallIcon(R.drawable.ic_launcher).setContentTitle("Nexus Watch-Update bereit")
+                .setContentText("Tippen zum Installieren").setContentIntent(pi).setAutoCancel(true).build());
         } else if (st == PackageInstaller.STATUS_SUCCESS) {
             Toast.makeText(c, "✔ Nexus Watch aktualisiert", Toast.LENGTH_LONG).show();
         } else {

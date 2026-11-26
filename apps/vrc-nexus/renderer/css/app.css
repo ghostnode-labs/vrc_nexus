@@ -1357,3 +1357,37 @@ body.mobile .hm-tab em { display: none; }
 .hr-pin { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
 .hr-pin b { font-size: 1.8rem; letter-spacing: 4px; font-variant-numeric: tabular-nums; color: var(--gold, #e3b341); }
 .hr-watches { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }
+
+/* 5.2.3: Werkzeuge → Nexus Watch */
+.nw-devs { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.nw-devs li { display: flex; align-items: center; gap: 10px; }
+.nw-devs li div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nw-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; flex: 0 0 auto; }
+.nw-dot.on { background: #3ddc84; box-shadow: 0 0 8px #3ddc84; }
+.nw-hr { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.nw-hr b { font-size: 1.6rem; }
+.nw-design { grid-column: 1 / -1; }
+.nw-design-row { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+.nw-opts { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 8px; }
+.nw-themes { display: flex; flex-wrap: wrap; gap: 6px; }
+.nw-theme { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--a); background: var(--b); color: #fff; cursor: pointer; font: inherit; font-size: .8rem; }
+.nw-theme i { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, var(--a) 50%, var(--h) 50%); }
+.nw-theme.on { box-shadow: 0 0 0 2px var(--a); }
+.nw-prev { width: 180px; height: 180px; border-radius: 50%; padding: 6px; background: #222; box-shadow: 0 0 0 3px #333, 0 8px 24px rgba(0,0,0,.5); flex: 0 0 auto; }
+.nw-face { position: relative; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #fff; font-family: system-ui, sans-serif; }
+.nw-face i { position: absolute; inset: 0; background: #000; pointer-events: none; }
+.nw-face > *:not(i) { position: relative; }
+.nw-brand { color: var(--ac); font-size: .6rem; letter-spacing: 2px; }
+.nw-bpm { color: var(--dg); font-size: 1.5rem; }
+.nw-face small { font-size: .55rem; }
+.nw-tiles { display: grid; grid-template-columns: repeat(2, 30px); gap: 5px; margin-top: 4px; }
+.nw-tiles span { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ac); background: rgba(22,32,43,.85); display: flex; align-items: center; justify-content: center; font-size: .8rem; }
+.nw-tiles span.dg { border-color: var(--dg); }
+.nw-tiles span.mu { border-color: var(--mu); }
+/* 5.2.3: Handy ↔ PC */
+.pc-pair, .pc-chat { display: flex; flex-direction: column; gap: 8px; }
+.pc-chat { flex-direction: row; } .pc-chat input { flex: 1; min-width: 0; }
+.pc-head > div:first-child { display: flex; flex-direction: column; }
+.pc-bpm { font-size: 2rem; font-weight: 800; color: #888; margin: 6px 0; } .pc-bpm.on { color: #ff5577; }
+.pc-panic { width: 100%; font-size: 1.1rem; padding: 12px; margin-bottom: 8px; }
+.pc-light .btn { font-size: 1.1rem; }

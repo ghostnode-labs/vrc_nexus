@@ -3753,3 +3753,73 @@ test('5.2: VRC Nexus Watch – Suche per UDP, Kopplung mit Code (Fehlversuche), 
     assert.ok(!app.watch.server);
     app.tools.stop(); app.heart && app.heart.stop();
 });
+
+test('5.2.3: Handy ↔ PC über die Uhr-Kopplung (feste Aktionsliste), Themen & Hintergrund der Uhr, Uhr finden', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWNER = 'usr_' + '8'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null), ud = fs.mkdtempSync(path.join(os.tmpdir(), 'nx-w3-'));
+    const pc = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: ud } });
+    pc.game.osc.stopListen(); pc.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'Luna' }); pc.tools.alert = () => {};
+    const chats = []; pc.game.oscSend = async (kind, input) => { chats.push([kind, input.text]); return 1; };
+    const PORT = 17000 + Math.floor(Math.random() * 800);
+    let r = await pc.post({ act: 'watch_cfg', on: '1', port: String(PORT) }, {});
+    for (let i = 0; i < 50 && !pc.watch.server.listening; i++) await U.sleep(10);
+    // Handy-App koppelt sich
+    const db2 = await openDatabase(null);
+    const mob = new NexusApp({ db: db2, crypt: { encrypt: s => 'e:' + s, decrypt: s => s.replace(/^e:/, '') }, mobile: true, host: { userData: os.tmpdir() } });
+    const m = (act, x) => mob.post(Object.assign({ act }, x || {}), {});
+    await assert.rejects(m('pclink_pair', { addr: '127.0.0.1:' + PORT, pin: '12' }), /6-stelligen/);
+    await assert.rejects(m('pclink_pair', { addr: '127.0.0.1:' + PORT, pin: pc.watch.pin === '999999' ? '111111' : '999999' }), /Falscher Code/);
+    r = await m('pclink_pair', { addr: '127.0.0.1:' + PORT, pin: pc.watch.pin });
+    assert.ok(r.paired && r.pc === 'Luna' && /verbunden/.test(r.msg));
+    assert.ok(db2.setting('pclink', '').includes('"token":"e:'), 'Schlüssel auf dem Handy verschlüsselt');
+    assert.strictEqual(pc.watch.cfg().devices[0].kind, 'phone');
+    assert.notStrictEqual(pc.heart.cfg().source, 'watch', 'Handy wird keine Puls-Quelle');
+    // Chatbox vom Handy
+    r = await m('pclink_act', { pc_act: 'client_osc', data: JSON.stringify({ kind: 'chatbox', text: 'Hallo vom Handy' }) });
+    assert.deepStrictEqual(chats.pop(), ['chatbox', 'Hallo vom Handy']);
+    await assert.rejects(m('pclink_act', { pc_act: 'client_osc', data: JSON.stringify({ kind: 'param', name: 'x', value: 1 }) }), /nur Chatbox/);
+    await assert.rejects(m('pclink_act', { pc_act: 'watch_cfg', data: '{}' }), /nicht erlaubt/, 'keine Einstellungen am PC vom Handy');
+    await assert.rejects(m('pclink_act', { pc_act: 'tools_config_save', data: '{}' }), /nicht erlaubt/);
+    await assert.rejects(m('pclink_act', { pc_act: 'nsfw_panic' }), /Nicht freigeschaltet/, '🔞 nur mit Freigabe am PC');
+    grant18(pc);
+    r = await m('pclink_act', { pc_act: 'nsfw_panic' }); assert.ok(pc.nsfw.private && r.state.private && r.state.nsfw);
+    await m('pclink_act', { pc_act: 'nsfw_allclear' }); assert.ok(!pc.nsfw.private);
+    r = await m('pclink_get', { refresh: '1' }); assert.ok(r.state && r.state.look.theme === 'cyber');
+    // Uhr-Endpunkte nur für Uhren, Handy-Endpunkt nur für Handys
+    const pin = pc.watch.pin, B = 'http://127.0.0.1:' + PORT;
+    const w = await (await fetch(B + '/watch/pair', { method: 'POST', body: JSON.stringify({ pin, name: 'Uhr' }) })).json();
+    const wr = await fetch(B + '/watch/act', { method: 'POST', headers: { 'X-Nexus-Watch': w.token }, body: JSON.stringify({ act: 'toys_stop' }) });
+    assert.strictEqual(wr.status, 400);
+    // Themen & Hintergrund
+    await assert.rejects(pc.post({ act: 'watch_cfg', theme: 'gibtsnicht' }, {}), /Unbekanntes Thema/);
+    await assert.rejects(pc.post({ act: 'watch_cfg', bg: 'image' }, {}), /Erst ein Bild/);
+    r = await pc.post({ act: 'watch_cfg', theme: 'neon', bg: 'gradient', bg_dim: '40' }, {});
+    assert.strictEqual(r.look.colors.accent, '#FF3DCB'); assert.strictEqual(r.look.bg_dim, 40);
+    await assert.rejects(pc.post({ act: 'watch_bg', data: 'data:image/png;base64,' + Buffer.from('kein bild').toString('base64') }, {}), /Keine gültige Bilddatei/);
+    const png = Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), Buffer.alloc(64)]);
+    r = await pc.post({ act: 'watch_bg', data: 'data:image/png;base64,' + png.toString('base64') }, {});
+    assert.ok(r.has_bg && r.look.bg === 'image' && /^[a-f0-9]{16}$/.test(r.look.bg_rev));
+    const st = await (await fetch(B + '/watch/state', { headers: { 'X-Nexus-Watch': w.token, 'X-Nexus-Watch-Version': '5.2.3' } })).json();
+    assert.strictEqual(st.look.theme, 'neon'); assert.strictEqual(st.look.bg_rev, r.look.bg_rev);
+    const img = Buffer.from(await (await fetch(B + '/watch/bg', { headers: { 'X-Nexus-Watch': w.token } })).arrayBuffer());
+    assert.ok(img.equals(png), 'Uhr bekommt das Bild');
+    assert.strictEqual((await fetch(B + '/watch/bg')).status, 401, 'Bild nur für gekoppelte Geräte');
+    // Thema von der Uhr aus ändern
+    await fetch(B + '/watch/action', { method: 'POST', headers: { 'X-Nexus-Watch': w.token }, body: JSON.stringify({ a: 'theme', theme: 'amoled' }) });
+    assert.strictEqual(pc.watch.cfg().theme, 'amoled');
+    // Uhr finden
+    await pc.post({ act: 'watch_find', id: w.id }, {});
+    const s2 = await (await fetch(B + '/watch/state', { headers: { 'X-Nexus-Watch': w.token } })).json();
+    assert.ok(s2.buzz > 0, 'Uhr soll vibrieren');
+    const s3 = await (await fetch(B + '/watch/state', { headers: { 'X-Nexus-Watch': w.token } })).json();
+    assert.ok(!s3.buzz, 'nur einmal');
+    r = await pc.post({ act: 'watch_get' }, {});
+    assert.ok(r.devices.find(d => d.kind === 'watch').ver === '5.2.3', 'Version der Uhr sichtbar');
+    await pc.post({ act: 'watch_bg_clear' }, {});
+    await m('pclink_unpair'); assert.strictEqual((await m('pclink_get')).paired, false);
+    await pc.post({ act: 'watch_cfg', on: '0' }, {});
+    pc.tools.stop(); mob.tools && mob.tools.stop && mob.tools.stop(); pc.heart && pc.heart.stop();
+});

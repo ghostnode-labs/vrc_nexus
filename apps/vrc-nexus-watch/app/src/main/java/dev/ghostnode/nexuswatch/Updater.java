@@ -72,6 +72,8 @@ final class Updater {
         PackageInstaller pi = c.getPackageManager().getPackageInstaller();
         PackageInstaller.SessionParams p = new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
         p.setAppPackageName(c.getPackageName());
+        // ab Android 12: Updates der eigenen App ohne Rückfrage (sobald Nexus Watch selbst der Installer ist)
+        if (android.os.Build.VERSION.SDK_INT >= 31) p.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
         int id = pi.createSession(p);
         try (PackageInstaller.Session s = pi.openSession(id)) {
             HttpURLConnection h = (HttpURLConnection) new URL(url).openConnection();

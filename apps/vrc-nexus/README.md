@@ -22,6 +22,12 @@ All data stays on your PC. Screenshots and downloads: see the [main README](../.
 
 ## Changelog
 
+### New in 5.2.3 – Watch & phone hub, themes, auto-updater
+- 🧰 **Tools → ⌚ Nexus Watch & phone**: everything in one place – connection & pairing code, paired devices with online status and version, live heart rate, 🔔 *find watch* (it vibrates)
+- 🎨 **Watch design**: 6 themes (Cyber, Neon, Ocean, Forest, Sunset, AMOLED), background (none, gradient or your own image, automatically shrunk) with dimming and a live round preview – synced to every paired watch, and the theme can also be changed on the watch
+- 📱 **Phone ↔ PC**: the Android app pairs with the same code (Tools → *Connect to PC*) and talks directly to the PC on your home network: status & heart rate, chatbox text, avatar presets, macros, sleep mode and 🔞 *** – only a fixed list of actions, one key per device
+- ⬆ **Watch auto-updater**: checks about every 12 h while charging on Wi-Fi and installs new versions by itself (Wear OS 4+, after confirming the first update once; Wear OS 3 asks with a notification)
+
 ### New in 5.2.2 – Nexus Watch: main menu, settings & updater
 - ⌚ **Main menu** made for round screens: heart rate and status on top, round tiles for ♥ Heart rate, 💤 Comfort (sleep mode, sleep with 8 h alarm), ⚙ Settings and 🔞 ***
 - ⏱ **Heart rate is sent at a fixed interval** (1, 2, 5 or 10 s) – shows when it was last sent

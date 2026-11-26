@@ -1778,3 +1778,38 @@ noch nicht verbunden	not connected yet	pas encore connectée	まだ接続され�
 Diese Uhr entfernen? Sie muss danach neu gekoppelt werden.	Remove this watch? It will need to be paired again.	Retirer cette montre ? Il faudra l’appairer à nouveau.	このウォッチを削除しますか? 再度ペアリングが必要になります。
 Uhr entfernt	Watch removed	Montre retirée	ウォッチを削除しました
 Die Uhr-App verbindet sich nur mit der Windows-App	The watch app only connects to the Windows app	L’app montre se connecte uniquement à l’application Windows	ウォッチアプリは Windows アプリにのみ接続します
+// 5.2.3 – Nexus Watch & Handy
+vor	ago	il y a	前
+bereit	ready	prêt	準備完了
+Gekoppelte Geräte	Paired devices	Appareils appairés	ペアリング済みデバイス
+Uhr finden	Find watch	Trouver la montre	ウォッチを探す
+Noch keine Uhr gekoppelt	No watch paired yet	Aucune montre appairée	まだウォッチがペアリングされていません
+Handy: in der VRC-Nexus-App unter Werkzeuge → „Mit PC verbinden“ Adresse und Code eingeben	Phone: in the VRC Nexus app go to Tools → “Connect to PC” and enter the address and code	Téléphone : dans l’app VRC Nexus, Outils → « Se connecter au PC » puis saisir l’adresse et le code	スマホ: VRC Nexus アプリのツール →「PC に接続」でアドレスとコードを入力
+Uhr als Puls-Quelle	Use watch as heart-rate source	Utiliser la montre comme source de pouls	ウォッチを心拍ソースにする
+Puls-Quelle	Heart-rate source	Source de pouls	心拍ソース
+Design der Uhr	Watch design	Design de la montre	ウォッチのデザイン
+Thema	Theme	Thème	テーマ
+Bild hochladen	Upload image	Téléverser une image	画像をアップロード
+Bild entfernen	Remove image	Supprimer l’image	画像を削除
+Abdunkeln	Dim	Assombrir	暗くする
+Wird automatisch auf alle gekoppelten Uhren übertragen. Am besten ein quadratisches Bild (z. B. 450 × 450)	Sent to all paired watches automatically. A square image works best (e.g. 450 × 450)	Envoyé automatiquement à toutes les montres appairées. Une image carrée convient le mieux (p. ex. 450 × 450)	ペアリング済みのすべてのウォッチに自動で送信されます。正方形の画像がおすすめです(例: 450 × 450)
+Bild nicht lesbar	Image not readable	Image illisible	画像を読み込めません
+Mit PC verbinden	Connect to PC	Se connecter au PC	PC に接続
+Am PC in VRC Nexus: Werkzeuge → Nexus Watch → „Uhr-Verbindung im Heimnetz erlauben“. Dort stehen Adresse und Code	On the PC in VRC Nexus: Tools → Nexus Watch → “Allow watch connection on the home network”. The address and code are shown there	Sur le PC dans VRC Nexus : Outils → Nexus Watch → « Autoriser la connexion de la montre sur le réseau local ». L’adresse et le code y sont affichés	PC の VRC Nexus で: ツール → Nexus Watch →「ホームネットワークでのウォッチ接続を許可」。アドレスとコードが表示されます
+PC-Adresse, z. B. 192.168.2.10	PC address, e.g. 192.168.2.10	Adresse du PC, p. ex. 192.168.2.10	PC のアドレス(例: 192.168.2.10)
+Code (6 Ziffern)	Code (6 digits)	Code (6 chiffres)	コード(6桁)
+Koppeln	Pair	Appairer	ペアリング
+Text an die VRChat-Chatbox	Text to the VRChat chatbox	Texte vers la chatbox VRChat	VRChat チャットボックスへのテキスト
+Presets & Makros	Presets & macros	Préréglages & macros	プリセットとマクロ
+Notfall	Emergency	Urgence	緊急
+Verbindung lösen	Disconnect	Déconnecter	接続を解除
+Panik auslösen?	Trigger panic?	Déclencher la panique ?	パニックを実行しますか?
+Verbindung zum PC lösen?	Disconnect from the PC?	Se déconnecter du PC ?	PC との接続を解除しますか?
+Nexus Watch & Handy	Nexus Watch & phone	Nexus Watch & téléphone	Nexus Watch とスマホ
+Uhr und Handy koppeln, Puls vom Handgelenk, Notfall-Knöpfe, Themen & Hintergrund	Pair watch and phone, heart rate from your wrist, emergency buttons, themes & background	Appairer montre et téléphone, pouls au poignet, boutons d’urgence, thèmes & fond	ウォッチとスマホのペアリング、手首の心拍、緊急ボタン、テーマと背景
+Handy mit VRC Nexus am PC koppeln: Chatbox, Presets, Makros, Notfall-Knöpfe	Pair your phone with VRC Nexus on the PC: chatbox, presets, macros, emergency buttons	Appairer le téléphone avec VRC Nexus sur le PC : chatbox, préréglages, macros, boutons d’urgence	スマホを PC の VRC Nexus とペアリング: チャットボックス、プリセット、マクロ、緊急ボタン
+Ozean	Ocean	Océan	オーシャン
+Wald	Forest	Forêt	フォレスト
+Sonnenuntergang	Sunset	Coucher de soleil	サンセット
+keiner	none	aucun	なし
+Alles zur Uhr: Werkzeuge → Nexus Watch	Everything about the watch: Tools → Nexus Watch	Tout sur la montre : Outils → Nexus Watch	ウォッチのすべて: ツール → Nexus Watch

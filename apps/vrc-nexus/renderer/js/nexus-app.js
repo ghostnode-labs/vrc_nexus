@@ -370,6 +370,7 @@
             ['ginvites', '✉', 'Gruppen-Einladungen', 'Offene Gruppen-Einladungen annehmen, ablehnen oder blockieren']]],
         ['Systemwerkzeuge', [['config', '⚙', 'VRChat-Konfiguration', 'config.json bearbeiten (Cache, Kamera, Fotos …)'], ['launch', '🚀', 'Startoptionen', 'VRChat mit eigenen Startoptionen starten'],
             ['registry', '🗄', 'VRChat-Registry-Sicherung', 'Einstellungen von VRChat sichern und wiederherstellen'], ['auto', '🤖', 'Auto-Status & Einladungen', 'Status automatisch ändern, Einladungs-Anfragen automatisch beantworten']]],
+        ['Geräte', [['watch', '⌚', 'Nexus Watch & Handy', 'Uhr und Handy koppeln, Puls vom Handgelenk, Notfall-Knöpfe, Themen & Hintergrund'], ['pc', '🖥', 'Mit PC verbinden', 'Handy mit VRC Nexus am PC koppeln: Chatbox, Presets, Makros, Notfall-Knöpfe']]],
         ['Marktplatz', [['shop', '🛒', 'VRChat-Store', 'Shops von Creators ansehen'], ['purchases', '🧾', 'Kaufverlauf', 'Deine Käufe im Store und Marktplatz']]],
         ['Sonstiges', [['messages', '✏', 'Einladungsnachrichten', 'Texte für Einladungen und Antworten bearbeiten'], ['reports', '🚩', 'Meine Meldungen', 'Eingereichte Meldungen ansehen und löschen'],
             ['news', '📢', 'Info-Push', 'Ankündigungen von VRChat'], ['streamdeck', '🎛', 'Stream Deck', 'Plugin einrichten: Status, Chatbox, OSC per Tastendruck']]],
@@ -377,8 +378,9 @@
             ['x:friends', '📋', 'Freundesliste exportieren', 'Freundesliste als CSV'], ['x:avatars', '🎭', 'Eigene Avatare exportieren', 'Deine Avatare als CSV']]],
     ];
     // Auf Android: nur, was ohne PC funktioniert
-    const PC_ONLY = new Set(['shots', 'f:photos', 'f:steam', 'f:nexus', 'f:vrchat', 'f:logs', 'f:crashes', 'config', 'launch', 'registry', 'auto', 'streamdeck']);
+    const PC_ONLY = new Set(['watch', 'shots', 'f:photos', 'f:steam', 'f:nexus', 'f:vrchat', 'f:logs', 'f:crashes', 'config', 'launch', 'registry', 'auto', 'streamdeck']);
     if (MOBILE) TOOLS.forEach(sec => { sec[1] = sec[1].filter(t => !PC_ONLY.has(t[0])); });
+    else TOOLS.forEach(sec => { sec[1] = sec[1].filter(t => t[0] !== 'pc'); });   // „Mit PC verbinden“ nur in der Handy-App
     for (let i = TOOLS.length - 1; i >= 0; i--) if (!TOOLS[i][1].length) TOOLS.splice(i, 1);
     const closedSecs = new Set(UI.store.get('toolsClosed', []));
     function renderTools() {
@@ -398,6 +400,7 @@
         const b = e.target.closest('[data-tool]');
         if (b) tool(b.dataset.tool);
     });
+    window.NexusOpenTool = id => { UI.tab('tools'); setTimeout(() => tool(id), 120); };   // 5.2.3: Werkzeug direkt öffnen (z. B. von der Puls-Seite)
     function tool(id) {
         if (id === 'back') return renderTools();
         if (id.startsWith('f:')) return run('tools_folder', { which: id.slice(2) }).catch(() => {});
@@ -406,6 +409,8 @@
         const jump = { inventory: ['gallery', 'inventory'], calendar: ['calendar'], shop: ['shop'], purchases: ['shop'], news: ['notifs', 'news'], reports: ['notifs', 'reports'] }[id];
         if (jump) { UI.tab(jump[0], jump[1]); if (id === 'purchases') setTimeout(() => { const p = $('#shopBox .sh-purch, #shopBox table'); if (p) p.scrollIntoView({ behavior: 'smooth' }); }, 1200); return; }
         ({ shots: toolShots, blocked: () => toolGroups('blocked'), ginvites: () => toolGroups('invites'), config: toolConfig, launch: toolLaunch, registry: toolRegistry, auto: toolAuto,
+            pc: () => { const b = toolView('🖥 Mit PC verbinden'); if (window.NexusPcLink) window.NexusPcLink.render(b); },
+            watch: () => { const b = toolView('⌚ Nexus Watch & Handy'); if (window.NexusWatchUI) window.NexusWatchUI.render(b); },
             messages: () => toolMessages('message'), streamdeck: toolStreamDeck, discord: toolDiscord, memos: toolMemos })[id]();
     }
 
