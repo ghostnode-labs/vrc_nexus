@@ -298,7 +298,7 @@ public class MainActivity extends Activity {
         status();
         boolean sleeping = s != null && s.optBoolean("sleeping");
         button(sleeping ? "☀️ Aufwachen" : "💤 Schlafmodus", CYAN, v -> act("sleep", "on", !sleeping));
-        if (!sleeping) button("💤 Schlafen + Wecker 8 h", MUTED, v -> act("sleep_alarm", null, null));
+        if (!sleeping) button("⏰ Wecker 8 h", MUTED, v -> act("sleep_alarm", null, null));
         button("← Menü", MUTED, v -> go("main"));
     }
 
@@ -348,7 +348,7 @@ public class MainActivity extends Activity {
     private EditText hostIn, pinIn;
     private void renderPair() {
         text("Nexus Watch", 18, GOLD, true);
-        text("Mit VRC Nexus koppeln:\nam PC unter 💓 Puls → „VRC Nexus Watch“ einschalten und den Code eingeben.", 11, MUTED, false);
+        text("Mit VRC Nexus koppeln:\nam PC unter Werkzeuge → Nexus Watch die Verbindung erlauben und den Code eingeben.", 11, MUTED, false);
         if (p().getBoolean("lost", false)) text("Die Kopplung wurde am PC entfernt.", 11, GOLD, false);
         pinIn = new EditText(this);
         pinIn.setHint("Code (6 Ziffern)"); pinIn.setInputType(InputType.TYPE_CLASS_NUMBER); pinIn.setGravity(Gravity.CENTER);
