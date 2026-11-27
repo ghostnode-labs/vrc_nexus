@@ -21,7 +21,8 @@ const DEF = { url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idl
     heart: { on: false, device: 'all', lo: 75, hi: 150 },
     voice: { on: false, device: 'all', gain: 100 },
     consent: { param: 'NX/Consent', chat: true, yellow: 50 },
-    aftercare: { on: true, after_min: 3, chat: '' } };
+    aftercare: { on: true, after_min: 3, chat: '' },
+    autopause: { on: false, max_min: 30, pause_min: 5, hr_on: false, hr_max: 150 } };   // 8.2: automatische Pausen nach Zeit oder Puls
 const DEV_DEF = { alias: '', on: true, min: 0, max: 100, curve: 1, smooth: 0, rot: 'cw', rot_alt: 8, lin_min: 0, lin_max: 100, types: {} };
 const TYPE_DEF = { Vibrate: 100, Oscillate: 100, Rotate: 100, Constrict: 60, Inflate: 60, Position: 100 };
 const LINK_TYPES = ['plugs', 'sockets', 'touch', 'constant', 'param', 'pcs', 'heart', 'voice', 'lust'];
@@ -75,7 +76,7 @@ class Toys {
     cfg() {
         let c; try { c = JSON.parse(this.app.db.setting('toys_cfg', '{}')); } catch (e) { c = {}; }
         const o = Object.assign({}, DEF, c);
-        for (const k of ['pcs', 'lust', 'edge', 'heart', 'voice', 'consent', 'aftercare']) o[k] = Object.assign({}, DEF[k], c[k] || {});
+        for (const k of ['pcs', 'lust', 'edge', 'heart', 'voice', 'consent', 'aftercare', 'autopause']) o[k] = Object.assign({}, DEF[k], c[k] || {});
         return o;
     }
     /** Geräte-Objekt vervollständigen (auch für von außen/Tests gesetzte Geräte) */
@@ -145,6 +146,7 @@ class Toys {
         grp('voice', [['on', 'b'], ['device', 'd'], ['gain', 'n', 10, 400]]);
         grp('consent', [['param', 's', 0, 80], ['chat', 'b'], ['yellow', 'n', 10, 90]]);
         grp('aftercare', [['on', 'b'], ['after_min', 'n', 1, 60], ['chat', 's', 0, 144]]);
+        grp('autopause', [['on', 'b'], ['max_min', 'n', 5, 180], ['pause_min', 'n', 1, 60], ['hr_on', 'b'], ['hr_max', 'n', 90, 210]]);
         if (n.lust.source && !['auto', 'pcs', 'own'].includes(n.lust.source)) n.lust.source = 'auto';
         if (n.lust.climax_param && !/^[\w./\-]+$/.test(n.lust.climax_param)) n.lust.climax_param = '';
         if (n.consent.param && !/^[\w./\-]+$/.test(n.consent.param)) n.consent.param = 'NX/Consent';
@@ -177,6 +179,7 @@ class Toys {
             heart: this.app.heart && this.app.heart.active ? this.app.heart.bpm : 0, voice: Math.round(this.voiceLv * 100), consent: this.consent,
             scene: this.scene ? { built: this.scenes ? this.scenes.state() : null, name: this.scene.name, left: Math.max(0, Math.round((this.scene.until - Date.now()) / 1000)), total: Math.round((this.scene.until - this.scene.start) / 1000) } : null,
             session: { running: !!this.session.start, secs: this.session.start ? Math.round((Date.now() - this.session.start) / 1000) : 0, aftercare_due: this.session.due },
+            paused: this.paused && Date.now() < this.paused.until ? { left: Math.round((this.paused.until - Date.now()) / 1000), why: this.paused.why, msg: this.pauseMsg || '' } : null,
             devices: [...this.devices.values()].map(d => this.norm(d)).map(d => { const dc = this.devCfg(d.name); return { index: d.index, name: d.name, alias: dc.alias, label: dc.alias || d.name, on: dc.on, motors: d.motors.length,
                 level: Math.round((this.level.get(d.index) || 0) * 100), out: Math.round((this.cur.get(d.index) || 0) * 100),
                 scalars: d.motors.map(m => ({ index: m.index, type: m.type, steps: m.steps, desc: m.desc, override: this.motorOv.has(d.index + ':' + m.index) ? Math.round(this.motorOv.get(d.index + ':' + m.index) * 100) : null })),
@@ -365,6 +368,7 @@ class Toys {
         const dc = this.devCfg(d.name);
         let x = this.level.get(d.index) || 0;
         if (!dc.on) return 0;
+        if (this.paused && Date.now() < this.paused.until) return 0;   // 8.2: automatische Pause
         x *= this.consentFactor() * this.edgeFactor(x);
         if (x <= 0.001) return 0;
         x = Math.pow(x, dc.curve);
@@ -667,6 +671,7 @@ class Toys {
         this.oscOut(L.v, out);
         // N9/N10: Szene & Aftercare
         if (this.scene && t >= this.scene.until) { this.scene = null; this.stopAll().catch(() => {}); this.session.due = c.aftercare.on; this.session.start = 0; return; }
+        this.checkAutoPause(c, t, out);   // 8.2
         if (out > 0.02) { if (!this.session.start) this.session.start = t; this.session.last = t; this.session.due = false; }
         else if (this.session.start && t - this.session.last > c.aftercare.after_min * 60000) {
             this.session.total += Math.round((this.session.last - this.session.start) / 1000);
@@ -713,6 +718,22 @@ class Toys {
     }
     /** N8: Consent-Ampel – 🔴 stoppt alles, 🟡 halbiert (einstellbar), 🟢 normal */
     consentFactor() { return this.consent === 'red' ? 0 : this.consent === 'yellow' ? this.cfg().consent.yellow / 100 : 1; }
+    /** 8.2: Pause nach X Minuten am Stück oder ab einem Puls – Ausgabe 0, Muster/Szenen laufen danach weiter */
+    checkAutoPause(c, t, out) {
+        if (this.paused && t >= this.paused.until) { this.paused = null; this.pauseMsg = '▶ Pause vorbei'; }
+        const ap = c.autopause;
+        if (!ap || !ap.on || this.paused || out <= 0.02) return '';
+        const hr = this.app.heart && this.app.heart.active ? this.app.heart.bpm : 0;
+        const why = this.session.start && t - this.session.start >= ap.max_min * 60000 ? 'time' : ap.hr_on && hr >= ap.hr_max ? 'heart' : '';
+        if (!why) return '';
+        this.paused = { until: t + ap.pause_min * 60000, why, at: t };
+        this.session.start = 0;   // nach der Pause zählt die Zeit neu
+        for (const d of this.devices.values()) this.drive(d, true).catch(() => {});
+        const msg = why === 'time' ? '⏸ ' + ap.max_min + ' min am Stück – ' + ap.pause_min + ' min Pause' : '⏸ Puls ' + hr + ' – ' + ap.pause_min + ' min Pause';
+        this.pauseMsg = msg;
+        if (this.app.tools && this.app.tools.host && this.app.tools.host.notify) this.app.tools.host.notify('⏸ Pause', msg + '. Wasser trinken, durchatmen 💙');
+        return why;
+    }
     async setConsent(light) {
         if (!['green', 'yellow', 'red'].includes(light)) throw new UserError('Ampel: green, yellow oder red.');
         if (this.consent !== light && this.app.nsfwsafe) this.app.nsfwsafe.log('ampel', { green: '🟢', yellow: '🟡', red: '🔴' }[light]);   // 6.7
@@ -805,6 +826,7 @@ class Toys {
             case 'toys_climax': this.climax('hand'); return Object.assign(this.status(), { msg: '💥 Höhepunkt!' });
             case 'toys_scene': { const s = this.startScene(input); return Object.assign(this.status(), { msg: '🎬 ' + s.name + ' – ' + Math.round((s.until - s.start) / 60000) + ' min' }); }
             case 'toys_scene_stop': if (this.scenes) this.scenes.stop(true); this.scene = null; this.session.due = this.cfg().aftercare.on; return Object.assign(await this.stopAll(), { msg: '🎬 Szene beendet – Zeit für Aftercare 💞' });
+            case 'toys_pause_end': if (this.paused) { this.paused = null; this.pauseMsg = '▶ Pause beendet'; } for (const d of this.devices.values()) this.drive(d, true).catch(() => {}); return Object.assign(this.status(), { msg: '▶ Weiter geht\'s.' });
             case 'toys_aftercare_done': this.session.due = false; return Object.assign(this.status(), { msg: '💞 Danke fürs Kümmern!' });
         }
         throw new UserError('Unbekannte Aktion.');

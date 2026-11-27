@@ -2841,3 +2841,9 @@ Handy: in der VRC-Nexus-App unter 🎮 PC-Fernbedienung Adresse und Code eingebe
 Am PC in VRC Nexus: Werkzeuge → 📡 Geräte → „Geräte-Verbindung im Heimnetz erlauben“. Dort stehen Adresse und Code.	On the PC in VRC Nexus: Tools → 📡 Devices → "Allow device connections on the home network". The address and code are shown there.	Sur le PC dans VRC Nexus : Outils → 📡 Appareils → « Autoriser la connexion des appareils sur le réseau local ». L'adresse et le code s'y trouvent.	PC の VRC Nexus で：ツール → 📡 デバイス →「ホームネットワークでのデバイス接続を許可」。そこにアドレスとコードが表示されます。
 Alles zur Uhr: Werkzeuge → Geräte	Everything about the watch: Tools → Devices	Tout sur la montre : Outils → Appareils	ウォッチのすべて：ツール → デバイス
 Rennen	Run	Courir	走る
+Automatische Pausen	Automatic breaks	Pauses automatiques	自動休憩
+Pause beenden	End break	Terminer la pause	休憩を終える
+min am Stück	min in a row	min d'affilée	分連続
+min Pause	min break	min de pause	分休憩
+auch ab Puls	also from heart rate	aussi à partir du pouls	心拍数でも
+Während der Pause ist die Stärke 0; Muster und Szenen laufen danach weiter. Puls braucht die Puls-Verbindung (HypeRate, Uhr …).	During the break the strength is 0; patterns and scenes continue afterwards. Heart rate needs the heart rate connection (HypeRate, watch …).	Pendant la pause, l'intensité est à 0 ; les motifs et scènes reprennent ensuite. Le pouls nécessite la connexion cardio (HypeRate, montre …).	休憩中は強さ0になり、その後パターンとシーンが再開します。心拍数には心拍接続（HypeRate、ウォッチなど）が必要です。

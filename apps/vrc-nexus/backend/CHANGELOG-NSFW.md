@@ -2,6 +2,10 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.10 – Automatic breaks by time or heart rate
+
+- ⏸ **Automatic breaks** (🔞 → Toys → *⏸ Automatic breaks*, next to Aftercare): after **X minutes in a row** (5–180) the strength goes to 0 for **Y minutes** (1–60); optionally also as soon as your **heart rate** reaches a limit (90–210 bpm, needs the heart rate connection – HypeRate, watch …). Patterns and scenes keep running and simply continue after the break; the session timer starts fresh. A notification shows why the break started ("30 min in a row" or "heart rate 152"), and *▶ End break* resumes immediately. Off by default.
+
 ### New in 8.0.9 – Emergency stop on all devices
 
 - 🚨 **Emergency stop on all paired PCs at once:** a panic on any PC that is paired through home network sync (🧰 Tools → 📡 Devices) now also runs on the others: toys stop, running scenes end, remote control turns off, plus whatever your panic settings include (private mode, chatbox, safe avatar, wallpaper, OBS, lights). Laptop → main PC is immediate; main PC → laptops within 10 s. Together with the watch, phone, voice command, VR hand menu and gamepad (hold Y), one panic now stops everything you own. The message shows "triggered by a paired PC" when it came from another device. Paired PCs can only trigger a stop – never start anything.

@@ -3243,6 +3243,20 @@ test('4.1: Buttplug-Funktionen (Aktoren, Rotation, Stroker, Sensoren, Gerät-Ein
     t.scene.until = Date.now() - 1; t.tickLust(t.cfg()); await U.sleep(10);
     assert.ok(!t.scene && t.status().session.aftercare_due);
     await app.post({ act: 'toys_aftercare_done' }, {}); assert.ok(!t.status().session.aftercare_due);
+    // 8.2: automatische Pausen nach Zeit oder Puls (Stärke 0, danach geht es weiter)
+    await app.post({ act: 'toys_cfg', autopause: JSON.stringify({ on: '1', max_min: 1, pause_min: 2, hr_on: '1', hr_max: 140 }) }, {});
+    assert.strictEqual(t.cfg().autopause.max_min, 5, 'mindestens 5 min am Stück');
+    t.paused = null; t.session.start = Date.now() - 6 * 60000; t.cur.set(0, 1); t.lust.at = Date.now(); t.tickLust(t.cfg());
+    assert.ok(t.paused && t.paused.why === 'time' && t.status().paused.left > 100 && /5 min am Stück/.test(t.status().paused.msg), JSON.stringify(t.status().paused));
+    t.level.set(0, 1); assert.strictEqual(t.shaped(t.devices.get(0)), 0, 'Pause = Stärke 0');
+    await app.post({ act: 'toys_pause_end' }, {}); assert.ok(!t.paused && t.status().paused === null);
+    assert.strictEqual(Math.round(t.shaped(t.devices.get(0)) * 100), 100, 'nach der Pause wieder voll');
+    app.heart.bpm = 150; app.heart.at = Date.now(); t.session.start = Date.now(); t.cur.set(0, 1); t.tickLust(t.cfg());
+    assert.strictEqual(t.paused && t.paused.why, 'heart', 'Puls über Grenze');
+    t.paused.until = Date.now() - 1; t.cur.set(0, 0); t.tickLust(t.cfg()); assert.ok(!t.paused, 'Pause läuft ab');
+    app.heart.bpm = 0; app.heart.at = 0;
+    await app.post({ act: 'toys_cfg', autopause: JSON.stringify({ on: '0' }) }, {});
+    t.session.start = Date.now() - 600 * 60000; t.cur.set(0, 1); t.tickLust(t.cfg()); assert.ok(!t.paused, 'aus = keine Pause'); t.session.start = 0; t.cur.set(0, 0);
     // Puls & Stimme
     app.heart.push(120, 'test');
     await app.post({ act: 'toys_cfg', heart: JSON.stringify({ lo: 80, hi: 160 }) }, {});

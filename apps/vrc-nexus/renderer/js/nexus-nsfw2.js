@@ -205,6 +205,11 @@
             + sw('aftercare.on', c.aftercare.on, T('nach jeder Sitzung erinnern')) + ' ' + esc(T('nach')) + ' ' + num('aftercare.after_min', c.aftercare.after_min, 1, 60, 1, 56) + ' min ' + esc(T('Pause'))
             + '<div class="nc-row small">' + esc(T('Chatbox-Text')) + ' <input type="text" data-n2="aftercare.chat" value="' + esc(c.aftercare.chat) + '" maxlength="144" placeholder="💞 ' + esc(T('Danke dir – alles gut bei dir?')) + '" style="flex:1"></div>'
             + (ss.aftercare_due ? '<button type="button" class="btn btn-sm btn-gold" data-n2a="afterdone">✔ ' + esc(T('Erledigt')) + '</button>' : ''));
+        const ap = c.autopause || {}, pz = t.paused;   // 8.2: automatische Pausen
+        h += sec('⏸ ' + T('Automatische Pausen'), (pz ? '<p class="ns-card-big">⏸ ' + esc(pz.msg || T('Pause')) + ' · ' + Math.ceil(pz.left / 60) + ' min</p><button type="button" class="btn btn-sm" data-n2a="pauseend">▶ ' + esc(T('Pause beenden')) + '</button>' : '')
+            + '<div class="nc-row small">' + sw('autopause.on', ap.on, T('nach')) + ' ' + num('autopause.max_min', ap.max_min, 5, 180, 5, 56) + ' ' + esc(T('min am Stück')) + ' → ' + num('autopause.pause_min', ap.pause_min, 1, 60, 1, 56) + ' ' + esc(T('min Pause')) + '</div>'
+            + '<div class="nc-row small">' + sw('autopause.hr_on', ap.hr_on, T('auch ab Puls')) + ' ' + num('autopause.hr_max', ap.hr_max, 90, 210, 5, 60) + ' bpm</div>'
+            + '<p class="muted small">' + esc(T('Während der Pause ist die Stärke 0; Muster und Szenen laufen danach weiter. Puls braucht die Puls-Verbindung (HypeRate, Uhr …).')) + '</p>');
         return h;
     }
 
@@ -241,6 +246,7 @@
         if (a === 'scene') { const n = document.getElementById('n2Scene'), m = document.getElementById('n2SceneMin'); toysDo('toys_scene', { name: n ? n.value : '', minutes: m ? m.value : 20 }); return true; }
         if (a === 'scenestop') { toysDo('toys_scene_stop'); if (built) built.running = null; return true; }
         if (a === 'afterdone') { after = {}; toysDo('toys_aftercare_done'); return true; }
+        if (a === 'pauseend') { toysDo('toys_pause_end'); return true; }
         if (a === 'scenegen') { scene = { ort: pick(SCENE.ort), rolle: pick(SCENE.rolle), stimmung: pick(SCENE.stimmung), twist: pick(SCENE.twist) }; scene.title = T(scene.rolle).slice(0, 40); render(); return true; }
         if (a === 'scenechat' && scene) { api('nsfw_chat', { text: '🎭 ' + T(scene.rolle) + ' – ' + T(scene.ort) + ' · ' + T(scene.stimmung) }).then(d => toast(d.msg)).catch(x => toast(x.message, true)); return true; }
         if (a === 'scenesend' && scene) { toysDo('toys_scene', { name: scene.title, minutes: 20 }); return true; }
