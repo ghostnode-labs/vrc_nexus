@@ -175,7 +175,7 @@ class Toys {
             pcs: { active: Date.now() - this.pcs.at < 3000, seen: [...this.pcs.seen].slice(0, 30), depth: Math.round(this.pcs.depth * 100), vel: Math.round(this.pcs.vel * 100), zones: [...this.pcs.zones], event: this.pcs.event, level: Math.round(this.pcsLevel() * 100) },
             lust: { v: Math.round(this.lust.v * 100), ext: this.lust.ext, hist: this.lust.hist.slice(-60), climaxes: this.lust.climaxes, edging: this.lust.edgeHold, release_left: Math.max(0, Math.round((this.lust.releaseUntil - Date.now()) / 1000)) },
             heart: this.app.heart && this.app.heart.active ? this.app.heart.bpm : 0, voice: Math.round(this.voiceLv * 100), consent: this.consent,
-            scene: this.scene ? { name: this.scene.name, left: Math.max(0, Math.round((this.scene.until - Date.now()) / 1000)), total: Math.round((this.scene.until - this.scene.start) / 1000) } : null,
+            scene: this.scene ? { built: this.scenes ? this.scenes.state() : null, name: this.scene.name, left: Math.max(0, Math.round((this.scene.until - Date.now()) / 1000)), total: Math.round((this.scene.until - this.scene.start) / 1000) } : null,
             session: { running: !!this.session.start, secs: this.session.start ? Math.round((Date.now() - this.session.start) / 1000) : 0, aftercare_due: this.session.due },
             devices: [...this.devices.values()].map(d => this.norm(d)).map(d => { const dc = this.devCfg(d.name); return { index: d.index, name: d.name, alias: dc.alias, label: dc.alias || d.name, on: dc.on, motors: d.motors.length,
                 level: Math.round((this.level.get(d.index) || 0) * 100), out: Math.round((this.cur.get(d.index) || 0) * 100),
@@ -764,6 +764,7 @@ class Toys {
     async action(act, input) {
         if (this.app.nsfw) this.app.nsfw.need('toys');
         if (act.startsWith('toys3_')) return await this.play3.action(act, input);
+        if (act.startsWith('toys_scenes')) { if (!this.scenes) { const { Scenes } = require('./scenes'); this.scenes = new Scenes(this); } return await this.scenes.action(act, input); }   // 6.2: Szenen-Baukasten
         switch (act) {
             case 'toys_status': return this.status();
             case 'toys_check': return Object.assign(this.status(), { check: this.avatarCheck() });
@@ -802,7 +803,7 @@ class Toys {
             case 'toys_lust_reset': this.lust.v = 0; this.lust.hist = []; return Object.assign(this.status(), { msg: 'Lust-Meter zurückgesetzt.' });
             case 'toys_climax': this.climax('hand'); return Object.assign(this.status(), { msg: '💥 Höhepunkt!' });
             case 'toys_scene': { const s = this.startScene(input); return Object.assign(this.status(), { msg: '🎬 ' + s.name + ' – ' + Math.round((s.until - s.start) / 60000) + ' min' }); }
-            case 'toys_scene_stop': this.scene = null; this.session.due = this.cfg().aftercare.on; return Object.assign(await this.stopAll(), { msg: '🎬 Szene beendet – Zeit für Aftercare 💞' });
+            case 'toys_scene_stop': if (this.scenes) this.scenes.stop(true); this.scene = null; this.session.due = this.cfg().aftercare.on; return Object.assign(await this.stopAll(), { msg: '🎬 Szene beendet – Zeit für Aftercare 💞' });
             case 'toys_aftercare_done': this.session.due = false; return Object.assign(this.status(), { msg: '💞 Danke fürs Kümmern!' });
         }
         throw new UserError('Unbekannte Aktion.');

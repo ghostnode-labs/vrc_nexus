@@ -26,6 +26,9 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.2.0
+- 🔞 *** (details in the app under “About” when NSFW is unlocked)
+
 ### New in 6.1.0 – Automation 2.0
 - 🤖 **New triggers:** heart rate above / below a limit, friend comes online / goes offline (optionally by name), sleep mode on / off, new song, and **🎛 Stream Deck / button** for rules you start yourself (▶ in the rule list)
 - 🕒 **Time window** per rule (e.g. `18:00-23:00`, also across midnight) – outside it the rule stays quiet

@@ -1441,3 +1441,8 @@ html[data-scheme="light"] body.hi-contrast { --text-muted: #2f3b48; }
 .l18-consent input[type=text] { width: 100%; margin: 6px 0; }
 .l18-consent .nc-row { gap: 10px; flex-wrap: wrap; align-items: center; }
 .l18-compat .vx-pill { margin: 3px 3px 0 0; }
+
+/* 6.2: Szenen-Baukasten */
+.n2-build { display: flex; flex-direction: column; gap: 6px; }
+.n2-bstep { gap: 8px; flex-wrap: wrap; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--line, rgba(255,255,255,.08)); }
+.n2-bstep:last-of-type { border-bottom: 0; }

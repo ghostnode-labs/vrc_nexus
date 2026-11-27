@@ -1,5 +1,10 @@
 [
  {
+  "version": "6.2.0",
+  "title": "",
+  "body": "- 🔞 *** (details in the app under “About” when NSFW is unlocked)"
+ },
+ {
   "version": "6.1.0",
   "title": "Automation 2.0",
   "body": "- 🤖 **New triggers:** heart rate above / below a limit, friend comes online / goes offline (optionally by name), sleep mode on / off, new song, and **🎛 Stream Deck / button** for rules you start yourself (▶ in the rule list)\n- 🕒 **Time window** per rule (e.g. `18:00-23:00`, also across midnight) – outside it the rule stays quiet\n- ✨ Six new templates (heart rate peak, calm again, friend online, song announcement, good night, hype button) and the `{puls}` placeholder\n- 🎛 **Stream Deck plugin 1.9:** new key **Automation rule** – runs a rule or switches it on/off, the key lights up while the rule is on\n- 🔌 Client API: action `auto` (`id`, `cmd` = `run` / `toggle`), status now lists the rules\n- Fix: rules created in quick succession no longer overwrite each other"

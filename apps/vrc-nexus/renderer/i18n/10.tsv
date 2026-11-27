@@ -1953,3 +1953,12 @@ Noch keine Presets.	No presets yet.	Pas encore de préréglages.	プリセット
 In die Zwischenablage kopiert.	Copied to clipboard.	Copié dans le presse-papiers.	クリップボードにコピーしました。
 Puls zwischen 30 und 230 BPM angeben.	Enter a heart rate between 30 and 230 BPM.	Indique un pouls entre 30 et 230 BPM.	心拍数は30〜230 BPMで指定してください。
 Zeitfenster als HH:MM-HH:MM angeben (z. B. 18:00-23:00).	Enter the time window as HH:MM-HH:MM (e.g. 18:00-23:00).	Indique la plage horaire au format HH:MM-HH:MM (p. ex. 18:00-23:00).	時間帯はHH:MM-HH:MMで指定してください（例：18:00-23:00）。
+Noch keine eigenen Szenen.	No scenes of your own yet.	Pas encore de scènes à toi.	自作シーンはまだありません。
+Neue Szene bauen	Build a new scene	Créer une nouvelle scène	新しいシーンを作る
+Runden	Rounds	Tours	ラウンド
+Steigerung	Build-up	Montée	段階的強化
+Steigerung: jede Runde wird um so viel Prozent stärker (höchstens 100 %). Rot auf der Ampel, ⏹ oder Panik beenden sofort.	Build-up: each round gets this many percent stronger (max 100 %). Red on the traffic light, ⏹ or panic stop at once.	Montée : chaque tour devient plus fort de ce pourcentage (max. 100 %). Le rouge, ⏹ ou la panique arrêtent tout de suite.	段階的強化：ラウンドごとにこの割合だけ強くなります（最大100%）。信号の赤、⏹、パニックで即停止。
+Höchstens 30 Schritte.	At most 30 steps.	30 étapes maximum.	最大30ステップです。
+Schritt	Step	Étape	ステップ
+Nächster Schritt	Next step	Étape suivante	次のステップ
+Szenen-Baukasten	Scene builder	Créateur de scènes	シーンビルダー

@@ -23,6 +23,64 @@
     let check = null, checking = false;
     let scene = null, mic = null, micT = null, devOpen = {}, after = {}, patEd = null, lastT = null;
     const pick = a => a[Math.floor(Math.random() * a.length)];
+    // 6.2: Szenen-Baukasten – gespeicherte Abläufe (Muster/Pause, Stärke, Tempo, Dauer, Runden, Steigerung)
+    let built = null, builtLoading = false, sEd = null, reRender = null;
+    const newStep = pause => pause ? { pause: true, seconds: 20 } : { pattern: 'welle', strength: 50, speed: 1, seconds: 60 };
+    function loadBuilt() {
+        if (builtLoading) return; builtLoading = true;
+        api('toys_scenes').then(d => { built = d; }).catch(() => { built = { scenes: [], patterns: [], running: null }; }).finally(() => { builtLoading = false; if (reRender) reRender(); });
+    }
+    const mmss = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    function builderHtml(t) {
+        if (!built) { loadBuilt(); return '<p class="muted small">' + esc(T('Lade …')) + '</p>'; }
+        const pats = built.patterns.length ? built.patterns : ((t && t.patterns) || []), pname = id => ((pats.find(x => x.id === id) || {}).name || id);
+        let h = '';
+        if (!sEd) {
+            h += built.scenes.length ? built.scenes.map(x => '<div class="nc-mrow"><b>' + esc(x.name) + '</b><span class="muted small">' + x.steps.length + ' ' + esc(T('Schritte')) + ' · ' + x.rounds + '× · ' + (x.ramp ? '+' + x.ramp + ' %/' + esc(T('Runde')) + ' · ' : '') + Math.round(x.total / 60) + ' min</span>'
+                + '<button type="button" class="btn btn-sm btn-gold" data-n2a="bplay" data-id="' + esc(x.id) + '">▶</button><button type="button" class="nc-link" data-n2a="bedit" data-id="' + esc(x.id) + '">' + esc(T('bearbeiten')) + '</button>'
+                + '<button type="button" class="nc-x" data-n2a="bdel" data-id="' + esc(x.id) + '">✕</button></div>').join('') : '<p class="muted small">' + esc(T('Noch keine eigenen Szenen.')) + '</p>';
+            return h + '<button type="button" class="btn btn-sm" data-n2a="bnew">＋ ' + esc(T('Neue Szene bauen')) + '</button>';
+        }
+        const total = sEd.steps.reduce((a, x) => a + (+x.seconds || 0), 0) * (+sEd.rounds || 1);
+        h += '<div class="n2-build"><div class="nc-row"><input type="text" data-se="name" maxlength="40" value="' + esc(sEd.name) + '" placeholder="' + esc(T('Name der Szene')) + '" style="flex:1">'
+            + '<label class="small">' + esc(T('Runden')) + ' <input type="number" data-se="rounds" value="' + sEd.rounds + '" min="1" max="10" style="width:56px"></label>'
+            + '<label class="small">' + esc(T('Steigerung')) + ' <input type="number" data-se="ramp" value="' + sEd.ramp + '" min="0" max="30" style="width:56px"> %</label></div>'
+            + sEd.steps.map((x, i) => '<div class="nc-row n2-bstep" data-si="' + i + '"><b class="small">' + (i + 1) + '.</b>'
+                + (x.pause ? '<span class="small" style="flex:1">⏸ ' + esc(T('Pause')) + '</span>'
+                    : '<select data-ss="pattern" style="flex:1">' + pats.map(p => '<option value="' + esc(p.id) + '"' + (p.id === x.pattern ? ' selected' : '') + '>' + esc(T(p.name)) + '</option>').join('') + '</select>'
+                    + '<label class="small">💪 <input type="number" data-ss="strength" value="' + x.strength + '" min="5" max="100" style="width:56px"> %</label>'
+                    + '<label class="small">⚡ <input type="number" data-ss="speed" value="' + x.speed + '" min="0.25" max="3" step="0.25" style="width:60px">×</label>')
+                + '<label class="small">⏱ <input type="number" data-ss="seconds" value="' + x.seconds + '" min="5" max="600" style="width:64px"> s</label>'
+                + '<button type="button" class="nc-link" data-n2a="bup" data-i="' + i + '"' + (i ? '' : ' disabled') + '>↑</button><button type="button" class="nc-x" data-n2a="bsdel" data-i="' + i + '">✕</button></div>').join('')
+            + '<div class="nc-row"><button type="button" class="btn btn-sm" data-n2a="badd">＋ ' + esc(T('Muster')) + '</button><button type="button" class="btn btn-sm" data-n2a="baddp">＋ ⏸ ' + esc(T('Pause')) + '</button>'
+            + '<span class="muted small" style="flex:1">≈ ' + mmss(total) + ' min</span>'
+            + '<button type="button" class="btn btn-sm btn-gold" data-n2a="bsave">💾 ' + esc(T('Speichern')) + '</button><button type="button" class="btn btn-sm" data-n2a="bcancel">' + esc(T('Abbrechen')) + '</button></div>'
+            + '<p class="muted small">' + esc(T('Steigerung: jede Runde wird um so viel Prozent stärker (höchstens 100 %). Rot auf der Ampel, ⏹ oder Panik beenden sofort.')) + '</p></div>';
+        return h;
+    }
+    function builderClick(a, b, toysDo, render) {
+        reRender = render;
+        const done = d => { if (d.msg) toast(d.msg); if (d.scenes) built.scenes = d.scenes; if (d.running !== undefined) built.running = d.running; render(); };
+        const fail = x => toast(x.message, true);
+        if (a === 'bnew') { sEd = { id: '', name: '', rounds: 1, ramp: 0, steps: [newStep(), newStep(true), Object.assign(newStep(), { strength: 70 })] }; render(); return true; }
+        if (a === 'bedit') { const x = built.scenes.find(y => y.id === b.dataset.id); if (x) sEd = JSON.parse(JSON.stringify(x)); render(); return true; }
+        if (a === 'bcancel') { sEd = null; render(); return true; }
+        if (a === 'badd' || a === 'baddp') { if (sEd.steps.length >= 30) { toast(T('Höchstens 30 Schritte.'), true); return true; } sEd.steps.push(newStep(a === 'baddp')); render(); return true; }
+        if (a === 'bsdel') { sEd.steps.splice(+b.dataset.i, 1); render(); return true; }
+        if (a === 'bup') { const i = +b.dataset.i; if (i > 0) { const x = sEd.steps[i]; sEd.steps[i] = sEd.steps[i - 1]; sEd.steps[i - 1] = x; } render(); return true; }
+        if (a === 'bsave') { api('toys_scenes_save', { id: sEd.id, name: sEd.name, rounds: sEd.rounds, ramp: sEd.ramp, steps: JSON.stringify(sEd.steps) }).then(d => { sEd = null; done(d); }).catch(fail); return true; }
+        if (a === 'bdel') { if (!confirm(T('Szene löschen?'))) return true; api('toys_scenes_delete', { id: b.dataset.id }).then(done).catch(fail); return true; }
+        if (a === 'bplay') { api('toys_scenes_play', { id: b.dataset.id }).then(d => { done(d); toysDo('toys_status'); }).catch(fail); return true; }
+        if (a === 'bskip') { api('toys_scenes_skip').then(done).catch(fail); return true; }
+        return false;
+    }
+    function builderChange(e) {
+        const g = e.target.closest('[data-se]'), st = e.target.closest('[data-ss]');
+        if (!sEd || !(g || st)) return false;
+        if (g) sEd[g.dataset.se] = g.type === 'number' ? Number(g.value) : g.value;
+        else { const i = +st.closest('[data-si]').dataset.si; sEd.steps[i][st.dataset.ss] = st.type === 'number' ? Number(st.value) : st.value; }
+        return true;
+    }
 
     // ---------- 🎙 Stimm-Kopplung (Mikrofon → Stärke, nur Pegel – nichts wird aufgenommen oder gesendet) ----------
     async function micSync(on) {
@@ -133,9 +191,13 @@
             + '<p class="muted small">' + esc(T('Nur der Pegel wird gemessen – nichts wird aufgenommen oder verschickt. Läuft, solange VRC Nexus offen ist.')) + '</p>');
         // N9 Szene + N10 Aftercare
         const sc = t.scene, ss = t.session;
-        h += sec('🎬 ' + T('Szenen-Timer'), (sc ? '<p><b>' + esc(sc.name) + '</b> · ' + esc(T('noch')) + ' ' + Math.floor(sc.left / 60) + ':' + String(sc.left % 60).padStart(2, '0') + '</p>' + bar(100 - sc.left / sc.total * 100) + '<button type="button" class="btn btn-sm ns-stop" data-n2a="scenestop">⏹ ' + esc(T('Szene beenden')) + '</button>'
+        const bs = sc && sc.built;
+        h += sec('🎬 ' + T('Szenen-Timer'), (sc ? '<p><b>' + esc(sc.name) + '</b> · ' + esc(T('noch')) + ' ' + Math.floor(sc.left / 60) + ':' + String(sc.left % 60).padStart(2, '0') + '</p>' + bar(100 - sc.left / sc.total * 100)
+            + (bs ? '<p class="small">' + esc(T('Schritt')) + ' ' + bs.step + '/' + bs.steps + ' · ' + esc(T('Runde')) + ' ' + bs.round + '/' + bs.rounds + ' · ' + (bs.pause ? '⏸ ' + esc(T('Pause')) : '💪 ' + bs.level + ' %') + ' · ' + mmss(bs.left) + '</p>' : '')
+            + '<div class="nc-row">' + (bs ? '<button type="button" class="btn btn-sm" data-n2a="bskip">⏭ ' + esc(T('Nächster Schritt')) + '</button>' : '') + '<button type="button" class="btn btn-sm ns-stop" data-n2a="scenestop">⏹ ' + esc(T('Szene beenden')) + '</button></div>'
             : '<div class="nc-row"><input type="text" id="n2Scene" maxlength="40" placeholder="' + esc(T('Name der Szene')) + '" value="' + esc(scene ? scene.title : '') + '" style="flex:1"><input type="number" id="n2SceneMin" value="20" min="1" max="240" style="width:64px"> min<button type="button" class="btn btn-sm btn-gold" data-n2a="scene">▶</button></div><p class="muted small">' + esc(T('Am Ende fährt das Spielzeug herunter und die Aftercare-Erinnerung kommt.')) + '</p>')
             + (ss.running ? '<p class="small">⏱ ' + esc(T('Sitzung läuft seit')) + ' ' + Math.floor(ss.secs / 60) + ' min</p>' : ''));
+        h += sec('🧱 ' + T('Szenen-Baukasten'), builderHtml(t), 'ns-wide');   // 6.2
         h += sec('💞 Aftercare', (ss.aftercare_due ? '<p class="ns-card-big">💞 ' + esc(T('Zeit für Aftercare!')) + '</p>' : '')
             + '<div class="n2-after">' + AFTER.map((a, i) => '<label class="check small"><input type="checkbox" data-after="' + i + '"' + (after[i] ? ' checked' : '') + '> ' + esc(T(a)) + '</label>').join('') + '</div>'
             + sw('aftercare.on', c.aftercare.on, T('nach jeder Sitzung erinnern')) + ' ' + esc(T('nach')) + ' ' + num('aftercare.after_min', c.aftercare.after_min, 1, 60, 1, 56) + ' min ' + esc(T('Pause'))
@@ -163,6 +225,7 @@
         const b = e.target.closest('[data-n2a]');
         if (!b) return false;
         const a = b.dataset.n2a, t = lastT;
+        if (a[0] === 'b' && builderClick(a, b, toysDo, render)) return true;   // 6.2
         if (a === 'check') { checking = true; render(); api('toys_check').then(d => { check = d.check; }).catch(x => toast(x.message, true)).finally(() => { checking = false; render(); }); return true; }
         if (a === 'devopen') { devOpen[b.dataset.name] = !devOpen[b.dataset.name]; render(); return true; }
         if (a === 'tap') { toysDo('toys_tap', { device: b.dataset.dev }); return true; }
@@ -174,7 +237,7 @@
         if (a === 'climax') { toysDo('toys_climax'); return true; }
         if (a === 'release') { toysDo('toys_edge_release'); return true; }
         if (a === 'scene') { const n = document.getElementById('n2Scene'), m = document.getElementById('n2SceneMin'); toysDo('toys_scene', { name: n ? n.value : '', minutes: m ? m.value : 20 }); return true; }
-        if (a === 'scenestop') { toysDo('toys_scene_stop'); return true; }
+        if (a === 'scenestop') { toysDo('toys_scene_stop'); if (built) built.running = null; return true; }
         if (a === 'afterdone') { after = {}; toysDo('toys_aftercare_done'); return true; }
         if (a === 'scenegen') { scene = { ort: pick(SCENE.ort), rolle: pick(SCENE.rolle), stimmung: pick(SCENE.stimmung), twist: pick(SCENE.twist) }; scene.title = T(scene.rolle).slice(0, 40); render(); return true; }
         if (a === 'scenechat' && scene) { api('nsfw_chat', { text: '🎭 ' + T(scene.rolle) + ' – ' + T(scene.ort) + ' · ' + T(scene.stimmung) }).then(d => toast(d.msg)).catch(x => toast(x.message, true)); return true; }
@@ -195,6 +258,7 @@
     const devData = el => { const box = el.closest('[data-devname]'); return box ? box.dataset.devname : null; };
     function onChange(e, toysDo) {
         const af = e.target.closest('[data-after]'); if (af) { after[af.dataset.after] = af.checked; return true; }
+        if (builderChange(e)) return true;
         const dv = e.target.closest('[data-dv]'), dt = e.target.closest('[data-dt]');
         if (dv || dt) {
             const name = devData(e.target); if (!name) return true;

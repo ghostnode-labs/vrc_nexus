@@ -4092,3 +4092,44 @@ test('6.1: Automatik 2.0 – Puls/Schlaf/Musik/Freunde als Auslöser (nur beim W
     const nowIn = inWindow('00:00-00:01');
     assert.strictEqual(names().includes('chatbox gn'), nowIn, 'außerhalb des Zeitfensters kein Auslösen');
 });
+
+test('6.2: Szenen-Baukasten – prüfen, speichern, Ablauf mit Runden & Steigerung, Pause, Rot/Not-Aus stoppen sofort', async () => {
+    const { Scenes } = require('../backend/scenes');
+    let store = '[]'; const started = []; let stopped = 0;
+    const toys = { app: { db: { setting: () => store, setSetting: (k, v) => { store = v; } }, nsfw: { private: false } }, consent: 'green', ws: {}, devices: new Map([[0, {}]]), pat: null, scene: null,
+        session: { due: false }, cfg: () => ({ aftercare: { on: true }, links_on: false }), allPatterns: () => [{ id: 'welle', name: 'Welle' }, { id: 'puls', name: 'Puls' }],
+        startPattern(p) { started.push(p); this.pat = { id: p.id, device: 'all' }; return this.pat; }, set: async () => {},
+        startScene(i) { this.scene = { name: i.name, start: Date.now(), until: Date.now() + i.minutes * 60000 }; return this.scene; }, async stopAll() { stopped++; this.scene = null; this.pat = null; } };
+    const sc = new Scenes(toys);
+    assert.throws(() => sc.save({ name: 'x', steps: [] }), /mindestens einen Schritt/);
+    assert.throws(() => sc.save({ name: 'x', steps: [{ pause: true, seconds: 10 }] }), /Nur Pausen/);
+    assert.throws(() => sc.save({ name: 'x', steps: [{ pattern: 'gibtsnicht' }] }), /unbekanntes Muster/);
+    assert.throws(() => sc.save({ name: 'x', rounds: 10, steps: Array(30).fill({ pattern: 'welle', seconds: 600 }) }), /4 Stunden/);
+    const { id } = sc.save({ name: 'Abend', rounds: 2, ramp: 20, steps: JSON.stringify([{ pattern: 'welle', strength: 50, speed: 1.3, seconds: 5 }, { pause: true, seconds: 5 }, { pattern: 'puls', strength: 90, seconds: 5 }]) });
+    assert.strictEqual(sc.list()[0].total, 30);
+    const r = await sc.action('toys_scenes_play', { id });
+    assert.deepStrictEqual([r.running.step, r.running.round, r.running.level], [1, 1, 50]);
+    assert.ok(toys.scene && toys.scene.built, 'läuft als Szene (Timer, Ende, Aftercare)');
+    sc.next(); assert.strictEqual(sc.state().pause, true); assert.strictEqual(toys.pat, null, 'Pause stoppt das Muster');
+    sc.next(); sc.next();
+    assert.deepStrictEqual([sc.state().round, sc.state().level], [2, 60], 'Runde 2: +20 %');
+    sc.next(); sc.next();
+    assert.strictEqual(sc.state().level, 100, 'nie über 100 %');
+    assert.deepStrictEqual(started.map(p => p.strength), [50, 90, 60, 100]);
+    sc.next();
+    assert.strictEqual(sc.run, null); assert.strictEqual(toys.scene, null); assert.strictEqual(toys.session.due, true, 'Ende → Aftercare');
+    // Rot stoppt beim nächsten Schritt und verhindert den Start
+    await sc.action('toys_scenes_play', { id }); toys.consent = 'red'; const n = started.length; sc.next();
+    assert.strictEqual(sc.run, null); assert.strictEqual(started.length, n, 'bei Rot kein weiterer Schritt');
+    await assert.rejects(sc.action('toys_scenes_play', { id }), /Rot/);
+    toys.consent = 'green';
+    // Not-Aus/Panik (stopAll leert die Szene) → Zeitgeber startet nichts mehr
+    await sc.action('toys_scenes_play', { id }); await toys.stopAll(); const m = started.length; sc.next();
+    assert.strictEqual(started.length, m); assert.strictEqual(sc.run, null);
+    toys.app.nsfw.private = true; await assert.rejects(sc.action('toys_scenes_play', { id }), /Privat-Modus/); toys.app.nsfw.private = false;
+    // NSFW aus (z. B. Panik ohne „Spielzeug stoppen“) → Szene endet beim nächsten Schritt
+    await sc.action('toys_scenes_play', { id }); toys.app.nsfw.access = () => ({ unlocked: false }); const k = started.length; sc.next();
+    assert.strictEqual(sc.run, null); assert.strictEqual(started.length, k, 'ohne NSFW-Freigabe kein weiterer Schritt'); delete toys.app.nsfw.access;
+    sc.stop(); clearTimeout(sc.timer);
+    assert.strictEqual((await sc.action('toys_scenes_delete', { id })).scenes.length, 0);
+});

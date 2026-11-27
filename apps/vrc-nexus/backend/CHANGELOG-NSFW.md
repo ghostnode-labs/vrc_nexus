@@ -2,6 +2,13 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 6.2.0 – Scene builder
+
+- 🧱 **Scene builder** (🔥 Lust & PCS → *Scene builder*): build your own scenes from steps – a pattern (also your own patterns) with strength, speed and duration, or a ⏸ pause. Up to 30 steps, reorder them, save up to 50 scenes on this device only.
+- 🔁 **Rounds & build-up:** a scene can run up to 10 rounds and get stronger each round (0–30 % per round, never above 100 %).
+- 🎬 While it runs the scene timer shows step, round, strength and time left; ⏭ skips to the next step. At the end the toys power down and the aftercare reminder comes.
+- 🛑 **Safe by design:** red on the consent light, ⏹ stop, panic, the safeword of a consent check or private mode end the scene immediately – no further step starts. A scene can't be started on red or in private mode.
+
 ### New in 6.0.0 – NSFW major: 18+ requests, connections & consent check
 
 - 💌 **18+ requests** (Community → *💌 18+ requests*, in the profile and on Nexus Web): send someone with Verified 18+ and NSFW on a request with a short message. They accept or decline – a decline is shown to you only as “not accepted”. Limits: 20 requests a day, no duplicates, 30 days pause after a decline, open requests expire after 14 days.
