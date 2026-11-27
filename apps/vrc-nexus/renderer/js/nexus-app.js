@@ -180,7 +180,7 @@
         if (name === 'network') loadNetwork(false);
         if (name === 'tools') renderTools();
         if (name === 'settings') loadSettings();
-        if (name === 'remote') { loadRemote(); plTimer = setInterval(() => { if (!document.hidden && !document.activeElement.closest('#remBox form')) loadRemote(); }, 5000); }
+        if (name === 'remote') { loadRemote(); if (!(MOBILE && window.NexusPcLink)) plTimer = setInterval(() => { if (!document.hidden && !document.activeElement.closest('#remBox form')) loadRemote(); }, 5000); }
         if (name === 'client' && sub) setTimeout(() => { const b = $('#ncSub [data-sub="' + sub + '"]'); if (b) b.click(); }, 300);
         if (name === 'gallery' && sub === 'inventory') setTimeout(() => { const b = $('#galKinds [data-gk=inventory]'); if (b) b.click(); }, 600);
     }
@@ -409,7 +409,7 @@
             ['ginvites', '✉', 'Gruppen-Einladungen', 'Offene Gruppen-Einladungen annehmen, ablehnen oder blockieren']]],
         ['Systemwerkzeuge', [['config', '⚙', 'VRChat-Konfiguration', 'config.json bearbeiten (Cache, Kamera, Fotos …)'], ['launch', '🚀', 'Startoptionen', 'VRChat mit eigenen Startoptionen starten'],
             ['registry', '🗄', 'VRChat-Registry-Sicherung', 'Einstellungen von VRChat sichern und wiederherstellen'], ['auto', '🤖', 'Auto-Status & Einladungen', 'Status automatisch ändern, Einladungs-Anfragen automatisch beantworten']]],
-        ['Geräte', [['watch', '⌚', 'Nexus Watch & Handy', 'Uhr und Handy koppeln, Puls vom Handgelenk, Notfall-Knöpfe, Themen & Hintergrund'], ['pc', '🖥', 'Mit PC verbinden', 'Handy mit VRC Nexus am PC koppeln: Chatbox, Presets, Makros, Notfall-Knöpfe']]],
+        ['Geräte', [['watch', '📡', 'Geräte', 'Uhr, Handy und Laptop im Heimnetz koppeln: Puls vom Handgelenk, Fernbedienung, Notfall-Knöpfe, Abgleich, Design der Uhr'], ['pc', '🖥', 'Mit PC verbinden', 'Handy mit VRC Nexus am PC koppeln: Chatbox, Presets, Makros, Notfall-Knöpfe']]],
         ['Marktplatz', [['shop', '🛒', 'VRChat-Store', 'Shops von Creators ansehen'], ['purchases', '🧾', 'Kaufverlauf', 'Deine Käufe im Store und Marktplatz']]],
         ['Sonstiges', [['messages', '✏', 'Einladungsnachrichten', 'Texte für Einladungen und Antworten bearbeiten'], ['reports', '🚩', 'Meine Meldungen', 'Eingereichte Meldungen ansehen und löschen'],
             ['news', '📢', 'Info-Push', 'Ankündigungen von VRChat'], ['streamdeck', '🎛', 'Stream Deck', 'Plugin einrichten: Status, Chatbox, OSC per Tastendruck']]],
@@ -448,8 +448,8 @@
         const jump = { inventory: ['gallery', 'inventory'], calendar: ['calendar'], shop: ['shop'], purchases: ['shop'], news: ['notifs', 'news'], reports: ['notifs', 'reports'] }[id];
         if (jump) { UI.tab(jump[0], jump[1]); if (id === 'purchases') setTimeout(() => { const p = $('#shopBox .sh-purch, #shopBox table'); if (p) p.scrollIntoView({ behavior: 'smooth' }); }, 1200); return; }
         ({ shots: toolShots, blocked: () => toolGroups('blocked'), ginvites: () => toolGroups('invites'), config: toolConfig, launch: toolLaunch, registry: toolRegistry, auto: toolAuto,
-            pc: () => { const b = toolView('🖥 Mit PC verbinden'); if (window.NexusPcLink) window.NexusPcLink.render(b); },
-            watch: () => { const b = toolView('⌚ Nexus Watch & Handy'); if (window.NexusWatchUI) window.NexusWatchUI.render(b); },
+            pc: () => { if (MOBILE && UI.tab) return UI.tab('remote'); const b = toolView('🖥 Mit PC verbinden'); if (window.NexusPcLink) window.NexusPcLink.render(b); },   // 8.0.8: Handy → PC-Fernbedienung
+            watch: () => { const b = toolView('📡 Geräte'); if (window.NexusWatchUI) window.NexusWatchUI.render(b); },
             messages: () => toolMessages('message'), streamdeck: toolStreamDeck, discord: toolDiscord, memos: toolMemos })[id]();
     }
 
@@ -709,7 +709,7 @@
         const box = $('#lanBox'); if (!box) return;
         if (!r) return api('lsync_status').then(lanCard).catch(() => { box.innerHTML = ''; });
         const peers = r.hub.peers || [];
-        box.innerHTML = '<p class="nx-hint">' + esc(T('Gleicht die Einstellungen zwischen zwei PCs direkt im WLAN ab – ohne Server, ohne Konto. Ein PC ist die Zentrale (Uhr/Handy-Verbindung an unter Werkzeuge → Nexus Watch), der andere koppelt sich mit Adresse und 6-stelligem Code. Verschlüsselt mit deinem Sicherungs-Passwort.')) + '</p>'
+        box.innerHTML = '<p class="nx-hint">' + esc(T('Gleicht die Einstellungen zwischen zwei PCs direkt im WLAN ab – ohne Server, ohne Konto. Ein PC ist die Zentrale (Geräte-Verbindung an unter Werkzeuge → Geräte), der andere koppelt sich mit Adresse und 6-stelligem Code. Verschlüsselt mit deinem Sicherungs-Passwort.')) + '</p>'
             + (r.role === 'peer' ? '<p>🔗 ' + esc(T('Gekoppelt mit')) + ' <b>' + esc(r.pc || r.host) + '</b> <span class="vx-small">(' + esc(r.host) + ')</span> <button type="button" class="btn btn-sm" id="lanUnpair">' + esc(T('Lösen')) + '</button></p>'
                 : r.role === 'hub' ? '<p>🏠 ' + esc(T('Dieser PC ist die Zentrale')) + (peers.length ? ' · ' + esc(T('gekoppelt')) + ': ' + peers.map(p => esc(p.name)).join(', ') : ' · ' + esc(T('noch kein anderer PC gekoppelt'))) + '</p>' : '')
             + (r.role !== 'peer' ? '<div class="nx-row"><input type="text" id="lanAddr" placeholder="' + esc(T('Adresse des anderen PCs, z. B. 192.168.2.10')) + '" style="flex:1"><input type="text" id="lanPin" placeholder="123456" maxlength="7" style="width:90px" inputmode="numeric"><button type="button" class="btn btn-sm" id="lanPair">🔗 ' + esc(T('Koppeln')) + '</button></div>' : '')
@@ -1380,6 +1380,10 @@
     let remKeep = null;
     function loadRemote() {
         const box = $('#remBox');
+        if (MOBILE && window.NexusPcLink) {   // 8.0.8: Handy → PC direkt im Heimnetz (Kopplung mit Code), ohne Dashboard
+            box.innerHTML = '<div class="nx-panel"><h2>🎮 ' + esc(T('PC-Fernbedienung')) + '</h2><div id="remPc"></div></div>'; window.NexusPcLink.render($('#remPc'));
+            return;
+        }
         api('tools_remote_state').then(d => {
             const st = d.state || {}, fresh = st && st.fresh;
             const params = Object.entries(st.params || {}).filter(([, v]) => typeof v === 'boolean').slice(0, 24);

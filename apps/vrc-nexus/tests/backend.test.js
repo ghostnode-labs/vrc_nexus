@@ -3989,6 +3989,8 @@ test('5.2.3: Handy ↔ PC über die Uhr-Kopplung (feste Aktionsliste), Themen & 
     r = await m('pclink_act', { pc_act: 'client_osc', data: JSON.stringify({ kind: 'chatbox', text: 'Hallo vom Handy' }) });
     assert.deepStrictEqual(chats.pop(), ['chatbox', 'Hallo vom Handy']);
     await assert.rejects(m('pclink_act', { pc_act: 'client_osc', data: JSON.stringify({ kind: 'param', name: 'x', value: 1 }) }), /nur Chatbox/);
+    await m('pclink_act', { pc_act: 'client_osc', data: JSON.stringify({ kind: 'input', name: 'Jump', value: '1', pulse: '1' }) });   // 8.0.8: einfache Eingaben
+    await assert.rejects(m('pclink_act', { pc_act: 'client_osc', data: JSON.stringify({ kind: 'input', name: 'Exit', value: '1' }) }), /nicht erlaubt/);
     await assert.rejects(m('pclink_act', { pc_act: 'watch_cfg', data: '{}' }), /nicht erlaubt/, 'keine Einstellungen am PC vom Handy');
     await assert.rejects(m('pclink_act', { pc_act: 'tools_config_save', data: '{}' }), /nicht erlaubt/);
     await assert.rejects(m('pclink_act', { pc_act: 'nsfw_panic' }), /Nicht freigeschaltet/, '🔞 nur mit Freigabe am PC');

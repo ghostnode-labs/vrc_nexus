@@ -24,6 +24,8 @@ const THEMES = {
     sunset: { name: 'Sonnenuntergang',  bg: '#1A0B0B', accent: '#FF8A4C', hi: '#FFD166', danger: '#FF4D4D', muted: '#B89A8F', grad: ['#1A0B0B', '#4A1A2C'] },
     amoled: { name: 'AMOLED',           bg: '#000000', accent: '#FFFFFF', hi: '#D0D0D0', danger: '#FF5555', muted: '#808080', grad: ['#000000', '#111111'] },
 };
+/** 8.0.8: harmlose VRChat-Eingaben fürs Handy (Taste kurz drücken) */
+const PHONE_INPUTS = ['Jump', 'Voice', 'QuickMenuToggleLeft', 'Run'];
 const BG_KINDS = ['none', 'gradient', 'image'], BG_MAX = 3 * 1024 * 1024;
 /** 8.0.5: Uhr-App 2.0 – Zifferblätter für den Startbildschirm der Uhr */
 const FACES = { classic: 'Klassisch (Puls + Kacheln)', big: 'Große Uhrzeit', analog: 'Analog mit Puls-Ring', minimal: 'Minimal (nur Zeit & Puls)', stats: 'Gesundheit (VR-Zeit, Pausen, Schritte)', friends: 'Freunde & Welt' };
@@ -264,7 +266,8 @@ class Watch {
         if (dev.kind !== 'phone') throw new UserError('Nur für gekoppelte Handys.');
         const act = str(b.act), input = b.data && typeof b.data === 'object' && !Array.isArray(b.data) ? b.data : {};
         if (!PHONE_ACTS.has(act)) throw new UserError('Diese Aktion ist vom Handy aus nicht erlaubt.');
-        if (act === 'client_osc' && !['chatbox', 'typing'].includes(str(input.kind))) throw new UserError('Vom Handy nur Chatbox-Text.');
+        if (act === 'client_osc' && !['chatbox', 'typing', 'input'].includes(str(input.kind))) throw new UserError('Vom Handy nur Chatbox-Text und einfache Eingaben.');
+        if (act === 'client_osc' && str(input.kind) === 'input' && !PHONE_INPUTS.includes(str(input.name))) throw new UserError('Diese Eingabe ist vom Handy aus nicht erlaubt.');   // 8.0.8
         const clean = {};
         for (const [k, v] of Object.entries(input)) if (/^[a-z_]{1,32}$/.test(k) && ['string', 'number', 'boolean'].includes(typeof v)) clean[k] = typeof v === 'string' ? cut(v, 2000) : v;
         const r = await this.app.post(Object.assign(clean, { act }), {});

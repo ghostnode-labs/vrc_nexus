@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.8",
+  "title": "Phone remote via pairing, \"Devices\"",
+  "body": "- 📱 **PC remote on the phone now uses direct pairing** instead of the dashboard link. Enter the PC address and the 6-digit code once; after that the phone talks straight to the PC on your home network, with no dashboard address or device token needed.\n  - Available: chatbox, presets & macros, sleep mode, emergency buttons (18+ only with unlock).\n  - New: simple VRChat inputs (jump, mic, quick menu, run, \"typing …\"). The PC only accepts this fixed list from the phone.\n  - \"Tools → Connect to PC\" on the phone now opens the same page.\n- 📡 **\"Nexus Watch\" is now \"Devices\"** (🧰 Tools → 📡 Devices): one place to pair the watch, phone and laptop. Paired devices show their type (⌚ / 📱 / 🖥). The \"find watch\" button only appears for watches.\n- 🗺 Roadmap: new \"Planned for the future\" list – first entry: an Ubuntu Touch version (Android offshoot)."
+ },
+ {
   "version": "8.0.7",
   "title": "Swipe gestures",
   "body": "- 👆 **Swipe gestures in the phone app** (also on touch screens) – the \"⟳ Refresh\" button is gone:\n  - ⬇ **Pull down** at the top of a page = refresh. A spinner follows your finger; pages with their own reload, like the gallery, use theirs.\n  - ⬅ ➡ **Swipe sideways** = previous/next page of the bottom bar (Home · Friends · Community · Buttons), with a short slide animation.\n  - ➡ **Swipe in from the left edge** = open the menu; ⬅ swipe inside the menu = close it.\n  - ⬇ **Swipe down on an open profile** = close it.\n- Gestures never fire on text fields, sliders or sideways-scrolling bars, and pull-to-refresh only works when the page is scrolled to the top.\n- They can be turned off under Settings → Appearance → Accessibility → \"Swipe gestures\", which brings the ⟳ button back. On the PC with a mouse, nothing changes: the button and the R key stay."

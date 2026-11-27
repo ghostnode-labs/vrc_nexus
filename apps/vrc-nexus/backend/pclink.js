@@ -17,7 +17,7 @@ class PcLink {
 
     static parseAddr(s) {
         const m = /^\s*(?:https?:\/\/)?([\w.-]{1,100})(?::(\d{2,5}))?\s*$/.exec(str(s));
-        if (!m) throw new UserError('Bitte die PC-Adresse eingeben (z. B. 192.168.2.10 – steht am PC unter Werkzeuge → Nexus Watch).');
+        if (!m) throw new UserError('Bitte die PC-Adresse eingeben (z. B. 192.168.2.10 – steht am PC unter Werkzeuge → Geräte).');
         return { host: m[1], port: Math.max(1, Math.min(65535, int(m[2]) || DEF_PORT)) };
     }
     async http(method, host, port, path, body, tok) {

@@ -1,4 +1,4 @@
-/* VRC Nexus – Werkzeuge → ⌚ Nexus Watch: Verbindung & Kopplung, gekoppelte Uhren, Puls, Uhr finden, Design (Thema & Hintergrund). */
+/* VRC Nexus – Werkzeuge → 📡 Geräte (8.0.8, vorher „Nexus Watch“): Verbindung & Kopplung, gekoppelte Uhren, Puls, Uhr finden, Design (Thema & Hintergrund). */
 (function () {
     const UI = window.NexusUI;
     if (!UI) return;
@@ -22,7 +22,7 @@
         let h = '<div class="nc-grid">';
         // Verbindung
         h += '<div class="nc-card"><h4>📡 ' + esc(T('Verbindung')) + '</h4>'
-            + '<label class="check"><input type="checkbox" data-nw="on"' + (on ? ' checked' : '') + '> ' + esc(T('Uhr-Verbindung im Heimnetz erlauben')) + '</label>'
+            + '<label class="check"><input type="checkbox" data-nw="on"' + (on ? ' checked' : '') + '> ' + esc(T('Geräte-Verbindung im Heimnetz erlauben (Uhr, Handy, PC)')) + '</label>'
             + (on ? '<div class="hr-pin"><span class="small">' + esc(T('Kopplungscode')) + '</span><b>' + esc(d.pin.slice(0, 3) + ' ' + d.pin.slice(3)) + '</b><button type="button" class="btn btn-sm" data-nwa="newpin" title="' + esc(T('Neuer Code')) + '">↻</button></div>'
                 + '<p class="small muted">' + esc(T('In der Uhr-App „Koppeln“ tippen und den Code eingeben – die Uhr findet den PC von selbst. Sonst Adresse eintragen:')) + ' <code>' + esc((d.addresses[0] || '?') + ':' + c.port) + '</code></p>'
                 + '<div class="nc-row"><span class="small">' + esc(T('Port')) + '</span><input type="number" min="1024" max="65535" value="' + c.port + '" data-nwport style="width:100px"></div>'
@@ -31,9 +31,9 @@
             + '</div>';
         // Uhren
         h += '<div class="nc-card"><h4>⌚ ' + esc(T('Gekoppelte Geräte')) + '</h4>'
-            + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('zuletzt')) + ' ' + esc(ago(x.last))) + (x.ver ? ' · v' + esc(x.ver) : '') + '</small></div>'
-                + (x.kind === 'phone' ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + '<button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
-                : '<p class="small muted">' + esc(T('Noch keine Uhr gekoppelt.')) + '</p>') + '<p class="small muted">📱 ' + esc(T('Handy: in der VRC-Nexus-App unter Werkzeuge → „Mit PC verbinden“ Adresse und Code eingeben.')) + '</p>'
+            + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : x.kind === 'pc' ? '🖥 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('zuletzt')) + ' ' + esc(ago(x.last))) + (x.ver ? ' · v' + esc(x.ver) : '') + '</small></div>'
+                + (x.kind !== 'watch' && x.kind ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + '<button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
+                : '<p class="small muted">' + esc(T('Noch kein Gerät gekoppelt.')) + '</p>') + '<p class="small muted">📱 ' + esc(T('Handy: in der VRC-Nexus-App unter 🎮 PC-Fernbedienung Adresse und Code eingeben. Laptop: Einstellungen → System → Heimnetz-Abgleich.')) + '</p>'
             + (d.heart ? '<div class="nw-hr"><span>💓</span><b>' + (d.heart.bpm || '–') + '</b><small>bpm' + (d.heart.from === 'watch' ? ' · ⌚' : d.heart.bpm ? ' · ' + esc(d.heart.from) : '') + '</small>'
                 + (d.heart.source !== 'watch' ? '<button type="button" class="btn btn-sm" data-nwa="usewatch">' + esc(T('Uhr als Puls-Quelle')) + '</button>' : '<span class="small ok">✔ ' + esc(T('Puls-Quelle')) + '</span>') + '</div>' : '')
             + '</div>';

@@ -26,6 +26,14 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.8 – Phone remote via pairing, "Devices"
+- 📱 **PC remote on the phone now uses direct pairing** instead of the dashboard link. Enter the PC address and the 6-digit code once; after that the phone talks straight to the PC on your home network, with no dashboard address or device token needed.
+  - Available: chatbox, presets & macros, sleep mode, emergency buttons (18+ only with unlock).
+  - New: simple VRChat inputs (jump, mic, quick menu, run, "typing …"). The PC only accepts this fixed list from the phone.
+  - "Tools → Connect to PC" on the phone now opens the same page.
+- 📡 **"Nexus Watch" is now "Devices"** (🧰 Tools → 📡 Devices): one place to pair the watch, phone and laptop. Paired devices show their type (⌚ / 📱 / 🖥). The "find watch" button only appears for watches.
+- 🗺 Roadmap: new "Planned for the future" list – first entry: an Ubuntu Touch version (Android offshoot).
+
 ### New in 8.0.7 – Swipe gestures
 - 👆 **Swipe gestures in the phone app** (also on touch screens) – the "⟳ Refresh" button is gone:
   - ⬇ **Pull down** at the top of a page = refresh. A spinner follows your finger; pages with their own reload, like the gallery, use theirs.

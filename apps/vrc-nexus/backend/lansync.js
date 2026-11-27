@@ -57,7 +57,7 @@ class LanSync {
         let r;
         try {
             r = await fetch('http://' + c.host + ':' + (c.port || DEF_PORT) + path, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { 'X-Nexus-Watch': tok } : {}), body: JSON.stringify(body || {}), signal: AbortSignal.timeout(10000) });
-        } catch (e) { throw new UserError('PC „' + (c.pc || c.host) + '“ nicht erreichbar – gleiches Netz? Läuft dort VRC Nexus mit Uhr/Handy-Verbindung?'); }
+        } catch (e) { throw new UserError('PC „' + (c.pc || c.host) + '“ nicht erreichbar – gleiches Netz? Läuft dort VRC Nexus mit eingeschalteter Geräte-Verbindung?'); }
         let j = {}; try { j = await r.json(); } catch (e) { j = {}; }
         if (r.status === 409) throw new Error('HTTP 409');
         if (r.status === 401) throw new UserError('Nicht mehr gekoppelt – bitte neu koppeln.');
@@ -66,7 +66,7 @@ class LanSync {
     }
     async pair(addr, pin) {
         const m = /^\s*(?:https?:\/\/)?([\w.-]{1,100})(?::(\d{2,5}))?\s*$/.exec(str(addr));
-        if (!m) throw new UserError('Bitte die Adresse des anderen PCs eingeben (z. B. 192.168.2.10 – steht dort unter Werkzeuge → Nexus Watch).');
+        if (!m) throw new UserError('Bitte die Adresse des anderen PCs eingeben (z. B. 192.168.2.10 – steht dort unter Werkzeuge → Geräte).');
         const c = { host: m[1], port: Math.max(1, Math.min(65535, int(m[2]) || DEF_PORT)) };
         if (!/^\d{6}$/.test(str(pin).replace(/\s/g, ''))) throw new UserError('Bitte den 6-stelligen Code vom anderen PC eingeben.');
         let hello;

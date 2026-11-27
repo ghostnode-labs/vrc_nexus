@@ -7,7 +7,7 @@
 
     function pairHtml() {
         return '<div class="nc-card"><h4>🖥 ' + esc(T('Mit PC verbinden')) + '</h4>'
-            + '<p class="small muted">' + esc(T('Am PC in VRC Nexus: Werkzeuge → Nexus Watch → „Uhr-Verbindung im Heimnetz erlauben“. Dort stehen Adresse und Code.')) + '</p>'
+            + '<p class="small muted">' + esc(T('Am PC in VRC Nexus: Werkzeuge → 📡 Geräte → „Geräte-Verbindung im Heimnetz erlauben“. Dort stehen Adresse und Code.')) + '</p>'
             + '<form id="pcPair" class="pc-pair"><input type="text" name="addr" placeholder="' + esc(T('PC-Adresse, z. B. 192.168.2.10')) + '" value="' + esc(d.host || '') + '" inputmode="url" autocomplete="off">'
             + '<input type="text" name="pin" placeholder="' + esc(T('Code (6 Ziffern)')) + '" inputmode="numeric" maxlength="7" autocomplete="one-time-code">'
             + '<button class="btn btn-gold">🔗 ' + esc(T('Koppeln')) + '</button></form>'
@@ -20,6 +20,8 @@
             + '<div class="pc-bpm' + (s.bpm ? ' on' : '') + '">♥ ' + (s.bpm || '–') + '</div><p class="small">' + esc(world) + '</p>'
             + (d.error ? '<p class="small bad">⚠ ' + esc(T(d.error)) + '</p>' : '') + '</div>';
         h += '<div class="nc-card"><h4>💬 ' + esc(T('Chatbox')) + '</h4><form id="pcChat" class="pc-chat"><input type="text" name="text" maxlength="144" placeholder="' + esc(T('Text an die VRChat-Chatbox')) + '"><button class="btn btn-sm btn-gold">' + esc(T('Senden')) + '</button></form></div>';
+        h += '<div class="nc-card"><h4>🎮 ' + esc(T('Eingaben')) + '</h4><div class="nc-row">' + [['Jump', '⤴ ' + T('Springen')], ['Voice', '🎙 ' + T('Mikro')], ['QuickMenuToggleLeft', '☰ ' + T('Quick-Menü')], ['Run', '🏃 ' + T('Rennen')]].map(([k, l]) => '<button type="button" class="btn btn-sm" data-pcin="' + k + '">' + esc(l) + '</button>').join('')
+            + '<button type="button" class="btn btn-sm" data-pcty="1">⌨ ' + esc(T('tippt …')) + '</button></div></div>';
         h += '<div class="nc-card"><h4>💤 ' + esc(T('Komfort')) + '</h4><div class="nc-row">'
             + (s.sleeping ? '<button type="button" class="btn btn-sm" data-pc="sleep_off">☀️ ' + esc(T('Aufwachen')) + '</button>' : '<button type="button" class="btn btn-sm" data-pc="sleep_on">💤 ' + esc(T('Schlafmodus')) + '</button>')
             + '</div></div>';
@@ -54,6 +56,8 @@
             if (f.id === 'pcChat') { const tx = f.text.value.trim(); if (!tx) return; act('client_osc', { kind: 'chatbox', text: tx, sound: '1' }).then(() => { f.text.value = ''; toast('💬 ' + T('gesendet')); }).catch(() => {}); }
         });
         box.addEventListener('click', e => {
+            const ip = e.target.closest('[data-pcin]'); if (ip) return act('client_osc', { kind: 'input', name: ip.dataset.pcin, value: '1', pulse: '1' }).catch(() => {});   // 8.0.8
+            const ty = e.target.closest('[data-pcty]'); if (ty) return act('client_osc', { kind: 'typing', on: '1' }).catch(() => {});
             const l = e.target.closest('[data-pcl]'); if (l) return act('toys_consent', { light: l.dataset.pcl }).catch(() => {});
             const pr = e.target.closest('[data-pcpre]'); if (pr) return act('preset_apply', { id: pr.dataset.pcpre }).catch(() => {});
             const mc = e.target.closest('[data-pcmac]'); if (mc) return act('client_macro_run', { id: mc.dataset.pcmac }).catch(() => {});
