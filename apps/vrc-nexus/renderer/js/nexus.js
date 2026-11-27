@@ -194,6 +194,7 @@
         if (name === 'community' && window.NexusCommunity) window.NexusCommunity.open(sub);
         if (window.NexusClubs) window.NexusClubs.open(name, sub);   // 7.0
         if (name === 'together' && window.NexusTogether) window.NexusTogether.open();   // 7.1
+        if (name === 'perf' && window.NexusPerf) window.NexusPerf.open();   // 7.3.4
         if (window.NexusWiki) window.NexusWiki.open(name);   // 7.2
         if (name === 'buttons' && window.NexusButtons) window.NexusButtons.open();
         if (name === 'osc' && window.NexusMOsc) window.NexusMOsc.open();

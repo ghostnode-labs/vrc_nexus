@@ -805,3 +805,15 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 .ad-star.on { color: #f3c262; }
 .ad-body { white-space: pre-wrap; font: inherit; background: rgba(0,0,0,.2); padding: 8px; border-radius: 8px; margin: 8px 0; }
 .ad-lim summary { cursor: pointer; }
+
+/* 7.3.4 Leistungsmessung */
+.perf-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 10px 0; }
+.perf-spark { width: 100%; height: 46px; background: rgba(56,213,230,.06); border-radius: 8px; display: block; }
+.perf-procs { width: 100%; border-collapse: collapse; font-size: .9em; }
+.perf-procs td, .perf-procs th { padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,.06); text-align: right; }
+.perf-procs td:first-child, .perf-procs th:first-child { text-align: left; }
+.perf-hist { border-bottom: 1px solid rgba(255,255,255,.06); }
+.perf-row { all: unset; cursor: pointer; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; padding: 8px 0; }
+.perf-lv { font-size: .8em; padding: 1px 8px; border-radius: 8px; }
+.perf-ok { background: rgba(34,197,94,.18); } .perf-mid { background: rgba(243,194,98,.22); } .perf-high { background: rgba(239,68,68,.25); }
+.perf-det { padding: 0 0 10px 4px; } .perf-det p { margin: 4px 0; } .perf-rust { color: var(--accent, #38d5e6); }

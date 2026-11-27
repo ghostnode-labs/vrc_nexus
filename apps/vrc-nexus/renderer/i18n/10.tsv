@@ -2596,3 +2596,49 @@ Dieses Widget hat keine weiteren Einstellungen.	This widget has no further setti
 🖥 PC	🖥 PC	🖥 PC	🖥 PC
 🔞 18+	🔞 18+	🔞 18+	🔞 18+
 ⚙ Einstellungen	⚙ Settings	⚙ Réglages	⚙ 設定
+Leistungsmessung	Performance check	Mesure des performances	パフォーマンス測定
+Wie viel Arbeitsspeicher und CPU braucht VRC Nexus wirklich – besonders während VR? Miss am besten eine ganze VR-Sitzung und schick uns den Bericht, wenn etwas auffällt.	How much memory and CPU does VRC Nexus really use – especially in VR? Best measure a whole VR session and send us the report if something stands out.	Combien de mémoire et de CPU VRC Nexus utilise-t-il vraiment – surtout en VR ? Mesure de préférence une session VR entière et envoie-nous le rapport si quelque chose te frappe.	VRC Nexusが実際に使うメモリとCPUは？特にVR中。VRセッション全体を測定し、気になる点があればレポートを送ってください。
+Hier wird nur der App-Prozess gemessen – die vollständige Messung gibt es in der Windows-App.	Only the app process is measured here – the full check is in the Windows app.	Seul le processus de l'app est mesuré ici – la mesure complète est dans l'app Windows.	ここではアプリのプロセスのみ測定します。完全な測定はWindows版で。
+VRC Nexus gesamt	VRC Nexus total	VRC Nexus au total	VRC Nexus合計
+des RAM	of RAM	de la RAM	RAMの
+CPU (alle Prozesse)	CPU (all processes)	CPU (tous les processus)	CPU（全プロセス）
+VR-FPS	VR FPS	FPS VR	VR FPS
+Schnitt / Tiefstwert	average / low	moyenne / minimum	平均 / 最低
+SteamVR-Helfer aus	SteamVR helper off	Assistant SteamVR éteint	SteamVRヘルパー停止中
+zum Vergleich	for comparison	pour comparaison	比較用
+läuft nicht	not running	ne tourne pas	未起動
+Arbeitsspeicher (10 min)	Memory (10 min)	Mémoire (10 min)	メモリ（10分）
+CPU (10 min)	CPU (10 min)	CPU (10 min)	CPU（10分）
+Hauptprozess (Backend)	Main process (backend)	Processus principal (backend)	メインプロセス（バックエンド）
+Grafik (GPU)	Graphics (GPU)	Graphismes (GPU)	グラフィック（GPU）
+Helfer	Helpers	Assistants	ヘルパー
+Messung aufnehmen	Record a measurement	Enregistrer une mesure	測定を記録
+Messpunkte	data points	points de mesure	測定点
+Messung beenden & auswerten	Stop & evaluate	Arrêter & analyser	終了して評価
+Starte die Messung, spiele wie immer (am besten mit VR) und beende sie danach. Alle 5 Sekunden ein Messpunkt, höchstens 4 Stunden.	Start the measurement, play as usual (ideally in VR) and stop it afterwards. One data point every 5 seconds, up to 4 hours.	Lance la mesure, joue comme d'habitude (idéalement en VR) puis arrête-la. Un point toutes les 5 secondes, 4 heures max.	測定を開始し、いつも通り（できればVRで）遊んでから終了してください。5秒ごとに記録、最長4時間。
+z. B. Club-Abend mit Spielzeug	e.g. club night with toys	p. ex. soirée club avec jouets	例：おもちゃ付きクラブの夜
+Messung starten	Start measurement	Démarrer la mesure	測定開始
+Letzte Messungen	Recent measurements	Mesures récentes	最近の測定
+Zuwachs	growth	hausse	増加
+5-%-Tief	5 % low	creux 5 %	下位5%
+der Zeit in VR	of the time in VR	du temps en VR	VR時間の割合
+Noch keine Messungen.	No measurements yet.	Pas encore de mesures.	まだ測定はありません。
+Messung löschen?	Delete measurement?	Supprimer la mesure ?	測定を削除しますか？
+Messung	Measurement	Mesure	測定
+🟢 unkritisch	🟢 fine	🟢 sans souci	🟢 問題なし
+🟡 merklich	🟡 noticeable	🟡 perceptible	🟡 やや高い
+🔴 hoch	🔴 high	🔴 élevé	🔴 高い
+Hoher Arbeitsspeicher – viele offene Bereiche/Fenster oder ein Leck möglich.	High memory – many open sections/windows or a leak possible.	Mémoire élevée – beaucoup de sections/fenêtres ouvertes ou une fuite possible.	メモリ使用量が多い – 多くの画面を開いているか、リークの可能性。
+Arbeitsspeicher spürbar, aber im üblichen Rahmen einer Electron-App.	Noticeable memory, but normal for an Electron app.	Mémoire perceptible, mais normale pour une app Electron.	メモリはやや多いが、Electronアプリとしては通常範囲。
+Hohe CPU-Last im Hintergrund – das kann in VR Frames kosten.	High background CPU load – this can cost frames in VR.	Charge CPU élevée en arrière-plan – cela peut coûter des images en VR.	バックグラウンドのCPU負荷が高い – VRでフレームが落ちる可能性。
+Leichte CPU-Last im Hintergrund.	Light background CPU load.	Légère charge CPU en arrière-plan.	バックグラウンドのCPU負荷は軽め。
+Häufige Hänger im Backend (Verzögerung) – Aktionen reagieren dann träge.	Frequent stalls in the backend – actions then react slowly.	Blocages fréquents du backend – les actions réagissent lentement.	バックエンドが頻繁に停止 – 操作の反応が遅くなります。
+Gelegentliche kurze Verzögerungen.	Occasional short delays.	Retards courts occasionnels.	ときどき短い遅延。
+Der Speicher ist während der Messung deutlich gewachsen – bitte länger messen und Bericht schicken.	Memory grew clearly during the measurement – please measure longer and send the report.	La mémoire a nettement augmenté pendant la mesure – mesure plus longtemps et envoie le rapport.	測定中にメモリが大きく増加しました – 長めに測定してレポートを送ってください。
+VRC Nexus braucht mehr als halb so viel Arbeitsspeicher wie VRChat.	VRC Nexus uses more than half as much memory as VRChat.	VRC Nexus utilise plus de la moitié de la mémoire de VRChat.	VRC NexusはVRChatの半分以上のメモリを使用しています。
+Kurze Messung – für eine sichere Aussage mindestens 2 Minuten, besser eine ganze VR-Sitzung messen.	Short measurement – measure at least 2 minutes, better a whole VR session, for a reliable result.	Mesure courte – mesure au moins 2 minutes, idéalement une session VR entière.	短い測定です – 確実な結果には最低2分、できればVRセッション全体を測定してください。
+Kein Handlungsbedarf – ein Umbau (z. B. auf Rust) würde hier kaum etwas bringen.	Nothing to do – a rewrite (e.g. in Rust) would hardly help here.	Rien à faire – une réécriture (p. ex. en Rust) n'apporterait presque rien.	対応不要 – 書き直し（Rustなど）の効果はほぼありません。
+Optimierungen in der App lohnen sich zuerst (Fenster schlafen legen, weniger Abfragen) – Rust erst danach prüfen.	App optimisations pay off first (sleeping windows, fewer requests) – consider Rust only after that.	Optimiser l'app d'abord (fenêtres en veille, moins de requêtes) – Rust seulement ensuite.	まずアプリの最適化を（ウィンドウのスリープ、問い合わせ削減）。Rustはその後に検討。
+Deutlicher Bedarf: zeitkritische Teile in einen schlanken Helfer auslagern (z. B. Rust) und die App entlasten – Bericht bitte schicken.	Clear need: move time-critical parts into a lean helper (e.g. Rust) to relieve the app – please send the report.	Besoin net : déplacer les parties critiques dans un assistant léger (p. ex. Rust) – envoie le rapport.	明確な必要あり：時間に厳しい部分を軽量ヘルパー（Rustなど）に移すべき – レポートを送ってください。
+⏺ Messung läuft – nutze VRC Nexus und VRChat wie immer.	⏺ Measuring – use VRC Nexus and VRChat as usual.	⏺ Mesure en cours – utilise VRC Nexus et VRChat comme d'habitude.	⏺ 測定中 – いつも通りVRC NexusとVRChatを使ってください。
+⏹ Messung gespeichert.	⏹ Measurement saved.	⏹ Mesure enregistrée.	⏹ 測定を保存しました。

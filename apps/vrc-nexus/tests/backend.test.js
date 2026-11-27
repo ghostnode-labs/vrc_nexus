@@ -4585,3 +4585,55 @@ test('7.3.2: 18+ – Paar-Profile/Vorlagen/Einlass-Liste gehen an nexusclubs.php
         await assert.rejects(c.action('comm_req_send', { id: 'usr_x', with_limits: '1' }), /nicht freigegeben/);
     } finally { globalThis.fetch = old; }
 });
+
+test('7.3.4: Leistungsmessung – alle Prozesse zusammen, VR-FPS, VRChat-Vergleich, Aufnahme mit Auswertung, Bericht, Verlauf', async () => {
+    const { PerfMon, summarize, verdict } = require('../backend/perfmon');
+    const store = {};
+    let metrics = [{ type: 'Browser', cpu: { percentCPUUsage: 1.5 }, memory: { workingSetSize: 150 * 1024 } }, { type: 'Tab', cpu: { percentCPUUsage: 2 }, memory: { workingSetSize: 200 * 1024 } },
+        { type: 'GPU', cpu: { percentCPUUsage: 0.5 }, memory: { workingSetSize: 80 * 1024 } }, { type: 'Utility', cpu: { percentCPUUsage: 0 }, memory: { workingSetSize: 20 * 1024 } }, { type: 'Utility', cpu: { percentCPUUsage: 0.2 }, memory: { workingSetSize: 10 * 1024 } }];
+    const calls = [];
+    const app = { db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; }, size: () => 2048 * 1024 }, game: { state: { running: true } },
+        tools: { host: { appMetrics: () => metrics, vrFps: () => ({ app: 89.6, min: 71.2, at: Date.now() }),
+            execFile: async (cmd, args) => { calls.push([cmd, ...args]); return '"VRChat.exe","4242","Console","1","3.145.728 K"\r\n'; } } } };
+    const p = new PerfMon(app);
+    try {
+        const s = p.sample(1000);
+        assert.strictEqual(s.mem, 460, 'alle Prozesse zusammen (MB)');
+        assert.strictEqual(s.cpu, 4.2);
+        assert.deepStrictEqual(s.procs.helper, { mem: 30, cpu: 0.2, n: 2 }, 'Helfer zusammengefasst');
+        assert.deepStrictEqual([s.fps, s.fps_min], [89.6, 71.2]);
+        if (process.platform === 'win32') assert.ok(calls.length); else assert.strictEqual(calls.length, 0, 'tasklist nur unter Windows');
+        p.vrc = { mem: 3072, at: Date.now() };
+        assert.strictEqual(p.sample(Date.now()).vrc_mem, 3072);
+        // Aufnahme: 3 Minuten mit wachsendem Speicher und kurzen Hängern
+        const r = await p.action('perf_start', { label: 'Club-Abend' });
+        assert.strictEqual(r.rec.label, 'Club-Abend');
+        await assert.rejects(p.action('perf_start', {}), /läuft schon/);
+        for (let i = 0; i < 36; i++) { metrics[1].memory.workingSetSize = (200 + i * 8) * 1024; p.lag = i % 12 === 0 ? 150 : 5; p.tick(Date.now() + i * 5000); }
+        const st = await p.action('perf_stop', {});
+        const x = st.result;
+        assert.ok(x.samples >= 36 && x.minutes > 2.5, 'Dauer und Messpunkte');
+        assert.ok(x.mem.growth > 100, 'Zuwachs erkannt');
+        assert.ok(x.fps && x.fps.avg === 89.6 && x.vr_share === 100);
+        assert.strictEqual(x.vrchat_mem, 3072);
+        assert.ok(x.verdict.notes.includes('mem_growth') && x.verdict.notes.includes('vs_vrchat') === false);
+        assert.strictEqual(st.history[0].id, x.id, 'im Verlauf gespeichert');
+        const rep = (await p.action('perf_report', { id: x.id })).text;
+        assert.match(rep, /Leistungsmessung „Club-Abend“/); assert.match(rep, /VR: Ø 89\.6 FPS/); assert.match(rep, /→ /);
+        assert.ok(!/usr_|wrld_/.test(rep), 'keine IDs, Welten oder Namen im Bericht');
+        await assert.rejects(p.action('perf_stop', {}), /keine Messung/);
+        // Einschätzung
+        const S = (mem, cpu, lag) => Array.from({ length: 30 }, (_, i) => ({ t: i * 5000, mem, cpu, lag, procs: {}, fps: null }));
+        assert.strictEqual(summarize(S(300, 1, 5), 16384, 8).verdict.rust, 'no', 'leicht → kein Umbau nötig');
+        assert.strictEqual(summarize(S(700, 3, 5), 16384, 8).verdict.level, 'mid');
+        assert.strictEqual(summarize(S(1200, 40, 400), 16384, 8).verdict.rust, 'helper', 'schwer → Helfer auslagern');
+        assert.ok(verdict(summarize(S(300, 1, 5).slice(0, 5), 16384, 8)).notes.includes('short'), 'kurze Messung markiert');
+        // ohne Electron (Handy): nur der eigene Prozess
+        const q = new PerfMon({ db: app.db, tools: { host: {} } });
+        const qs = q.sample(); assert.ok(qs.procs.main && qs.mem > 0 && Object.keys(qs.procs).length === 1);
+        q.stop();
+        // Verlauf höchstens 10
+        for (let i = 0; i < 12; i++) { p.startRec('x' + i); p.tick(); p.stopRec(); await new Promise(r2 => setTimeout(r2, 2)); }
+        assert.ok(p.history().length <= 10);
+    } finally { p.stop(); }
+});

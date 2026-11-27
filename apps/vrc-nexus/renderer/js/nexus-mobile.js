@@ -44,7 +44,7 @@
         ['🫂', 'Community', ['community', 'clubs', 'together', 'wiki', 'groups', 'pulse']],
         ['🎮', 'Spiel & Steuerung', ['client', 'remote', 'buttons', 'osc', 'stream', 'nsfw']],
         ['🎨', 'Inhalte', ['avatars', 'worlds', 'favs', 'coll', 'global', 'gallery', 'shop']],
-        ['🧰', 'Werkzeuge & Auswertung', ['tools', 'warn', 'mod', 'calendar', 'stats', 'activity']],
+        ['🧰', 'Werkzeuge & Auswertung', ['tools', 'perf', 'warn', 'mod', 'calendar', 'stats', 'activity']],
         ['⚙', 'System', ['plugins', 'admin']],
     ];
     const QUICK = ['settings', 'buttons', 'remote', 'osc', 'notifs', 'search'];   // feste Kacheln oben – ⚙ Einstellungen immer zuerst

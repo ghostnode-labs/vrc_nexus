@@ -26,6 +26,11 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.3.4 – Performance check
+- 📈 **Performance check** (🧰 Tools → 📈 Performance check): live view of everything VRC Nexus uses – all its processes together and per part (main process/backend, window, GPU, helpers), CPU, event-loop delay, VR FPS from the SteamVR helper, system memory/CPU and VRChat's own memory for comparison (Windows), with a 10-minute chart
+- ⏺ **Record a measurement** – e.g. a whole VR session (one data point every 5 s, up to 4 h): afterwards you get averages, peaks, 95 % values, memory growth, share of your RAM, VR FPS and a plain-language rating (🟢 fine / 🟡 noticeable / 🔴 high) including whether optimisations or a lean helper (e.g. in Rust) would be worth it
+- 📋 The last 10 measurements are kept on your PC (numbers only – no worlds, names or IDs); **copy the report** to send it to us. The live view only runs while the tool is open or a measurement is recording
+
 ### New in 7.3.3 – Settings for every Android widget
 - ⚙ **Every home-screen widget now has its own settings** – tap the small ⚙ on the widget, or long-press → “Customize widget” on Android 12+ (on older Android the settings open when you add a widget; Back keeps the defaults). Each widget instance keeps its own values, so the same widget can look different on two home screens
 - 🎨 **For all widgets:** theme (dark / light / transparent), text size (small / normal / large), show or hide the “as of” time, and which section opens when you tap the widget

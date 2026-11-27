@@ -8,7 +8,7 @@ const TITLEBAR_H = 34;   // Höhe der eigenen Titelleiste (Windows)
 const { app, BrowserWindow, Menu, Tray, Notification, protocol, shell, safeStorage, nativeImage, dialog, globalShortcut, session, desktopCapturer, clipboard } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execFile } = require('child_process');
 const { openDatabase } = require('./backend/db');
 const { NexusApp, handleWebRequest } = require('./backend/app');
 
@@ -65,6 +65,9 @@ const host = {
     openExternal: url => shell.openExternal(url),
     copy: text => clipboard.writeText(String(text || '')),
     vrFps: () => (vr && vr.fps && Date.now() - vr.fps.at < 5000 ? vr.fps : null),
+    // 7.3.4: Leistungsmessung – alle Prozesse von VRC Nexus; VRChat zum Vergleich (tasklist, ohne Konsolenfenster)
+    appMetrics: () => app.getAppMetrics(),
+    execFile: (cmd, args, ms) => new Promise((res, rej) => execFile(cmd, args, { timeout: ms || 3000, windowsHide: true }, (e, out) => (e ? rej(e) : res(out)))),
     setLoginItem: on => { if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: on, args: ['--minimized'] }); },
     spawn: (exe, args) => spawn(exe, args, { detached: true, stdio: 'ignore', cwd: path.dirname(exe) }).unref(),
     speak: text => { if (win) win.webContents.executeJavaScript('window.speechSynthesis && speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(' + JSON.stringify(String(text).slice(0, 300)) + '), { lang: "de-DE" }))').catch(() => {}); },
