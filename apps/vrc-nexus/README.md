@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.2.1 – Fix: Android start freeze
+- 🩹 **Android: app could freeze right at start since 7.0** – a style rule added for the club forms (`:has(...)`) can stall older Android WebViews when the app draws its many elements at start; it is replaced by a plain class
+- 🛟 **Safe start (Android):** if a start doesn't finish (frozen and closed by Android), the next start opens on the home page instead of the last section and shows a notice with a 📋 report (last start step, section, WebView version) you can send us
+
 ### New in 7.2.0 – Clubs 2.0
 Same in the app and on the GhostNode website (Community → Clubs):
 - 🛡 **Moderation 2.0:** word filter per club (also catches “w.o.r.d”, plus the website's own list) – matching posts wait in a queue for the leaders; **bans with expiry** (1 h, 1 day, 1 week, 30 days or permanent) and a reason; banned people can send **one appeal**, the leaders accept or decline it

@@ -729,7 +729,7 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 .cl-ban-big { height: 140px; margin: 0 0 10px; border: 1px solid var(--border-color); }
 .cl-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .cl-form label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--text-muted); }
-.cl-form label:has(> input[type=checkbox]) { flex-direction: row; align-items: center; }
+.cl-form label.cl-chk { flex-direction: row; align-items: center; }   /* 7.2.1: Klasse statt :has() – ältere Android-WebViews froren damit ein */
 .cl-form .cl-wide { grid-column: 1 / -1; }
 .cl-form input:not([type=checkbox]):not([type=color]), .cl-form select, .cl-form textarea { width: 100%; box-sizing: border-box; }
 .cl-day { margin: 14px 0 6px; font-size: .9rem; color: var(--accent-cyan); text-transform: capitalize; }

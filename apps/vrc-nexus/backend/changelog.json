@@ -1,5 +1,10 @@
 [
  {
+  "version": "7.2.1",
+  "title": "Fix: Android start freeze",
+  "body": "- 🩹 **Android: app could freeze right at start since 7.0** – a style rule added for the club forms (`:has(...)`) can stall older Android WebViews when the app draws its many elements at start; it is replaced by a plain class\n- 🛟 **Safe start (Android):** if a start doesn't finish (frozen and closed by Android), the next start opens on the home page instead of the last section and shows a notice with a 📋 report (last start step, section, WebView version) you can send us"
+ },
+ {
   "version": "7.2.0",
   "title": "Clubs 2.0",
   "body": "Same in the app and on the GhostNode website (Community → Clubs):\n- 🛡 **Moderation 2.0:** word filter per club (also catches “w.o.r.d”, plus the website's own list) – matching posts wait in a queue for the leaders; **bans with expiry** (1 h, 1 day, 1 week, 30 days or permanent) and a reason; banned people can send **one appeal**, the leaders accept or decline it\n- 🎫 **Tickets:** members and interested people write to the club leaders; replies as a conversation, open/done\n- 🤝 **Partnerships:** request a partnership with another club; once confirmed, partners show on both club pages\n- 🔗 **Invite links:** links with expiry and use limit – they let people join directly, even “invite only” or “by application” clubs\n- 📊 **Club statistics** for leaders: members, new members, posts, upcoming events, average sign-ups, open tickets and applications, member chart for 12 weeks, most active members\n- 🤖 Public event feed per club for the GhostNode Discord bot (no members-only events)"

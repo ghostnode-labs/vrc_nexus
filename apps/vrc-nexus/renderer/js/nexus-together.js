@@ -136,7 +136,7 @@
         body.innerHTML = '<div class="nw-card"><p class="nw-muted">' + esc(T('Ein Schalter fürs Event: VRChat-Status mit Titel, Ansage in der Chatbox und Meldungen stumm (außer VIPs und deinen Erinnerungen). Beim Beenden kommt der alte Status zurück.')) + '</p>'
             + '<div class="cl-form"><label class="cl-wide">' + esc(T('Titel')) + '<input data-t maxlength="32" placeholder="' + esc(T('z. B. Clubnacht')) + '"></label>'
             + '<label>' + esc(T('Status')) + '<select data-s><option value="busy">🔴 busy</option><option value="ask me">🟠 ask me</option><option value="active">🟢 active</option><option value="join me">🔵 join me</option></select></label>'
-            + '<label><input type="checkbox" data-c checked> ' + esc(T('Ansage in der Chatbox')) + '</label><label><input type="checkbox" data-m checked> ' + esc(T('Meldungen stumm')) + '</label></div>'
+            + '<label class="cl-chk"><input type="checkbox" data-c checked> ' + esc(T('Ansage in der Chatbox')) + '</label><label class="cl-chk"><input type="checkbox" data-m checked> ' + esc(T('Meldungen stumm')) + '</label></div>'
             + '<div class="nw-row" style="margin-top:10px"><span class="sp"></span><button type="button" class="btn btn-gold" data-on>🎉 ' + esc(T('Event-Modus starten')) + '</button></div></div>';
         $('[data-on]', body).onclick = () => api('tg_event_on', { title: $('[data-t]', body).value, status: $('[data-s]', body).value, chatbox: $('[data-c]', body).checked ? '1' : '0', mute: $('[data-m]', body).checked ? '1' : '0' })
             .then(r => { d.event = r.event; toast(r.msg); render(); }).catch(fail);

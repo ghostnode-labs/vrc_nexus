@@ -95,7 +95,7 @@
                 + '<label class="cl-wide">Regeln<textarea data-f="rules" maxlength="3000" rows="4" placeholder="1. Respekt …">' + esc(c.rules) + '</textarea></label>'
                 + '<label class="cl-wide">Einlass-Fragen bei Bewerbung (eine pro Zeile, höchstens 5)<textarea data-f="questions" rows="3">' + esc((c.questions || []).join('\n')) + '</textarea></label>'
                 + '<label class="cl-wide">Banner (https-Bildadresse, optional)<input data-f="banner" value="' + esc(c.banner) + '"></label>'
-                + '<label><input type="checkbox" data-f="listed"' + (c.listed ? ' checked' : '') + '> im Verzeichnis und Kalender zeigen</label></div>'
+                + '<label class="cl-chk"><input type="checkbox" data-f="listed"' + (c.listed ? ' checked' : '') + '> im Verzeichnis und Kalender zeigen</label></div>'
                 + '<div class="nw-row" style="margin-top:10px"><span class="sp"></span>' + (c.id ? '<button type="button" class="btn btn-sm" data-back>Zurück</button>' : '') + '<button type="button" class="btn btn-sm btn-gold" data-save>Speichern</button></div></div>';
             const body = c.id ? $('[data-body]', box) : shell('');
             body.innerHTML = html;
@@ -158,7 +158,7 @@
                     pane.innerHTML = (staff && t === 'events' ? '<details class="nw-card"><summary>➕ Neues Event</summary><div class="cl-form" data-evf>'
                         + '<label class="cl-wide">Titel<input data-e="title" maxlength="80"></label><label>Beginn<input type="datetime-local" data-e="starts" value="' + dIn(Math.ceil(Date.now() / 3600000 + 24) * 3600) + '"></label>'
                         + '<label>Ende<input type="datetime-local" data-e="ends"></label><label class="cl-wide">Ort (Welt / Instanz)<input data-e="place" maxlength="160"></label><label>Plätze (0 = offen)<input type="number" min="0" max="500" data-e="capacity" value="0"></label>'
-                        + '<label><input type="checkbox" data-e="members_only"> nur für Mitglieder</label><label class="cl-wide">Beschreibung<textarea data-e="descr" rows="2" maxlength="2000"></textarea></label></div>'
+                        + '<label class="cl-chk"><input type="checkbox" data-e="members_only"> nur für Mitglieder</label><label class="cl-wide">Beschreibung<textarea data-e="descr" rows="2" maxlength="2000"></textarea></label></div>'
                         + '<div class="nw-row"><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-evsave>Event anlegen</button></div></details>' : '')
                         + (list.length ? list.map(e => evCard(e, false) + (staff && t === 'events' ? '<div class="nw-row" style="margin:-6px 0 8px"><span class="sp"></span><button type="button" class="btn btn-sm" data-evcancel="' + e.id + '">❌ Absagen</button></div>' : '')).join('')
                             : '<div class="nw-muted">' + (t === 'events' ? 'Keine kommenden Events.' : 'Noch keine vergangenen Events.') + '</div>');

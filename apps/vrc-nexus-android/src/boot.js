@@ -37,11 +37,30 @@ if (native) {
     LocalNotifications.checkPermissions().then(r => { AndroidNotification._p = r.display === 'granted' ? 'granted' : r.display === 'denied' ? 'denied' : 'default'; }).catch(() => {});
 }
 
+// ---------- 7.2.1: Start-Diagnose & sicherer Start ----------
+// Jeder Startschritt wird sofort gemerkt. Kommt ein Start nicht bis „ok“ (z. B. eingefroren und von Android beendet),
+// startet die App beim nächsten Mal sicher: auf der Startseite statt im zuletzt geöffneten Bereich, mit Hinweis und Bericht.
+const BOOT_KEY = 'nexus-boot';
+const APP_VER = require('../package.json').version;
+const bootPrev = (() => { try { return JSON.parse(localStorage.getItem(BOOT_KEY) || 'null'); } catch (e) { return null; } })();
+const bootFails = bootPrev && bootPrev.step !== 'ok' ? (bootPrev.fails || 0) + 1 : 0;
+const bootSafe = bootFails > 0;
+const bootStep = (step, extra) => { try { localStorage.setItem(BOOT_KEY, JSON.stringify(Object.assign({ step, at: Date.now(), v: APP_VER, fails: step === 'ok' ? 0 : bootFails, safe: bootSafe }, extra || {}))); } catch (e) { /* egal */ } };
+if (bootSafe) {
+    try {
+        const lastTab = JSON.parse(localStorage.getItem('vrcx-tab') || '"home"');
+        localStorage.setItem('nexus-boot-hang', JSON.stringify({ step: bootPrev.step, tab: lastTab, v: bootPrev.v, at: bootPrev.at, fails: bootFails, ua: navigator.userAgent }));
+        localStorage.setItem('vrcx-tab', '"home"'); localStorage.setItem('vrcx-tabSub', '""');
+    } catch (e) { /* egal */ }
+}
+bootStep('start');
+
 // ---------- Start ----------
 (async () => {
-    status('Lade Datenbank …');
+    status(bootSafe ? 'Sicherer Start …' : 'Lade Datenbank …');
     await fs.__load();
     fs.__files.set('/renderer/page.html', TEMPLATE);
+    bootStep('db');
     const SQL = await initSqlJs({ locateFile: f => f });
     // 3.4 Multiaccount: Datenbank des aktuell gewählten Kontos
     const prof = require('../../vrc-nexus/backend/profiles');
@@ -68,6 +87,7 @@ if (native) {
         restart: async () => { try { db.save(); await fs.__flush(); } catch (e) { /* egal */ } window.location.reload(); },   // 3.4: Konto-Wechsel
         speak: t => { if (window.speechSynthesis) speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(t), { lang: 'de-DE' })); },
     };
+    bootStep('app');
     const app = new NexusApp({ db, crypt, host, notify, mobile: true, licenseTimer: true });
     app.game.stop();
     app.game.osc.stopListen();
@@ -149,6 +169,7 @@ if (native) {
 
     window.NexusMobile = { download, imgFix, pushWidget };
     status('Starte …');
+    bootStep('page', { tab: (() => { try { return JSON.parse(localStorage.getItem('vrcx-tab') || '"home"'); } catch (e) { return ''; } })() });
     const r = await app.handle({ method: 'GET', query: new URLSearchParams() });
     document.open();
     document.write(r.body);
@@ -157,8 +178,31 @@ if (native) {
     const cs = document.getElementById('clientStandalone');
     if (cs) cs.parentNode.removeChild(cs);
     setTimeout(imgFix, 0);
+    bootStep('ui');
+    // erst wenn die Oberfläche 12 s lang flüssig lief, gilt der Start als gelungen (ein eingefrorener Start kommt nie hierhin)
+    setTimeout(() => bootStep('ok'), 12000);
+    if (bootSafe) setTimeout(safeNotice, 1500);
     runPending();   // Start über ein Widget
 })().catch(e => { status('⚠ Start fehlgeschlagen: ' + e.message); console.error(e); });
+
+// 7.2.1: Hinweis nach einem hängengebliebenen Start (mit Bericht zum Kopieren)
+function safeNotice() {
+    let info = {};
+    try { info = JSON.parse(localStorage.getItem('nexus-boot-hang') || '{}'); } catch (e) { info = {}; }
+    const t = typeof window.t === 'function' ? window.t : x => x;
+    const box = document.createElement('div');
+    box.className = 'nx-safe';
+    box.setAttribute('style', 'position:fixed;left:10px;right:10px;bottom:84px;z-index:99999;background:#1c2433;border:1px solid #f3c262;border-radius:10px;padding:12px;color:#e2e8f0;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.5)');
+    const p = document.createElement('div');
+    p.textContent = '⚠ ' + t('Der letzte Start ist hängen geblieben – die App ist deshalb auf der Startseite gestartet.') + ' (' + (info.step || '?') + (info.tab ? ' · ' + info.tab : '') + ')';
+    const row = document.createElement('div');
+    row.setAttribute('style', 'display:flex;gap:8px;margin-top:10px;justify-content:flex-end');
+    const copy = document.createElement('button'); copy.className = 'btn btn-sm'; copy.textContent = '📋 ' + t('Bericht kopieren');
+    copy.onclick = () => { const txt = 'VRC Nexus Start-Bericht ' + JSON.stringify(info); try { navigator.clipboard.writeText(txt); copy.textContent = '✔'; } catch (e) { window.prompt('', txt); } };
+    const ok = document.createElement('button'); ok.className = 'btn btn-sm btn-gold'; ok.textContent = 'OK';
+    ok.onclick = () => box.remove();
+    row.append(copy, ok); box.append(p, row); document.body.appendChild(box);
+}
 
 // ---------- Bilder: „nexus.php?img=…“ gibt es nicht als Datei → über fetch holen ----------
 const imgCache = new Map();
