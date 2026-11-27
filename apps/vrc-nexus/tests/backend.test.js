@@ -343,8 +343,8 @@ test('Auto-Update: neueste Version finden, Windows installieren, Android öffnen
     const asset = (n, sz) => ({ name: n, size: sz, browser_download_url: 'https://github.com/x/releases/download/t/' + n });
     const releases = [
         { tag_name: 'vrc-nexus-v99.0.1', draft: false, prerelease: true, assets: [] },                       // Vorabversion → ignorieren
-        { tag_name: 'vrc-nexus-v9.3.0', draft: false, prerelease: false, assets: [asset('VRC-Nexus-Watch-9.3.0-wearos.apk', 14)] },   // 6.2.1: nur die Uhr-App da → Handy wartet
-        { tag_name: 'vrc-nexus-v9.2.0', draft: false, prerelease: false, assets: [asset('VRC-Nexus-9.2.0-android.apk', 13), asset('VRC-Nexus-Watch-9.2.0-wearos.apk', 15)] },     // Windows-Setup noch nicht hochgeladen; Uhr-APK nach der Handy-APK
+        { tag_name: 'vrc-nexus-v9.3.0', draft: false, prerelease: false, assets: [asset('Nexus-Pet-1.0.0.apk', 16), asset('VRC-Nexus-Watch-9.3.0-wearos.apk', 14)] },   // 6.2.1: nur Uhr-App + Nexus Pet da → Handy wartet
+        { tag_name: 'vrc-nexus-v9.2.0', draft: false, prerelease: false, assets: [asset('Nexus-Pet-1.0.0.apk', 16), asset('VRC-Nexus-9.2.0-android.apk', 13), asset('VRC-Nexus-Watch-9.2.0-wearos.apk', 15)] },     // Windows-Setup noch nicht hochgeladen; Uhr-APK nach der Handy-APK
         { tag_name: 'anderes-v100.0.0', draft: false, prerelease: false, assets: [] },                         // anderes Projekt → ignorieren
         { tag_name: 'vrc-nexus-v9.1.0', draft: false, prerelease: false, body: '## Neu\n**Mehr**', html_url: 'https://github.com/x/releases/tag/vrc-nexus-v9.1.0',
           published_at: '2026-11-13T10:00:00Z', assets: [asset('VRC-Nexus-9.1.0-Setup.exe', 10), asset('VRC-Nexus-9.1.0-portable.exe', 11), asset('VRC-Nexus-9.1.0-android.apk', 12)] },

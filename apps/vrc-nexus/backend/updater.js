@@ -5,8 +5,8 @@
  * Android: APK-Download öffnen – installieren muss man selbst bestätigen.
  */
 const { str, now, cut, UserError } = require('./util');
-/** Handy-APK: „…-android.apk“ (ältere Releases: jede .apk) – aber nie die Uhr-App „VRC-Nexus-Watch-…-wearos.apk“ */
-const PHONE_APK = /^(?!.*(watch|wear)).*\.apk$/i;
+/** Handy-APK: „…-android.apk“ (ältere Releases: jede .apk) – aber nie die Uhr-App „VRC-Nexus-Watch-…-wearos.apk“ und nie „Nexus-Pet-….apk“ (eigene App im selben Release) */
+const PHONE_APK = /^(?!.*(watch|wear|pet)).*\.apk$/i;
 const { VERSION } = require('./vrchat');
 
 const REPO = 'ghostnode-labs/vrc_nexus';

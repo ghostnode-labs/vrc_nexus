@@ -15,6 +15,6 @@ You raise a **Geistling**, a small original ghost creature in the GhostNode styl
 ## Build
 - Tests (logic only, no Android needed): `sh tests/run.sh`
 - APK: `gradle -p apps/nexus-pet assembleRelease` (Android SDK, compileSdk 34, minSdk 26)
-- CI: `.github/workflows/nexus-pet.yml` tests, builds and attaches `Nexus-Pet-<version>.apk` to the release `nexus-pet-v<version>` (version in `version.txt`)
+- CI: job `pet` in `.github/workflows/vrc-nexus-android.yml` tests, builds and attaches `Nexus-Pet-<version>.apk` to the current VRC Nexus release (so it shows up on the GhostNode website: dashboard widget, downloads, changelog); version in `version.txt`
 
 All characters and artwork are original and drawn in code (`Sprites.java`).
