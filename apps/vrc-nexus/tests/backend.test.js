@@ -4686,6 +4686,36 @@ test('8.2: Wearables (bHaptics, Mock) – folgen der Spielzeug-Stärke, Fläche/
     unlocked = true; await w.action('wear_cfg', { on: '0' }); assert.ok(w.state === 'aus' && !w.timer && !w.ws);
 });
 
+test('8.2: Szenen-Begleiter (lokal) – Start, Edging, Gelb, Puls (nie Chatbox), Pause, Check-Takt, Szenen-Ende, Privat-Modus still', async () => {
+    const { Companion } = require('../backend/companion');
+    const store = {}, notes = [], chat = [], watch = [];
+    const toys = { session: { start: 0, due: false }, lust: { edgeHold: false }, consent: 'green', scene: null, paused: null, status: () => ({}) };
+    const app = { db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } }, nsfw: { private: false, access: () => ({ unlocked: true, features: ['toys'] }) }, toys,
+        heart: { active: true, bpm: 80 }, tools: { host: { notify: (t, b) => notes.push(b) } }, watch: { note: (t, b) => watch.push(b) }, game: { osc: { chatbox: async t => { chat.push(t); } } } };
+    const c = new Companion(app);
+    await c.action('comp_cfg', { on: '1', style: 'verspielt', check_min: '5', heart_max: '130', chat: '1' }); c.stop();
+    let t0 = Date.now();
+    assert.strictEqual(c.tick(t0), '', 'ohne Session still');
+    toys.session.start = t0; assert.match(c.tick(t0), /bereit|Los geht/);
+    toys.lust.edgeHold = true; assert.match(c.tick(t0 + 5000), /noch nicht|knapp/i);
+    assert.strictEqual(c.tick(t0 + 10000), '', 'Edging nur beim Übergang');
+    toys.consent = 'yellow'; assert.match(c.tick(t0 + 15000), /Gelb/);
+    app.heart.bpm = 150; const h = c.tick(t0 + 20000); assert.match(h, /Herz|atmen/i);
+    assert.ok(!chat.some(x => x.includes(h)), 'Puls nie in die Chatbox');
+    assert.strictEqual(c.tick(t0 + 25000), '', 'Puls-Hinweis höchstens alle 2 min');
+    app.heart.bpm = 80;
+    toys.paused = { until: t0 + 999999 }; assert.match(c.tick(t0 + 30000), /Pause/);
+    toys.paused = null;
+    assert.match(c.tick(t0 + 5 * 60000 + 1000), /Check|grün|Daumen/);
+    toys.scene = { name: 'x' }; c.tick(t0 + 5 * 60000 + 6000); toys.scene = null; toys.session.start = 0;
+    assert.match(c.tick(t0 + 5 * 60000 + 11000), /war's|gut gemacht/);
+    assert.ok(notes.length >= 7 && watch.length === notes.length && chat.length >= 5);
+    // Privat-Modus: nur im Verlauf
+    app.nsfw.private = true; const n = notes.length; toys.session.start = Date.now(); c.s.session = 0; c.tick(Date.now()); assert.strictEqual(notes.length, n); assert.ok(c.status().log.length >= 1);
+    await assert.rejects(c.action('comp_cfg', {}).then(() => { app.nsfw.access = () => ({ unlocked: false }); return c.action('comp_cfg', {}); }), /Freigabe/);
+    c.stop();
+});
+
 test('7.3.1: Handy-Datenbank klein halten – alte Verläufe weg, Aktuelles und offene Benachrichtigungen bleiben, Datei wird kleiner', async () => {
     const os = require('os'), path = require('path'), fs = require('fs');
     const { openDatabase } = require('../backend/db');

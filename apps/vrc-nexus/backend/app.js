@@ -78,6 +78,7 @@ class NexusApp {
         this.warn = new (require('./warnlist').WarnList)(this);
         this.safety = new (require('./safety').Safety)(this, opts.crypt);   // 8.2 Sicherheits-Center
         this.wear = opts.mobile ? null : new (require('./wearables').Wearables)(this);   // 8.2 Wearables (bHaptics)
+        this.companion = opts.mobile ? null : new (require('./companion').Companion)(this);   // 8.2 lokaler Szenen-Begleiter
         this.pulse = new (require('./pulse').Pulse)(this);   // 3.9 News & Discovery
         this.comm = new (require('./community').Community)(this);
         this.together = new (require('./together').Together)(this);   // 7.1 Gemeinsam
@@ -93,7 +94,7 @@ class NexusApp {
         this.voicecmd = new (require('./voicecmd').VoiceCmd)(this);   // 8.0.3 App-Sprachbefehle
         this.lansync = opts.mobile ? null : new (require('./lansync').LanSync)(this, opts.crypt);   // 8.0.4 Heimnetz-Abgleich
         this.settingsync = new (require('./settingsync').SettingSync)(this, opts.crypt);   // 8.0.2 Einstellungs-Abgleich
-        if (!opts.noTimers) { this.settingsync.start(); if (this.lansync) this.lansync.start(); if (this.wear && this.wear.cfg().on) this.wear.start(); }
+        if (!opts.noTimers) { this.settingsync.start(); if (this.lansync) this.lansync.start(); if (this.wear && this.wear.cfg().on) this.wear.start(); if (this.companion && this.companion.cfg().on) this.companion.start(); }
         if (!opts.noTimers) { this.diary.start(); this.coach.start(); }
         this.buttons = new (require('./buttons').Buttons)(this);
         this.deco = new (require('./deco').Deco)(this);                    // 3.1: Profil-Dekorationen
@@ -321,6 +322,7 @@ class NexusApp {
             if (act.startsWith('lsync_')) { if (!this.lansync) throw new UserError('Nur in der PC-App.'); return await this.lansync.action(act, input); }   // 8.0.4
             if (act === 'platform_info') return require('./platform').info();
             if (act.startsWith('safety_')) return await this.safety.action(act, input);   // 8.2
+            if (act.startsWith('comp_')) { if (!this.companion) throw new UserError('Nur in der PC-App.'); return await this.companion.action(act, input); }   // 8.2
             if (act.startsWith('wear_')) { if (!this.wear) throw new UserError('Nur in der PC-App.'); return await this.wear.action(act, input); }   // 8.2
             if (act.startsWith('devhub_')) { if (!this.devhub) this.devhub = new (require('./devhub').DevHub)(this); return await this.devhub.action(act, input); }   // 8.2 Geräte-Hub
             if (act.startsWith('sync_')) return await this.settingsync.action(act, input);   // 8.0.2 Abgleich

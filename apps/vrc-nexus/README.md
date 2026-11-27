@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.17 – Local scene companion
+- 🫶 **A local companion for sessions:** short, friendly hints at the right moments (start, regular check-ins, breathing hint at a high heart rate, breaks, end) in three styles. Runs entirely on your PC – no cloud, no AI service, no data leaves your computer.
+- 🔞 ***
+
 ### New in 8.0.16 – Wearables (experimental)
 - 🦺 **bHaptics wearables** (vest, arm bands, mask, gloves, feet) can now be connected through the bHaptics Player app on your PC – no extra software from us, local connection only. Experimental: feedback welcome.
 - 🔞 ***

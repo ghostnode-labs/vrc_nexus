@@ -152,6 +152,16 @@
         // N3 Lust-Meter
         h += sec('⏱ ' + T('Gleichzeitig spüren'), '<div class="nc-row small">' + esc(T('Eigene Geräte zusätzlich verzögern um')) + ' ' + num('sync_extra', c.sync_extra || 0, 0, 3000, 50, 70) + ' ms</div>'
             + '<p class="muted small">' + esc(T('Für Fern-Szenen: die Befehle zum Partner brauchen über das Internet etwas länger. Mit dem passenden Versatz spürt ihr beide es gleichzeitig. Je Gerät lässt sich unter ⚙ die Reaktionszeit einstellen. Stopp wirkt immer sofort.')) + '</p>');   // 8.2
+        if (t.companion) {   // 8.2: lokaler Szenen-Begleiter
+            const cp = t.companion, cc = cp.cfg, SN = { sanft: '💙 ' + T('sanft'), verspielt: '😏 ' + T('verspielt'), knapp: '▪ ' + T('knapp') };
+            h += sec('🫶 ' + T('Szenen-Begleiter'), '<label class="check small"><input type="checkbox" data-cp="on"' + (cc.on ? ' checked' : '') + '> ' + esc(T('Begleitet deine Session mit kurzen Hinweisen')) + '</label>'
+                + '<div class="nc-row small">' + cp.styles.map(k => '<label class="check small"><input type="radio" name="cpst" data-cp="style" value="' + k + '"' + (cc.style === k ? ' checked' : '') + '> ' + esc(SN[k] || k) + '</label>').join('') + '</div>'
+                + '<div class="nc-row small">' + esc(T('Check alle')) + ' <input type="number" data-cp="check_min" value="' + cc.check_min + '" min="0" max="60" style="width:56px"> min · ' + esc(T('Atem-Hinweis ab')) + ' <input type="number" data-cp="heart_max" value="' + cc.heart_max + '" min="90" max="210" step="5" style="width:64px"> bpm</div>'
+                + '<label class="check small"><input type="checkbox" data-cp="chat"' + (cc.chat ? ' checked' : '') + '> ' + esc(T('auch in die Chatbox (öffentlich! nie Puls, nie im Privat-Modus)')) + '</label>'
+                + (cp.log.length ? '<div class="small muted">' + cp.log.slice(0, 4).map(l => '🫶 ' + esc(T(l.text))).join('<br>') + '</div>' : '')
+                + '<div class="nc-row"><button type="button" class="btn btn-sm" data-n2a="comptry">👂 ' + esc(T('Probe hören')) + '</button></div>'
+                + '<p class="muted small">' + esc(T('Läuft komplett auf diesem PC – keine Cloud, keine KI, keine Daten nach außen. Nutzt nur Sitzungsdauer, Lust-Meter, Edging, Puls, Pausen und Ampel.')) + '</p>');
+        }
         if (t.wear) {   // 8.2: Wearables (bHaptics)
             const w = t.wear, wc = w.cfg, wst = { verbunden: '🟢 ' + T('verbunden'), verbindet: '🟡 ' + T('verbindet …'), getrennt: '🔴 ' + T('getrennt'), fehler: '🔴 ' + T('Fehler'), aus: '⚪ ' + T('aus') }[w.state] || w.state;
             h += sec('🦺 ' + T('Wearables (bHaptics)') + ' <span class="small muted">' + esc(T('experimentell')) + '</span>', '<label class="check small"><input type="checkbox" data-wr="on"' + (wc.on ? ' checked' : '') + '> ' + esc(T('Weste & Co. folgen der Spielzeug-Stärke')) + '</label> <span class="small">' + esc(wst) + '</span>'
@@ -275,6 +285,7 @@
             if (i >= 0) list[i] = item; else list.push(item);
             patEd = null; setCfg({ custom: JSON.stringify(list) }, toysDo); return true;
         }
+        if (a === 'comptry') { toysDo('comp_try', { kind: 'check' }); return true; }   // 8.2
         if (a === 'wearconn') { toysDo('wear_connect'); return true; }   // 8.2
         if (a === 'weartest') { toysDo('wear_test'); return true; }
         if (a === 'patshare') {   // 8.2: nur Ende-zu-Ende verschlüsselt
@@ -296,6 +307,7 @@
     const devData = el => { const box = el.closest('[data-devname]'); return box ? box.dataset.devname : null; };
     function onChange(e, toysDo) {
         const af = e.target.closest('[data-after]'); if (af) { after[af.dataset.after] = af.checked; return true; }
+        const cpi = e.target.closest('[data-cp]'); if (cpi) { toysDo('comp_cfg', { [cpi.dataset.cp]: cpi.type === 'checkbox' ? (cpi.checked ? '1' : '0') : cpi.value }); return true; }   // 8.2
         const wr = e.target.closest('[data-wr]'); if (wr) { toysDo('wear_cfg', { [wr.dataset.wr]: wr.type === 'checkbox' ? (wr.checked ? '1' : '0') : wr.value }); return true; }   // 8.2
         const wp = e.target.closest('[data-wrp]'); if (wp) { toysDo('wear_cfg', { parts: [...document.querySelectorAll('[data-wrp]')].filter(x => x.checked).map(x => x.dataset.wrp).join(',') }); return true; }
         if (builderChange(e)) return true;
