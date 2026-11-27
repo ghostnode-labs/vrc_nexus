@@ -5,7 +5,10 @@
     if (!UI) return;
     const esc = UI.esc, api = (a, d) => UI.api(a, d), toast = (m, bad) => UI.toast(m, bad);
     const T = s => (window.t ? window.t(s) : s);
-    let box = null, d = null, check = null, logs = {}, timer = null, busy = false, mk = null, mkOpen = false, mkQ = '';
+    let box = null, d = null, check = null, logs = {}, timer = null, busy = false, mk = null, mkQ = '';
+    // 8.0.6: Tabs – ⚙ Einstellungen | 🛒 Marktplatz | je Plugin ein eigener Tab
+    let ptab = (() => { try { return localStorage.getItem('nx_pltab') || 'settings'; } catch (e) { return 'settings'; } })();
+    const setTab = t => { ptab = t; try { localStorage.setItem('nx_pltab', t); } catch (e) { /* egal */ } if (t === 'market' && !mk) loadMarket(false); render(); };
     const ST = { running: ['🟢', 'läuft'], starting: ['🟡', 'startet …'], error: ['🔴', 'Fehler'], stopped: ['⚪', 'aus'] };
 
     function widget(p, w) {
@@ -26,7 +29,7 @@
             default: return '';
         }
     }
-    function card(p) {
+    function card(p, page) {
         const st = ST[p.status] || ST.stopped;
         return '<section class="panel pl-card' + (p.enabled ? '' : ' off') + '" data-plid="' + esc(p.id) + '">'
             + '<div class="pl-top"><span class="pl-ic">' + esc(p.icon || '🧩') + '</span><div class="pl-meta"><b>' + esc(p.name) + '</b> <small class="muted">' + esc(p.version) + (p.author ? ' · ' + esc(p.author) : '') + '</small>'
@@ -37,30 +40,37 @@
             + '<button type="button" class="btn btn-sm" data-plact="restart" title="' + esc(T('Neu starten')) + '">⟳</button>'
             + '<button type="button" class="btn btn-sm" data-plact="log">📜 ' + esc(T('Protokoll')) + '</button>'
             + '<button type="button" class="btn btn-sm btn-danger" data-plact="remove">🗑</button></div></div>'
-            + (p.enabled && p.ui && p.ui.length ? '<div class="pl-ui">' + p.ui.map(w => widget(p, w)).join('') + '</div>' : '')
+            + (page ? (p.enabled ? (p.ui && p.ui.length ? '<div class="pl-ui">' + p.ui.map(w => widget(p, w)).join('') + '</div>' : '<p class="small muted">' + esc(T('Dieses Plugin hat keine eigene Oberfläche.')) + '</p>')
+                : '<p class="small muted">' + esc(T('Plugin ist aus – oben einschalten, dann erscheint hier seine Oberfläche.')) + '</p>')
+                : (p.ui && p.ui.length ? '<div class="nc-row"><button type="button" class="btn btn-sm" data-pltab="' + esc(p.id) + '">→ ' + esc(T('Zum Plugin')) + '</button></div>' : ''))
             + (logs[p.id] ? '<pre class="pl-log">' + (logs[p.id].length ? logs[p.id].map(l => '<span class="' + (l.level === 'error' ? 'bad' : l.level === 'warn' ? 'warn' : '') + '">' + esc(new Date(l.at).toLocaleTimeString(window.nxLoc ? nxLoc() : 'de-DE') + '  ' + l.text) + '</span>').join('\n') : esc(T('Noch keine Einträge.'))) + '</pre>' : '')
             + '</section>';
     }
     function render() {
         if (!box || !d) return;
         if (box.contains(document.activeElement) && document.activeElement.matches('input[type=text], input[type=password], textarea, select')) return;   // nicht beim Tippen neu zeichnen
-        box.innerHTML = '<div class="panel pl-head"><h2>🧩 ' + esc(T('Plugins')) + '</h2>'
+        if (ptab !== 'settings' && ptab !== 'market' && !d.items.some(p => p.id === ptab)) ptab = 'settings';   // Plugin entfernt
+        const tabs = '<div class="set-tabs pl-tabs" role="tablist">'
+            + [['settings', '⚙ ' + T('Einstellungen')], ['market', '🛒 ' + T('Marktplatz') + (mk && mk.updates ? ' (' + mk.updates + ')' : '')]]
+                .concat(d.items.map(p => [p.id, (ST[p.status] || ST.stopped)[0] + ' ' + (p.icon || '🧩') + ' ' + p.name]))
+                .map(([k, l]) => '<button type="button" role="tab" aria-selected="' + (ptab === k) + '" data-pltab="' + esc(k) + '" class="' + (ptab === k ? 'on' : '') + '">' + esc(l) + '</button>').join('') + '</div>';
+        box.innerHTML = '<div class="panel pl-head"><h2>🧩 ' + esc(T('Plugins')) + '</h2>' + tabs + (ptab === 'settings' ? (''
             + '<p class="small muted">' + esc(T('Erweiterungen für VRC Nexus im Format .nxp. Jedes Plugin läuft abgeschottet in einem eigenen Prozess und darf nur das, was du bei der Installation erlaubst. Installiere trotzdem nur Plugins aus Quellen, denen du vertraust.')) + '</p>'
             + '<div class="nc-row"><label class="btn btn-gold">📦 ' + esc(T('Plugin installieren (.nxp)')) + '<input type="file" accept=".nxp" data-plfile="1" hidden></label>'
             + (d.example ? '<button type="button" class="btn" data-plexample="1">📝 ' + esc(T('Beispiel: Text-Plugin')) + '</button>' : '')
             + '<button type="button" class="btn" data-plopen="1" title="' + esc(d.dir || '') + '">📂 ' + esc(T('Plugin-Ordner öffnen')) + '</button>'
             + '<label class="check small" title="' + esc(T('Stoppt alle Plugins sofort – bleibt auch nach einem Neustart so, bis du es wieder ausschaltest.')) + '"><input type="checkbox" data-plpause="1"' + (d.paused ? ' checked' : '') + '> ⏸ ' + esc(T('Alle Plugins pausieren')) + '</label>'
-            + '<button type="button" class="btn' + (mkOpen ? ' btn-gold' : '') + '" data-plmk="1">🛒 ' + esc(T('Marktplatz')) + (mk && mk.updates ? ' <span class="vx-pill">' + mk.updates + ' ' + esc(T('Updates')) + '</span>' : '') + '</button></div>'
-            + (d.dir ? '<p class="small muted">📁 <code>' + esc(d.dir) + '</code></p>' : '') + '</div>'
+            + (d.dir ? '<p class="small muted">📁 <code>' + esc(d.dir) + '</code></p>' : '')) : '') + '</div>'
             + (check ? '<div class="panel pl-check"><h3>' + esc(check.manifest.icon) + ' ' + esc(check.manifest.name) + ' <small class="muted">' + esc(check.manifest.version) + '</small></h3>'
                 + '<p class="small">' + (check.manifest.author ? esc(T('von')) + ' <b>' + esc(check.manifest.author) + '</b> · ' : '') + check.files + ' ' + esc(T('Dateien')) + ' · ' + Math.ceil(check.size / 1024) + ' KB'
                 + (check.update ? ' · ' + esc(T('ersetzt Version')) + ' ' + esc(check.update) : '') + '</p>'
                 + (check.manifest.description ? '<p>' + esc(check.manifest.description) + '</p>' : '')
                 + '<p><b>' + esc(T('Das Plugin möchte:')) + '</b></p><ul class="pl-plist">' + (check.perms.length ? check.perms.map(x => '<li>' + x.icon + ' ' + esc(T(x.label)) + '</li>').join('') : '<li class="muted">' + esc(T('keine besonderen Rechte (nur eigene Oberfläche und eigener Speicher)')) + '</li>') + '</ul>'
                 + '<div class="nc-row"><button type="button" class="btn btn-gold" data-plinstall="1">✔ ' + esc(T('Erlauben & installieren')) + '</button><button type="button" class="btn" data-plcancel="1">' + esc(T('Abbrechen')) + '</button></div></div>' : '')
-            + (mkOpen ? market() : '')
-            + (d.items.length ? d.items.map(card).join('') : '<div class="vx-empty">' + esc(T('Noch keine Plugins installiert.')) + '</div>')
-            + '<p class="small muted">📘 ' + esc(T('Eigene Plugins schreiben: siehe docs/PLUGINS.md im Repository.')) + '</p>';
+            + (ptab === 'market' ? market()
+                : ptab === 'settings' ? (d.items.length ? d.items.map(p => card(p, false)).join('') : '<div class="vx-empty">' + esc(T('Noch keine Plugins installiert.')) + '</div>')
+                    + '<p class="small muted">📘 ' + esc(T('Eigene Plugins schreiben: siehe docs/PLUGINS.md im Repository.')) + '</p>'
+                : card(d.items.find(p => p.id === ptab), true));
     }
     /** 4.4: Marktplatz – geprüfte Plugins von der GhostNode-Website */
     const PL = { chatbox: '💬', osc: '🎛', notify: '🔔', game: '🎮', net: '🌐', vrchat: '🟦' };
@@ -103,12 +113,12 @@
             if (t.closest('[data-plexample]')) { const fd = new FormData(); fd.append('act', 'plug_inspect'); fd.append('example', '1'); return inspect(fd); }
             if (t.closest('[data-plcancel]')) { check = null; return render(); }
             if (t.closest('[data-plopen]')) return api('plug_open').catch(x => toast(x.message, true));
-            if (t.closest('[data-plmk]')) { mkOpen = !mkOpen; render(); if (mkOpen) loadMarket(false); return; }
+            const tb = t.closest('[data-pltab]'); if (tb) return setTab(tb.dataset.pltab);   // 8.0.6
             if (t.closest('[data-plmkre]')) { mk = null; render(); return loadMarket(true); }
             if (t.closest('[data-plmkkey]')) { e.preventDefault(); if (!confirm(T('Nur tun, wenn der Schlüsselwechsel angekündigt war. Neu lernen?'))) return; return api('plug_market_relearn').then(r => { toast(T(r.msg)); mk = null; loadMarket(true); }).catch(x => toast(x.message, true)); }
             const g = t.closest('[data-plmkget]');
             if (g && !busy) { busy = true; g.disabled = true; return api('plug_market_get', { id: g.dataset.plmkget }).then(r => { check = r; render(); box.scrollIntoView({ behavior: 'smooth' }); }).catch(x => toast(x.message, true)).finally(() => { busy = false; }); }
-            if (t.closest('[data-plinstall]') && check && !busy) { busy = true; const fromMk = check.market; return api('plug_install', { token: check.token }).then(r => { check = null; upd(r); if (fromMk) loadMarket(true); }).catch(x => toast(x.message, true)).finally(() => { busy = false; }); }
+            if (t.closest('[data-plinstall]') && check && !busy) { busy = true; const fromMk = check.market; const newId = check.manifest && check.manifest.id; return api('plug_install', { token: check.token }).then(r => { check = null; if (newId) { ptab = newId; try { localStorage.setItem('nx_pltab', newId); } catch (e) { /* egal */ } } upd(r); if (fromMk) loadMarket(true); }).catch(x => toast(x.message, true)).finally(() => { busy = false; }); }
             const b = t.closest('[data-plbtn]');
             if (b && c) return api('plug_ui', { id: c.dataset.plid, type: 'click', el: b.dataset.plbtn, values: JSON.stringify(values(c)) }).then(r => { if (document.activeElement && c.contains(document.activeElement)) document.activeElement.blur(); upd(r); }).catch(x => toast(x.message, true));
             const a = t.closest('[data-plact]');

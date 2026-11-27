@@ -1525,3 +1525,7 @@ body.deck .vx-tabbtn { min-height: 46px; }
 .th-colors input[type=color] { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); background: none; }
 .th-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; } .th-card { border: 1px solid var(--border-color); padding: 8px; display: flex; flex-direction: column; gap: 4px; }
 .th-card small { color: var(--text-muted); }
+
+/* 8.0.6 Plugin-Tabs */
+.pl-tabs { margin: 10px 0 12px; overflow-x: auto; flex-wrap: nowrap; }
+.pl-tabs button { white-space: nowrap; }

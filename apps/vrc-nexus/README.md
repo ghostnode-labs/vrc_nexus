@@ -26,6 +26,13 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.6 – Plugin tabs
+- 🧩 **Every plugin gets its own tab**: the plugin page now has a tab bar `⚙ Settings | 🛒 Marketplace | Plugin 1 | Plugin 2 | …`. Each plugin tab shows the plugin's status dot.
+  - **Settings**: install (.nxp or example), plugin folder, pause all, and the overview of every plugin with on/off, rights, restart, log and remove.
+  - **Marketplace**: now its own tab instead of a toggle button.
+  - **Plugin tabs**: the plugin's own interface with its controls.
+  - The last open tab is remembered. After an install, the new plugin's tab opens automatically. If a plugin is removed, the page falls back to Settings.
+
 ### New in 8.0.5 – Watch app 2.0, health, VR hand menu & themes marketplace
 - ⌚ **Nexus Watch 2.0 – watch faces**: Classic, Big time, Analog (hands plus a heart-rate ring that fills from 40 to 200 bpm), Minimal (time and heart rate only, ☰ opens the menu), Health (VR time today, breaks, minutes to the next break, steps) and Friends & world. Choose on the watch (Settings → ⌚ Watch face) or on the PC (🧰 Tools → Nexus Watch).
 - 🚶 **Steps from the watch** (opt-in, "Physical activity" permission). The daily step count from the watch's step counter (it survives watch restarts) is sent to the PC with the heart rate, at most once a minute and only when it changed.
