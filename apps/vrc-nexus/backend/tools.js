@@ -138,6 +138,7 @@ class Tools {
         if (this.timer.unref) this.timer.unref();
         if (this.app.auto) this.app.auto.start();
         if (this.app.insights) this.app.insights.start();
+        if (this.app.together) this.app.together.start();   // 7.1: Erinnerungen an Treffen & Club-Events
         if (this.app.stream) this.app.stream.apply();
         if (this.app.backup) this.app.backup.start();
         if (this.app.account) this.app.account.start();
@@ -149,7 +150,7 @@ class Tools {
         if (this.app.osclog && !this.oscLogOn) { this.oscLogOn = true; this.app.osclog.attach(this.app.game.osc); }
         if (this.app.plugins) this.app.plugins.start();   // 3.6 zuletzt, damit es OSC-Nachrichten mit abgreift
     }
-    stop() { if (this.timer) clearInterval(this.timer); this.timer = null; if (this.app.auto) this.app.auto.stop(); if (this.app.insights) this.app.insights.stop(); if (this.app.osclog) this.app.osclog.stop(); if (this.app.stream) this.app.stream.stop(); if (this.app.chatmods) this.app.chatmods.stop(); if (this.app.heart) this.app.heart.stop(); if (this.app.account) this.app.account.stop(); if (this.app.chat) this.app.chat.stop(); if (this.app.media) this.app.media.stop(); if (this.app.osctools) this.app.osctools.stop(); if (this.app.plugins) this.app.plugins.stop(); this.api.stop(); this.rpc.close(); }
+    stop() { if (this.timer) clearInterval(this.timer); this.timer = null; if (this.app.auto) this.app.auto.stop(); if (this.app.insights) this.app.insights.stop(); if (this.app.together) this.app.together.stop(); if (this.app.osclog) this.app.osclog.stop(); if (this.app.stream) this.app.stream.stop(); if (this.app.chatmods) this.app.chatmods.stop(); if (this.app.heart) this.app.heart.stop(); if (this.app.account) this.app.account.stop(); if (this.app.chat) this.app.chat.stop(); if (this.app.media) this.app.media.stop(); if (this.app.osctools) this.app.osctools.stop(); if (this.app.plugins) this.app.plugins.stop(); this.api.stop(); this.rpc.close(); }
     applySettings(changed) {
         const all = changed.includes('*');
         if (all || changed.some(k => k.startsWith('int.api') || k === 'int.obs')) this.api.apply();
@@ -253,7 +254,7 @@ class Tools {
         if (list('notify.mute').some(w => text.includes(w))) return;   // 6.3: nie melden
         if (this.app.nsfw && this.app.nsfw.private && this.app.nsfwsafe && this.app.nsfwsafe.cfg().private2.mute_notes && /🔞|18\+|nsfw|💌|🤝/i.test(text)) return;   // 6.7: Privat-Modus 2.0
         if (webhookKind && s['int.webhook'] && s['int.webhook_' + webhookKind]) this.webhook(title + (body ? '\n' + body : ''));
-        if (this.quiet() && !list('notify.vip').some(w => text.includes(w))) return;   // 6.3: VIPs auch in der Nicht-stören-Zeit
+        if ((this.quiet() || (this.app.together && this.app.together.muted() && !/^[⏰🏠]/u.test(str(title)))) && !list('notify.vip').some(w => text.includes(w))) return;   // 6.3: VIPs auch in der Nicht-stören-Zeit; 7.1: Event-Modus (eigene Erinnerungen kommen durch)
         if (this.app.watch && this.app.watch.note) this.app.watch.note(title, body, meta);   // 6.5: auf die Nexus Watch (mit Antwort-Knöpfen)
         if (s['notify.desktop'] && this.host.notify) this.host.notify(title, body, s['notify.silent']);
         if (s['notify.tts'] && this.host.speak) this.host.speak(title + '. ' + body);

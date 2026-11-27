@@ -67,7 +67,8 @@ class Home {
         const pcs = a.pclink ? safe(() => a.pclink.status(), null) : null, st = pcs && pcs.state;
         return { ts: d.ts, me: d.me ? d.me.name : '', status: d.me ? d.me.status : '', in_game: d.friends.in_game, online: d.friends.online, notifs: d.notifs ? d.notifs.unseen : 0,
             top: d.friends.list.slice(0, 5).map(f => f.name + (f.world ? ' · ' + f.world : '')),
-            events: (d.events || []).filter(e => (e.end || e.start) > t).sort((x, y) => x.start - y.start).slice(0, 4).map(e => ({ title: str(e.title).slice(0, 60), group: str(e.group).slice(0, 40), start: e.start, end: e.end, following: e.following })),
+            events: (d.events || []).concat(a.together ? safe(() => a.together.plans().filter(p => !p.past).map(p => ({ title: '🗓 ' + p.title, group: p.group_name || p.place, start: p.when, end: p.when + 7200, following: true })), []) : [])   // 7.1: eigene Treffen
+                .filter(e => (e.end || e.start) > t).sort((x, y) => x.start - y.start).slice(0, 4).map(e => ({ title: str(e.title).slice(0, 60), group: str(e.group).slice(0, 40), start: e.start, end: e.end, following: e.following })),
             anniv: (d.anniv || []).slice(0, 3).map(x => ({ name: str(x.name).slice(0, 40), kind: str(x.kind), in_days: int(x.in_days), years: int(x.years) })),
             notif_items: d.notifs ? d.notifs.items.slice(0, 4).map(n => ({ title: str(n.title).slice(0, 60), message: str(n.message).slice(0, 80), ts: int(n.ts) })) : [],
             pc: pcs ? { paired: !!pcs.paired, name: str(pcs.pc).slice(0, 40), error: str(pcs.error).slice(0, 80),

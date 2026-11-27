@@ -78,6 +78,7 @@ class NexusApp {
         this.warn = new (require('./warnlist').WarnList)(this);
         this.pulse = new (require('./pulse').Pulse)(this);   // 3.9 News & Discovery
         this.comm = new (require('./community').Community)(this);
+        this.together = new (require('./together').Together)(this);   // 7.1 Gemeinsam
         this.buttons = new (require('./buttons').Buttons)(this);
         this.deco = new (require('./deco').Deco)(this);                    // 3.1: Profil-Dekorationen
         this.netgraph = new (require('./netgraph').NetGraph)(this);        // 3.2.3: Gemeinsames Netzwerk
@@ -288,6 +289,7 @@ class NexusApp {
                 return { pos: this.overlayPos() };
             }
             if (act.startsWith('ins_')) return await this.insights.action(act, input);
+            if (act.startsWith('tg_')) return await this.together.action(act, input);   // 7.1
             if (act.startsWith('mod_')) return await this.mod.action(act, input);
             if (act.startsWith('coll_')) return await this.coll.action(act, input);
             if (act === 'about') return this.about(input);

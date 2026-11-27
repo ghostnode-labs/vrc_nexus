@@ -26,6 +26,16 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.1.0 – Together
+Community → 🎉 **Together** – everything stays local in the app.
+- 👥 **Friend groups:** fixed crews (e.g. “Friday crew”) with online status – 📨 invite everyone who's in game to your instance with one click
+- 🗓 **Plan meetups:** title, time, place, group and note; ⏰ reminder 5 min to 1 day before – on the PC, on the Nexus Watch and in the phone widget “Next events”; copy as text to share
+- 🏠 **Club event reminders (new):** events you signed up for in a club (7.0) remind you 15 minutes before
+- 📊 **Chatbox polls:** question with 2–6 answers in the chatbox, count the votes in the app, send the result back
+- 🎲 **Mini-games for meetups:** dice (e.g. 2d6), coin flip, “Whose turn?” (picks someone in your instance), wheel of fortune, quiz questions (answer only in the app), truth or dare (friendly), VRChat bingo card – optionally straight into the chatbox
+- 🎉 **Event mode:** one switch sets your VRChat status with the event title, announces it in the chatbox and mutes notifications (VIPs and your reminders still come through); ending it restores your old status
+- 🏅 **Badges:** 15 badges from your real playtime, worlds, people, photos, friends and meetups – with progress
+
 ### New in 7.0.1 – More Android widgets
 Long-press the home screen → Widgets → VRC Nexus. All widgets use the app language and are refreshed by the app every minute while it runs.
 - ❤ **Heart rate & PC** (2×1): heart rate, world and player count from the paired PC (phone ↔ PC); no world in private mode, notice when the PC is unreachable; tap opens the PC connection

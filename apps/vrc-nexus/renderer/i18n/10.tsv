@@ -2252,3 +2252,93 @@ Puls & PC	Heart rate & PC	Pouls & PC	心拍とPC
 Schnellzugriff & Panik	Quick access & panic	Accès rapide & panique	クイックアクセスとパニック
 in	in	dans	あと
 Privat-Modus	Private mode	Mode privé	プライベートモード
+Freundes-Gruppen	Friend groups	Groupes d'amis	フレンドグループ
+Treffen planen	Plan meetups	Planifier des rencontres	集まりを計画
+Mini-Spiele	Mini-games	Mini-jeux	ミニゲーム
+Event-Modus	Event mode	Mode événement	イベントモード
+# Tag vorher	# day before	# jour avant	#日前
+# h vorher	# h before	# h avant	#時間前
+# min vorher	# min before	# min avant	#分前
+# Stunden VRChat	# hours of VRChat	# heures de VRChat	VRChat #時間
+# Umfragen	# polls	# sondages	投票#回
+# Fotos	# photos	# photos	写真#枚
+# Leute getroffen	Met # people	# personnes rencontrées	#人と出会った
+# verschiedene Welten	# different worlds	# mondes différents	#種類のワールド
+# Events	# events	# événements	イベント#回
+# Treffen geplant	# meetups planned	# rencontres planifiées	集まりを#回計画
+# Mini-Spiele	# mini-games	# mini-jeux	ミニゲーム#回
+# Sammel-Einladungen verschickt	# group invites sent	# invitations groupées envoyées	まとめて招待#件
+Abzeichen – aus deiner echten Spielzeit, nur auf diesem Gerät.	badges – from your real playtime, only on this device.	badges – d'après ton vrai temps de jeu, seulement sur cet appareil.	バッジ – 実際のプレイ時間から、この端末のみ。
+Angekommen	Arrived	Bien arrivé	到着
+Stammgast	Regular	Habitué	常連
+Urgestein	Veteran	Vétéran	古参
+Weltenbummler	Globetrotter	Globe-trotteur	世界旅行者
+Entdecker	Explorer	Explorateur	探検家
+Gesellig	Sociable	Sociable	社交的
+Bekannt wie ein bunter Hund	Known everywhere	Connu comme le loup blanc	顔が広い
+Freundeskreis	Circle of friends	Cercle d'amis	友達の輪
+Fotograf	Photographer	Photographe	フォトグラファー
+Erstes Event	First event	Premier événement	初めてのイベント
+Event-Modus zum ersten Mal	Event mode for the first time	Mode événement pour la première fois	初めてのイベントモード
+Partygänger	Party-goer	Fêtard	パーティー好き
+Organisator	Organizer	Organisateur	オーガナイザー
+Demokrat	Democrat	Démocrate	民主派
+Spielleitung	Game master	Maître du jeu	ゲームマスター
+Gastgeber	Host	Hôte	ホスト
+Ansage in der Chatbox	Announcement in the chatbox	Annonce dans la chatbox	チャットボックスで告知
+Antwort zeigen	Show answer	Afficher la réponse	答えを表示
+Antworten – eine pro Zeile (2 bis 6)	Answers – one per line (2 to 6)	Réponses – une par ligne (2 à 6)	回答 – 1行に1つ（2〜6）
+Bitte einen Zeitpunkt in der Zukunft wählen.	Please choose a time in the future.	Choisis une date dans le futur.	未来の日時を選んでください。
+Chatbox ist hier nicht verfügbar.	Chatbox isn't available here.	La chatbox n'est pas disponible ici.	ここではチャットボックスを使えません。
+Ein Schalter fürs Event: VRChat-Status mit Titel, Ansage in der Chatbox und Meldungen stumm (außer VIPs und deinen Erinnerungen). Beim Beenden kommt der alte Status zurück.	One switch for the event: VRChat status with title, announcement in the chatbox and muted notifications (except VIPs and your reminders). When you end it, your old status comes back.	Un seul interrupteur pour l'événement : statut VRChat avec titre, annonce dans la chatbox et notifications coupées (sauf VIP et tes rappels). À la fin, ton ancien statut revient.	イベント用のスイッチ：タイトル付きVRChatステータス、チャットボックスで告知、通知をミュート（VIPと自分のリマインダーは除く）。終了すると元のステータスに戻ります。
+Ergebnis in die Chatbox	Result to the chatbox	Résultat dans la chatbox	結果をチャットボックスへ
+Erinnern	Remind	Rappeler	リマインド
+Erinnerung kommt am PC, auf der Nexus Watch und im Handy-Widget.	The reminder appears on the PC, on the Nexus Watch and in the phone widget.	Le rappel apparaît sur le PC, la Nexus Watch et le widget du téléphone.	リマインダーはPC、Nexus Watch、スマホのウィジェットに表示されます。
+Event-Modus beenden	End event mode	Quitter le mode événement	イベントモードを終了
+Event-Modus ist aus.	Event mode is off.	Le mode événement est désactivé.	イベントモードはオフです。
+Event-Modus starten	Start event mode	Démarrer le mode événement	イベントモードを開始
+Feste Runden für Treffen: sieh, wer online ist, und lade alle im Spiel mit einem Klick in deine Instanz ein.	Fixed groups for meetups: see who's online and invite everyone in game to your instance with one click.	Groupes fixes pour les rencontres : vois qui est en ligne et invite tous ceux en jeu dans ton instance en un clic.	集まり用の固定グループ：誰がオンラインか確認し、ゲーム中の全員を1クリックで自分のインスタンスに招待。
+Frage in die Chatbox – alle antworten mit der Nummer, du zählst hier mit und schickst das Ergebnis zurück.	Question to the chatbox – everyone answers with the number, you count here and send the result back.	Question dans la chatbox – chacun répond avec le numéro, tu comptes ici et renvoies le résultat.	チャットボックスに質問 – みんなが番号で答え、ここで数えて結果を送り返します。
+Frage und mindestens zwei Antworten nötig.	A question and at least two answers are needed.	Il faut une question et au moins deux réponses.	質問と2つ以上の回答が必要です。
+Frage, z. B. Welche Welt als Nächstes?	Question, e.g. Which world next?	Question, p. ex. Quel monde ensuite ?	質問（例：次はどのワールド？）
+Freunde filtern …	Filter friends …	Filtrer les amis …	フレンドを絞り込む …
+Für „Wer ist dran?“ und Glücksrad: Namen/Felder, mit Komma oder pro Zeile (leer = alle in der Instanz)	For “Whose turn?” and wheel: names/fields, comma-separated or one per line (empty = everyone in the instance)	Pour « À qui le tour ? » et la roue : noms/cases, séparés par des virgules ou un par ligne (vide = tout le monde dans l'instance)	「誰の番？」とルーレット用：名前/項目をカンマか1行ずつ（空欄＝インスタンスの全員）
+Gruppe einladen	Invite group	Inviter le groupe	グループを招待
+Gruppe gelöscht.	Group deleted.	Groupe supprimé.	グループを削除しました。
+Gruppe gespeichert.	Group saved.	Groupe enregistré.	グループを保存しました。
+Gruppe löschen?	Delete group?	Supprimer le groupe ?	グループを削除しますか？
+Gruppe nicht gefunden.	Group not found.	Groupe introuvable.	グループが見つかりません。
+Keine Umfrage aktiv.	No active poll.	Aucun sondage en cours.	実行中の投票はありません。
+Meldungen stumm	Mute notifications	Notifications coupées	通知をミュート
+Mindestens zwei Felder fürs Glücksrad.	At least two fields for the wheel.	Au moins deux cases pour la roue.	ルーレットには2つ以上の項目が必要です。
+Name der Gruppe	Group name	Nom du groupe	グループ名
+Name der Gruppe: mindestens 2 Zeichen.	Group name: at least 2 characters.	Nom du groupe : au moins 2 caractères.	グループ名：2文字以上。
+Neues Treffen	New meetup	Nouvelle rencontre	新しい集まり
+Niemand zum Auswählen – Namen eintragen oder in eine Instanz gehen.	Nobody to choose – enter names or join an instance.	Personne à choisir – saisis des noms ou rejoins une instance.	選ぶ人がいません – 名前を入力するかインスタンスに入ってください。
+Noch keine Gruppen – z. B. „Freitagsrunde“ oder „Club-Team“.	No groups yet – e.g. “Friday crew” or “Club team”.	Pas encore de groupes – p. ex. « Bande du vendredi » ou « Équipe du club ».	まだグループはありません – 例：「金曜メンバー」「クラブチーム」。
+Noch keine Treffen geplant.	No meetups planned yet.	Aucune rencontre prévue.	予定された集まりはまだありません。
+Titel: mindestens 2 Zeichen.	Title: at least 2 characters.	Titre : au moins 2 caractères.	タイトル：2文字以上。
+Treffen gelöscht.	Meetup deleted.	Rencontre supprimée.	集まりを削除しました。
+Treffen gespeichert.	Meetup saved.	Rencontre enregistrée.	集まりを保存しました。
+Treffen nicht gefunden.	Meetup not found.	Rencontre introuvable.	集まりが見つかりません。
+Umfrage starten	Start poll	Lancer le sondage	投票を開始
+Unbekannte Aktion.	Unknown action.	Action inconnue.	不明な操作です。
+Unbekannte Antwort.	Unknown answer.	Réponse inconnue.	不明な回答です。
+Unbekanntes Spiel.	Unknown game.	Jeu inconnu.	不明なゲームです。
+Wann	When	Quand	いつ
+Würfel als z. B. „2d6“ angeben.	Enter dice as e.g. “2d6”.	Indique les dés, p. ex. « 2d6 ».	サイコロは「2d6」のように指定してください。
+Würfel, z. B. 1d6, 2d6, 1d20	Dice, e.g. 1d6, 2d6, 1d20	Dés, p. ex. 1d6, 2d6, 1d20	サイコロ（例：1d6、2d6、1d20）
+Würfeln	Roll dice	Lancer les dés	サイコロ
+Münzwurf	Coin flip	Pile ou face	コイントス
+Wer ist dran?	Whose turn?	À qui le tour ?	誰の番？
+Glücksrad	Wheel of fortune	Roue de la fortune	ルーレット
+Quizfrage	Quiz question	Question de quiz	クイズ
+Wahrheit	Truth	Vérité	真実
+Pflicht	Dare	Action	挑戦
+VRChat-Bingo	VRChat bingo	Bingo VRChat	VRChatビンゴ
+Neue Bingo-Karte	New bingo card	Nouvelle carte de bingo	新しいビンゴカード
+läuft seit	running since	en cours depuis	開始：
+nur VIP-Meldungen	VIP notifications only	notifications VIP seulement	VIPの通知のみ
+z. B. Clubnacht	e.g. club night	p. ex. soirée club	例：クラブナイト
+z. B. Filmabend	e.g. movie night	p. ex. soirée film	例：映画の夜
+Alle im Spiel einladen	Invite everyone in game	Inviter tous ceux en jeu	ゲーム中の全員を招待

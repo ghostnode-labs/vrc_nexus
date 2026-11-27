@@ -738,3 +738,34 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 .cl-gal img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
 .cl-gal figcaption { padding: 6px 8px; font-size: .82rem; }
 .cl-mem { padding: 4px 0; border-bottom: 1px solid var(--border-color); }
+/* 7.1 Gemeinsam */
+#tgBox .nw-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#tgBox .nw-row .sp { flex: 1; }
+#tgBox .nw-muted { color: var(--text-muted); font-size: 0.82rem; }
+#tgBox .nw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+#tgBox .nw-text { white-space: pre-wrap; word-break: break-word; }
+#tgBox .nw-card h3 { margin: 0 0 10px; font-size: 0.95rem; color: var(--accent-cyan); }
+.tg-sub { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.tg-mem { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; font-size: .82rem; }
+.tg-pick { max-height: 320px; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px; }
+.tg-pick label { font-size: .85rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tg-past { opacity: .55; }
+.tg-vote { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr auto auto auto; gap: 8px; align-items: center; margin: 6px 0; }
+.tg-vote i { display: block; height: 10px; background: var(--accent-cyan); min-width: 2px; }
+.tg-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 10px 0; }
+.tg-game { cursor: pointer; text-align: center; color: inherit; font: inherit; }
+.tg-game span { display: block; font-size: 1.8rem; }
+.tg-game:hover { border-color: var(--accent-cyan); }
+.tg-res b { font-size: 1.05rem; color: var(--accent-gold); }
+.tg-bingo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tg-bingo button { min-height: 64px; background: var(--panel-bg); border: 1px solid var(--border-color); color: inherit; font: inherit; font-size: .8rem; cursor: pointer; }
+.tg-bingo button.on { background: rgba(56, 213, 230, .25); border-color: var(--accent-cyan); }
+.tg-live { border-color: var(--accent-gold); }
+.tg-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.tg-badge { text-align: center; opacity: .55; filter: grayscale(.8); }
+.tg-badge.got { opacity: 1; filter: none; border-color: var(--accent-gold); }
+.tg-badge span { display: block; font-size: 2rem; }
+.tg-badge b { display: block; margin: 4px 0; }
+.tg-badge small { display: block; color: var(--text-muted); font-size: .75rem; }
+.tg-badge i { display: block; height: 5px; background: rgba(255,255,255,.08); margin: 6px 0 2px; }
+.tg-badge em { display: block; height: 100%; background: var(--accent-gold); }

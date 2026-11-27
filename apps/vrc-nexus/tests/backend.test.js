@@ -4351,3 +4351,69 @@ test('7.0.1: Android-Widgets – Zusammenfassung mit Events, Jubiläen, Benachri
     delete app.pclink; assert.strictEqual(new Home(app).summary().pc, null, 'ohne Kopplung kein PC-Teil');
     assert.ok(JSON.stringify(s).length < 32768, 'passt ins Widget (Grenze in WidgetBridge)');
 });
+
+test('7.1: Gemeinsam – Freundes-Gruppen + Sammel-Einladung, Treffen mit Erinnerung, Club-Erinnerung, Umfrage, Mini-Spiele, Event-Modus, Abzeichen', async () => {
+    const { Together, QUIZ } = require('../backend/together');
+    const store = {}, alerts = [], chat = [], posts = [], status = [];
+    const fl = [{ id: 'usr_aaaaaaaa-1111', name: 'Mira', state: 'online', loc: { kind: 'world', world_name: 'Club' } }, { id: 'usr_bbbbbbbb-2222', name: 'Kai', state: 'offline', loc: {} }, { id: 'usr_cccccccc-3333', name: 'Luna', state: 'online', loc: {} }];
+    let clubCal = { items: [] };
+    const app = { db: { setting: (k, d) => store[k] ?? d, setSetting: (k, v) => { store[k] = v; } },
+        vrc: { friendList: () => fl }, tools: { alert: (t, b) => alerts.push([t, b]), acc: () => ({ me: { status: 'active', statusDescription: 'chillig' } }), setStatus: async (s, d) => { status.push([s, d]); return true; } },
+        game: { oscSend: async (k, o) => chat.push(o.text), state: { players: new Map([['a', { name: 'Mira' }], ['b', { name: 'Ole' }]]) } },
+        post: async b => { posts.push(b); return { msg: b.ids.length + ' Einladung(en) verschickt.' }; },
+        insights: { recap: () => ({ playtime: 12 * 3600, worlds_count: 30, people_count: 5, shots: 0 }) },
+        account: { current: () => ({ token: 't' }) }, comm: { club: async () => clubCal } };
+    const t = new Together(app);
+
+    // Gruppen
+    assert.throws(() => t.groupSave({ name: 'x' }), /mindestens 2/);
+    const g = t.groupSave({ name: 'Freitagsrunde', emoji: '🍕', ids: JSON.stringify(['usr_aaaaaaaa-1111', 'usr_bbbbbbbb-2222', 'usr_cccccccc-3333', 'kaputt', 'usr_aaaaaaaa-1111']) }).groups[0];
+    assert.deepStrictEqual([g.members.length, g.in_game], [3, 2], 'ungültige/doppelte IDs fliegen raus, Online-Stand stimmt');
+    await t.groupInvite(g.id);
+    assert.deepStrictEqual(posts[0], { act: 'invite_many', ids: ['usr_aaaaaaaa-1111', 'usr_cccccccc-3333'] }, 'nur wer im Spiel ist');
+
+    // Treffen + Erinnerung
+    const now = Math.floor(Date.now() / 1000);
+    assert.throws(() => t.planSave({ title: 'Alt', when: now - 7200 }), /Zukunft/);
+    t.planSave({ title: 'Filmabend', when: now + 20 * 60, remind: 15, place: 'Kino-Welt', group: g.id });
+    await t.tick(now); assert.strictEqual(alerts.length, 0, 'noch zu früh');
+    await t.tick(now + 6 * 60); assert.deepStrictEqual(alerts.shift(), ['⏰ Filmabend', 'in 14 min · Kino-Welt']);
+    await t.tick(now + 7 * 60); assert.strictEqual(alerts.filter(a => a[0].startsWith('⏰')).length, 0, 'nur einmal');
+    assert.match(t.planText(t.plans()[0].id).text, /🗓 Filmabend\n🕒 .+\n📍 Kino-Welt/);
+
+    // Club-Erinnerung (zugesagt, beginnt bald) – nur einmal
+    t.clubAt = 0;
+    clubCal = { items: [{ id: 9, title: 'Tanzabend', starts: now + 600, mine: 'going', club: { name: 'Tanzclub' } }, { id: 10, title: 'Egal', starts: now + 600, mine: 'maybe' }] };
+    await t.tick(now + 60); assert.deepStrictEqual(alerts.map(a => a[0]), ['🏠 Tanzabend']);
+    t.clubAt = 0; await t.tick(now + 120); assert.strictEqual(alerts.length, 1, 'Club-Erinnerung nur einmal');
+
+    // Umfrage
+    await assert.rejects(t.pollStart({ q: 'Hm?', options: 'nur eine' }), /zwei Antworten/);
+    await t.pollStart({ q: 'Welche Welt?', options: 'Club\nStrand\nBerg' });
+    assert.strictEqual(chat.pop(), '📊 Welche Welt? 1) Club 2) Strand 3) Berg');
+    t.pollVote(1, 1); t.pollVote(1, 1); t.pollVote(0, 1); t.pollVote(2, -1);
+    const end = await t.pollEnd(true);
+    assert.strictEqual(chat.pop(), '📊 Ergebnis: Strand (2) · Club (1) · Berg (0)');
+    assert.strictEqual(end.result[0][0], 'Strand');
+
+    // Mini-Spiele
+    const dice = await t.game('dice', { arg: '3d6' });
+    assert.ok(dice.rolls.length === 3 && dice.rolls.every(r => r >= 1 && r <= 6) && dice.text.endsWith('= ' + dice.rolls.reduce((a, b) => a + b, 0)));
+    await assert.rejects(t.game('dice', { arg: 'abc' }), /2d6/);
+    assert.match((await t.game('pick', {})).text, /^👉 Ausgewählt: (Mira|Ole) \(aus 2\)$/, 'ohne Namen: Leute in der Instanz');
+    assert.match((await t.game('wheel', { arg: 'Pizza, Sushi' })).text, /Pizza|Sushi/);
+    const q = await t.game('quiz', { chatbox: '1' }); assert.ok(QUIZ.some(x => x[1] === q.answer) && chat.pop() === q.text, 'Quiz: Frage in die Chatbox, Antwort nur in der App');
+    const b = await t.game('bingo', {}); assert.strictEqual(b.card.length, 9); assert.strictEqual(new Set(b.card).size, 9); assert.strictEqual(b.card[4], '⭐ Frei');
+
+    // Event-Modus: Status setzen, stumm, danach alter Status zurück
+    const on = await t.eventOn({ title: 'Clubnacht', status: 'busy', chatbox: '1', mute: '1' });
+    assert.ok(t.muted() && on.event.prev_status === 'active');
+    assert.deepStrictEqual(status.pop(), ['busy', '🎉 Clubnacht']); assert.strictEqual(chat.pop(), '🎉 Clubnacht');
+    await t.eventOff();
+    assert.ok(!t.muted()); assert.deepStrictEqual(status.pop(), ['active', 'chillig'], 'alter Status zurück');
+
+    // Abzeichen aus echten Werten
+    const bd = t.badges();
+    assert.ok(bd.find(x => x.id === 'play10').got && !bd.find(x => x.id === 'play100').got && bd.find(x => x.id === 'worlds25').got && bd.find(x => x.id === 'events1').got);
+    assert.strictEqual(bd.find(x => x.id === 'play100').value, 12);
+});
