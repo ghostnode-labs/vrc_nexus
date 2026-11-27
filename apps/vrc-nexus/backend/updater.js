@@ -5,6 +5,8 @@
  * Android: APK-Download öffnen – installieren muss man selbst bestätigen.
  */
 const { str, now, cut, UserError } = require('./util');
+/** Handy-APK: „…-android.apk“ (ältere Releases: jede .apk) – aber nie die Uhr-App „VRC-Nexus-Watch-…-wearos.apk“ */
+const PHONE_APK = /^(?!.*(watch|wear)).*\.apk$/i;
 const { VERSION } = require('./vrchat');
 
 const REPO = 'ghostnode-labs/vrc_nexus';
@@ -42,7 +44,7 @@ class Updater {
         }
         // Nur Releases, die die Datei für DIESES Gerät schon haben: Android- und Windows-Build laden ihre Dateien
         // nacheinander hoch – sonst meldet die App ein Update, bevor das Setup da ist („Im Release fehlt die passende Datei“).
-        const need = this.app.mobile ? /\.apk$/i : process.env.PORTABLE_EXECUTABLE_FILE ? /-portable\.exe$/i : /-Setup\.exe$/i;
+        const need = this.app.mobile ? PHONE_APK : process.env.PORTABLE_EXECUTABLE_FILE ? /-portable\.exe$/i : /-Setup\.exe$/i;
         let best = null;
         for (const r of list) {
             if (!r || r.draft || r.prerelease || !str(r.tag_name).startsWith(TAG_PREFIX)) continue;
@@ -59,7 +61,7 @@ class Updater {
                 if (!/^https:\/\//.test(u) && !(process.env.NEXUS_UPDATE_API && /^http:\/\/127\.0\.0\.1:/.test(u))) continue;   // http nur im lokalen Test
                 if (/-Setup\.exe$/i.test(n)) a.setup = { name: n, url: u, size: x.size };
                 else if (/-portable\.exe$/i.test(n)) a.portable = { name: n, url: u, size: x.size };
-                else if (/\.apk$/i.test(n)) a.apk = { name: n, url: u, size: x.size };
+                else if (PHONE_APK.test(n) && (!a.apk || /-android\.apk$/i.test(n))) a.apk = { name: n, url: u, size: x.size };   // nie die Wear-OS-App der Uhr
             }
             Object.assign(out, { available: newer(best.v, VERSION), version: best.v, notes: cut(str(best.r.body), 4000), published: str(best.r.published_at), page: str(best.r.html_url), assets: a });
         }
@@ -74,7 +76,8 @@ class Updater {
     }
     /** Update anwenden (Windows: herunterladen + installieren; Android: Download öffnen) */
     async install() {
-        const st = this.status();
+        let st = this.status();
+        if (this.app.mobile && st.assets && st.assets.apk && !PHONE_APK.test(str(st.assets.apk.name))) { await this.check(); st = this.status(); }   // 6.2.1: alter Stand zeigte auf die Uhr-APK
         if (!st.available) throw new UserError('Du hast schon die neueste Version (' + VERSION + ').');
         const host = this.app.tools.host;
         if (this.app.mobile) {

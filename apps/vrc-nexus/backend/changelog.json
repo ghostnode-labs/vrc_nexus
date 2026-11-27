@@ -1,5 +1,10 @@
 [
  {
+  "version": "6.2.1",
+  "title": "",
+  "body": "- 📱 Fix: the updater in the Android app downloaded the **Wear OS watch APK** instead of the phone app – it now always picks `VRC-Nexus-x.y.z-android.apk` and waits until the phone APK is uploaded"
+ },
+ {
   "version": "6.2.0",
   "title": "",
   "body": "- 🔞 *** (details in the app under “About” when NSFW is unlocked)"

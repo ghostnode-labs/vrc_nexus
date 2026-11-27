@@ -26,6 +26,9 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.2.1
+- 📱 Fix: the updater in the Android app downloaded the **Wear OS watch APK** instead of the phone app – it now always picks `VRC-Nexus-x.y.z-android.apk` and waits until the phone APK is uploaded
+
 ### New in 6.2.0
 - 🔞 *** (details in the app under “About” when NSFW is unlocked)
 
