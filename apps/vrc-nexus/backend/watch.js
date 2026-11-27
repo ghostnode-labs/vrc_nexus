@@ -134,6 +134,11 @@ class Watch {
         if (url.pathname === '/watch/pair') return this.send(res, 200, this.pair(await this.body(req), req.socket.remoteAddress));
         const dev = this.device(req);
         if (!dev) return this.send(res, 401, { error: 'Nicht gekoppelt.' });
+        if (url.pathname === '/watch/sync') {   // 8.0.4: Heimnetz-Abgleich – nur gekoppelte PCs
+            if (dev.kind !== 'pc' || !this.app.lansync) return this.send(res, 403, { error: 'Nur für gekoppelte PCs.' });
+            try { return this.send(res, 200, this.app.lansync.serve(await this.body(req, 800000))); } catch (e) { if (e.status === 409) return this.send(res, 409, { ok: false, conflict: true, rev: e.rev }); throw e; }
+        }
+        if (dev.kind === 'pc') return this.send(res, 403, { error: 'Ein gekoppelter PC darf nur abgleichen.' });
         if (url.pathname === '/watch/state') { const st = this.state(); const bz = this.buzz[dev.id]; if (bz && Date.now() < bz) { st.buzz = bz; delete this.buzz[dev.id]; } return this.send(res, 200, st); }
         if (url.pathname === '/watch/bg' && req.method === 'POST') {   // 5.2.4: Bild aus der Galerie der Uhr
             const b = await this.body(req, Math.ceil(BG_MAX * 1.4) + 200);
@@ -162,14 +167,14 @@ class Watch {
         const c = this.cfg();
         if (c.devices.length >= MAX_DEV) throw new UserError('Schon ' + MAX_DEV + ' Uhren gekoppelt – erst eine in VRC Nexus entfernen.');
         const token = crypto.randomBytes(32).toString('hex'), id = 'w' + crypto.randomBytes(4).toString('hex');
-        const kind = b.kind === 'phone' ? 'phone' : 'watch';
-        const name = cut(str(b.name).replace(/[\r\n]/g, ' ').trim(), 40) || (kind === 'phone' ? 'Handy' : 'Uhr');
+        const kind = b.kind === 'phone' ? 'phone' : b.kind === 'pc' ? 'pc' : 'watch';   // 8.0.4: „pc“ = anderer PC/Laptop, darf nur den Heimnetz-Abgleich
+        const name = cut(str(b.name).replace(/[\r\n]/g, ' ').trim(), 40) || (kind === 'phone' ? 'Handy' : kind === 'pc' ? 'Laptop' : 'Uhr');
         c.devices.push({ id, name, kind, hash: sha(token), added: t, ip: cut(str(ip), 60) });
         this.pin = newPin();
         this.saveCfg({ devices: c.devices });
         const h = this.app.heart;
         if (kind === 'watch' && h && h.cfg().source !== 'watch' && !h.active) h.save({ source: 'watch' });   // Uhr übernimmt, wenn die bisherige Quelle gerade nichts liefert
-        if (this.app.tools && this.app.tools.alert) this.app.tools.alert(kind === 'phone' ? '📱 Handy gekoppelt' : '⌚ Uhr gekoppelt', name);
+        if (this.app.tools && this.app.tools.alert) this.app.tools.alert(kind === 'phone' ? '📱 Handy gekoppelt' : kind === 'pc' ? '🏠 PC gekoppelt (Abgleich)' : '⌚ Uhr gekoppelt', name);
         return { ok: true, token, id, name: cut(str((this.app.vrc.account() || {}).display_name) || os.hostname(), 40) };
     }
     remove(id) { const c = this.cfg(); this.saveCfg({ devices: c.devices.filter(d => d.id !== str(id)) }); return this.status(); }

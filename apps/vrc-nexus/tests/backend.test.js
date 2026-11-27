@@ -4889,3 +4889,53 @@ test('8.0.3: App-Sprachbefehle – Weckwort, Panik auch ohne, Seiten/Knöpfe/OBS
     r = await sp.action('speech_transcribe', { audio: Buffer.alloc(2000).toString('base64') });
     assert.deepStrictEqual(chat, ['Hallo zusammen'], 'normale Sätze gehen weiter in die Chatbox');
 });
+
+test('8.0.4: Heimnetz-Abgleich PC ↔ Laptop (Kopplung per Code als „PC“, nur Abgleich erlaubt, verschlüsselt, 3-Wege) · VRChat-Ordner unter Linux/Steam Deck (Proton)', async () => {
+    const { NexusApp } = require('../backend/app');
+    const P = require('../backend/platform');
+    // Linux / Steam Deck: Proton-Präfix in einer zweiten Bibliothek (SD-Karte)
+    const files = new Set(['/home/deck/.local/share/Steam', '/home/deck/.local/share/Steam/steamapps/libraryfolders.vdf', '/run/media/mmcblk0p1/steamapps/compatdata/438100/pfx/drive_c/users/steamuser/AppData/LocalLow/VRChat/VRChat']);
+    const vdf = '"libraryfolders"\n{\n "0" { "path" "/home/deck/.local/share/Steam" }\n "1" { "path" "/run/media/mmcblk0p1" }\n}';
+    const o = { platform: 'linux', home: '/home/deck', env: { SteamDeck: '1' }, exists: f => files.has(f), read: () => vdf };
+    assert.strictEqual(P.vrchatDir(o), '/run/media/mmcblk0p1/steamapps/compatdata/438100/pfx/drive_c/users/steamuser/AppData/LocalLow/VRChat/VRChat');
+    assert.deepStrictEqual([P.info(o).label, P.info({ platform: 'darwin' }).vrchat, P.info({ platform: 'win32', env: { USERPROFILE: 'C:\\U' }, home: 'C:\\U' }).label], ['Steam Deck', false, 'Windows']);
+    assert.ok(P.vrchatDir({ platform: 'linux', home: '/h', env: {}, exists: () => false }).includes('compatdata/438100'), 'Vorschlag auch ohne gefundenen Ordner');
+    // zwei Apps: Zentrale (Uhr/Handy-Verbindung an) und Laptop
+    const crypt = { encrypt: s => s, decrypt: s => s };
+    const mk = async () => { const a = new NexusApp({ db: await openDatabase(null), crypt, noTimers: true, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-ls-')) } }); a.game.osc.stopListen(); a.tools.alert = () => {}; a.vrc.account = () => ({ vrc_id: 'usr_x', display_name: 'Luna' }); a.backup.setPass('gemeinsam-123'); return a; };
+    const hub = await mk(), lap = await mk();
+    const PORT = 18000 + Math.floor(Math.random() * 800);
+    try {
+        await hub.post({ act: 'watch_cfg', on: '1', port: String(PORT) }, {});
+        for (let i = 0; i < 50 && !hub.watch.server.listening; i++) await U.sleep(10);
+        assert.strictEqual((await hub.post({ act: 'lsync_status' }, {})).role, 'hub');
+        assert.strictEqual((await lap.post({ act: 'lsync_status' }, {})).role, 'off');
+        await assert.rejects(lap.post({ act: 'lsync_pair', addr: '127.0.0.1:' + PORT, pin: '12' }, {}), /6-stellig/);
+        let r = await lap.post({ act: 'lsync_pair', addr: '127.0.0.1:' + PORT, pin: hub.watch.pin }, {});
+        assert.ok(r.role === 'peer' && r.pc === 'Luna', JSON.stringify(r));
+        assert.ok(hub.watch.cfg().devices.some(d => d.kind === 'pc'));
+        // gekoppelter PC darf nichts außer Abgleich
+        const tok = JSON.parse(lap.db.setting('lansync', '{}')).token;
+        const call = (p, body) => fetch('http://127.0.0.1:' + PORT + p, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Nexus-Watch': tok }, body: JSON.stringify(body) }).then(x => x.status);
+        assert.strictEqual(await call('/watch/act', { act: 'nsfw_panic' }), 403);
+        assert.strictEqual(await call('/watch/action', { a: 'chat' }), 403);
+        // Abgleich: Zentrale zuerst, dann Laptop übernimmt; dann je eine Änderung auf beiden Seiten
+        hub.ctools.importSettings({ settings: { 'ui.theme': 'snow', 'ui.zoom': 110 } });
+        lap.ctools.importSettings({ settings: { 'ui.theme': 'midnight' } });
+        r = await hub.post({ act: 'lsync_now' }, {}); assert.match(r.msg, /hochgeladen/);
+        assert.ok(!hub.db.setting('lansync_blob', '').includes('snow'), 'Zentrale speichert nur Verschlüsseltes');
+        r = await lap.post({ act: 'lsync_now' }, {});
+        assert.strictEqual(lap.settings.all()['ui.theme'], 'snow', 'erster Abgleich: Stand der Zentrale');
+        lap.ctools.importSettings({ settings: { 'ui.zoom': 125 } });
+        hub.ctools.importSettings({ settings: { 'ui.theme': 'neon' } });
+        await lap.post({ act: 'lsync_now' }, {});
+        await hub.post({ act: 'lsync_now' }, {});
+        await lap.post({ act: 'lsync_now' }, {});
+        assert.deepStrictEqual([hub.settings.all()['ui.theme'], hub.settings.all()['ui.zoom'], lap.settings.all()['ui.theme'], lap.settings.all()['ui.zoom']], ['neon', 125, 'neon', 125]);
+        // falsches Passwort auf dem Laptop → Fehler, nichts kaputt
+        lap.backup.setPass('anderes-pw-99');
+        await assert.rejects(lap.post({ act: 'lsync_now' }, {}));
+        assert.strictEqual(hub.settings.all()['ui.theme'], 'neon');
+        r = await lap.post({ act: 'lsync_unpair' }, {}); assert.strictEqual(r.role, 'off');
+    } finally { hub.watch.stop(); }
+});

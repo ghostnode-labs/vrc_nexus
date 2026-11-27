@@ -1,4 +1,4 @@
-name: VRC Nexus App (Windows)
+name: VRC Nexus App (Windows, Linux, macOS)
 
 on:
   push:
@@ -152,6 +152,9 @@ jobs:
             "| File | What for |" "|---|---|" \
             "| VRC-Nexus-$VER-Setup.exe | Windows installer |" \
             "| VRC-Nexus-$VER-portable.exe | Windows portable (no install) |" \
+            "| VRC-Nexus-$VER-linux-x86_64.AppImage | Linux / Steam Deck (chmod +x, then start) |" \
+            "| VRC-Nexus-$VER-linux-x64.tar.gz | Linux (unpack anywhere) |" \
+            "| VRC-Nexus-$VER-mac-arm64.dmg / -mac-x64.dmg | macOS Apple Silicon / Intel (unsigned: right-click → Open; no VRChat game log on macOS) |" \
             "| VRC-Nexus-$VER-android.apk | Android (without PC features) |" \
             "| VRC-Nexus.streamDeckPlugin | Stream Deck plugin (double-click to install) |" "" \
             "$SIGNTXT" "" \
@@ -177,3 +180,98 @@ jobs:
             RELEASE_URL="https://github.com/$REPO/releases/tag/$TAG" node app/scripts/release-notes.js "$VER" --discord-nsfw > discord-nsfw.json
             if [ -s discord-nsfw.json ]; then curl -sS -f -H "Content-Type: application/json" -d @discord-nsfw.json "$DISCORD_WEBHOOK_NSFW" > /dev/null && echo "Discord NSFW: gepostet" || echo "::warning::NSFW-Webhook fehlgeschlagen"; else echo "Discord NSFW: kein NSFW-Teil in $VER"; fi
           fi
+
+  # 8.0.4: Linux (AppImage + tar.gz, auch Steam Deck) und macOS (dmg + zip, Apple Silicon + Intel) – unsigniert
+  build-linux:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: App-Quelltext holen
+        uses: actions/download-artifact@v4
+        with:
+          name: app-src
+          path: app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Abhängigkeiten
+        working-directory: app
+        run: npm ci
+      - name: Discord-Link setzen
+        working-directory: app
+        env:
+          DISCORD_INVITE: ${{ secrets.DISCORD_INVITE || vars.DISCORD_INVITE }}
+          PATREON_URL: ${{ secrets.PATREON_URL || vars.PATREON_URL }}
+        run: node scripts/set-links.js
+      - name: Stream-Deck-Plugin packen
+        working-directory: app
+        run: node streamdeck/tools/pack.js
+      - name: Linux bauen (AppImage + tar.gz)
+        working-directory: app
+        run: npx electron-builder --linux AppImage tar.gz --x64 --publish never
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: VRC-Nexus-Linux
+          path: |
+            app/dist/*.AppImage
+            app/dist/*.tar.gz
+      - name: An das GitHub-Release hängen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          VER=$(node -p "require('./app/package.json').version")
+          TAG="vrc-nexus-v$VER"
+          for i in 1 2 3 4 5 6 7 8 9 10; do gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 && break; sleep 60; done
+          gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 || gh release create "$TAG" -R "$REPO" --target "$GITHUB_SHA" --title "VRC Nexus $VER" --notes "VRC Nexus $VER" || true
+          gh release upload "$TAG" -R "$REPO" --clobber app/dist/*.AppImage app/dist/*.tar.gz
+
+  build-mac:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - name: App-Quelltext holen
+        uses: actions/download-artifact@v4
+        with:
+          name: app-src
+          path: app
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Abhängigkeiten
+        working-directory: app
+        run: npm ci
+      - name: Discord-Link setzen
+        working-directory: app
+        env:
+          DISCORD_INVITE: ${{ secrets.DISCORD_INVITE || vars.DISCORD_INVITE }}
+          PATREON_URL: ${{ secrets.PATREON_URL || vars.PATREON_URL }}
+        run: node scripts/set-links.js
+      - name: Stream-Deck-Plugin packen
+        working-directory: app
+        run: node streamdeck/tools/pack.js
+      - name: macOS bauen (dmg + zip, arm64 + x64, unsigniert)
+        working-directory: app
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --mac dmg zip --arm64 --x64 --publish never
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: VRC-Nexus-macOS
+          path: |
+            app/dist/*.dmg
+            app/dist/*-mac-*.zip
+      - name: An das GitHub-Release hängen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          VER=$(node -p "require('./app/package.json').version")
+          TAG="vrc-nexus-v$VER"
+          for i in 1 2 3 4 5 6 7 8 9 10; do gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 && break; sleep 60; done
+          gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 || gh release create "$TAG" -R "$REPO" --target "$GITHUB_SHA" --title "VRC Nexus $VER" --notes "VRC Nexus $VER" || true
+          gh release upload "$TAG" -R "$REPO" --clobber app/dist/*.dmg app/dist/*-mac-*.zip

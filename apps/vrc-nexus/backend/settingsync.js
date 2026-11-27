@@ -20,9 +20,11 @@ const stable = o => JSON.stringify(o, Object.keys(o || {}).sort());
 const hash = o => crypto.createHash('sha256').update(stable(o)).digest('hex').slice(0, 16);
 
 class SettingSync {
-    constructor(app, crypt) { this.app = app; this.crypt = crypt; this.timer = null; this.busy = false; }
-    state() { try { return Object.assign({ on: false, rev: 0, snap: null, last: 0, err: '', applied: 0, pushed: 0 }, JSON.parse(this.app.db.setting('sync_state', '{}'))); } catch (e) { return { on: false, rev: 0, snap: null, last: 0, err: '' }; } }
-    save(st) { this.app.db.setSetting('sync_state', JSON.stringify(st)); return st; }
+    /** opts (8.0.4): key = eigener Zustand, link = () => Transport mit base()/token()/req() (Standard: Dashboard-Verbindung), name = Timer-Name */
+    constructor(app, crypt, opts = {}) { this.app = app; this.crypt = crypt; this.timer = null; this.busy = false; this.key = opts.key || 'sync_state'; this.linkFn = opts.link || (() => this.app.link); this.name = opts.name || 'settingsync'; this.noLink = opts.noLink || 'Erst die Dashboard-Verbindung einrichten (Einstellungen → Verbindung).'; }
+    link() { return this.linkFn(); }
+    state() { try { return Object.assign({ on: false, rev: 0, snap: null, last: 0, err: '', applied: 0, pushed: 0 }, JSON.parse(this.app.db.setting(this.key, '{}'))); } catch (e) { return { on: false, rev: 0, snap: null, last: 0, err: '' }; } }
+    save(st) { this.app.db.setSetting(this.key, JSON.stringify(st)); return st; }
     pass() { return this.app.backup ? this.app.backup.pass() : ''; }
     device() { return str(os.hostname()).replace(/[^\p{L}\p{N} ._-]/gu, '').slice(0, 40) || (this.app.mobile ? 'Handy' : 'PC'); }
 
@@ -64,9 +66,9 @@ class SettingSync {
     open(b64, pass) { return JSON.parse(CloudBackup.open(Buffer.from(b64, 'base64'), pass).toString('utf8')); }
 
     async sync(now = Date.now()) {
-        const pass = this.pass(), link = this.app.link;
+        const pass = this.pass(), link = this.link();
         if (!pass) throw new UserError('Erst unter „Cloud-Sicherung“ ein Sicherungs-Passwort festlegen – damit wird auch der Abgleich verschlüsselt (auf allen Geräten das gleiche).');
-        if (!link || !link.base() || !link.token()) throw new UserError('Erst die Dashboard-Verbindung einrichten (Einstellungen → Verbindung).');
+        if (!link || !link.base() || !link.token()) throw new UserError(this.noLink);
         if (this.busy) throw new UserError('Abgleich läuft schon.');
         this.busy = true;
         const st = this.state();
@@ -94,13 +96,13 @@ class SettingSync {
     start() {
         if (this.timer) return;
         this.timer = setInterval(() => {
-            if (!this.state().on || (this.app.energy && this.app.energy.skip('settingsync', EVERY))) return;
+            if (!this.state().on || (this.app.energy && this.app.energy.skip(this.name, EVERY))) return;
             this.sync().catch(() => {});
         }, EVERY);
         if (this.timer.unref) this.timer.unref();
     }
     stop() { clearInterval(this.timer); this.timer = null; }
-    status() { const st = this.state(); return { on: st.on, rev: st.rev, last: st.last, err: st.err, applied: st.applied || 0, pushed: st.pushed || 0, has_pass: !!this.pass(), linked: !!(this.app.link && this.app.link.base() && this.app.link.token()), device: this.device() }; }
+    status() { const st = this.state(); return { on: st.on, rev: st.rev, last: st.last, err: st.err, applied: st.applied || 0, pushed: st.pushed || 0, has_pass: !!this.pass(), linked: (l => !!(l && l.base() && l.token()))(this.link()), device: this.device() }; }
     async action(act, input) {
         switch (act) {
             case 'sync_status': return this.status();

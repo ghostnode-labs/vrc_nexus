@@ -170,7 +170,7 @@ class Tools {
     call(method, p, q = {}, b = null) { const acc = this.acc(); if (!acc) throw new VrcAuthError('Kein VRChat-Konto verbunden.'); return this.app.vrc.call(acc, method, p, q, b); }
 
     // ======================= Pfade =======================
-    vrchatDir() { return process.env.NEXUS_VRCHAT_DIR || path.join(os.homedir(), 'AppData', 'LocalLow', 'VRChat', 'VRChat'); }
+    vrchatDir() { return require('./platform').vrchatDir(); }   // 8.0.4: Windows, Linux/Steam Deck (Proton)
     photoDir() {
         const s = str(this.settings.get('media.photo_dir')).trim();
         if (s) return s;

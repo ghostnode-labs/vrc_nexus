@@ -92,6 +92,7 @@
         b.classList.toggle('wide-spacing', !!s['ui.spacing']);
         b.classList.toggle('hi-contrast', !!s['ui.contrast']);
         if (window.NexusA11y) NexusA11y.apply(s);   // 8.0.3
+        if (window.NexusPad) { NexusPad.apply(s); if (!applyLook.plat && !MOBILE) { applyLook.plat = 1; api('platform_info').then(i => NexusPad.apply(s, i)).catch(() => {}); } }   // 8.0.4 Controller / Steam Deck
         let svg = document.getElementById('cvdFilters');
         if (CVD[s['ui.cvd']]) {
             if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.id = 'cvdFilters'; svg.setAttribute('aria-hidden', 'true'); svg.style.cssText = 'position:absolute;width:0;height:0';
@@ -696,9 +697,28 @@
             + (!r.has_pass ? '<p class="nx-hint">⚠ ' + esc(T('Erst ein Sicherungs-Passwort festlegen (Cloud-Sicherung) – auf allen Geräten das gleiche.')) + '</p>' : '')
             + '<div class="nx-row"><label class="check"><input type="checkbox" id="syncOn"' + (r.on ? ' checked' : '') + (ready ? '' : ' disabled') + '> ' + esc(T('Automatisch abgleichen (alle 10 Minuten)')) + '</label>'
             + '<button type="button" class="btn btn-sm" id="syncNow"' + (ready ? '' : ' disabled') + '>🔄 ' + esc(T('Jetzt abgleichen')) + '</button></div>'
-            + '<p class="vx-small">' + esc(T('Dieses Gerät')) + ': <b>' + esc(r.device) + '</b>' + (r.last ? ' · ' + esc(T('zuletzt')) + ' ' + esc(UI.ago(r.last)) : '') + (r.rev ? ' · ' + esc(T('Stand')) + ' #' + r.rev : '') + (r.applied ? ' · ⬇ ' + r.applied : '') + (r.pushed ? ' · ⬆ ' + r.pushed : '') + (r.err ? ' · ⚠ ' + esc(r.err) : '') + '</p>';
+            + '<p class="vx-small">' + esc(T('Dieses Gerät')) + ': <b>' + esc(r.device) + '</b>' + (r.last ? ' · ' + esc(T('zuletzt')) + ' ' + esc(UI.ago(r.last / 1000)) : '') + (r.rev ? ' · ' + esc(T('Stand')) + ' #' + r.rev : '') + (r.applied ? ' · ⬇ ' + r.applied : '') + (r.pushed ? ' · ⬆ ' + r.pushed : '') + (r.err ? ' · ⚠ ' + esc(r.err) : '') + '</p>';
         $('#syncOn').onchange = e => api('sync_on', { on: e.target.checked ? '1' : '0' }).then(x => { if (x.msg) toast(x.msg); syncCard(x); }).catch(x => toast(x.message, true));
         $('#syncNow').onclick = () => api('sync_now').then(x => { toast(x.msg); syncCard(x); }).catch(x => toast(x.message, true));
+    }
+    /** 8.0.4: Heimnetz-Abgleich PC ↔ Laptop */
+    function lanCard(r) {
+        const box = $('#lanBox'); if (!box) return;
+        if (!r) return api('lsync_status').then(lanCard).catch(() => { box.innerHTML = ''; });
+        const peers = r.hub.peers || [];
+        box.innerHTML = '<p class="nx-hint">' + esc(T('Gleicht die Einstellungen zwischen zwei PCs direkt im WLAN ab – ohne Server, ohne Konto. Ein PC ist die Zentrale (Uhr/Handy-Verbindung an unter Werkzeuge → Nexus Watch), der andere koppelt sich mit Adresse und 6-stelligem Code. Verschlüsselt mit deinem Sicherungs-Passwort.')) + '</p>'
+            + (r.role === 'peer' ? '<p>🔗 ' + esc(T('Gekoppelt mit')) + ' <b>' + esc(r.pc || r.host) + '</b> <span class="vx-small">(' + esc(r.host) + ')</span> <button type="button" class="btn btn-sm" id="lanUnpair">' + esc(T('Lösen')) + '</button></p>'
+                : r.role === 'hub' ? '<p>🏠 ' + esc(T('Dieser PC ist die Zentrale')) + (peers.length ? ' · ' + esc(T('gekoppelt')) + ': ' + peers.map(p => esc(p.name)).join(', ') : ' · ' + esc(T('noch kein anderer PC gekoppelt'))) + '</p>' : '')
+            + (r.role !== 'peer' ? '<div class="nx-row"><input type="text" id="lanAddr" placeholder="' + esc(T('Adresse des anderen PCs, z. B. 192.168.2.10')) + '" style="flex:1"><input type="text" id="lanPin" placeholder="123456" maxlength="7" style="width:90px" inputmode="numeric"><button type="button" class="btn btn-sm" id="lanPair">🔗 ' + esc(T('Koppeln')) + '</button></div>' : '')
+            + (!r.has_pass ? '<p class="nx-hint">⚠ ' + esc(T('Erst ein Sicherungs-Passwort festlegen (Cloud-Sicherung) – auf allen Geräten das gleiche.')) + '</p>' : '')
+            + (r.role !== 'off' ? '<div class="nx-row"><label class="check"><input type="checkbox" id="lanOn"' + (r.on ? ' checked' : '') + (r.has_pass ? '' : ' disabled') + '> ' + esc(T('Automatisch abgleichen (alle 10 Minuten)')) + '</label><button type="button" class="btn btn-sm" id="lanNow"' + (r.has_pass ? '' : ' disabled') + '>🔄 ' + esc(T('Jetzt abgleichen')) + '</button></div>'
+                + '<p class="vx-small">' + (r.last ? esc(T('zuletzt')) + ' ' + esc(UI.ago(r.last / 1000)) : '') + (r.rev ? ' · ' + esc(T('Stand')) + ' #' + r.rev : '') + (r.err ? ' · ⚠ ' + esc(r.err) : '') + '</p>' : '');
+        const done = x => { if (x.msg) toast(x.msg); lanCard(x); }, bad = x => toast(x.message, true);
+        const b = id => document.getElementById(id);
+        if (b('lanPair')) b('lanPair').onclick = () => api('lsync_pair', { addr: b('lanAddr').value, pin: b('lanPin').value }).then(done).catch(bad);
+        if (b('lanUnpair')) b('lanUnpair').onclick = () => confirm(T('Kopplung wirklich lösen?')) && api('lsync_unpair').then(done).catch(bad);
+        if (b('lanOn')) b('lanOn').onchange = e => api('lsync_on', { on: e.target.checked ? '1' : '0' }).then(done).catch(bad);
+        if (b('lanNow')) b('lanNow').onclick = () => api('lsync_now').then(done).catch(bad);
     }
     /** 8.0.2: Portable – Daten neben die .exe (Stick) legen */
     function portCard() {
@@ -836,7 +856,7 @@
         const fields = d.schema.fields.filter(f => f.tab === setTab && visible(f));
         const secs = [...new Set(fields.map(f => f.section))];
         const extra = {
-            system: '<div class="set-sec"><h3>🔄 ' + esc(T('Einstellungs-Abgleich')) + '</h3><div id="syncBox"></div></div><div class="set-sec" id="portSec" hidden><h3>📦 ' + esc(T('Portable vom Stick')) + '</h3><div id="portBox"></div></div>'
+            system: '<div class="set-sec"><h3>🔄 ' + esc(T('Einstellungs-Abgleich')) + '</h3><div id="syncBox"></div></div><div class="set-sec" id="portSec" hidden><h3>📦 ' + esc(T('Portable vom Stick')) + '</h3><div id="portBox"></div></div>' + (MOBILE ? '' : '<div class="set-sec"><h3>🏠 ' + esc(T('Heimnetz-Abgleich (ohne Cloud)')) + '</h3><div id="lanBox"></div></div>')
                 + '<div class="set-sec"><h3>Aktionen</h3><div class="nx-row"><button type="button" class="btn btn-sm" data-act="backup">💾 Datenbank jetzt sichern</button><button type="button" class="btn btn-sm" data-act="f:backups">📂 Sicherungen</button>'
                 + '<button type="button" class="btn btn-sm" data-act="f:nexus">📂 Datenordner</button></div></div>',
             link: '<div class="set-sec"><h3>Geräte-Token</h3><div id="linkBox"><div class="vx-loading">Lade …</div></div></div>',
@@ -863,7 +883,7 @@
         if (setTab === 'system') { dbPanel(); const sc = $('#setConn'); if (sc) sc.appendChild(connWrap()); }
         if (setTab === 'adv' && window.NexusAccount && $('#acctBox')) window.NexusAccount.render($('#acctBox'));
         if (setTab === 'adv') { licCard(); perfCard(); }
-        if (setTab === 'system') { syncCard(); portCard(); }   // 8.0.2
+        if (setTab === 'system') { syncCard(); portCard(); lanCard(); }   // 8.0.2 / 8.0.4
         if (setTab === 'about' && window.NexusAbout) window.NexusAbout.open();
         if (setTab === 'vr' && !MOBILE && window.NexusClient && window.NexusClient.cfgInto) window.NexusClient.cfgInto($('#setGameCfg'));
         if (UI.subnav) UI.subnav();     // 3.1.1: Menü links → Reiter der Einstellungen oben in der Leiste

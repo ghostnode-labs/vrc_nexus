@@ -26,6 +26,22 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.4 – Linux, macOS, Steam Deck & home network sync
+- 🐧 **Linux and macOS builds**: every release now also ships the following, built automatically in CI:
+  - Linux AppImage and tar.gz (x64, runs on the Steam Deck in desktop mode);
+  - macOS .dmg and .zip for Apple Silicon and Intel.
+- 🐧 On Linux and the Steam Deck, VRChat runs through Proton. VRC Nexus finds its game log, config.json and OSC folder in the Proton prefix of every Steam library, including an SD card, Flatpak Steam and Snap Steam.
+- 🍎 macOS has no VRChat, so the game log and OSC features stay idle there. Friends, clubs, phone, watch and everything web-based work.
+- ⚠️ The Linux and macOS files are not signed. On macOS, right-click the app and choose Open the first time.
+- 🎮 **Steam Deck & controller companion**:
+  - Every page can be operated with a gamepad: the D-pad or left stick moves the focus spatially, A selects, B goes back or closes, LB/RB switch the menu page and Start jumps to the search.
+  - **Holding Y for 1 s triggers panic**, so safety stays reachable without mouse or keyboard.
+  - On the Steam Deck, **Deck mode** switches on automatically with larger touch targets for 1280×800 (can also be forced on or off).
+- 🏠 **Cloud-free home network sync PC ↔ laptop** (⚙️ Settings → System):
+  - One PC is the hub, using the existing watch/phone connection. The other PC pairs with its address and the 6-digit code.
+  - A paired PC may **only** sync: no actions, no panic, no chat (the server answers 403).
+  - Content and merging work as in the dashboard sync, end-to-end encrypted with your backup password. The hub only stores the encrypted block and syncs itself too.
+
 ### New in 8.0.3 – Accessibility & local voice commands
 - ♿ **Accessibility** (⚙️ Settings → Appearance → Accessibility):
   - Full keyboard control: a "Skip to content" link on the first Tab, arrow keys / Home / End in the main menu, Alt+1 … Alt+9 for the first menu items and Alt+0 for the search.

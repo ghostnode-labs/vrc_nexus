@@ -23,7 +23,7 @@ const NOTIFY = { invite: 'Einladung', requestInvite: 'Einladungsanfrage', friend
     requestInviteResponse: 'Antwort auf Anfrage', votetokick: 'Abstimmung zum Kicken' };
 const INPUTS = ['Jump', 'Run', 'Voice', 'QuickMenuToggleLeft', 'MoveForward', 'MoveBackward', 'MoveLeft', 'MoveRight', 'LookLeft', 'LookRight', 'ComfortLeft', 'ComfortRight', 'GrabRight', 'UseRight', 'DropRight', 'PanicButton'];
 
-function defaultLogDir() { return path.join(process.env.USERPROFILE || os.homedir(), 'AppData', 'LocalLow', 'VRChat', 'VRChat'); }
+function defaultLogDir() { return require('./platform').vrchatDir(); }   // 8.0.4: auch Linux/Steam Deck (Proton)
 const parseTs = (y, mo, d, h, mi, s) => Math.floor(new Date(+y, +mo - 1, +d, +h, +mi, +s).getTime() / 1000);
 
 // =============================== Log-Parser ===============================

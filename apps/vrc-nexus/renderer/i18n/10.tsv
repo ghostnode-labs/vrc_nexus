@@ -2757,3 +2757,16 @@ wie im Betriebssystem eingestellt	as set in the operating system	comme dans le s
 🕶 Privat-Modus an	🕶 Private mode on	🕶 Mode privé activé	🕶 プライベートモードオン
 🚨 Panik (wie der Panik-Knopf)	🚨 Panic (like the panic button)	🚨 Panique (comme le bouton panique)	🚨 パニック（パニックボタンと同じ）
 🟢 VRChat-Status „Online“	🟢 VRChat status "Online"	🟢 Statut VRChat « En ligne »	🟢 VRChat ステータス「オンライン」
+Adresse des anderen PCs, z. B. 192.168.2.10	Address of the other PC, e.g. 192.168.2.10	Adresse de l'autre PC, p. ex. 192.168.2.10	もう一台の PC のアドレス（例：192.168.2.10）
+Controller-Bedienung	Controller navigation	Navigation à la manette	コントローラー操作
+Deck-Modus (große Ziele für 1280×800)	Deck mode (large targets for 1280×800)	Mode Deck (grandes cibles pour 1280×800)	Deck モード（1280×800 向けの大きなボタン）
+Dieser PC ist die Zentrale	This PC is the hub	Ce PC est la centrale	この PC がハブです
+Gekoppelt mit	Paired with	Associé à	ペアリング先
+Gleicht die Einstellungen zwischen zwei PCs direkt im WLAN ab – ohne Server, ohne Konto. Ein PC ist die Zentrale (Uhr/Handy-Verbindung an unter Werkzeuge → Nexus Watch), der andere koppelt sich mit Adresse und 6-stelligem Code. Verschlüsselt mit deinem Sicherungs-Passwort.	Syncs settings between two PCs directly over your Wi-Fi – no server, no account. One PC is the hub (watch/phone connection on under Tools → Nexus Watch); the other pairs with its address and the 6-digit code. Encrypted with your backup password.	Synchronise les réglages entre deux PC directement via le Wi-Fi – sans serveur ni compte. Un PC est la centrale (connexion montre/téléphone activée sous Outils → Nexus Watch), l'autre s'associe avec son adresse et le code à 6 chiffres. Chiffré avec ton mot de passe de sauvegarde.	2 台の PC 間で Wi-Fi 経由で直接設定を同期します。サーバーもアカウントも不要です。1 台がハブ（ツール → Nexus Watch でウォッチ/スマホ接続をオン）になり、もう 1 台はアドレスと 6 桁のコードでペアリングします。バックアップ用パスワードで暗号化されます。
+Heimnetz-Abgleich (ohne Cloud)	Home network sync (no cloud)	Synchronisation en réseau local (sans cloud)	ホームネットワーク同期（クラウド不要）
+Kopplung wirklich lösen?	Really unpair?	Vraiment dissocier ?	ペアリングを解除しますか？
+Steam Deck, Xbox- oder PlayStation-Controller: Steuerkreuz wandert, A wählt, B zurück, LB/RB wechseln die Seite, Y 1 s halten = Panik.	Steam Deck, Xbox or PlayStation controller: D-pad moves, A selects, B goes back, LB/RB switch pages, hold Y for 1 s = panic.	Steam Deck, manette Xbox ou PlayStation : la croix directionnelle se déplace, A sélectionne, B revient, LB/RB changent de page, maintenir Y 1 s = panique.	Steam Deck、Xbox、PlayStation コントローラー：十字キーで移動、A で選択、B で戻る、LB/RB でページ切替、Y を 1 秒長押しでパニック。
+automatisch auf dem Steam Deck	automatically on the Steam Deck	automatiquement sur le Steam Deck	Steam Deck では自動
+gekoppelt	paired	associé	ペアリング済み
+immer an	always on	toujours activé	常にオン
+noch kein anderer PC gekoppelt	no other PC paired yet	aucun autre PC associé pour l'instant	まだ他の PC はペアリングされていません

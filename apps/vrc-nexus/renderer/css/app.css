@@ -1507,3 +1507,9 @@ body.a11y-focus.kbd-nav :focus-visible, body.a11y-focus.kbd-nav [role=button]:fo
 body.a11y-links a:not(.btn):not(.vx-tabbtn) { text-decoration: underline !important; text-underline-offset: 2px; }
 body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; scroll-behavior: auto !important; }
 [role=button][tabindex] { cursor: pointer; }
+
+/* 8.0.4 Steam Deck: größere Ziele, kompakte Seitenleiste */
+body.deck { --deck-hit: 44px; }
+body.deck .btn, body.deck button, body.deck select, body.deck input:not([type=checkbox]):not([type=radio]) { min-height: var(--deck-hit); }
+body.deck input[type=checkbox], body.deck input[type=radio] { width: 22px; height: 22px; }
+body.deck .vx-tabbtn { min-height: 46px; }

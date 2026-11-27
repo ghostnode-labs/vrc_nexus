@@ -216,8 +216,9 @@ function rememberBounds() {
 }
 function createWindow() {
     const wb = savedBounds();
+    let wa = { width: 1380, height: 900 }; try { wa = screen.getPrimaryDisplay().workAreaSize; } catch (e) { /* vor app.ready nicht möglich */ }
     win = new BrowserWindow({
-        ...(wb ? { x: wb.x, y: wb.y } : {}), width: wb ? wb.width : 1380, height: wb ? wb.height : 900, minWidth: 900, minHeight: 600, backgroundColor: '#040609', title: 'VRC Nexus', icon: path.join(RENDERER, 'icon.png'),
+        ...(wb ? { x: wb.x, y: wb.y } : {}), width: wb ? wb.width : Math.min(1380, wa.width), height: wb ? wb.height : Math.min(900, wa.height), /* 8.0.4: kleine Bildschirme (Steam Deck 1280×800) */ minWidth: Math.min(900, wa.width), minHeight: 600, backgroundColor: '#040609', title: 'VRC Nexus', icon: path.join(RENDERER, 'icon.png'),
         autoHideMenuBar: true, show: !(process.argv.includes('--minimized') && prefs['sys.start_minimized'] !== false),
         // 3.1.3: Titelleiste im App-Design – Windows zeichnet nur noch die Fensterknöpfe (in den Theme-Farben), den Rest macht die Oberfläche
         ...(process.platform === 'win32' ? { titleBarStyle: 'hidden', titleBarOverlay: { color: '#040609', symbolColor: '#cbd5e1', height: TITLEBAR_H } } : {}),
