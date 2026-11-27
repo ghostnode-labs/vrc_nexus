@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.1.1 – Updates arrive again
+- 🛠 **Fixed: updates since 8.0.19 never reached Windows, Linux and macOS.** One automatic test only failed on GitHub's build machine (it found the Android tools installed there), so the build stopped before the installer was made. The fixes from 8.0.20, 8.0.21 and 8.1.0 now finally arrive with this version.
+- 🔞 ***
+
 ### New in 8.1.0 – Shared plugins & GhostNode account
 - 🧩 **One plugin system for VRC Nexus and D2 Nexus:** the `.nxp` format is now shared with D2 Nexus (Destiny 2). A plugin with `"apps": ["vrc", "d2"]` in its `plugin.json` runs in both apps; plugins without `apps` stay VRC-only as before. Rights of the other app (`destiny`) are shown but never granted here.
 - ◈ **GhostNode account in the Plugins tab:** sign in with your ghostnode-labs.dev account in the browser (normal login including two-factor). No ID to type in – the sign-in stays saved (encrypted) until you sign out. Plugins with the new `ghostnode` right use it.

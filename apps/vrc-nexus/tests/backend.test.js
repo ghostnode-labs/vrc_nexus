@@ -5381,6 +5381,9 @@ test('8.0.19: Uhren-Installer per ADB – adb laden (nur adb entpackt), koppeln/
         if (u.endsWith('8.0.18-wearos.apk')) return { ok: true, status: 200, arrayBuffer: async () => apk };
         throw new Error('unerwartet ' + u); };
     const savedPath = process.env.PATH; process.env.PATH = dir;   // kein System-adb
+    // 8.1.1: auch die Android-SDK-Variablen ausblenden – GitHubs Build-Rechner hat adb unter ANDROID_HOME (Test schlug dort fehl, kein Release seit 8.0.19)
+    const savedEnv = {}; for (const k of ['ADB', 'ANDROID_HOME', 'ANDROID_SDK_ROOT', 'HOME', 'USERPROFILE']) { savedEnv[k] = process.env[k]; delete process.env[k]; }
+    process.env.HOME = dir; process.env.USERPROFILE = dir;
     try {
         const w = new WatchInstall(null, { exec, fetch: fetchFn, dir, platform: 'linux' });
         let st = await w.action('watch_adb_status');
@@ -5404,7 +5407,7 @@ test('8.0.19: Uhren-Installer per ADB – adb laden (nur adb entpackt), koppeln/
         // readZip: Filter + eigene Grenzen, Standard bleibt streng
         assert.deepStrictEqual(Object.keys(readZip(zip, { only: n => n.endsWith('/adb') })), ['platform-tools/adb']);
         assert.throws(() => readZip(Buffer.concat([zip, Buffer.alloc(7 * 1048576)])), /zu groß/);
-    } finally { process.env.PATH = savedPath; }
+    } finally { process.env.PATH = savedPath; for (const [k, v] of Object.entries(savedEnv)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; } }
 });
 
 test('8.0.20: Fernsteuerung über den Live-Dienst (WebSocket, Root-Server) – sofort statt Abfragen, nur mit Freigabe, Rückfall ohne Live', async () => {

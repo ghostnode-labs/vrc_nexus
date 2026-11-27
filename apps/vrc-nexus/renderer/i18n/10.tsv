@@ -2945,3 +2945,4 @@ GhostNode Admin-Panel installieren	Install GhostNode admin panel	Installer le pa
 Browser geöffnet – dort anmelden …	Browser opened – sign in there …	Navigateur ouvert – connecte-toi là-bas …	ブラウザを開きました – そちらでサインインしてください…
 Angemeldet als	Signed in as	Connecté en tant que	サインイン中：
 Dein GhostNode-Konto nutzen (Web-API mit deiner Anmeldung)	Use your GhostNode account (web API with your sign-in)	Utiliser ton compte GhostNode (API web avec ta connexion)	GhostNodeアカウントを使用（あなたのサインインでWeb API）
+Keine Antwort (Zeitüberschreitung) – bitte erneut versuchen.	No answer (timeout) – please try again.	Pas de réponse (délai dépassé) – réessaie.	応答がありません（タイムアウト）– もう一度お試しください。

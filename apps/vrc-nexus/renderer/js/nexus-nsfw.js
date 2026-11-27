@@ -5,6 +5,8 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = UI.api, toast = (m, bad) => UI.toast(m, bad);
+    // 8.1.1: Laden mit Zeitlimit – lieber eine Meldung mit „Erneut versuchen“ als endlos „Lade …“
+    const apiT = (a, d, ms = 15000) => Promise.race([UI.api(a, d), new Promise((_, rej) => setTimeout(() => rej(new Error('Keine Antwort (Zeitüberschreitung) – bitte erneut versuchen.')), ms))]);
     const T = s => (window.t ? window.t(s) : s);
     let st = null, box = null, lastToken = '', tPoll = null, busy = false;
     const ls = (k, d) => { try { const v = localStorage.getItem('nx_nsfw_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
@@ -45,9 +47,10 @@
         const a = document.querySelector('#tabs .vx-tabbtn.active'); if (a && a.dataset.tab === 'nsfw') UI.tab('home');
     }
     /** Menüpunkt zeigen/verstecken – beim Start und nach dem Freischalten */
+    let accErr = '';
     function refreshAccess() {
-        return api('nsfw_state').then(d => {
-            st = d;
+        return apiT('nsfw_state').then(d => {
+            st = d; accErr = '';
             if (window.NexusNsfw2 && d.toys && d.toys.cfg) window.NexusNsfw2.micSync(!!(d.toys.cfg.voice && d.toys.cfg.voice.on) && d.access.unlocked);
             const b = btn();
             if (b) b.hidden = !d.access.unlocked;
@@ -67,14 +70,21 @@
             if (roleKey !== refreshAccess.roles) { refreshAccess.roles = roleKey; if (window.NexusI18n && window.NexusI18n.corner) window.NexusI18n.corner(); }
             if (box && !box.closest('[hidden]')) render();
             return d;
-        }).catch(() => {});
+        }).catch(e => { if (!st) { accErr = e.message || 'Fehler'; if (box && !box.closest('[hidden]')) render(); } });
     }
     const sec = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '"><h4>' + t + '</h4>' + html + '</div>';
     const chk = (k, on, label) => '<label class="check small"><input type="checkbox" data-nk="' + k + '"' + (on ? ' checked' : '') + '> ' + label + '</label>';
 
+    let later = null, busyAt = 0;
     function render() {
-        if (!box || !st) return;
-        if (busy || (box.contains(document.activeElement) && document.activeElement.matches('input[type=text], textarea, input[type=number], select'))) return;
+        if (!box) return;
+        if (!st) { if (accErr) box.innerHTML = '<div class="nc-card"><p class="bad">⚠ ' + esc(accErr) + '</p><button type="button" class="btn btn-sm" data-ns="reload">' + esc(T('Erneut versuchen')) + '</button></div>'; return; }
+        if (busy && Date.now() - busyAt > 4000) busy = false;   // 8.1.1: Schieberegler außerhalb losgelassen → nicht mehr ewig blockieren
+        if (busy || (box.contains(document.activeElement) && document.activeElement.matches('input[type=text], textarea, input[type=number], select'))) {
+            clearTimeout(later); later = setTimeout(render, 900);   // 8.1.1: nicht verwerfen, sondern gleich nachholen
+            return;
+        }
+        clearTimeout(later);
         const a = st.access;
         if (!a.unlocked) { box.innerHTML = '<div class="nc-grid"><div class="nc-card"><h4>🔞 NSFW ist gesperrt</h4><p class="small">' + esc(a.reason || '') + '</p><p class="small muted">NSFW gibt es nur mit „Verified 18+“: VRChat-Altersverifizierung (18+) abgeschlossen – Nexus fragt das direkt bei VRChat ab. Danach NSFW bewusst einschalten – jederzeit wieder ausschaltbar.</p><div id="nsAcct"></div></div></div>'; if (window.NexusAccount) window.NexusAccount.render(box.querySelector('#nsAcct')); return; }
         const c = st.cfg || {}, t = st.toys, r = st.remote, has = f => a.features.includes(f);
@@ -235,6 +245,7 @@
         const b = e.target.closest('[data-ns]');
         if (!b) return;
         const a = b.dataset.ns;
+        if (a === 'reload') { accErr = ''; box.innerHTML = '<div class="vx-loading">…</div>'; return refreshAccess().then(render); }
         if (b.dataset.tabGo) return UI.tab(b.dataset.tabGo);
         const simple = { panic: 'nsfw_panic', allclear: 'nsfw_allclear', private: 'nsfw_private', boundaries: 'nsfw_boundaries' };
         if (simple[a]) return api(simple[a]).then(d => { toast(d.msg); refreshAccess(); }).catch(x => toast(x.message, true));
@@ -315,8 +326,9 @@
         box = document.getElementById('nsfwBox');
         if (!box) return;
         if (!box.dataset.bound) { box.dataset.bound = '1'; box.addEventListener('click', onClick); box.addEventListener('change', onChange); box.addEventListener('input', onInput); box.addEventListener('submit', onSubmit);
-            box.addEventListener('pointerdown', e => { if (e.target.matches('input[type=range]')) busy = true; });
-            document.addEventListener('pointerup', () => { if (busy) { busy = false; setTimeout(render, 300); } }); }
+            box.addEventListener('pointerdown', e => { if (e.target.matches('input[type=range]')) { busy = true; busyAt = Date.now(); } });
+            const unbusy = () => { if (busy) { busy = false; setTimeout(render, 300); } };
+            document.addEventListener('pointerup', unbusy); document.addEventListener('pointercancel', unbusy); window.addEventListener('blur', unbusy); }
         refreshAccess().then(render);
         clearInterval(tPoll); tPoll = setInterval(() => { if (box && !box.closest('[hidden]') && !document.hidden) refreshAccess(); }, 3000);
     }

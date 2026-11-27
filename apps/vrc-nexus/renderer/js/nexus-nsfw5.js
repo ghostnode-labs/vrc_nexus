@@ -5,6 +5,8 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = UI.api, toast = (m, bad) => UI.toast(m, bad);
+    // 8.1.1: Laden mit Zeitlimit – lieber eine Meldung mit „Erneut versuchen“ als endlos „Lade …“
+    const apiT = (a, d, ms = 15000) => Promise.race([UI.api(a, d), new Promise((_, rej) => setTimeout(() => rej(new Error('Keine Antwort (Zeitüberschreitung) – bitte erneut versuchen.')), ms))]);
     const T = s => (window.t ? window.t(s) : s);
     const sec = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '"><h4>' + t + '</h4>' + html + '</div>';
     const LVL = { partner: '💞 Partner', trusted: '🤝 Vertraut', known: '👋 Bekannt' };
@@ -13,7 +15,7 @@
     let x = null, loading = false, tEd = null, reRender = null;
     let loadErr = '';
     // 8.0.21: Fehler anzeigen (mit „Erneut versuchen“) statt endlos neu zu laden
-    const load = () => { if (loading || loadErr) return; loading = true; api('nsfwt_state').then(d => { x = d; loadErr = ''; }).catch(e => { loadErr = e.message || 'Fehler'; }).finally(() => { loading = false; if (reRender) reRender(); }); };
+    const load = () => { if (loading || loadErr) return; loading = true; apiT('nsfwt_state').then(d => { x = d; loadErr = ''; }).catch(e => { loadErr = e.message || 'Fehler'; }).finally(() => { loading = false; if (reRender) reRender(); }); };
     const fail = e => toast(e.message, true);
     const hm = t => new Date(t).toLocaleTimeString(window.nxLoc ? nxLoc() : 'de-DE', { hour: '2-digit', minute: '2-digit' });
     const cb = (grp, k, on, label) => '<label class="check small"><input type="checkbox" data-x5c="' + grp + '" data-k="' + k + '"' + (on ? ' checked' : '') + '> ' + esc(T(label)) + '</label>';
@@ -69,7 +71,9 @@
         return trustHtml() + checkinHtml() + careHtml();
     }
     function onClick(e, render) {
-        const b = e.target.closest('[data-x5]'); if (!b || !x) return false;
+        const b = e.target.closest('[data-x5]'); if (!b) return false;
+        if (b.dataset.x5 === 'retry') { reRender = render; loadErr = ''; x = null; render(); return true; }   // 8.1.1: ging vorher nicht (x war leer)
+        if (!x) return false;
         reRender = render;
         const a = b.dataset.x5, st = d => { x = Object.assign(x, d); if (d.msg) toast(d.msg); if (d.tip) toast(d.mood + ' – ' + d.tip); render(); };
         const val = id => (document.getElementById(id) || {}).value || '';

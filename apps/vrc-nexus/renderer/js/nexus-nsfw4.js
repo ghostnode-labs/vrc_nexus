@@ -5,13 +5,15 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = UI.api, toast = (m, bad) => UI.toast(m, bad);
+    // 8.1.1: Laden mit Zeitlimit – lieber eine Meldung mit „Erneut versuchen“ als endlos „Lade …“
+    const apiT = (a, d, ms = 15000) => Promise.race([UI.api(a, d), new Promise((_, rej) => setTimeout(() => rej(new Error('Keine Antwort (Zeitüberschreitung) – bitte erneut versuchen.')), ms))]);
     const T = s => (window.t ? window.t(s) : s);
     const sec = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '"><h4>' + t + '</h4>' + html + '</div>';
     const LV = { yes: ['🟢', 'Ja'], maybe: ['🟡', 'Vielleicht'], no: ['🔴', 'Nein'] };
     let x = null, loading = false, edit = null, fEd = null, logItems = null, reRender = null;
     let loadErr = '';
     // 8.0.21: Fehler anzeigen (mit „Erneut versuchen“) statt endlos neu zu laden
-    const load = () => { if (loading || loadErr) return; loading = true; api('nsfwx_state').then(d => { x = d; edit = null; loadErr = ''; }).catch(e => { loadErr = e.message || 'Fehler'; }).finally(() => { loading = false; if (reRender) reRender(); }); };
+    const load = () => { if (loading || loadErr) return; loading = true; apiT('nsfwx_state').then(d => { x = d; edit = null; loadErr = ''; }).catch(e => { loadErr = e.message || 'Fehler'; }).finally(() => { loading = false; if (reRender) reRender(); }); };
     const fail = e => toast(e.message, true);
 
     function limitsHtml() {

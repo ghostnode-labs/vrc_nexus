@@ -2,6 +2,9 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.1.1
+- 🛠 **Fixed: the 18+ area could still hang on "Lade …"** (e.g. "Trust & care"). The repair from 8.0.21 never shipped because the build failed – it is in this version. In addition: if a tab does not answer within 15 seconds it now shows an error with a working "Try again" button (that button did nothing in "Trust & care" before); if the area itself cannot load, it says so instead of staying empty; and letting go of a slider outside the window no longer freezes the whole area.
+
 ### New in 8.0.21
 - 🛠 **Fixed: "Trust & care" never loaded** (stuck on "Lade …"): its actions shared the prefix of the collection and were answered by the wrong module, which also swallowed its settings. They now have their own prefix (`nsfwt_`). "Limits & safety", "Fantasies" and "Help" no longer retry endlessly on an error either. A new test makes sure no action prefix is routed to two modules again.
 

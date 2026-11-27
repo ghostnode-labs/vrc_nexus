@@ -5,11 +5,13 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = UI.api, toast = (m, bad) => UI.toast(m, bad);
+    // 8.1.1: Laden mit Zeitlimit – lieber eine Meldung mit „Erneut versuchen“ als endlos „Lade …“
+    const apiT = (a, d, ms = 15000) => Promise.race([UI.api(a, d), new Promise((_, rej) => setTimeout(() => rej(new Error('Keine Antwort (Zeitüberschreitung) – bitte erneut versuchen.')), ms))]);
     const T = s => (window.t ? window.t(s) : s);
     const sec = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '"><h4>' + t + '</h4>' + html + '</div>';
     const GO = { care: 'care', safe: 'safe2', nsfw: 'main', toys: 'lust', devices: '', safety: '' };
     let x = null, loading = false, reRender = null, code = '';
-    const load = () => { if (loading) return; loading = true; api('safety_state').then(d => { x = d; }).catch(e => { x = { error: e.message }; }).finally(() => { loading = false; if (reRender) reRender(); }); };
+    const load = () => { if (loading) return; loading = true; apiT('safety_state').then(d => { x = d; }).catch(e => { x = { error: e.message }; }).finally(() => { loading = false; if (reRender) reRender(); }); };
     const fail = e => toast(e.message, true);
     const st = d => { x = d; if (d.msg) toast(d.msg); if (d.code) code = d.code; if (reRender) reRender(); };
     const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
