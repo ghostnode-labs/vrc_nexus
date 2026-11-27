@@ -26,6 +26,11 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.0 – Diary, VR break coach, diagnostic report
+- 📔 **Daily diary** (🧰 Tools → 📔 Diary & breaks): every day summarises itself from the game log – worlds with time spent (same world merged), people you met, photos, avatar changes, videos and play time – plus the day's heart rate (min/avg/max, collected every minute while a heart-rate source runs) and your VR breaks. Add your own note, a mood and ⭐ for special days. Month calendar shows active days at a glance; copy any day as text/Markdown. Everything stays on your device; in private mode no photo file paths are shown
+- 🌿 **VR break coach**: friendly reminders while you are in VR – a break after X minutes in a row (with “⏰ later”), optional drink reminder and 20-20-20 eye tip. VR is detected via the SteamVR helper's FPS (or “whenever VRChat runs”). Answers also work on the Nexus Watch; never in the chatbox; silent in sleep and event mode. A real break (headset off for a few minutes) resets the counter and is written to the diary (VR minutes, breaks, longest stretch). While the coach is on, the simple 5.0 break hint stays quiet
+- 🩺 **Diagnostic report** (🧰 Tools → 📈 Performance & diagnostics): checks VRChat login, OSC, VRChat running, SteamVR helper, heart rate, database, reachability of VRChat and GhostNode, recent errors and performance – each with ✅ / ⚠ / ❌ and a tip. Copy the report to send it; it never contains keys, tokens, passwords, names or IDs and is never sent automatically. Recent errors are now always remembered in memory for this (the log file still only with debug mode)
+
 ### New in 7.3.4 – Performance check
 - 📈 **Performance check** (🧰 Tools → 📈 Performance check): live view of everything VRC Nexus uses – all its processes together and per part (main process/backend, window, GPU, helpers), CPU, event-loop delay, VR FPS from the SteamVR helper, system memory/CPU and VRChat's own memory for comparison (Windows), with a 10-minute chart
 - ⏺ **Record a measurement** – e.g. a whole VR session (one data point every 5 s, up to 4 h): afterwards you get averages, peaks, 95 % values, memory growth, share of your RAM, VR FPS and a plain-language rating (🟢 fine / 🟡 noticeable / 🔴 high) including whether optimisations or a lean helper (e.g. in Rust) would be worth it

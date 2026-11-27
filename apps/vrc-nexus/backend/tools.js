@@ -161,6 +161,7 @@ class Tools {
         if (this.host.applySettings) this.host.applySettings(changed, this.settings.all());
     }
     debug(where, e) {
+        if (this.app.diag) this.app.diag.note(where, e);   // 8.0: letzte Fehler für den Diagnose-Bericht
         if (!this.settings.get('adv.debug')) return;
         const line = new Date().toISOString() + ' [' + where + '] ' + (e && e.stack || e) + '\n';
         try { fs.appendFileSync(path.join(this.userData, 'nexus.log'), line); } catch (x) { /* egal */ }

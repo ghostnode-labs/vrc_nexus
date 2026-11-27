@@ -817,3 +817,14 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 .perf-lv { font-size: .8em; padding: 1px 8px; border-radius: 8px; }
 .perf-ok { background: rgba(34,197,94,.18); } .perf-mid { background: rgba(243,194,98,.22); } .perf-high { background: rgba(239,68,68,.25); }
 .perf-det { padding: 0 0 10px 4px; } .perf-det p { margin: 4px 0; } .perf-rust { color: var(--accent, #38d5e6); }
+
+/* 8.0 Tagebuch, Diagnose */
+.dy-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+.dy-wd { text-align: center; font-size: .75em; opacity: .7; }
+.dy-cell { all: unset; cursor: pointer; border-radius: 8px; padding: 4px; min-height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,.03); border: 1px solid transparent; }
+.dy-cell span { font-size: .75em; min-height: 1em; }
+.dy-l1 { background: rgba(56,213,230,.12); } .dy-l2 { background: rgba(56,213,230,.25); } .dy-l3 { background: rgba(56,213,230,.42); }
+.dy-cell.today { border-color: #f3c262; } .dy-cell.on { outline: 2px solid #38d5e6; }
+.dy-people { display: flex; flex-wrap: wrap; gap: 4px; } .dy-moods .chip { font-size: 1.1em; }
+.dg-list > div { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+.dg-bad { color: #fca5a5; } .dg-warn { color: #fcd34d; }

@@ -2642,3 +2642,42 @@ Optimierungen in der App lohnen sich zuerst (Fenster schlafen legen, weniger Abf
 Deutlicher Bedarf: zeitkritische Teile in einen schlanken Helfer auslagern (z. B. Rust) und die App entlasten – Bericht bitte schicken.	Clear need: move time-critical parts into a lean helper (e.g. Rust) to relieve the app – please send the report.	Besoin net : déplacer les parties critiques dans un assistant léger (p. ex. Rust) – envoie le rapport.	明確な必要あり：時間に厳しい部分を軽量ヘルパー（Rustなど）に移すべき – レポートを送ってください。
 ⏺ Messung läuft – nutze VRC Nexus und VRChat wie immer.	⏺ Measuring – use VRC Nexus and VRChat as usual.	⏺ Mesure en cours – utilise VRC Nexus et VRChat comme d'habitude.	⏺ 測定中 – いつも通りVRC NexusとVRChatを使ってください。
 ⏹ Messung gespeichert.	⏹ Measurement saved.	⏹ Mesure enregistrée.	⏹ 測定を保存しました。
+Tagebuch	Diary	Journal	日記
+Pausen-Coach	Break coach	Coach de pauses	休憩コーチ
+kein Puls	no heart rate	pas de pouls	心拍なし
+Pausen	breaks	pauses	休憩
+längste	longest	plus longue	最長
+VR (Pausen-Coach)	VR (break coach)	VR (coach de pauses)	VR（休憩コーチ）
+besonderer Tag	special day	jour spécial	特別な日
+Was war heute schön, lustig oder wichtig?	What was nice, funny or important today?	Qu'est-ce qui était beau, drôle ou important aujourd'hui ?	今日の楽しかったこと、大事なことは？
+Nur auf diesem Gerät gespeichert.	Only saved on this device.	Enregistré uniquement sur cet appareil.	この端末にのみ保存。
+An diesem Tag gibt es keine Einträge im Spiel-Log.	No game-log entries on this day.	Aucune entrée de journal de jeu ce jour-là.	この日のゲームログはありません。
+VR-Pausen-Coach	VR break coach	Coach de pauses VR	VR休憩コーチ
+Freundliche Erinnerungen während VR – auch auf der Nexus Watch, nie in der Chatbox. Im Schlafmodus und im Event-Modus bleibt der Coach still. Eine echte Pause (Headset ab) setzt den Zähler zurück.	Friendly reminders during VR – also on the Nexus Watch, never in the chatbox. Silent in sleep and event mode. A real break (headset off) resets the counter.	Rappels bienveillants pendant la VR – aussi sur la Nexus Watch, jamais dans la chatbox. Silencieux en mode sommeil et événement. Une vraie pause (casque retiré) remet le compteur à zéro.	VR中のやさしいリマインダー – Nexus Watchにも、チャットボックスには出しません。スリープ・イベントモードでは静かに。本当の休憩（ヘッドセットを外す）でカウンターがリセット。
+gerade nicht in VR	not in VR right now	pas en VR actuellement	現在VR外
+bis zur nächsten Pause	until the next break	avant la prochaine pause	次の休憩まで
+VR heute	VR today	VR aujourd'hui	今日のVR
+Pausen heute	breaks today	pauses aujourd'hui	今日の休憩
+längste Strecke	longest stretch	plus longue session	最長連続
+Coach an	Coach on	Coach activé	コーチ オン
+VR automatisch erkennen	detect VR automatically	détecter la VR automatiquement	VRを自動検出
+nur mit SteamVR-Helfer	only with SteamVR helper	seulement avec l'assistant SteamVR	SteamVRヘルパー使用時のみ
+immer, wenn VRChat läuft	whenever VRChat is running	dès que VRChat tourne	VRChat起動中は常に
+Pause nach	Break after	Pause après	休憩まで
+„Später“ =	“Later” =	« Plus tard » =	「後で」＝
+Als Pause zählt ab	Counts as a break from	Compte comme pause dès	休憩とみなす時間
+Trink-Erinnerung	Drink reminder	Rappel pour boire	水分補給リマインダー
+Augen-Tipp 20-20-20	Eye tip 20-20-20	Conseil yeux 20-20-20	目のヒント 20-20-20
+Ich habe gerade Pause gemacht	I just took a break	Je viens de faire une pause	今休憩しました
+Leistung & Diagnose	Performance & diagnostics	Performance & diagnostic	パフォーマンスと診断
+Tagebuch & Pausen	Diary & breaks	Journal & pauses	日記と休憩
+Diagnose-Bericht	Diagnostic report	Rapport de diagnostic	診断レポート
+Prüft Anmeldung, OSC, VR, Puls, Datenbank, Verbindung zu VRChat und GhostNode sowie die letzten Fehler. Der Bericht enthält keine Schlüssel, Passwörter, Namen oder IDs und wird nie automatisch verschickt.	Checks login, OSC, VR, heart rate, database, connection to VRChat and GhostNode and recent errors. The report contains no keys, passwords, names or IDs and is never sent automatically.	Vérifie la connexion, l'OSC, la VR, le pouls, la base de données, la connexion à VRChat et GhostNode et les erreurs récentes. Le rapport ne contient ni clés, ni mots de passe, ni noms, ni ID et n'est jamais envoyé automatiquement.	ログイン、OSC、VR、心拍、データベース、VRChatとGhostNodeへの接続、最近のエラーを確認します。レポートにキー・パスワード・名前・IDは含まれず、自動送信もされません。
+Jetzt prüfen	Check now	Vérifier maintenant	今すぐ確認
+Erneut prüfen	Check again	Vérifier à nouveau	再確認
+🌿 Zeit für eine Pause	🌿 Time for a break	🌿 C'est l'heure d'une pause	🌿 休憩の時間です
+💧 Trinken nicht vergessen	💧 Don't forget to drink	💧 N'oublie pas de boire	💧 水分補給を忘れずに
+✅ Pause gemacht	✅ Break taken	✅ Pause faite	✅ 休憩した
+⏰ später	⏰ later	⏰ plus tard	⏰ 後で
+📔 Gespeichert.	📔 Saved.	📔 Enregistré.	📔 保存しました。
+🌿 Pause eingetragen – der Zähler startet neu.	🌿 Break logged – the counter restarts.	🌿 Pause enregistrée – le compteur repart.	🌿 休憩を記録しました – カウンターを再開します。

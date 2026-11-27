@@ -12,7 +12,7 @@
     const loc = () => (window.nxLoc ? window.nxLoc() : 'de-DE');
     const PROC = { main: ['🧠', 'Hauptprozess (Backend)'], window: ['🪟', 'Fenster'], gpu: ['🎨', 'Grafik (GPU)'], helper: ['🔧', 'Helfer'] };
     const LV = { ok: 'perf-ok', mid: 'perf-mid', high: 'perf-high' };
-    let d = null, timer = null, open = '';
+    let d = null, timer = null, open = '', diag = null, diagBusy = false;
 
     function spark(vals, max, color) {
         const W = 300, H = 46, n = vals.length;
@@ -41,6 +41,12 @@
             + '<div><small>⚙ ' + esc(T('CPU (10 min)')) + '</small>' + spark(live.map(x => x.cpu), 10, '#f3c262') + '</div></div>'
             + '<table class="perf-procs"><tr><th></th><th>' + esc(T('Arbeitsspeicher')) + '</th><th>CPU</th></tr>'
             + Object.entries(n.procs).map(([k, v]) => '<tr><td>' + (PROC[k] || ['•', k])[0] + ' ' + esc(T((PROC[k] || ['', k])[1])) + (v.n > 1 ? ' ×' + v.n : '') + '</td><td>' + v.mem + ' MB</td><td>' + v.cpu + ' %</td></tr>').join('') + '</table></div>';
+        // 8.0: Diagnose
+        const I = { ok: '✅', warn: '⚠', bad: '❌', info: 'ℹ' };
+        h += '<div class="nc-card"><h3>🩺 ' + esc(T('Diagnose-Bericht')) + '</h3><p class="vx-small">' + esc(T('Prüft Anmeldung, OSC, VR, Puls, Datenbank, Verbindung zu VRChat und GhostNode sowie die letzten Fehler. Der Bericht enthält keine Schlüssel, Passwörter, Namen oder IDs und wird nie automatisch verschickt.')) + '</p>'
+            + (diag ? '<div class="dg-list">' + diag.checks.map(c => '<div class="dg-' + c.st + '">' + I[c.st] + ' ' + esc(T(c.text)) + (c.tip ? '<div class="vx-small">→ ' + esc(T(c.tip)) + '</div>' : '') + '</div>').join('') + '</div>' : '')
+            + '<div class="nx-row"><button type="button" class="btn btn-sm btn-gold" data-pf="diag"' + (diagBusy ? ' disabled' : '') + '>' + (diagBusy ? '⏳ ' : '🩺 ') + esc(T(diag ? 'Erneut prüfen' : 'Jetzt prüfen')) + '</button>'
+            + (diag ? '<button type="button" class="btn btn-sm" data-pf="diagcopy">📋 ' + esc(T('Bericht kopieren')) + '</button>' : '') + '</div></div>';
         // Aufnahme
         h += '<div class="nc-card"><h3>⏺ ' + esc(T('Messung aufnehmen')) + '</h3>'
             + (d.rec ? '<p><b>' + esc(d.rec.label || T('Messung')) + '</b> · ' + esc(T('läuft seit')) + ' ' + dur(Date.now() - d.rec.start) + ' · ' + d.rec.n + ' ' + esc(T('Messpunkte')) + '</p><button type="button" class="btn btn-gold" data-pf="stop">⏹ ' + esc(T('Messung beenden & auswerten')) + '</button>'
@@ -74,6 +80,8 @@
         const a = b.dataset.pf;
         if (a === 'start') api('perf_start', { label: (document.getElementById('pfLabel') || {}).value || '' }).then(r => { d = r; toast(r.msg); render(); }).catch(fail);
         if (a === 'stop') api('perf_stop').then(r => { d = r; open = r.result.id; toast(r.msg); render(); }).catch(fail);
+        if (a === 'diag') { diagBusy = true; render(); api('diag_run').then(r => { diag = r; }).catch(fail).finally(() => { diagBusy = false; render(); }); }
+        if (a === 'diagcopy' && diag) navigator.clipboard.writeText(diag.text).then(() => toast(T('Kopiert.'))).catch(fail);
         if (a === 'open') { open = open === b.dataset.id ? '' : b.dataset.id; render(); }
         if (a === 'copy') api('perf_report', { id: b.dataset.id }).then(r => navigator.clipboard.writeText(r.text)).then(() => toast(T('Kopiert.'))).catch(fail);
         if (a === 'del' && confirm(T('Messung löschen?'))) api('perf_delete', { id: b.dataset.id }).then(r => { d = r; open = ''; render(); }).catch(fail);

@@ -67,7 +67,7 @@ class Comfort {
         if (this.sleep && this.sleep.wake && now >= this.sleep.wake) await this.sleepOff(true);
         if (running && !this.playStart) { this.playStart = now; this.lastBreak = now; }
         if (!running) { this.playStart = 0; }
-        if (c.break_on && running && !this.sleep && now - Math.max(this.playStart, this.lastBreak) >= c.break_min * 60000) {
+        if (c.break_on && running && !this.sleep && !(this.app.coach && this.app.coach.cfg().on) && now - Math.max(this.playStart, this.lastBreak) >= c.break_min * 60000) {
             this.lastBreak = now;
             this.app.tools.alert('🌿 Pause?', c.break_text + ' (' + Math.round((now - this.playStart) / 60000) + ' min am Stück)');
         }

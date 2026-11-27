@@ -4638,3 +4638,73 @@ test('7.3.4: Leistungsmessung – alle Prozesse zusammen, VR-FPS, VRChat-Verglei
         assert.ok(p.history().length <= 10);
     } finally { p.stop(); }
 });
+
+test('8.0: Tages-Tagebuch (Welten, Begegnungen, Fotos, Puls, Notiz), VR-Pausen-Coach (Pause, Später, echte Pause, still im Schlafmodus), Diagnose ohne Geheimnisse', async () => {
+    const os = require('os'), path = require('path'), fs = require('fs');
+    const { openDatabase } = require('../backend/db');
+    const { Diary, dayOf } = require('../backend/diary');
+    const { Coach } = require('../backend/coach');
+    const { Diag } = require('../backend/diag');
+    const db = await openDatabase(path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'nx-diary-')), 'nexus.sqlite'));
+    const alerts = [];
+    let fps = null, sleep = false;
+    const app = { db, heart: { active: true, bpm: 80 }, vrc: { account: () => ({ me: { displayName: 'Ich' } }) }, nsfw: { private: false },
+        game: { state: { running: true } }, comfort: { sleep: false }, together: { eventState: () => ({ on: false }) },
+        tools: { host: { vrFps: () => fps }, alert: (t, b, k, meta) => alerts.push({ t, b, meta }) },
+        settings: { all: () => ({ 'ui.lang': 'de', 'int.webhook': 'https://discord.com/api/webhooks/123/abc', 'vrc.auth_token': 'TOPSECRET42', 'osc.port': 9001, 'ui.note': 'Freund usr_12345678-aaaa-bbbb-cccc-1234567890ab' }), get: k => (k === 'ui.lang' ? 'de' : '') } };
+    Object.defineProperty(app.comfort, 'sleep', { get: () => sleep });
+    const diary = app.diary = new Diary(app);
+    // Spiel-Log eines Tages
+    const base = Math.floor(new Date(2026, 10, 20, 18, 0, 0).getTime() / 1000), D = '2026-11-20';
+    const ins = db.prepare('INSERT INTO game_log (user_id, ts, kind, world_id, world_name, player_id, player_name, detail, hash) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)');
+    let h = 0; const ev = (dt, kind, o = {}) => ins.run(base + dt, kind, o.w || '', o.wn || '', o.p || '', o.pn || '', o.d || '', 'h' + (h++));
+    ev(0, 'world_join', { w: 'wrld_a', wn: 'Lofi Café' }); ev(60, 'player_join', { p: 'usr_1', pn: 'Mira' }); ev(70, 'player_join', { pn: 'Ich' }); ev(120, 'screenshot', { d: 'C:\\Pics\\VRChat_1.png' });
+    ev(1800, 'world_join', { w: 'wrld_b', wn: 'Club Nacht' }); ev(1900, 'player_join', { p: 'usr_1', pn: 'Mira' }); ev(1950, 'player_join', { p: 'usr_2', pn: 'Kai' }); ev(2000, 'avatar');
+    ev(5400, 'world_join', { w: 'wrld_a', wn: 'Lofi Café' }); ev(6000, 'vrc_quit');
+    const a = diary.auto(D);
+    assert.deepStrictEqual(a.worlds.map(w => [w.name, w.min, w.visits]), [['Club Nacht', 60, 1], ['Lofi Café', 40, 2]], 'Welten mit Zeit, gleiche zusammengefasst');
+    assert.deepStrictEqual(a.people.map(p => [p.name, p.n]), [['Mira', 2], ['Kai', 1]], 'Begegnungen ohne mich selbst');
+    assert.deepStrictEqual([a.photos, a.avatars, a.play_min], [1, 1, 100]);
+    // Puls minütlich, Notiz, Monat, Text
+    const noon = new Date(2026, 10, 20, 19, 0).getTime();
+    diary.tick(noon); app.heart.bpm = 100; diary.tick(noon + 60000); app.heart.bpm = 60; diary.tick(noon + 120000);
+    const dd = (await diary.action('diary_save', { day: D, note: 'Schöner Abend mit Mira', mood: '🥳', star: '1' }));
+    assert.deepStrictEqual(dd.hr, { min: 60, max: 100, avg: 80, minutes: 3 });
+    assert.ok(dd.mood === '🥳' && dd.star && dd.note === 'Schöner Abend mit Mira');
+    await assert.rejects(diary.action('diary_day', { day: '20.11.2026' }), /Ungültiges Datum/);
+    assert.strictEqual((await diary.action('diary_save', { day: D, mood: '💩' })).mood, '', 'nur erlaubte Stimmungen');
+    const m = await diary.action('diary_month', { month: '2026-11' });
+    const d20 = m.days.find(x => x.day === D);
+    assert.ok(m.days.length === 30 && d20.worlds === 3 && d20.photos === 1);
+    const txt = (await diary.action('diary_text', { day: D })).text;
+    assert.match(txt, /## 🌐 Welten\n- Club Nacht \(60 min\)/); assert.match(txt, /Mira, Kai/); assert.match(txt, /❤ Puls: Ø 80/);
+    app.nsfw.private = true; assert.deepStrictEqual(diary.day(D).auto.photo_files, [], 'Privat-Modus: keine Dateipfade'); app.nsfw.private = false;
+    // Coach
+    const coach = app.coach = new Coach(app);
+    assert.strictEqual(coach.tick(Date.now()), null, 'aus = nichts');
+    await coach.action('coach_cfg', { on: '1', source: 'fps', break_min: 30, snooze_min: 10, drink: '', eyes: '', rest_min: 5 });
+    const t0 = new Date(2026, 10, 21, 20, 0).getTime();
+    fps = { app: 90 }; coach.tick(t0);
+    assert.strictEqual(coach.tick(t0 + 29 * 60000), null);
+    assert.strictEqual(coach.tick(t0 + 30 * 60000), 'break');
+    const al = alerts.pop(); assert.match(al.t, /Pause/); assert.deepStrictEqual(al.meta.replies.map(r => r[0]), ['done', 'later'], 'Antwort-Knöpfe (auch Uhr)');
+    assert.strictEqual(typeof al.meta.onReply, 'function'); coach.reply('later', t0 + 30 * 60000);
+    assert.strictEqual(coach.tick(t0 + 35 * 60000), null, 'später = Ruhe'); 
+    assert.strictEqual(coach.tick(t0 + 41 * 60000), 'break', 'nach der Schlummerzeit wieder');
+    sleep = true; coach.next.brk = 0; assert.strictEqual(coach.tick(t0 + 42 * 60000), null, 'Schlafmodus: still'); sleep = false;
+    // echte Pause: 6 min ohne VR
+    fps = null; coach.tick(t0 + 50 * 60000); coach.tick(t0 + 56 * 60000);
+    const v = diary.day(dayOf(t0)).vr;
+    assert.ok(v.breaks === 1 && v.longest >= 49 && v.min >= 40, 'Pause, längste Strecke und VR-Minuten im Tagebuch: ' + JSON.stringify(v));
+    fps = { app: 90 }; coach.tick(t0 + 60 * 60000); assert.strictEqual(coach.status(t0 + 61 * 60000).minutes, 1, 'Zähler neu gestartet');
+    // Diagnose
+    const dg = app.diag = new Diag(app);
+    dg.note('tick', new Error('Fehler mit usr_12345678-aaaa-bbbb-cccc-1234567890ab'));
+    const r = await dg.run({ net: false });
+    const text = dg.text(r);
+    assert.ok(!/TOPSECRET42|webhooks\/123|usr_12345678/.test(text), 'keine Tokens, Webhooks oder IDs im Bericht');
+    assert.match(text, /vrc\.auth_token=•••/); assert.match(text, /osc\.port=9001/);
+    assert.ok(r.checks.some(c => c.k === 'login' && c.st === 'ok') && r.checks.some(c => c.k === 'errors'));
+    assert.match(text, /\[tick\] Fehler mit usr_…/);
+    db.close();
+});
