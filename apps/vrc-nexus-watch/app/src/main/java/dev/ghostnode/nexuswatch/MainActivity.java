@@ -57,6 +57,8 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         Nexus.wantWifi(this);
+        if (android.os.Build.VERSION.SDK_INT >= 33 && Nexus.paired(this) && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{ Manifest.permission.POST_NOTIFICATIONS }, 8);   // 6.5: Meldungen vom PC
         sv = new ScrollView(this);
         sv.setBackgroundColor(BG);
         sv.setFillViewport(true);
@@ -233,7 +235,7 @@ public class MainActivity extends Activity {
     /** Hauptmenü: Kopf mit Puls & Status, darunter runde Kacheln */
     private void renderHome() {
         if (upd != null) button(updPct >= 0 ? "⬇ Update " + updPct + " %" : "⬆ Update " + upd.optString("version"), GOLD, v -> startUpdate());
-        text("◈ NEXUS", 11, CYAN, true);
+        text("◈ NEXUS · " + new java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).format(new java.util.Date()), 11, CYAN, true);
         int bpm = curBpm();
         text(bpm > 0 ? "♥ " + bpm : "♥ –", 30, bpm > 0 ? RED : MUTED, true);
         status();
@@ -248,6 +250,7 @@ public class MainActivity extends Activity {
         if (nsfw) tile(r2, "💤", "Komfort", s.optBoolean("sleeping") ? "schläft" : "", CYAN, v -> go("comfort"));
         tile(r2, "⚙", "Einstellungen", "", MUTED, v -> go("settings"));
         if (s != null && !nsfw && !s.optString("nsfw_reason").isEmpty()) text("🔞 gesperrt: " + s.optString("nsfw_reason"), 9, MUTED, false);
+        if (s != null && s.optInt("friends") > 0) text("👥 " + s.optInt("friends") + " Freunde im Spiel", 10, MUTED, false);
         text("⌚ ↔ " + p().getString("pc", "PC"), 9, MUTED, false);
     }
 
@@ -316,6 +319,7 @@ public class MainActivity extends Activity {
         toggle("Puls beim Start senden", "auto_heart", false, null);
         toggle("Bildschirm anlassen", "screen_on", false, this::applyScreenOn);
         toggle("Vibration", "vibrate", true, null);
+        toggle("Meldungen vom PC", "notes", true, null);   // 6.5
         toggle("Panik doppelt tippen", "panic_confirm", true, null);
         toggle("Updates automatisch suchen", "auto_update", true, null);
         toggle("Updates im Hintergrund installieren", "auto_install", true, () -> UpdateJob.schedule(this));
@@ -386,7 +390,7 @@ public class MainActivity extends Activity {
     }
     private void refresh() {
         net.execute(() -> {
-            try { state = Nexus.call(this, "/watch/state", null); err = ""; }
+            try { state = Nexus.call(this, "/watch/state", null); err = ""; Notes.handle(this, state); }
             catch (Exception e) { err = String.valueOf(e.getMessage()); }
             ui.post(() -> {
                 if (state != null) {

@@ -245,7 +245,7 @@ class Tools {
         return a <= b ? m >= a && m < b : m >= a || m < b;
     }
     /** Eine Meldung über alle eingeschalteten Wege; webhookKind: 'join' | 'vrc' | 'world' | '' */
-    alert(title, body, webhookKind = '') {
+    alert(title, body, webhookKind = '', meta = null) {
         const s = this.settings.all();
         this.log.unshift({ ts: now(), title, body });
         this.log = this.log.slice(0, 50);
@@ -253,6 +253,7 @@ class Tools {
         if (list('notify.mute').some(w => text.includes(w))) return;   // 6.3: nie melden
         if (webhookKind && s['int.webhook'] && s['int.webhook_' + webhookKind]) this.webhook(title + (body ? '\n' + body : ''));
         if (this.quiet() && !list('notify.vip').some(w => text.includes(w))) return;   // 6.3: VIPs auch in der Nicht-stören-Zeit
+        if (this.app.watch && this.app.watch.note) this.app.watch.note(title, body, meta);   // 6.5: auf die Nexus Watch (mit Antwort-Knöpfen)
         if (s['notify.desktop'] && this.host.notify) this.host.notify(title, body, s['notify.silent']);
         if (s['notify.tts'] && this.host.speak) this.host.speak(title + '. ' + body);
         const inGame = this.app.game.state.running;

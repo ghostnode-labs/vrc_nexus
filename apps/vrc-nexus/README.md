@@ -26,6 +26,11 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.5.0 – Watch & phone
+- ⌚ **Notifications on the Nexus Watch with reply buttons:** watched friends coming online, “Join Me”, public instances and other alerts appear as watch notifications – 🚪 *Go there* (invite to yourself), 🙋 *Ask for an invite* or 👍. They also arrive in the background while the watch sends your heart rate; never in private mode. Switch off on the watch: Settings → “Meldungen vom PC”
+- ⌚ Watch home screen shows the time and how many friends are in game
+- 📴 **Offline mode (Android):** without network the app shows the last saved data with a clear notice and syncs right away when the connection is back
+
 ### New in 6.4.0 – Mini mode, chatbox studio, macro blocks, Stream Deck 2.0
 - 🪟 **Mini mode:** a small always-on-top window with world, players, time there, heart rate, friends in game and music, plus quick buttons (rotator, sleep, mute, clear chatbox, panic when NSFW is on). Open it from the tray, the command palette or your own shortcut; size and position are remembered
 - 🎨 **Chatbox studio** (Game & OSC → Chatbox): live preview as a VRChat speech bubble with character count, all placeholders as tap-to-insert chips, ready-made templates (now playing, world info, clock, AFK, greeting, countdown, status)

@@ -162,3 +162,5 @@ body.m-ui .m-sfoot .i18n-corner { position: static !important; inset: auto !impo
 body.m-ui .m-sfoot .i18n-btns { display: grid !important; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; width: 100%; }
 body.m-ui .m-sfoot .i18n-fab { position: static !important; width: 100% !important; height: 46px !important; margin: 0 !important; border-radius: 12px !important; box-shadow: none !important; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; }
 body.m-ui .m-sfoot .i18n-menu { position: static !important; max-height: 40vh; overflow-y: auto; margin: 0; }
+/* 6.5: Offline-Hinweis */
+body.m-ui .m-offline { position: fixed; left: 8px; right: 8px; top: calc(6px + env(safe-area-inset-top)); z-index: 95; padding: 8px 12px; border-radius: 10px; background: rgba(255, 170, 60, .95); color: #1a1205; font-size: .8rem; font-weight: 600; text-align: center; box-shadow: 0 4px 16px rgba(0, 0, 0, .4); }

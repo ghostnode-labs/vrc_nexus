@@ -4229,3 +4229,28 @@ test('6.4: Mehrfach-Aktion, Welt-Taste, Mini-Modus-Daten', async () => {
     await assert.rejects(app.ctools.action('ctools_mini', {}), /nur in der Windows-App/);
     app.tools.stop();
 });
+
+test('6.5: Uhr – Meldungen mit Antwort-Knöpfen, nur mit gekoppelter Uhr, nicht im Privat-Modus; Freunde fürs Zifferblatt', async () => {
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
+    app.game.osc.stopListen();
+    const w = app.watch; assert.ok(w, 'Watch-Modul da');
+    app.settings.save({ 'notify.desktop': false });
+    app.tools.alert('🟢 Mira ist online', 'in Testwelt', '', { uid: 'usr_aaaaaaaa-1111-2222-3333-444444444444', loc: 'wrld_bbbbbbbb-1111-2222-3333-444444444444:123~region(eu)' });
+    assert.strictEqual((w.notes || []).length, 0, 'ohne gekoppelte Uhr nichts merken');
+    db.setSetting('watch_cfg', JSON.stringify({ on: true, devices: [{ id: 'd1', name: 'Uhr', hash: 'x' }] }));
+    app.tools.alert('🟢 Mira ist online', 'in Testwelt', '', { uid: 'usr_aaaaaaaa-1111-2222-3333-444444444444', loc: 'wrld_bbbbbbbb-1111-2222-3333-444444444444:123~region(eu)' });
+    app.tools.alert('📷 Screenshot', 'bild.png');
+    const st = w.state();
+    assert.strictEqual(st.notes.length, 2);
+    assert.deepStrictEqual(st.notes[0].replies.map(r => r[0]), ['join', 'request', 'ok'], 'Freund: Hin / Einladen lassen / 👍');
+    assert.deepStrictEqual(st.notes[1].replies.map(r => r[0]), ['ok']);
+    assert.ok(!('uid' in st.notes[0]) && !('loc' in st.notes[0]), 'IDs und Instanz bleiben am PC');
+    assert.ok(typeof st.friends === 'number');
+    await assert.rejects(w.noteReply(st.notes[1].id, 'join'), /Unbekannte Antwort/);
+    assert.strictEqual((await w.noteReply(st.notes[1].id, 'ok')).msg, '👍');
+    assert.strictEqual(w.state().notes.length, 1, 'beantwortete Meldung verschwindet');
+    app.nsfw.private = true; assert.strictEqual(w.state().notes.length, 0, 'Privat-Modus: keine Meldungen'); app.nsfw.private = false;
+    app.tools.stop(); if (w.stop) w.stop();
+});

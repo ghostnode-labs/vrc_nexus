@@ -14,7 +14,7 @@ const SYNC_MIN = 45;
 const OFFLINE_SYNC = 900;
 const FEED_KEEP_DAYS = 180;
 const UID = 1;   // die App hat genau ein Konto
-const VERSION = '6.4.0';
+const VERSION = '6.5.0';
 
 class Vrc {
     /**
@@ -314,7 +314,7 @@ class Vrc {
             for (const [id, kind, l] of watchEvents) if (w.includes(id)) {
                 const f = this.db.prepare('SELECT display_name FROM friends WHERE user_id = ? AND vrc_id = ?').get(UID, id);
                 const fl = U.location(l);
-                if (f) this.onWatchEvent(f.display_name, kind, fl.world ? (this.worlds([fl.world])[fl.world] || {}).name || '' : '', l);
+                if (f) this.onWatchEvent(f.display_name, kind, fl.world ? (this.worlds([fl.world])[fl.world] || {}).name || '' : '', l, id);
             }
         }
         // Beobachtete Freunde: Desktop-Benachrichtigung
@@ -322,7 +322,7 @@ class Vrc {
             const w = this.db.prepare('SELECT vrc_id FROM notes WHERE user_id = ? AND watch = 1').column(UID);
             for (const id of watchHits) if (w.includes(id)) {
                 const f = this.db.prepare('SELECT display_name, location FROM friends WHERE user_id = ? AND vrc_id = ?').get(UID, id);
-                if (f) { const fl = U.location(f.location); this.onWatch(f.display_name, fl.world ? (this.worlds([fl.world])[fl.world] || {}).name || '' : ''); }
+                if (f) { const fl = U.location(f.location); this.onWatch(f.display_name, fl.world ? (this.worlds([fl.world])[fl.world] || {}).name || '' : '', id, f.location); }
             }
         }
         return { synced: true, wait: SYNC_MIN };

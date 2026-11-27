@@ -102,11 +102,11 @@ class NexusApp {
         this.vrspace = new (require('./vrspace').VrSpace)(this);
         this.profiles = new (require('./profiles').Profiles)(this);
         this.osctools = new OscTools(this);               // 3.2.5: auch am Handy (Szenen, Aufnahme über die eigene OSC-Verbindung)
-        this.vrc.onWatch = (name, world) => { if (this.settings.get('notify.watch')) this.tools.alert('🟢 ' + name + ' ist online', world ? 'in ' + world : 'gerade ins Spiel gekommen'); };
-        this.vrc.onWatchEvent = (name, kind, world) => {
+        this.vrc.onWatch = (name, world, uid, loc) => { if (this.settings.get('notify.watch')) this.tools.alert('🟢 ' + name + ' ist online', world ? 'in ' + world : 'gerade ins Spiel gekommen', '', { uid, loc }); };
+        this.vrc.onWatchEvent = (name, kind, world, loc, uid) => {
             const s = this.settings;
-            if (kind === 'joinme' && s.get('notify.watch_joinme')) this.tools.alert('🔵 ' + name + ' ist jetzt „Join Me“', world ? 'in ' + world : '');
-            if (kind === 'public' && s.get('notify.watch_public')) this.tools.alert('🌍 ' + name + ' ist in einer öffentlichen Instanz', world || '');
+            if (kind === 'joinme' && s.get('notify.watch_joinme')) this.tools.alert('🔵 ' + name + ' ist jetzt „Join Me“', world ? 'in ' + world : '', '', { uid, loc });
+            if (kind === 'public' && s.get('notify.watch_public')) this.tools.alert('🌍 ' + name + ' ist in einer öffentlichen Instanz', world || '', '', { uid, loc });
         };
         this.notify = opts.notify || null;
         this.plugins = opts.mobile ? null : new (require('./plugins').Plugins)(this);

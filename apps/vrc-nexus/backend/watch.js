@@ -182,7 +182,31 @@ class Watch {
         const ts = nsfw && t ? { connected: t.state === 'verbunden' || !!t.ws, devices: t.devices ? t.devices.size : 0, consent: t.consent || 'green' } : null;
         return { ok: true, t: Date.now(), world: n && n.private ? '' : cut(str(st.worldName), 60), players: st.players ? st.players.size : 0, running: !!st.running,
             bpm: h && h.active ? h.bpm : 0, hr_src: h ? h.cfg().source : 'off', private: !!(n && n.private), nsfw, nsfw_reason: nsfw ? '' : cut(str(acc.reason), 160), toys: ts,
-            sleeping: !!(a.comfort && a.comfort.sleep), look: this.look() };
+            sleeping: !!(a.comfort && a.comfort.sleep), look: this.look(),
+            // 6.5: Zifferblatt-Daten und Benachrichtigungen (im Privat-Modus keine)
+            friends: (() => { try { return a.vrc.friendList().filter(f => f.state === 'online').length; } catch (e) { return 0; } })(),
+            notes: this.notesSafe() };
+    }
+    /** 6.5: Benachrichtigung für die Uhr merken (höchstens 8, 10 Minuten lang abrufbar) */
+    note(title, body, meta) {
+        const c = this.cfg(); if (!c.on || !(c.devices || []).length) return;   // nur mit gekoppelter Uhr
+        this.notes = (this.notes || []).filter(x => Date.now() - x.t < 600000).slice(-7);
+        const m = meta || {}, uid = /^usr_[\w-]+$/.test(str(m.uid)) ? str(m.uid) : '', loc = str(m.loc);
+        const joinable = /^wrld_[^:]+:[^~]+(~region\([a-z]+\))?$/.test(loc) || /~(friends|hidden)\(/.test(loc) && loc.startsWith('wrld_');
+        const replies = uid ? [...(joinable ? [['join', '🚪 Hin']] : []), ['request', '🙋 Einladen lassen'], ['ok', '👍']] : [['ok', '👍']];
+        this.noteSeq = (this.noteSeq || 0) + 1;
+        this.notes.push({ id: this.noteSeq, t: Date.now(), title: cut(str(title), 80), body: cut(str(body), 120), replies, uid, loc, done: '' });
+    }
+    notesSafe() { return this.app.nsfw && this.app.nsfw.private ? [] : this.notesFor(); }
+    notesFor() { return (this.notes || []).filter(x => Date.now() - x.t < 600000 && !x.done).map(x => ({ id: x.id, t: x.t, title: x.title, body: x.body, replies: x.replies })); }
+    async noteReply(id, reply) {
+        const x = (this.notes || []).find(n => n.id === int(id));
+        if (!x) throw new UserError('Benachrichtigung nicht mehr da.');
+        if (!x.replies.some(r => r[0] === reply)) throw new UserError('Unbekannte Antwort.');
+        x.done = reply;
+        if (reply === 'join') return Object.assign({ msg: '🚪 Einladung an dich – im Spiel annehmen' }, await this.app.post({ act: 'invite_self', location: x.loc }, {}));
+        if (reply === 'request') return Object.assign({ msg: '🙋 Anfrage gesendet' }, await this.app.post({ act: 'request_invite', id: x.uid }, {}));
+        return { msg: '👍' };
     }
     heart(b) {
         const h = this.app.heart;
@@ -190,11 +214,11 @@ class Watch {
         const src = h.cfg().source;
         if (src !== 'watch') {
             // 5.2.1: liefert die eingestellte Quelle gerade nichts (z. B. HypeRate nicht erreichbar), übernimmt die Uhr automatisch
-            if (h.active && h.from !== 'watch') return { ok: false, ignored: true, msg: 'In VRC Nexus liefert gerade eine andere Puls-Quelle (' + src + ').' };
+            if (h.active && h.from !== 'watch') return { ok: false, ignored: true, msg: 'In VRC Nexus liefert gerade eine andere Puls-Quelle (' + src + ').', notes: this.notesSafe() };
             h.save({ source: 'watch' });
             h.switchedFrom = src;
         }
-        return { ok: h.push(int(b.bpm), 'watch'), switched: src !== 'watch' ? src : undefined };
+        return { ok: h.push(int(b.bpm), 'watch'), switched: src !== 'watch' ? src : undefined, notes: this.notesSafe() };   // 6.5: Meldungen auch beim Puls-Senden
     }
     async action(a, b, dev) {
         const post = (act, x) => this.app.post(Object.assign({ act }, x || {}), {});
@@ -211,6 +235,7 @@ class Watch {
             case 'private': r = await post('nsfw_private', { on: b.on === false || b.on === '0' ? '0' : '1' }); break;
             case 'consent': if (!['green', 'yellow', 'red'].includes(str(b.light))) throw new UserError('Ampel: green, yellow oder red.'); r = await post('toys_consent', { light: str(b.light) }); break;
             case 'toys_stop': r = await post('toys_stop', { device: 'all' }); break;
+            case 'note_reply': r = await this.noteReply(b.id, str(b.reply)); break;   // 6.5
             case 'theme': this.saveCfg({ theme: str(b.theme) }); r = { msg: '🎨 ' + THEMES[str(b.theme)].name }; break;
             case 'sleep': r = await post('comfort_sleep', { on: b.on === false || b.on === '0' ? '0' : '1', wake: int(b.wake) || 0 }); break;
             default: throw new UserError('Unbekannte Aktion.');

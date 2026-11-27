@@ -76,6 +76,7 @@ public class HeartService extends Service implements SensorEventListener {
             JSONObject b = new JSONObject(); b.put("bpm", bpm);
             JSONObject r = Nexus.call(this, "/watch/heart", b);
             error = r.optBoolean("ignored") ? r.optString("msg") : "";
+            Notes.handle(this, r);   // 6.5: Meldungen vom PC auch im Hintergrund
             sentAt = System.currentTimeMillis();
         } catch (Exception ex) { error = String.valueOf(ex.getMessage()); }
     }

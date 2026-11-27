@@ -1,5 +1,10 @@
 [
  {
+  "version": "6.5.0",
+  "title": "Watch & phone",
+  "body": "- ⌚ **Notifications on the Nexus Watch with reply buttons:** watched friends coming online, “Join Me”, public instances and other alerts appear as watch notifications – 🚪 *Go there* (invite to yourself), 🙋 *Ask for an invite* or 👍. They also arrive in the background while the watch sends your heart rate; never in private mode. Switch off on the watch: Settings → “Meldungen vom PC”\n- ⌚ Watch home screen shows the time and how many friends are in game\n- 📴 **Offline mode (Android):** without network the app shows the last saved data with a clear notice and syncs right away when the connection is back"
+ },
+ {
   "version": "6.4.0",
   "title": "Mini mode, chatbox studio, macro blocks, Stream Deck 2.0",
   "body": "- 🪟 **Mini mode:** a small always-on-top window with world, players, time there, heart rate, friends in game and music, plus quick buttons (rotator, sleep, mute, clear chatbox, panic when NSFW is on). Open it from the tray, the command palette or your own shortcut; size and position are remembered\n- 🎨 **Chatbox studio** (Game & OSC → Chatbox): live preview as a VRChat speech bubble with character count, all placeholders as tap-to-insert chips, ready-made templates (now playing, world info, clock, AFK, greeting, countdown, status)\n- 🧱 **Macro blocks:** build macros from blocks (chatbox, parameter, toggle, wait, input, camera, status, avatar …) – edit, move up/down, duplicate, delete; the text view is still there\n- 🎛 **Stream Deck plugin 1.10:** new keys **Multi action** (several Nexus actions in a row with pauses) and **World key** (a different macro depending on the world you are in)\n- 🔌 Client API: new actions `multi` and `worldkey` (main key / “everything” level only)"

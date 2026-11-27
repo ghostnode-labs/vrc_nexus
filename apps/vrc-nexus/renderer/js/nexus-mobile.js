@@ -130,6 +130,14 @@
     new MutationObserver(mark).observe(menu, { subtree: true, attributes: true, attributeFilter: ['class'] });
     mark();
 
+    // ---------- 6.5: Offline-Modus – gespeicherte Daten zeigen, beim Wiederverbinden sofort abgleichen ----------
+    const off = document.createElement('div');
+    off.className = 'm-offline'; off.hidden = navigator.onLine !== false;
+    off.textContent = '📴 ' + T('Offline – du siehst die zuletzt gespeicherten Daten. Abgleich, sobald wieder Netz da ist.');
+    document.body.appendChild(off);
+    window.addEventListener('offline', () => { off.hidden = false; });
+    window.addEventListener('online', () => { off.hidden = true; if (UI.load) UI.load(true, true); UI.toast('📶 ' + T('Wieder online – gleiche ab …')); });
+
     // ---------- Freundesliste: Filter einklappen ----------
     const tools = document.querySelector('[data-pane="friends"] .vx-tools');
     if (tools) {
