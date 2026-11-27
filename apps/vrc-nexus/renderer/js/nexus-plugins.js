@@ -5,7 +5,7 @@
     if (!UI) return;
     const esc = UI.esc, api = (a, d) => UI.api(a, d), toast = (m, bad) => UI.toast(m, bad);
     const T = s => (window.t ? window.t(s) : s);
-    let box = null, d = null, check = null, logs = {}, timer = null, busy = false, mk = null, mkQ = '';
+    let box = null, d = null, check = null, logs = {}, timer = null, busy = false, mk = null, mkQ = '', gn = null, mkTag = '';
     // 8.0.6: Tabs – ⚙ Einstellungen | 🛒 Marktplatz | je Plugin ein eigener Tab
     let ptab = (() => { try { return localStorage.getItem('nx_pltab') || 'settings'; } catch (e) { return 'settings'; } })();
     const setTab = t => { ptab = t; try { localStorage.setItem('nx_pltab', t); } catch (e) { /* egal */ } if (t === 'market' && !mk) loadMarket(false); render(); };
@@ -60,12 +60,13 @@
             + (d.example ? '<button type="button" class="btn" data-plexample="1">📝 ' + esc(T('Beispiel: Text-Plugin')) + '</button>' : '')
             + '<button type="button" class="btn" data-plopen="1" title="' + esc(d.dir || '') + '">📂 ' + esc(T('Plugin-Ordner öffnen')) + '</button>'
             + '<label class="check small" title="' + esc(T('Stoppt alle Plugins sofort – bleibt auch nach einem Neustart so, bis du es wieder ausschaltest.')) + '"><input type="checkbox" data-plpause="1"' + (d.paused ? ' checked' : '') + '> ⏸ ' + esc(T('Alle Plugins pausieren')) + '</label>'
-            + (d.dir ? '<p class="small muted">📁 <code>' + esc(d.dir) + '</code></p>' : '')) : '') + '</div>'
+            + (d.dir ? '<p class="small muted">📁 <code>' + esc(d.dir) + '</code></p>' : '') + gnBox()) : '') + '</div>'
             + (check ? '<div class="panel pl-check"><h3>' + esc(check.manifest.icon) + ' ' + esc(check.manifest.name) + ' <small class="muted">' + esc(check.manifest.version) + '</small></h3>'
                 + '<p class="small">' + (check.manifest.author ? esc(T('von')) + ' <b>' + esc(check.manifest.author) + '</b> · ' : '') + check.files + ' ' + esc(T('Dateien')) + ' · ' + Math.ceil(check.size / 1024) + ' KB'
                 + (check.update ? ' · ' + esc(T('ersetzt Version')) + ' ' + esc(check.update) : '') + '</p>'
                 + (check.manifest.description ? '<p>' + esc(check.manifest.description) + '</p>' : '')
                 + '<p><b>' + esc(T('Das Plugin möchte:')) + '</b></p><ul class="pl-plist">' + (check.perms.length ? check.perms.map(x => '<li>' + x.icon + ' ' + esc(T(x.label)) + '</li>').join('') : '<li class="muted">' + esc(T('keine besonderen Rechte (nur eigene Oberfläche und eigener Speicher)')) + '</li>') + '</ul>'
+                + (check.foreign && check.foreign.length ? '<p class="small muted">' + esc(T('Nur in D2 Nexus (hier nicht erteilt):')) + ' ' + esc(check.foreign.map(f => f.id).join(', ')) + '</p>' : '')
                 + '<div class="nc-row"><button type="button" class="btn btn-gold" data-plinstall="1">✔ ' + esc(T('Erlauben & installieren')) + '</button><button type="button" class="btn" data-plcancel="1">' + esc(T('Abbrechen')) + '</button></div></div>' : '')
             + (ptab === 'market' ? market()
                 : ptab === 'settings' ? (d.items.length ? d.items.map(p => card(p, false)).join('') : '<div class="vx-empty">' + esc(T('Noch keine Plugins installiert.')) + '</div>')
@@ -73,16 +74,32 @@
                 : card(d.items.find(p => p.id === ptab), true));
     }
     /** 4.4: Marktplatz – geprüfte Plugins von der GhostNode-Website */
-    const PL = { chatbox: '💬', osc: '🎛', notify: '🔔', game: '🎮', net: '🌐', vrchat: '🟦' };
+    const PL = { chatbox: '💬', osc: '🎛', notify: '🔔', game: '🎮', net: '🌐', vrchat: '🟦', ghostnode: '◈', destiny: '💠' };
+    /** 8.1: GhostNode-Konto (gemeinsam mit D2 Nexus) + mitgelieferte Plugins */
+    function gnBox() {
+        const g = gn || {};
+        const bundled = (d.bundled || []).filter(b => !d.items.some(p => p.id === b));
+        return '<div class="panel pl-gn"><h3>◈ ' + esc(T('GhostNode-Konto')) + '</h3>'
+            + (g.connected ? '<p>✔ ' + esc(T('Verbunden als')) + ' <b>' + esc(g.user ? g.user.name : '?') + '</b>' + (g.admin ? ' <span class="vx-pill">' + esc(T('Admin')) + '</span>' : '') + '</p>'
+                + '<div class="nc-row"><button type="button" class="btn btn-sm" data-plgn="refresh">⟳ ' + esc(T('Rechte neu prüfen')) + '</button><button type="button" class="btn btn-sm btn-danger" data-plgn="logout">' + esc(T('Abmelden')) + '</button></div>'
+                : '<p class="small muted">' + esc(T('Melde dich mit deinem Konto von ghostnode-labs.dev an – im Browser, mit dem normalen Login (inkl. Zwei-Faktor). Die Anmeldung bleibt verschlüsselt gespeichert, bis du dich abmeldest.')) + '</p>'
+                + '<button type="button" class="btn btn-gold" data-plgn="login"' + (g.busy ? ' disabled' : '') + '>◈ ' + esc(T('Mit GhostNode anmelden')) + '</button>')
+            + '<p class="small muted">' + esc(T('Plugins mit dem Recht „GhostNode-Konto“ (z. B. das Admin-Panel) nutzen diese Anmeldung – in VRC Nexus und D2 Nexus gleich.')) + '</p>'
+            + (bundled.length ? '<div class="nc-row">' + bundled.map(b => '<button type="button" class="btn" data-plbundled="' + esc(b) + '">' + (b === 'ghostnode-admin' ? '🛡 ' + esc(T('GhostNode Admin-Panel installieren')) : '📦 ' + esc(b)) + '</button>').join('') + '</div>' : '')
+            + '</div>';
+    }
+    function loadGn() { return api('plug_gn_status').then(r => { gn = r; render(); }).catch(() => {}); }
     function market() {
         if (!mk) return '<div class="panel"><div class="vx-loading">…</div></div>';
         if (mk.error) return '<div class="panel vx-error">⚠ ' + esc(mk.error) + ' <button type="button" class="btn btn-sm" data-plmkre="1">↻</button></div>';
-        const q = mkQ.trim().toLowerCase(), list = mk.items.filter(i => !q || (i.name + ' ' + i.description + ' ' + i.author).toLowerCase().includes(q));
+        const q = mkQ.trim().toLowerCase(), list = mk.items.filter(i => (!q || (i.name + ' ' + i.description + ' ' + i.author + ' ' + (i.tags || []).join(' ')).toLowerCase().includes(q)) && (!mkTag || (i.tags || []).includes(mkTag)));
+        const tags = {}; mk.items.forEach(i => (i.tags || []).forEach(t => { tags[t] = (tags[t] || 0) + 1; }));
         return '<div class="panel pl-mk"><div class="nc-row"><h3 style="margin:0;flex:1">🛒 ' + esc(T('Marktplatz')) + '</h3><input type="search" data-plmkq="1" value="' + esc(mkQ) + '" placeholder="' + esc(T('Plugins suchen …')) + '">'
             + '<button type="button" class="btn btn-sm" data-plmkre="1" title="' + esc(T('Neu laden')) + '">↻</button></div>'
             + '<p class="small muted">' + esc(T('Alle Plugins hier wurden vor der Veröffentlichung geprüft. Der Katalog ist signiert, jedes Paket wird vor der Installation auf Echtheit geprüft – die Rechte bestätigst du trotzdem selbst.')) + '</p>'
+            + (Object.keys(tags).length ? '<div class="pl-perms">' + Object.keys(tags).sort().map(t => '<button type="button" class="vx-pill' + (mkTag === t ? ' on' : '') + '" data-plmktag="' + esc(t) + '">#' + esc(t) + '</button>').join('') + '</div>' : '')
             + (list.length ? '<div class="pl-mkgrid">' + list.map(i => '<div class="pl-mkcard"><div class="pl-top"><span class="pl-ic">' + esc(i.icon) + '</span><div class="pl-meta"><b>' + esc(i.name) + '</b> <small class="muted">' + esc(i.version) + (i.author ? ' · ' + esc(i.author) : '') + '</small>'
-                + '<div class="small muted">' + esc(i.description) + '</div><div class="pl-perms">' + (i.permissions.length ? i.permissions.map(p => '<span class="vx-pill">' + (PL[p] || '?') + ' ' + esc(p) + '</span>').join('') : '<span class="small muted">' + esc(T('keine besonderen Rechte')) + '</span>') + '</div>'
+                + '<div class="small muted">' + esc(i.description) + '</div><div class="pl-perms">' + (i.apps || ['vrc']).map(a => '<span class="vx-pill">' + (a === 'd2' ? '💠 Destiny 2' : '🥽 VRChat') + '</span>').join('') + (i.tags || []).map(t => '<span class="vx-pill small">#' + esc(t) + '</span>').join('') + (i.permissions.length ? i.permissions.map(p => '<span class="vx-pill">' + (PL[p] || '?') + ' ' + esc(p) + '</span>').join('') : '<span class="small muted">' + esc(T('keine besonderen Rechte')) + '</span>') + '</div>'
                 + '<div class="small muted">⬇ ' + i.downloads + ' · ' + Math.max(1, Math.round(i.size / 1024)) + ' KB' + (i.fits ? '' : ' · ⚠ ' + esc(T('braucht')) + ' Nexus ' + esc(i.nexus)) + '</div></div></div>'
                 + '<div class="nc-row">' + (i.installed && !i.update ? '<span class="small">✔ ' + esc(T('installiert')) + '</span>'
                     : '<button type="button" class="btn btn-sm' + (i.update ? ' btn-gold' : '') + '" data-plmkget="' + esc(i.id) + '"' + (i.fits ? '' : ' disabled') + '>' + (i.update ? '⬆ ' + esc(T('Update auf')) + ' ' + esc(i.version) : '⬇ ' + esc(T('Installieren'))) + '</button>')
@@ -91,7 +108,7 @@
             + '<p class="small muted">🔑 ' + esc(T('Katalog-Schlüssel')) + ' ' + esc(mk.key || '–') + '… · <a href="#" data-plmkkey="1">' + esc(T('Schlüssel neu lernen')) + '</a></p></div>';
     }
     function loadMarket(force) { return api('plug_market', { refresh: force ? '1' : '' }).then(r => { mk = r; render(); }).catch(e => { mk = { error: e.message, items: [] }; render(); }); }
-    function load() { return api('plug_list').then(r => { d = r; render(); }).catch(e => { box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
+    function load() { if (!gn) loadGn(); return api('plug_list').then(r => { d = r; render(); }).catch(e => { box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
     const upd = r => { if (r.items) d.items = r.items; if (r.msg) toast(T(r.msg)); render(); };
     function values(card) { const v = {}; card.querySelectorAll('[data-plval]').forEach(el => { v[el.dataset.plval] = el.type === 'checkbox' ? el.checked : el.value; }); return v; }
     function inspect(fd) {
@@ -112,6 +129,14 @@
             const t = e.target, c = t.closest('[data-plid]');
             if (t.closest('[data-plexample]')) { const fd = new FormData(); fd.append('act', 'plug_inspect'); fd.append('example', '1'); return inspect(fd); }
             if (t.closest('[data-plcancel]')) { check = null; return render(); }
+            const bd = t.closest('[data-plbundled]'); if (bd) { const fd = new FormData(); fd.append('act', 'plug_inspect'); fd.append('bundled', bd.dataset.plbundled); return inspect(fd); }   // 8.1
+            const tg = t.closest('[data-plmktag]'); if (tg) { mkTag = mkTag === tg.dataset.plmktag ? '' : tg.dataset.plmktag; return render(); }
+            const gb = t.closest('[data-plgn]');
+            if (gb && !busy) {
+                const op = gb.dataset.plgn; busy = true; gb.disabled = true;
+                if (op === 'login') toast(T('Browser geöffnet – dort anmelden …'));
+                return api('plug_gn_' + op).then(r => { gn = r; if (op === 'login') toast('◈ ' + T('Angemeldet als') + ' ' + (r.user ? r.user.name : '')); render(); }).catch(x => toast(x.message, true)).finally(() => { busy = false; gb.disabled = false; });
+            }
             if (t.closest('[data-plopen]')) return api('plug_open').catch(x => toast(x.message, true));
             const tb = t.closest('[data-pltab]'); if (tb) return setTab(tb.dataset.pltab);   // 8.0.6
             if (t.closest('[data-plmkre]')) { mk = null; render(); return loadMarket(true); }

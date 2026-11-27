@@ -2935,3 +2935,13 @@ Neueste Nexus Watch auf diese Uhr installieren?	Install the latest Nexus Watch o
 ✔ Uhr verbunden.	✔ Watch connected.	✔ Montre connectée.	✔ ウォッチを接続しました。
 ADB laden	Download ADB	Télécharger ADB	ADBをダウンロード
 Erneut versuchen	Try again	Réessayer	もう一度試す
+Nur in D2 Nexus (hier nicht erteilt):	Only in D2 Nexus (not granted here):	Uniquement dans D2 Nexus (non accordé ici) :	D2 Nexus専用（ここでは付与されません）：
+GhostNode-Konto	GhostNode account	Compte GhostNode	GhostNodeアカウント
+Rechte neu prüfen	Re-check rights	Revérifier les droits	権限を再確認
+Melde dich mit deinem Konto von ghostnode-labs.dev an – im Browser, mit dem normalen Login (inkl. Zwei-Faktor). Die Anmeldung bleibt verschlüsselt gespeichert, bis du dich abmeldest.	Sign in with your ghostnode-labs.dev account in the browser, using the normal login (including two-factor). The sign-in stays saved (encrypted) until you sign out.	Connecte-toi avec ton compte ghostnode-labs.dev dans le navigateur, avec la connexion habituelle (y compris la double authentification). La connexion reste enregistrée (chiffrée) jusqu'à ta déconnexion.	ブラウザでghostnode-labs.devのアカウントにサインインします（通常のログイン、二段階認証を含む）。サインインはサインアウトするまで暗号化して保存されます。
+Mit GhostNode anmelden	Sign in with GhostNode	Se connecter avec GhostNode	GhostNodeでサインイン
+Plugins mit dem Recht „GhostNode-Konto“ (z. B. das Admin-Panel) nutzen diese Anmeldung – in VRC Nexus und D2 Nexus gleich.	Plugins with the "GhostNode account" right (e.g. the admin panel) use this sign-in – the same in VRC Nexus and D2 Nexus.	Les plugins avec le droit « Compte GhostNode » (p. ex. le panneau admin) utilisent cette connexion – pareil dans VRC Nexus et D2 Nexus.	「GhostNodeアカウント」権限を持つプラグイン（管理パネルなど）はこのサインインを使います。VRC NexusとD2 Nexusで共通です。
+GhostNode Admin-Panel installieren	Install GhostNode admin panel	Installer le panneau admin GhostNode	GhostNode管理パネルをインストール
+Browser geöffnet – dort anmelden …	Browser opened – sign in there …	Navigateur ouvert – connecte-toi là-bas …	ブラウザを開きました – そちらでサインインしてください…
+Angemeldet als	Signed in as	Connecté en tant que	サインイン中：
+Dein GhostNode-Konto nutzen (Web-API mit deiner Anmeldung)	Use your GhostNode account (web API with your sign-in)	Utiliser ton compte GhostNode (API web avec ta connexion)	GhostNodeアカウントを使用（あなたのサインインでWeb API）

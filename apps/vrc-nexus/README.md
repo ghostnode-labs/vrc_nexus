@@ -26,6 +26,12 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.1.0 – Shared plugins & GhostNode account
+- 🧩 **One plugin system for VRC Nexus and D2 Nexus:** the `.nxp` format is now shared with D2 Nexus (Destiny 2). A plugin with `"apps": ["vrc", "d2"]` in its `plugin.json` runs in both apps; plugins without `apps` stay VRC-only as before. Rights of the other app (`destiny`) are shown but never granted here.
+- ◈ **GhostNode account in the Plugins tab:** sign in with your ghostnode-labs.dev account in the browser (normal login including two-factor). No ID to type in – the sign-in stays saved (encrypted) until you sign out. Plugins with the new `ghostnode` right use it.
+- 🛡 **GhostNode admin panel as a plugin** (bundled, one click to install): server overview, plugin review (approve/reject), users (lock/unlock), audit log and D2 chat moderation. Works the same in D2 Nexus. The website checks admin rights on every request.
+- 🛒 **Shared marketplace with tags and games:** the marketplace shows which game a plugin is for (🥽 VRChat / 💠 Destiny 2) and its tags; click a tag to filter. VRC Nexus only lists plugins made for VRChat.
+
 ### New in 8.0.21 – Bug fixes
 - 🛠 **Fixed: a tab in the 18+ area could hang on "Lade …" forever.** It now loads normally. If loading ever fails, the tab shows the error with a "Try again" button instead of retrying endlessly in the background.
 - 🔞 ***

@@ -4,7 +4,10 @@
  * (--permission: nur der eigene Plugin-Ordner lesbar, nur der eigene Datenordner schreibbar, keine Programme/Worker/Addons).
  * Das Plugin bekommt NUR das Objekt `nexus`; alles, was die App betrifft (Chatbox, OSC, Hinweise, Speicher, Oberfläche),
  * läuft als Nachricht an die App und wird dort gegen die bei der Installation erlaubten Rechte geprüft.
- * argv: <Plugin-Ordner> <Hauptdatei> <JSON: { id, name, version, perms }>
+ * argv: <Plugin-Ordner> <Hauptdatei> <JSON: { id, name, version, perms, app }>
+ *
+ * GEMEINSAM für VRC Nexus und D2 Nexus (gleiche Datei in beiden Apps): ein Plugin kann in beiden laufen.
+ * nexus.app.id sagt, wo es gerade läuft ("vrc" oder "d2"). Bereiche der anderen App melden „nicht verfügbar“.
  */
 const path = require('path');
 const fs = require('fs');
@@ -54,6 +57,8 @@ process.on('unhandledRejection', e => log('error', 'Unbehandelter Fehler: ' + (e
 // ---------- die Schnittstelle fürs Plugin ----------
 const nexus = Object.freeze({
     plugin: Object.freeze({ id: meta.id, name: meta.name, version: meta.version, permissions: [...perms] }),
+    /** in welcher App läuft das Plugin? */
+    app: Object.freeze({ id: String(meta.app || 'vrc'), name: meta.app === 'd2' ? 'D2 Nexus' : 'VRC Nexus', version: () => call('app.version') }),
     log: (...a) => log('info', ...a),
     /** Ereignisse: start, stop, ui (Klick/Eingabe), param (OSC-Wert, Recht „osc“), game (Spiel-Log, Recht „game“) */
     on: (name, fn) => { bus.on(String(name), fn); return nexus; },
@@ -85,7 +90,22 @@ const nexus = Object.freeze({
     }),
     /** 3.8: verschlüsselte Zugangsdaten (z. B. Bot-Tokens) – nur dieses Plugin kann sie lesen */
     secrets: Object.freeze({ get: k => call('secrets.get', String(k)), set: (k, v) => call('secrets.set', String(k), v), has: k => call('secrets.has', String(k)) }),
-    app: Object.freeze({ version: () => call('app.version') }),
+    /** nur D2 Nexus: Destiny-2-Daten lesen (Recht „destiny“) */
+    destiny: Object.freeze({
+        characters: () => call('destiny.characters'),
+        inventory: () => call('destiny.inventory'),
+        milestones: () => call('destiny.milestones'),
+        vendors: characterId => call('destiny.vendors', characterId ? String(characterId) : ''),
+        clan: () => call('destiny.clan'),
+        activity: (membershipType, membershipId) => call('destiny.activity', Number(membershipType) || 0, String(membershipId || '')),
+    }),
+    /** beide Apps: GhostNode-Konto (Recht „ghostnode“) – Web-API mit der Anmeldung aus den App-Einstellungen; die Website prüft die Rechte */
+    ghostnode: Object.freeze({
+        status: () => call('ghostnode.status'),
+        login: () => call('ghostnode.login'),
+        get: (p, query) => call('ghostnode.get', String(p), query && typeof query === 'object' ? query : {}),
+        post: (p, body) => call('ghostnode.post', String(p), body && typeof body === 'object' ? body : {}),
+    }),
 });
 
 // ---------- Plugin laden ----------

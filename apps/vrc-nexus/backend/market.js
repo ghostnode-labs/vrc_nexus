@@ -45,11 +45,11 @@ class Market {
     /** Katalog mit Installations- und Update-Status */
     async list(force) {
         const idx = await this.load(force), mine = require('./vrchat').VERSION, pl = this.plugins();
-        const items = idx.plugins.filter(p => /^[a-z0-9][a-z0-9-]{1,39}$/.test(str(p.id))).map(p => {
+        const items = idx.plugins.filter(p => /^[a-z0-9][a-z0-9-]{1,39}$/.test(str(p.id)) && [].concat(p.apps || ['vrc']).includes('vrc')).map(p => {   // 8.1: gemeinsamer Marktplatz, nur Plugins für VRC Nexus
             const m = pl && pl.manifest(p.id);
             return { id: p.id, name: str(p.name), version: str(p.version), author: str(p.author), description: str(p.description), icon: str(p.icon) || '🧩', category: str(p.category),
                 permissions: Array.isArray(p.permissions) ? p.permissions.map(str) : [], size: Number(p.size) || 0, downloads: Number(p.downloads) || 0, updated: Number(p.updated) || 0,
-                changelog: str(p.changelog), homepage: /^https:\/\//.test(str(p.homepage)) ? str(p.homepage) : '', fits: fits(p.nexus, mine), nexus: str(p.nexus),
+                changelog: str(p.changelog), homepage: /^https:\/\//.test(str(p.homepage)) ? str(p.homepage) : '', fits: fits(p.nexus, mine), nexus: str(p.nexus), apps: [].concat(p.apps || ['vrc']).map(str), tags: [].concat(p.tags || []).map(str).slice(0, 8),
                 installed: m ? m.version : '', update: !!(m && cmpVer(p.version, m.version) > 0) };
         });
         return { items, updates: items.filter(i => i.update).length, generated: idx.generated, key: this.pinned().slice(0, 12) };
@@ -58,7 +58,7 @@ class Market {
     async get(id) {
         const idx = await this.load();
         const p = idx.plugins.find(x => x.id === str(id));
-        if (!p) throw new UserError('Plugin nicht im Marktplatz gefunden.');
+        if (!p || ![].concat(p.apps || ['vrc']).includes('vrc')) throw new UserError('Plugin nicht im Marktplatz gefunden (oder nur für D2 Nexus).');
         if (!fits(p.nexus, require('./vrchat').VERSION)) throw new UserError('Dieses Plugin braucht VRC Nexus ' + str(p.nexus) + ' – bitte zuerst die App aktualisieren.');
         const url = str(p.url);
         if (!url.startsWith(base() + '/market.php?dl=')) throw new UserError('Marktplatz: Paket-Adresse nicht erlaubt.');

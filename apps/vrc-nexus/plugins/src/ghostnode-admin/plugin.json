@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "id": "ghostnode-admin",
+  "name": "GhostNode Admin-Panel",
+  "version": "1.0.0",
+  "author": "GHOST NODE",
+  "description": "Das Admin-Panel der GhostNode-Website in der App: Server-Übersicht, Plugins prüfen und freigeben, Benutzer sperren, Protokoll, D2-Chat moderieren und Ankündigungen. Anmeldung mit deinem GhostNode-Admin-Konto (bleibt gespeichert).",
+  "icon": "🛡",
+  "main": "main.js",
+  "apps": ["vrc", "d2"],
+  "tags": ["admin", "moderation", "server", "marktplatz"],
+  "nexus": ">=8.1.0",
+  "d2nexus": ">=0.7.0",
+  "permissions": ["ghostnode"]
+}

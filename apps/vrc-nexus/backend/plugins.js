@@ -23,7 +23,11 @@ const PERMS = {
     game: ['🎮', 'Spiel-Ereignisse sehen (Welt betreten, Spieler kommen/gehen)'],
     net: ['🌐', 'Ins Internet verbinden'],
     vrchat: ['🛡', 'VRChat-Gruppe verwalten – nur die genannte(n) Gruppe(n), mit deinem Konto'],   // 3.8
+    ghostnode: ['◈', 'Dein GhostNode-Konto nutzen (Web-API mit deiner Anmeldung)'],   // 8.1 gemeinsam mit D2 Nexus
 };
+/** 8.1: Rechte, die nur D2 Nexus kennt – im Paket erlaubt (Plugins für beide Apps), hier aber nie erteilt */
+const FOREIGN = { destiny: 'D2 Nexus' };
+const APP = 'vrc';
 const GRP = /^grp_[0-9a-f-]{36}$/;
 /** 3.8: erlaubte VRChat-Aufrufe für Gruppen-Plugins (nur Gruppen aus plugin.json; nie Gruppe löschen/übertragen, nie Konto-Daten) */
 function vrcAllowed(method, path, groups) {
@@ -56,11 +60,14 @@ function checkManifest(files, appVersion) {
     if (int(m.format) !== 1) throw new UserError('Unbekanntes Plugin-Format (erwartet „format“: 1).');
     if (!ID.test(str(m.id))) throw new UserError('Ungültige Plugin-ID (nur a–z, 0–9 und „-“, 2–40 Zeichen).');
     // zuerst die Mindestversion – sonst meldet eine ältere App bei neuen Rechten nur „Unbekannte Rechte“
+    // 8.1: gemeinsames Format mit D2 Nexus – "apps" sagt, für welche App(s) das Plugin ist (ohne Angabe: nur VRC Nexus)
+    const apps = [...new Set([].concat(m.apps || ['vrc']).map(str))].filter(x => /^[a-z0-9]{1,10}$/.test(x)).slice(0, 5);
+    if (!apps.includes(APP)) throw new UserError('Dieses Plugin ist nur für ' + (apps.includes('d2') ? 'D2 Nexus' : apps.join(', ') || '?') + ' gebaut (plugin.json "apps").');
     if (m.nexus && !versionAtLeast(appVersion, m.nexus)) throw new UserError('Das Plugin braucht VRC Nexus ' + str(m.nexus).replace(/^>=\s*/, '') + ' oder neuer.');
     const main = str(m.main || 'main.js');
     if (!files[main] || !main.endsWith('.js')) throw new UserError('Die Hauptdatei „' + cut(main, 60) + '“ fehlt.');
     const perms = [...new Set([].concat(m.permissions || []).map(str))];
-    const bad = perms.filter(p => !PERMS[p]);
+    const bad = perms.filter(p => !PERMS[p] && !FOREIGN[p]);
     if (bad.length) throw new UserError('Unbekannte Rechte: ' + bad.join(', '));
     const groups = [...new Set([].concat(m.groups || []).map(str))];
     if (groups.some(g => !GRP.test(g))) throw new UserError('Ungültige Gruppen-ID in plugin.json (grp_…).');
@@ -68,7 +75,8 @@ function checkManifest(files, appVersion) {
     if (perms.includes('vrchat') && !groups.length) throw new UserError('Recht „vrchat“ braucht „groups“: ["grp_…"] in plugin.json.');
     return {
         id: str(m.id), name: cut(str(m.name).trim(), 60) || str(m.id), version: cut(str(m.version || '0.0.0'), 20), author: cut(str(m.author).trim(), 60),
-        description: cut(str(m.description).trim(), 400), icon: cut(str(m.icon || '🧩'), 4), main, nexus: cut(str(m.nexus || ''), 20), permissions: perms,
+        description: cut(str(m.description).trim(), 400), icon: cut(str(m.icon || '🧩'), 4), main, nexus: cut(str(m.nexus || ''), 20),
+        permissions: perms.filter(p => PERMS[p]), foreign: perms.filter(p => FOREIGN[p]), apps, tags: [].concat(m.tags || []).map(x => cut(str(x), 20)).slice(0, 8),
         homepage: /^https:\/\/\S+$/.test(str(m.homepage)) ? cut(str(m.homepage), 200) : '', groups: perms.includes('vrchat') ? groups : [],
     };
 }
@@ -105,6 +113,26 @@ class Plugins {
     saveState(s) { this.app.db.setSetting('plugins_state', JSON.stringify(s)); }
     manifest(id) { try { return JSON.parse(fs.readFileSync(path.join(this.codeDir(id), '.manifest.json'), 'utf8')); } catch (e) { return null; } }
     version() { return require('./vrchat').VERSION; }
+    /** 8.1: GhostNode-Konto (gemeinsam mit D2 Nexus) – Anmeldung im Browser, Token verschlüsselt in der Profil-DB */
+    gn() {
+        if (!this._gn) {
+            const { GnAccount } = require('./gnaccount');
+            const db = this.app.db, host = (this.app.tools && this.app.tools.host) || {};
+            this._gn = new GnAccount({
+                base: () => String(process.env.NEXUS_MARKET_BASE || require('./servers').nexus()),
+                get: k => { const v = db.setting(k, ''); if (!v) return null; try { return JSON.parse(v); } catch (e) { return null; } },
+                set: (k, v) => db.setSetting(k, v === null || v === undefined ? '' : JSON.stringify(v)),
+                crypt: { encrypt: x => this.crypt().encrypt(x), decrypt: x => this.crypt().decrypt(x) },
+                openUrl: u => { if (/^https:\/\//.test(u) && host.openExternal) host.openExternal(u); }, app: APP,
+            });
+        }
+        return this._gn;
+    }
+    rate(r, key, max, ms) { const now = Date.now(); r.q = r.q || {}; r.q[key] = (r.q[key] || []).filter(t => now - t < ms); if (r.q[key].length >= max) throw new Error('Zu viele Anfragen – bitte kurz warten.'); r.q[key].push(now); }
+    bundled() {
+        const dir = path.join(__dirname, '..', 'plugins');
+        try { return fs.readdirSync(dir).filter(f => f.endsWith('.nxp') && f !== 'text-plugin.nxp').map(f => path.join(dir, f)); } catch (e) { return []; }
+    }
     mk() { if (!this.market) { const { Market } = require('./market'); this.market = new Market(this.app); } return this.market; }
 
     // ---------------- Installieren ----------------
@@ -115,7 +143,8 @@ class Plugins {
         this.pending[token] = { files, manifest: m, at: Date.now() };
         const old = this.manifest(m.id);
         return { token, manifest: m, files: Object.keys(files).length, size: Object.values(files).reduce((a, b) => a + b.length, 0),
-            update: old ? old.version : '', perms: m.permissions.map(p => ({ id: p, icon: PERMS[p][0], label: PERMS[p][1] + (p === 'vrchat' ? ': ' + m.groups.join(', ') : '') })) };
+            update: old ? old.version : '', perms: m.permissions.map(p => ({ id: p, icon: PERMS[p][0], label: PERMS[p][1] + (p === 'vrchat' ? ': ' + m.groups.join(', ') : '') })),
+            foreign: m.foreign.map(p => ({ id: p, app: FOREIGN[p] })) };
     }
     async install(token) {
         const p = this.pending[str(token)];
@@ -205,7 +234,7 @@ class Plugins {
             if (process.versions.electron) env.ELECTRON_RUN_AS_NODE = '1';
             let child;
             try {
-                child = cp.fork(host, [code, m.main, JSON.stringify({ id, name: m.name, version: m.version, perms: s.perms || [] })], {
+                child = cp.fork(host, [code, m.main, JSON.stringify({ id, name: m.name, version: m.version, perms: s.perms || [], app: APP })], {
                     execPath: process.execPath, env, cwd: data, stdio: ['ignore', 'ignore', 'pipe', 'ipc'], windowsHide: true, serialization: 'json',
                     execArgv: [flag, '--allow-fs-read=' + code, '--allow-fs-read=' + host, '--allow-fs-write=' + data, '--max-old-space-size=128', '--disallow-code-generation-from-strings'],
                 });
@@ -339,7 +368,14 @@ class Plugins {
             }
             case 'game.state': { this.need(id, 'game'); const st = g.state || {}; return { running: !!st.running, world: str(st.world_name || st.world || ''), players: Array.isArray(st.players) ? st.players.length : int(st.players) }; }
             case 'app.version': return this.version();
-            default: throw new Error('Unbekannte Funktion: ' + name);
+            // 8.1: GhostNode-Konto (Recht „ghostnode“) – gleiche Schnittstelle wie in D2 Nexus
+            case 'ghostnode.status': this.need(id, 'ghostnode'); return this.gn().status();
+            case 'ghostnode.login': this.need(id, 'ghostnode'); return this.gn().login();
+            case 'ghostnode.get': this.need(id, 'ghostnode'); this.rate(r, 'gn', 30, 10000); return this.gn().api('GET', str(a[0]), a[1] || {});
+            case 'ghostnode.post': this.need(id, 'ghostnode'); this.rate(r, 'gn', 30, 10000); return this.gn().api('POST', str(a[0]), a[1] || {});
+            default:
+                if (/^destiny\./.test(name)) throw new Error('Destiny-Funktionen gibt es nur in D2 Nexus (nexus.app.id prüfen).');
+                throw new Error('Unbekannte Funktion: ' + name);
         }
     }
     crypt() { const c = this.app.vrc && this.app.vrc.crypt; if (!c) throw new Error('Verschlüsselung nicht verfügbar.'); return c; }
@@ -364,10 +400,11 @@ class Plugins {
                 if (host && host.openPath) host.openPath(dir);
                 return { ok: true, path: dir };
             }
-            case 'plug_list': return { items: this.list(), perms: PERMS, example: fs.existsSync(this.example()), dir: this.base, paused: this.app.db.setting('plugins_paused', '') === '1' };
+            case 'plug_list': return { items: this.list(), perms: PERMS, example: fs.existsSync(this.example()), dir: this.base, bundled: this.bundled().map(f => path.basename(f, '.nxp')), paused: this.app.db.setting('plugins_paused', '') === '1' };
             case 'plug_inspect': {
                 let buf = files && files.file && files.file.buffer;
                 if (input.example === '1') buf = fs.readFileSync(this.example());
+                if (input.bundled) { const f = this.bundled().find(x => path.basename(x, '.nxp') === str(input.bundled)); if (f) buf = fs.readFileSync(f); }
                 if (!buf) throw new UserError('Bitte eine .nxp-Datei auswählen.');
                 return this.inspect(buf);
             }
@@ -375,6 +412,11 @@ class Plugins {
             case 'plug_market': return await this.mk().list(input.refresh === '1');
             case 'plug_market_get': return await this.mk().get(str(input.id));
             case 'plug_market_relearn': return this.mk().relearn();
+            // 8.1: GhostNode-Konto
+            case 'plug_gn_status': return this.gn().status();
+            case 'plug_gn_login': return await this.gn().login();
+            case 'plug_gn_logout': return await this.gn().logout();
+            case 'plug_gn_refresh': await this.gn().refresh(); return this.gn().status();
             case 'plug_install': { const m = await this.install(input.token); return { items: this.list(), msg: m.name + ' ' + m.version + ' installiert.' }; }
             case 'plug_toggle': {
                 const id = str(input.id), s = this.state();
@@ -418,4 +460,4 @@ class Plugins {
     }
 }
 
-module.exports = { Plugins, checkManifest, cleanUi, PERMS, vrcAllowed };
+module.exports = { FOREIGN, APP, Plugins, checkManifest, cleanUi, PERMS, vrcAllowed };

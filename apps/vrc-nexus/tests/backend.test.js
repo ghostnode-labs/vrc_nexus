@@ -2711,6 +2711,53 @@ test('3.6: Plugins (.nxp) – Paket prüfen, Rechte, abgeschotteter Prozess, Cha
     } finally { P.stop(); await wait(300); }
 });
 
+test('8.1: gemeinsames Plugin-Format mit D2 Nexus – apps, fremde Rechte, GhostNode-Konto, Admin-Plugin läuft', async () => {
+    const { Plugins, checkManifest, FOREIGN } = require('../backend/plugins');
+    const { writeZip } = require('../backend/nxp');
+    const { GnAccount, ALLOWED } = require('../backend/gnaccount');
+    const man = o => ({ 'plugin.json': Buffer.from(JSON.stringify(Object.assign({ format: 1, id: 'x-y', main: 'main.js' }, o))), 'main.js': Buffer.from('') });
+    assert.throws(() => checkManifest(man({ apps: ['d2'] }), '8.1.0'), /nur für D2 Nexus/);
+    const m = checkManifest(man({ apps: ['vrc', 'd2'], permissions: ['ghostnode', 'destiny', 'chatbox'], tags: ['admin'] }), '8.1.0');
+    assert.deepStrictEqual(m.permissions, ['ghostnode', 'chatbox']);
+    assert.deepStrictEqual(m.foreign, ['destiny']);
+    assert.deepStrictEqual(m.apps, ['vrc', 'd2']);
+    assert.ok(FOREIGN.destiny && !checkManifest(man({}), '8.1.0').foreign.length, 'ohne "apps" = VRC-Plugin wie bisher');
+    // gleiche Datei in beiden Apps
+    for (const f of ['plugin-host.js', 'gnaccount.js']) {
+        const other = path.join(__dirname, '../../../../d2_nexus/backend', f);
+        if (fs.existsSync(other)) assert.strictEqual(fs.readFileSync(other, 'utf8'), fs.readFileSync(path.join(__dirname, '../backend', f), 'utf8'), f + ' gleich wie in D2 Nexus');
+    }
+    // Konto: Token verschlüsselt, nur erlaubte Pfade
+    const data = {}, calls = [];
+    const gn = new GnAccount({ base: () => 'https://gn.test', get: k => data[k] ?? null, set: (k, v) => { data[k] = v; }, crypt: { encrypt: s => 'E' + Buffer.from(s).toString('hex'), decrypt: s => Buffer.from(s.slice(1), 'hex').toString() }, openUrl: () => {},
+        fetch: async (u, o) => { calls.push([u, o]); return { ok: true, status: 200, json: async () => ({ id: 1, name: 'Ada', admin: true }) }; } });
+    gn.saveToken('gno_' + 'c'.repeat(40), null);
+    assert.ok(!String(data.gn_account).includes('gno_'));
+    await assert.rejects(gn.api('GET', 'keys'), /nicht erlaubt/);
+    assert.ok(ALLOWED.test('admin/users/active'));
+    assert.strictEqual((await gn.refresh()).name, 'Ada');
+    assert.strictEqual(calls[0][1].headers.Authorization, 'Bearer gno_' + 'c'.repeat(40));
+    // mitgeliefertes Admin-Panel: installieren, läuft in VRC Nexus, zeigt Anmelde-Knopf
+    const settings = {};
+    const ud = fs.mkdtempSync(path.join(os.tmpdir(), 'nx-gn-'));
+    const app = { db: { setting: (k, d) => (k in settings ? settings[k] : d), setSetting: (k, v) => { settings[k] = v; } }, tools: { userData: ud, host: {} }, vrc: { crypt: { encrypt: s => s, decrypt: s => s } },
+        game: { oscSend: async () => {}, osc: { params: {} }, state: {}, isPrivate: () => false } };
+    const P = new Plugins(app);
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    try {
+        const l = await P.action('plug_list', {}, {});
+        assert.ok(l.bundled.includes('ghostnode-admin') && !l.bundled.includes('text-plugin'));
+        const r = await P.action('plug_inspect', { bundled: 'ghostnode-admin' }, {});
+        assert.deepStrictEqual(r.perms.map(x => x.id), ['ghostnode']);
+        await P.action('plug_install', { token: r.token }, {});
+        let it;
+        for (let i = 0; i < 60; i++) { it = P.list().find(x => x.id === 'ghostnode-admin'); if (it && it.ui.length) break; await wait(100); }
+        assert.ok(it.ui.some(w => w.id === 'login'), JSON.stringify(it.ui) + it.error);
+        assert.ok(it.ui.some(w => /VRC Nexus/.test(w.text || '')), 'nexus.app.name = VRC Nexus');
+        assert.strictEqual((await P.action('plug_gn_status', {}, {})).connected, false);
+    } finally { P.stop(); await wait(300); }
+});
+
 test('3.6.1: abgelaufene VRChat-Sitzung meldet automatisch ab (auch bei 401 von anderen Pfaden), Hinweis auf der Anmeldeseite', async () => {
     const { NexusApp } = require('../backend/app');
     const app = new NexusApp({ db: await openDatabase(null), crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
