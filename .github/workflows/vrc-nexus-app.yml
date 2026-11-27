@@ -238,7 +238,7 @@ jobs:
           TAG="vrc-nexus-v$VER"
           for i in 1 2 3 4 5 6 7 8 9 10; do gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 && break; sleep 60; done
           gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 || gh release create "$TAG" -R "$REPO" --target "$GITHUB_SHA" --title "VRC Nexus $VER" --notes "VRC Nexus $VER" || true
-          gh release upload "$TAG" -R "$REPO" --clobber app/dist/*.AppImage app/dist/*.tar.gz
+          for i in 1 2 3; do gh release upload "$TAG" -R "$REPO" --clobber app/dist/*.AppImage app/dist/*.tar.gz && break; [ $i = 3 ] && exit 1; sleep 30; done
 
   build-mac:
     needs: test
@@ -286,4 +286,4 @@ jobs:
           TAG="vrc-nexus-v$VER"
           for i in 1 2 3 4 5 6 7 8 9 10; do gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 && break; sleep 60; done
           gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 || gh release create "$TAG" -R "$REPO" --target "$GITHUB_SHA" --title "VRC Nexus $VER" --notes "VRC Nexus $VER" || true
-          gh release upload "$TAG" -R "$REPO" --clobber app/dist/*.dmg app/dist/*-mac-*.zip
+          for i in 1 2 3; do gh release upload "$TAG" -R "$REPO" --clobber app/dist/*.dmg app/dist/*-mac-*.zip && break; [ $i = 3 ] && exit 1; sleep 30; done

@@ -125,10 +125,13 @@ jobs:
             "| VRC-Nexus.streamDeckPlugin | Stream Deck plugin (double-click to install) |" "" \
             "The Windows files are still being built. Unsigned: Windows SmartScreen → “More info” → “Run anyway”; Android asks to allow installing from unknown sources." "" \
             "Build: ${GITHUB_SHA:0:7} · $(date -u '+%Y-%m-%d %H:%M') UTC")
-          if ! gh release view "$TAG" -R "$REPO" > /dev/null 2>&1; then
-            gh release create "$TAG" -R "$REPO" --target "$GITHUB_SHA" --title "VRC Nexus $VER" --notes "$NOTES" || sleep 15
-          fi
-          gh release upload "$TAG" -R "$REPO" --clobber VRC-Nexus-*-android.apk
+          # Desktop- und Android-Build laufen gleichzeitig: anlegen, sonst kurz warten, bis der andere es angelegt hat
+          for i in 1 2 3 4 5 6; do
+            gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 && break
+            gh release create "$TAG" -R "$REPO" --target "$GITHUB_SHA" --title "VRC Nexus $VER" --notes "$NOTES" && break
+            sleep 30
+          done
+          for i in 1 2 3; do gh release upload "$TAG" -R "$REPO" --clobber VRC-Nexus-*-android.apk && break; [ $i = 3 ] && exit 1; sleep 30; done
           # Notizen nur übernehmen, solange der Windows-Build sie noch nicht geschrieben hat (der kennt den Signatur-Stand)
           if ! gh release view "$TAG" -R "$REPO" --json assets -q '.assets[].name' | grep -q 'Setup.exe$'; then gh release edit "$TAG" -R "$REPO" --notes "$NOTES"; fi
 
@@ -172,7 +175,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
-          gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-Watch-*-wearos.apk
+          for i in 1 2 3 4 5 6; do gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-Watch-*-wearos.apk && break; [ $i = 6 ] && exit 1; sleep 30; done
 
   # 8.1.1: Zifferblatt „VRC Nexus“ (Watch Face Format, nur XML) – eigener Job, damit ein Fehler hier nie die Uhr-App aufhält
   watchface:
@@ -212,7 +215,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
-          gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-WatchFace-*-wearos.apk
+          for i in 1 2 3 4 5 6; do gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-WatchFace-*-wearos.apk && break; [ $i = 6 ] && exit 1; sleep 30; done
 
   # Nexus Pet (virtuelles Haustier, reines Java) – hängt mit am VRC-Nexus-Release, damit es auf der Webseite (Dashboard, Downloads, Changelog) erscheint
   pet:
@@ -254,7 +257,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
-          gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber Nexus-Pet-*.apk
+          for i in 1 2 3 4 5 6; do gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber Nexus-Pet-*.apk && break; [ $i = 6 ] && exit 1; sleep 30; done
 
   # 7.2: Twitch-Panel-Erweiterung als ZIP (zum Hochladen in der Twitch-Entwicklerkonsole) am Release
   twitch:
@@ -274,4 +277,4 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
-          gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-Twitch-Extension.zip
+          for i in 1 2 3 4 5 6; do gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-Twitch-Extension.zip && break; [ $i = 6 ] && exit 1; sleep 30; done
