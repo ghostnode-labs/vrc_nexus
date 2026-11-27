@@ -1930,3 +1930,26 @@ gelöst	unlinked	déliée	解除済み
 Nur meine Verbindungen (angenommene Anfragen)	Only my connections (accepted requests)	Seulement mes connexions (demandes acceptées)	つながりのみ（承認済みリクエスト）
 NSFW-Avatare	NSFW avatars	Avatars NSFW	NSFWアバター
 NSFW-Welten	NSFW worlds	Mondes NSFW	NSFWワールド
+💓 Puls über	💓 Heart rate above	💓 Pouls au-dessus de	💓 心拍数が次を超えた
+💙 Puls unter	💙 Heart rate below	💙 Pouls en dessous de	💙 心拍数が次を下回った
+🟢 Freund kommt online	🟢 Friend comes online	🟢 Un·e ami·e se connecte	🟢 フレンドがオンライン
+⚫ Freund geht offline	⚫ Friend goes offline	⚫ Un·e ami·e se déconnecte	⚫ フレンドがオフライン
+💤 Schlafmodus an	💤 Sleep mode on	💤 Mode sommeil activé	💤 スリープモードON
+⏰ Schlafmodus aus	⏰ Sleep mode off	⏰ Mode sommeil désactivé	⏰ スリープモードOFF
+🎵 Neuer Song	🎵 New song	🎵 Nouveau morceau	🎵 新しい曲
+🎛 Stream Deck / Knopf	🎛 Stream Deck / button	🎛 Stream Deck / bouton	🎛 Stream Deck / ボタン
+Name (leer = alle)	Name (empty = all)	Nom (vide = tous)	名前（空欄＝全員）
+▶ auslösen	▶ run	▶ lancer	▶ 実行
+🕒 nur	🕒 only	🕒 seulement	🕒 のみ
+Zeitfenster (leer = immer), auch über Mitternacht	Time window (empty = always), also across midnight	Plage horaire (vide = toujours), aussi après minuit	時間帯（空欄＝常時）、深夜をまたいでもOK
+💓 Puls-Spitze	💓 Heart rate peak	💓 Pic de pouls	💓 心拍ピーク
+😌 Wieder ruhig	😌 Calm again	😌 De nouveau calme	😌 落ち着いた
+🟢 Freund online	🟢 Friend online	🟢 Ami·e en ligne	🟢 フレンドオンライン
+🎵 Song-Ansage	🎵 Song announcement	🎵 Annonce du morceau	🎵 曲のお知らせ
+💤 Gute Nacht	💤 Good night	💤 Bonne nuit	💤 おやすみ
+🎛 Hype-Knopf	🎛 Hype button	🎛 Bouton hype	🎛 盛り上げボタン
+Kein getragener Avatar erkannt.	No worn avatar detected.	Aucun avatar porté détecté.	装着中のアバターが見つかりません。
+Noch keine Presets.	No presets yet.	Pas encore de préréglages.	プリセットはまだありません。
+In die Zwischenablage kopiert.	Copied to clipboard.	Copié dans le presse-papiers.	クリップボードにコピーしました。
+Puls zwischen 30 und 230 BPM angeben.	Enter a heart rate between 30 and 230 BPM.	Indique un pouls entre 30 et 230 BPM.	心拍数は30〜230 BPMで指定してください。
+Zeitfenster als HH:MM-HH:MM angeben (z. B. 18:00-23:00).	Enter the time window as HH:MM-HH:MM (e.g. 18:00-23:00).	Indique la plage horaire au format HH:MM-HH:MM (p. ex. 18:00-23:00).	時間帯はHH:MM-HH:MMで指定してください（例：18:00-23:00）。

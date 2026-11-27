@@ -2,7 +2,7 @@
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "UUID": "de.ghostnode.vrcnexus",
   "Name": "VRC Nexus",
-  "Version": "1.8.0.0",
+  "Version": "1.9.0.0",
   "Author": "GHOST NODE",
   "Description": "Steuert VRChat über die VRC-Nexus-App: Status, Chatbox, Avatar-Parameter, Eingaben, Rotator, Makros, Kamera, Avatar wechseln, Freunde beitreten/einladen, Benachrichtigungen, SteamVR-Overlay, Spracheingabe, Drehregler.",
   "Category": "VRC Nexus",
@@ -625,6 +625,27 @@
       ],
       "Tooltip": "Lässt die gekoppelte Nexus Watch vibrieren",
       "UUID": "de.ghostnode.vrcnexus.watchfind",
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/auto_icon",
+      "Name": "Automatik-Regel",
+      "States": [
+        {
+          "Image": "imgs/auto_key",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "imgs/auto_key_on",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Tooltip": "Löst eine Automatik-Regel aus VRC Nexus aus oder schaltet sie an/aus",
+      "UUID": "de.ghostnode.vrcnexus.auto",
       "Controllers": [
         "Keypad"
       ]

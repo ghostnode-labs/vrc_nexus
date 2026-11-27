@@ -130,6 +130,12 @@ function render(ctx) {
         case 'avpreset': if (!s.title) setTitle(ctx, wrapKey(((st.avpresets && st.avpresets.list) || []).find(p => p.id === s.id || p.name === s.id) ? ((st.avpresets.list.find(p => p.id === s.id || p.name === s.id)).name) : (s.id ? 'nicht für\ndiesen Avatar' : 'Preset'), 9, 2)); break;
         case 'warn': { const w = st.warn || { present: 0 }; setState(ctx, w.present ? 1 : 0); setTitle(ctx, w.present ? '⚠ ' + w.present + '\n' + wrapKey((w.names || [])[0] || '', 9, 1) : 'Warnliste\nok'); break; }
         case 'watchfind': if (!s.title) setTitle(ctx, st.watch && st.watch.devices ? 'Uhr\nfinden' : 'keine\nUhr'); break;
+        case 'auto': {   // 1.9: Automatik-Regel
+            const k = String(s.id || '').trim().toLowerCase(), r = (st.auto || []).find(x => x.id === s.id || x.name.toLowerCase() === k);
+            setState(ctx, r && r.on ? 1 : 0);
+            if (!s.title) setTitle(ctx, r ? wrapKey(r.name.replace(/^\W+\s*/u, ''), 9, 2) + (s.cmd === 'toggle' ? '\n' + (r.on ? 'an' : 'aus') : '') : (s.id ? 'Regel\nfehlt' : 'Regel'));
+            break;
+        }
         case 'status': {
             const cur = st.me && st.me.status;
             setState(ctx, cur === (s.status || 'join me') ? 1 : 0);
@@ -335,6 +341,7 @@ async function keyDown(ctx, action, s) {
         case 'avpreset': if (!s.id) throw new Error('Kein Preset eingetragen.'); return act('avpreset', { id: s.id });
         case 'warn': return act('open', { tab: 'warn' });
         case 'watchfind': return act('watch_find');
+        case 'auto': { if (!s.id) throw new Error('Keine Regel eingetragen.'); const r = await act('auto', { id: s.id, cmd: s.cmd || 'run' }); if (r.value !== undefined) setState(ctx, r.value ? 1 : 0); return r; }
         case 'launch': return act('launch');
         case 'rejoin': return act('rejoin');
         case 'open': return act('open', { tab: s.tab || '' });

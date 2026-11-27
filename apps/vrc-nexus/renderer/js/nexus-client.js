@@ -204,9 +204,10 @@
                         <div class="nc-row"><b class="small">Dann</b><span class="muted small">(Makro-Schritte, eine Zeile pro Schritt)</span></div>
                         <textarea name="script" rows="6" class="mono" placeholder="chatbox Willkommen {spieler_name}! 👋"></textarea>
                         <div class="nc-row"><label class="small">Pause danach <input type="number" name="cooldown" value="30" min="0" style="width:70px"> s</label>
-                            <label class="check small"><input type="checkbox" name="only_game" checked> nur wenn VRChat läuft</label></div>
+                            <label class="check small"><input type="checkbox" name="only_game" checked> nur wenn VRChat läuft</label>
+                            <label class="small">🕒 nur <input type="text" name="window" maxlength="11" placeholder="18:00-23:00" style="width:100px" title="Zeitfenster (leer = immer), auch über Mitternacht"></label></div>
                         <div class="nc-row"><button class="btn btn-sm btn-gold">💾 Speichern</button><button type="button" class="btn btn-sm" id="ncANew">＋ Neu</button></div>
-                        <p class="muted small">Zusätzliche Platzhalter: {spieler_name} {welt_name} {param_name} {param_wert} {afk_dauer} – und alle aus dem Rotator.</p>
+                        <p class="muted small">Zusätzliche Platzhalter: {spieler_name} {welt_name} {param_name} {param_wert} {afk_dauer} {puls} – und alle aus dem Rotator. Regeln mit „🎛 Stream Deck / Knopf“ startest du mit ▶ oder der Stream-Deck-Taste „Automatik-Regel“.</p>
                     </form>
                 </div>
             </div>
@@ -619,6 +620,13 @@
         ['🌙 Gute-Nacht', 'time', '23:30', 'chatbox 🌙 Gleich ist Schlafenszeit …\nstatus ask_me Bald weg', 0],
         ['📸 Danke fürs Foto', 'screenshot', '', 'chatbox 📸 Klick!', 30],
         ['🎭 Avatar-Info', 'avatar_change', '', 'wait 2\nchatbox 🎭 Neuer Look!', 30],
+        // 6.1
+        ['💓 Puls-Spitze', 'heart_high', '140', 'chatbox 💓 Puls bei {puls}! 😳', 120],
+        ['😌 Wieder ruhig', 'heart_low', '90', 'chatbox 😌 Puls wieder bei {puls}', 120],
+        ['🟢 Freund online', 'friend_online', '', 'notify 🟢 {spieler_name} ist online', 60],
+        ['🎵 Song-Ansage', 'music_change', '', 'chatbox 🎵 Jetzt: {musik}', 20],
+        ['💤 Gute Nacht', 'sleep_on', '', 'chatbox 💤 Schlafe jetzt – gute Nacht!', 0],
+        ['🎛 Hype-Knopf', 'manual', '', 'chatbox 🎉 HYPE! 🎉\ntoggle Wave', 5],
     ];
     let aData = null, aBound = false;
     function loadAuto() {
@@ -628,7 +636,7 @@
             f.trigger.addEventListener('change', () => { f.arg.placeholder = ((aData && aData.triggers[f.trigger.value]) || [])[1] || ''; f.arg.hidden = !f.arg.placeholder; });
             f.addEventListener('submit', e => {
                 e.preventDefault();
-                api('client_auto', { sub: 'auto_save', id: f.id.value, name: f.name.value, trigger: f.trigger.value, arg: f.arg.value, script: f.script.value, cooldown: f.cooldown.value, only_game: f.only_game.checked })
+                api('client_auto', { sub: 'auto_save', id: f.id.value, name: f.name.value, trigger: f.trigger.value, arg: f.arg.value, script: f.script.value, cooldown: f.cooldown.value, only_game: f.only_game.checked, window: f.window.value })
                     .then(d => { aData.rules = d.rules; renderAuto(); toast(d.msg); }).catch(fail);
             });
             $('#ncANew').addEventListener('click', () => { f.reset(); f.id.value = ''; f.trigger.dispatchEvent(new Event('change')); });
@@ -643,9 +651,9 @@
                 const b = e.target.closest('[data-a]');
                 if (!b) return;
                 const r = aData.rules.find(x => x.id === b.dataset.id);
-                if (b.dataset.a === 'edit') { f.id.value = r.id; f.name.value = r.name; f.trigger.value = r.trigger; f.trigger.dispatchEvent(new Event('change')); f.arg.value = r.arg; f.script.value = r.script; f.cooldown.value = r.cooldown; f.only_game.checked = r.only_game; return; }
+                if (b.dataset.a === 'edit') { f.id.value = r.id; f.name.value = r.name; f.trigger.value = r.trigger; f.trigger.dispatchEvent(new Event('change')); f.arg.value = r.arg; f.script.value = r.script; f.cooldown.value = r.cooldown; f.only_game.checked = r.only_game; f.window.value = r.window || ''; return; }
                 if (b.dataset.a === 'delete' && !confirm('Regel „' + r.name + '“ löschen?')) return;
-                api('client_auto', { sub: 'auto_' + b.dataset.a, id: r.id }).then(d => { if (d.rules) { aData.rules = d.rules; renderAuto(); } if (d.msg) toast(d.msg); }).catch(fail);
+                api('client_auto', { sub: 'auto_' + b.dataset.a, id: r.id })   // test, toggle, delete, run (6.1).then(d => { if (d.rules) { aData.rules = d.rules; renderAuto(); } if (d.msg) toast(d.msg); }).catch(fail);
             });
         }
         return api('client_auto', { sub: 'auto_list' }).then(d => {
@@ -660,7 +668,8 @@
         $('#ncAInfo').innerHTML = '🎵 Spielt gerade: <b>' + esc(d.music || '–') + '</b>' + (d.afk ? ' · 💤 AFK' : '') + ' · Regeln laufen im Hintergrund, solange VRC Nexus offen ist (auch im Infobereich).';
         $('#ncATpl').innerHTML = AUTO_TPL.map((t, i) => '<button type="button" class="chip" data-tpl="' + i + '">' + esc(t[0]) + '</button>').join('');
         $('#ncAList').innerHTML = d.rules.length ? d.rules.map(r => '<div class="nc-mrow' + (r.on ? '' : ' off') + '"><button type="button" class="chip' + (r.on ? ' on' : '') + '" data-a="toggle" data-id="' + esc(r.id) + '">' + (r.on ? 'an' : 'aus') + '</button>'
-            + '<b>' + esc(r.name) + '</b><span class="muted small">' + esc((d.triggers[r.trigger] || [r.trigger])[0]) + (r.arg ? ' · ' + esc(r.arg) : '') + '</span>'
+            + '<b>' + esc(r.name) + '</b><span class="muted small">' + esc((d.triggers[r.trigger] || [r.trigger])[0]) + (r.arg ? ' · ' + esc(r.arg) : '') + (r.window ? ' · 🕒 ' + esc(r.window) : '') + '</span>'
+            + (r.trigger === 'manual' ? '<button type="button" class="nc-link" data-a="run" data-id="' + esc(r.id) + '">▶ auslösen</button>' : '')
             + '<button type="button" class="nc-link" data-a="test" data-id="' + esc(r.id) + '">testen</button><button type="button" class="nc-link" data-a="edit" data-id="' + esc(r.id) + '">bearbeiten</button>'
             + '<button type="button" class="nc-x" data-a="delete" data-id="' + esc(r.id) + '">✕</button></div>').join('')
             : '<div class="muted small">Noch keine Regeln – nimm eine Vorlage unten.</div>';

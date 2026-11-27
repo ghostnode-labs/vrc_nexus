@@ -156,6 +156,9 @@
     <p class="hint">Was beim Schlafen passiert (Status, Chatbox, Spielzeug, Parameter), stellst du in VRC Nexus unter Komfort ein.</p></div>
 <div id="sec-avpreset" hidden><div class="row"><label>Preset</label><input type="text" data-s="id" placeholder="Name oder ID des Presets"></div>
     <p class="hint">Presets speicherst du in VRC Nexus unter OSC → Avatar-Presets. Die Taste zeigt den Namen, wenn das Preset zum getragenen Avatar gehört.</p></div>
+<div id="sec-auto" hidden><div class="row"><label>Regel</label><input type="text" data-s="id" placeholder="Name der Regel (wie in VRC Nexus)"></div>
+    <div class="row"><label>Drücken</label><select data-s="cmd"><option value="run">▶ Regel auslösen</option><option value="toggle">⏯ Regel an/aus schalten</option></select></div>
+    <p class="hint">Regeln legst du in VRC Nexus unter Spiel &amp; OSC → Automatik an. Für Tasten passt der Auslöser „🎛 Stream Deck / Knopf“; die Abklingzeit der Regel gilt auch hier.</p></div>
 <script>
 let sock = null, uuid = '', actionInfo = {}, settings = {}, globals = {};
 const $ = s => document.querySelector(s);

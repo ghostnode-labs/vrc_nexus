@@ -15,7 +15,18 @@ const TRIGGERS = {
     avatar_change: ['🎭 Avatar gewechselt', ''], afk_on: ['💤 AFK an', ''], afk_off: ['☀️ AFK aus', ''], param: ['🎚 Parameter = Wert', 'Name=Wert'],
     time: ['🕒 Uhrzeit', 'HH:MM'], interval: ['🔁 Alle N Minuten', 'Minuten'], vrc_start: ['▶️ VRChat gestartet', ''], vrc_quit: ['⏹️ VRChat beendet', ''], screenshot: ['📸 Screenshot', ''],
     warn_join: ['⚠ Gewarnter Spieler kommt', ''],
+    // 6.1: neue Auslöser
+    heart_high: ['💓 Puls über', 'BPM'], heart_low: ['💙 Puls unter', 'BPM'], friend_online: ['🟢 Freund kommt online', 'Name (leer = alle)'], friend_offline: ['⚫ Freund geht offline', 'Name (leer = alle)'],
+    sleep_on: ['💤 Schlafmodus an', ''], sleep_off: ['⏰ Schlafmodus aus', ''], music_change: ['🎵 Neuer Song', ''], manual: ['🎛 Stream Deck / Knopf', ''],
 };
+const HM = /^([01]?\d|2[0-3]):[0-5]\d$/;
+/** Zeitfenster „HH:MM-HH:MM“ (auch über Mitternacht, z. B. 22:00-06:00); leer = immer */
+function inWindow(w, d = new Date()) {
+    const m = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/.exec(str(w).replace(/\s/g, ''));
+    if (!m) return true;
+    const now = d.getHours() * 60 + d.getMinutes(), a = +m[1] * 60 + +m[2], b = +m[3] * 60 + +m[4];
+    return a <= b ? now >= a && now < b : now >= a || now < b;
+}
 const PLAYERS = ['Spotify.exe', 'foobar2000.exe', 'AIMP.exe', 'MusicBee.exe', 'vlc.exe', 'TIDAL.exe', 'Deezer.exe', 'Amazon Music.exe'];
 const IDLE_TITLES = /^(spotify( free| premium)?|foobar2000|aimp|musicbee|vlc media player|tidal|deezer|amazon music|n\/a|)$/i;
 
@@ -29,6 +40,7 @@ class Automation {
         this.lastPlayer = '';
         this.timer = null;
         this.firedMinute = '';
+        this.seen = { heart: 0, sleep: null, music: null, friends: null };   // 6.1: letzter Stand für Flanken-Auslöser
     }
     rules() { try { return JSON.parse(this.app.db.setting('auto_rules', '[]')) || []; } catch (e) { return []; } }
     write(l) { this.app.db.setSetting('auto_rules', JSON.stringify(l.slice(0, 100))); return this.rules(); }
@@ -40,9 +52,12 @@ class Automation {
         if (type === 'time' && !/^([01]?\d|2[0-3]):[0-5]\d$/.test(str(r.arg).trim())) throw new UserError('Uhrzeit als HH:MM angeben.');
         if (type === 'interval' && !(int(r.arg) >= 1)) throw new UserError('Mindestens 1 Minute.');
         if (type === 'param' && !/^[\w/\-. ]{1,64}=.+$/u.test(str(r.arg).trim())) throw new UserError('Parameter als Name=Wert angeben.');
+        if ((type === 'heart_high' || type === 'heart_low') && !(int(r.arg) >= 30 && int(r.arg) <= 230)) throw new UserError('Puls zwischen 30 und 230 BPM angeben.');
+        const win = str(r.window).replace(/\s/g, '');
+        if (win && !(win.includes('-') && win.split('-').length === 2 && win.split('-').every(x => HM.test(x)))) throw new UserError('Zeitfenster als HH:MM-HH:MM angeben (z. B. 18:00-23:00).');
         const l = this.rules();
-        const rule = { id: str(r.id) || 'r' + Date.now().toString(36), name: cut(str(r.name).trim(), 50) || TRIGGERS[type][0], trigger: type, arg: cut(str(r.arg).trim(), 80),
-            script: cut(str(r.script), 4000), cooldown: Math.max(0, Math.min(86400, int(r.cooldown))), only_game: !!r.only_game && r.only_game !== '0', on: r.on === undefined ? true : !!r.on && r.on !== '0' };
+        const rule = { id: str(r.id) || 'r' + Date.now().toString(36) + require('crypto').randomBytes(2).toString('hex'), name: cut(str(r.name).trim(), 50) || TRIGGERS[type][0], trigger: type, arg: cut(str(r.arg).trim(), 80),
+            script: cut(str(r.script), 4000), cooldown: Math.max(0, Math.min(86400, int(r.cooldown))), window: win, only_game: !!r.only_game && r.only_game !== '0', on: r.on === undefined ? true : !!r.on && r.on !== '0' };
         const i = l.findIndex(x => x.id === rule.id);
         if (i >= 0) l[i] = rule; else l.push(rule);
         return this.write(l);
@@ -56,6 +71,7 @@ class Automation {
         for (const r of this.rules()) {
             if (!r.on || r.trigger !== type || !test(r)) continue;
             if (r.only_game && !st.running) continue;
+            if (r.window && !inWindow(r.window)) continue;   // 6.1: nur im Zeitfenster
             const t = Date.now();
             if (r.cooldown && t - (this.last.get(r.id) || 0) < r.cooldown * 1000) continue;
             this.last.set(r.id, t);
@@ -105,6 +121,51 @@ class Automation {
             this.fire('interval', r => mins % Math.max(1, int(r.arg)) === 0);
         }
         if (Date.now() - this.musicAt > 10000) this.refreshMusic();
+        this.poll();
+    }
+    /** 6.1: Flanken-Auslöser aus dem App-Zustand (Puls, Schlafmodus, Musik, Freunde) – nur beim Wechsel, nie beim ersten Blick */
+    poll() {
+        const s = this.seen, a = this.app;
+        const h = a.heart && a.heart.active ? a.heart.bpm : 0;
+        if (h) {
+            const p = s.heart;
+            if (p) {
+                this.fire('heart_high', r => p <= int(r.arg) && h > int(r.arg), { puls: String(h) });
+                this.fire('heart_low', r => p >= int(r.arg) && h < int(r.arg), { puls: String(h) });
+            }
+        }
+        s.heart = h;
+        const sl = !!(a.comfort && a.comfort.sleep);
+        if (s.sleep !== null && sl !== s.sleep) this.fire(sl ? 'sleep_on' : 'sleep_off', () => true);
+        s.sleep = sl;
+        const mu = this.music || '';
+        if (s.music !== null && mu && mu !== s.music) this.fire('music_change', () => true, { musik: mu });
+        s.music = mu;
+        let fr = null; try { fr = a.vrc && a.vrc.friendList ? a.vrc.friendList() : null; } catch (e) { fr = null; }
+        if (!fr || !fr.length) return;
+        const now = new Map(fr.map(f => [f.id, f]));
+        if (s.friends) {
+            const match = (r, f) => !r.arg || str(f.name).toLowerCase().includes(r.arg.toLowerCase());
+            for (const f of fr) {
+                const was = s.friends.get(f.id);
+                if (was === undefined) continue;
+                if (was === 'offline' && f.state !== 'offline') this.fire('friend_online', r => match(r, f), { spieler_name: str(f.name) });
+                if (was !== 'offline' && f.state === 'offline') this.fire('friend_offline', r => match(r, f), { spieler_name: str(f.name) });
+            }
+        }
+        s.friends = new Map([...now].map(([id, f]) => [id, f.state]));
+    }
+    /** 6.1: Regel per Name oder ID von Hand / Stream Deck auslösen (Abklingzeit gilt, Zeitfenster nicht) */
+    find(key) { const k = str(key).trim().toLowerCase(); return this.rules().find(r => r.id === str(key).trim()) || this.rules().find(r => r.name.toLowerCase() === k); }
+    async runRule(key) {
+        const r = this.find(key);
+        if (!r) throw new UserError('Regel „' + str(key) + '“ nicht gefunden.');
+        if (!r.on) throw new UserError('Regel „' + r.name + '“ ist ausgeschaltet.');
+        const t = Date.now();
+        if (r.cooldown && t - (this.last.get(r.id) || 0) < r.cooldown * 1000) throw new UserError('Regel „' + r.name + '“ wartet noch (Abklingzeit).');
+        this.last.set(r.id, t);
+        const res = await this.app.macros.run(r.script, Object.assign({ welt_name: this.app.game.state.worldName || '' }, this.vars()));
+        return { msg: '▶ ' + r.name + ' (' + res.steps + ' Schritte)', rule: r.id };
     }
     start() {
         this.app.game.osc.onMessage = (a, args) => this.onOsc(a, args);
@@ -149,7 +210,8 @@ class Automation {
             case 'auto_list': return { rules: this.rules(), triggers: TRIGGERS, music: this.music, afk: !!this.afkSince };
             case 'auto_save': return { rules: this.save(input), msg: 'Regel gespeichert.' };
             case 'auto_delete': return { rules: this.remove(input.id) };
-            case 'auto_toggle': return { rules: this.toggle(input.id) };
+            case 'auto_toggle': { const r = this.find(input.id); return { rules: this.toggle(r ? r.id : input.id) }; }
+            case 'auto_run': return Object.assign({ rules: this.rules() }, await this.runRule(input.id || input.name));
             case 'auto_test': {
                 const r = this.rules().find(x => x.id === str(input.id));
                 if (!r) throw new UserError('Regel nicht gefunden.');
@@ -161,4 +223,4 @@ class Automation {
     }
 }
 
-module.exports = { Automation, TRIGGERS };
+module.exports = { Automation, TRIGGERS, inWindow };

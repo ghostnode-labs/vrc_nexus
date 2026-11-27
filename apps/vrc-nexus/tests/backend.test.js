@@ -4053,3 +4053,42 @@ test('6.0: 18+-Anfragen & Consent-Check – VRChat-IDs als Text, Bedingungen als
         assert.deepStrictEqual(sent.map(x => x.a), ['req_list', 'req_withdraw', 'sess_answer']);
     } finally { globalThis.fetch = old; }
 });
+
+test('6.1: Automatik 2.0 – Puls/Schlaf/Musik/Freunde als Auslöser (nur beim Wechsel), Zeitfenster, Regel per Taste', async () => {
+    const { Automation, inWindow } = require('../backend/automation');
+    let rules = '[]'; const ran = [];
+    const app = { db: { setting: () => rules, setSetting: (k, v) => { rules = v; } }, game: { state: { running: true, worldName: 'Testwelt' } }, tools: {},
+        macros: { run: async (script, vars) => { ran.push([script, vars]); return { steps: 1 }; } },
+        heart: { active: true, bpm: 80 }, comfort: { sleep: null }, vrc: { friendList: () => fl } };
+    let fl = [{ id: 'usr_1', name: 'Mira', state: 'offline' }, { id: 'usr_2', name: 'Kai', state: 'online' }];
+    const a = new Automation(app);
+    a.save({ name: 'Hoch', trigger: 'heart_high', arg: '120', script: 'chatbox {puls}' });
+    a.save({ name: 'Mira da', trigger: 'friend_online', arg: 'mir', script: 'notify hi' });
+    a.save({ name: 'Weg', trigger: 'friend_offline', script: 'notify weg' });
+    a.save({ name: 'Nacht', trigger: 'sleep_on', script: 'chatbox gn' });
+    a.save({ name: 'Song', trigger: 'music_change', script: 'chatbox {musik}' });
+    a.save({ name: 'Hype', trigger: 'manual', script: 'chatbox hype', cooldown: 60 });
+    assert.throws(() => a.save({ trigger: 'heart_low', arg: '5', script: 'notify x' }), /30 und 230/);
+    assert.throws(() => a.save({ trigger: 'manual', script: 'notify x', window: '25:00-1' }), /Zeitfenster/);
+    const names = () => ran.splice(0).map(r => r[0]);
+    a.music = 'Lied A'; a.poll();
+    assert.deepStrictEqual(names(), [], 'erster Blick löst nichts aus');
+    app.heart.bpm = 130; fl = [{ id: 'usr_1', name: 'Mira', state: 'active' }, { id: 'usr_2', name: 'Kai', state: 'offline' }]; app.comfort.sleep = { since: 1 }; a.music = 'Lied B';
+    a.poll(); await new Promise(r => setImmediate(r));
+    assert.deepStrictEqual(names().sort(), ['chatbox gn', 'chatbox {musik}', 'chatbox {puls}', 'notify hi', 'notify weg'].sort(), 'alle Wechsel lösen aus');
+    a.poll(); await new Promise(r => setImmediate(r));
+    assert.deepStrictEqual(names(), [], 'ohne Wechsel nichts doppelt');
+    const r = await a.action('auto_run', { id: 'hype' });
+    assert.match(r.msg, /Hype/); assert.deepStrictEqual(names(), ['chatbox hype'], 'per Name (Groß/klein egal) ausgelöst');
+    await assert.rejects(a.action('auto_run', { id: 'Hype' }), /Abklingzeit/);
+    await assert.rejects(a.action('auto_run', { id: 'gibtsnicht' }), /nicht gefunden/);
+    // Zeitfenster
+    const at = (h, m) => { const d = new Date(2026, 0, 1, h, m); return d; };
+    assert.ok(inWindow('18:00-23:00', at(20, 0)) && !inWindow('18:00-23:00', at(23, 30)), 'Zeitfenster am Abend');
+    assert.ok(inWindow('22:00-06:00', at(2, 0)) && !inWindow('22:00-06:00', at(12, 0)), 'über Mitternacht');
+    assert.ok(inWindow('', at(3, 0)), 'leer = immer');
+    a.save({ id: a.find('Nacht').id, name: 'Nacht', trigger: 'sleep_on', script: 'chatbox gn', window: '00:00-00:01' });
+    app.comfort.sleep = null; a.poll(); app.comfort.sleep = { since: 2 }; a.poll(); await new Promise(r => setImmediate(r));
+    const nowIn = inWindow('00:00-00:01');
+    assert.strictEqual(names().includes('chatbox gn'), nowIn, 'außerhalb des Zeitfensters kein Auslösen');
+});

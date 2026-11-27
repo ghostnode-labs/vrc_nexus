@@ -153,6 +153,9 @@ def draw(name, d, n, on=False):
         d.line(P((50, 34), (50, 50), (60, 58)), fill=GOLD, width=w)
         for x in (12, 88):
             d.arc(P((x - 10, 36), (x + 10, 64)), 300 if x > 50 else 120, 60 if x > 50 else 240, fill=GOLD, width=max(2, w - 3))
+    elif name == 'auto':
+        d.ellipse(P((14, 14), (86, 86)), outline=col, width=w)
+        d.polygon(P((56, 12), (30, 54), (50, 54), (42, 88), (72, 42), (52, 42), (62, 12)), fill=GOLD if not on else CYAN)
     elif name == 'plugin':
         d.polygon(P((50, 8), (88, 30), (88, 70), (50, 92), (12, 70), (12, 30)), outline=CYAN, width=w)
         d.line(P((34, 66), (34, 34), (66, 66), (66, 34)), fill=GOLD, width=w + 2)
@@ -166,12 +169,12 @@ def save(name, size, key, on=False, suffix=''):
 
 os.makedirs(OUT, exist_ok=True)
 for name in ('status', 'chatbox', 'param', 'input', 'rotator', 'friends', 'players', 'launch', 'rejoin', 'open', 'camera', 'macro', 'avatar', 'friend', 'notifs', 'overlay', 'speech', 'dial',
-             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance', 'heart', 'sleep', 'avpreset', 'warn', 'watchfind'):
+             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance', 'heart', 'sleep', 'avpreset', 'warn', 'watchfind', 'auto'):
     save(name, 20, False, suffix='_icon')
     save(name, 40, False, suffix='_icon@2x')
     save(name, 72, True, suffix='_key')
     save(name, 144, True, suffix='_key@2x')
-    if name in ('param', 'rotator', 'status', 'camera', 'macro', 'friend', 'notifs', 'overlay', 'speech', 'media', 'record', 'chatmods', 'sleep', 'warn'):
+    if name in ('param', 'rotator', 'status', 'camera', 'macro', 'friend', 'notifs', 'overlay', 'speech', 'media', 'record', 'chatmods', 'sleep', 'warn', 'auto'):
         save(name, 72, True, True, '_key_on')
         save(name, 144, True, True, '_key_on@2x')
 save('plugin', 28, False, suffix='_category')

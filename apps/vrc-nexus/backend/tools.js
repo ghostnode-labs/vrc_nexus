@@ -1102,6 +1102,7 @@ class Tools {
             heart: this.app.heart ? (() => { const h = this.app.heart.status(); return { on: h.cfg.source !== 'off', bpm: h.bpm, active: h.active, min: h.stats.min, max: h.stats.max, hist: h.hist.slice(-30).map(x => x[1]) }; })() : null,
             chatmods: this.app.chatmods ? (() => { const c = this.app.chatmods.cfg(); return { on: !!c.on, mods: Object.fromEntries(Object.entries(c.mods).map(([k, m]) => [k, !!m.on])) }; })() : null,
             comfort: this.app.comfort ? { sleeping: !!this.app.comfort.sleep, wake_at: this.app.comfort.sleep ? this.app.comfort.sleep.wake : 0 } : null,   // 5.4
+            auto: this.app.auto ? (() => { try { return this.app.auto.rules().map(r => ({ id: r.id, name: r.name, on: r.on, trigger: r.trigger })); } catch (e) { return null; } })() : null,   // 6.1
             avpresets: this.app.presets ? (() => { try { const l = this.app.presets.list(); return { avatar: l.avatar ? l.avatar.name : '', list: l.presets.map(p => ({ id: p.id, name: p.name })) }; } catch (e) { return null; } })() : null,
             watch: this.app.watch ? (() => { try { const c = this.app.watch.cfg(); return { on: !!c.on, devices: c.devices.length }; } catch (e) { return null; } })() : null,
             vars: (() => { try { const v = this.app.game.values(); return Object.fromEntries(Object.entries(v).filter(([, x]) => typeof x === 'string' || typeof x === 'number').slice(0, 150).map(([k, x]) => [k, String(x).slice(0, 80)])); } catch (e) { return {}; } })() };
@@ -1221,6 +1222,12 @@ class Tools {
                 if (!this.app.presets) throw new UserError('Presets fehlen.');
                 const r = await this.app.presets.action('preset_apply', { id: str(d.id || d.name) });
                 return Object.assign({ ok: true }, r);
+            }
+            case 'auto': {   // 6.1: Automatik-Regel auslösen oder an/aus
+                if (!this.app.auto) throw new UserError('Automatik fehlt.');
+                const key = str(d.id || d.name);
+                if (str(d.cmd) === 'toggle') { const r = this.app.auto.find(key); if (!r) throw new UserError('Regel nicht gefunden.'); this.app.auto.toggle(r.id); return { ok: true, value: !r.on, msg: (r.on ? '⏸ ' : '▶ ') + r.name + (r.on ? ' aus' : ' an') }; }
+                return Object.assign({ ok: true }, await this.app.auto.runRule(key));
             }
             case 'watch_find': {
                 if (!this.app.watch) throw new UserError('Nexus Watch gibt es nur in der Windows-App.');
