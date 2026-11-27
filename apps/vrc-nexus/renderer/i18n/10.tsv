@@ -2040,3 +2040,67 @@ Mini-Modus ein/aus	Mini mode on/off	Mode mini on/off	ミニモードON/OFF
 🎮 Status	🎮 Status	🎮 Statut	🎮 ステータス
 Offline – du siehst die zuletzt gespeicherten Daten. Abgleich, sobald wieder Netz da ist.	Offline – you're seeing the last saved data. Syncing as soon as you're back online.	Hors ligne – tu vois les dernières données enregistrées. Synchronisation dès le retour du réseau.	オフライン – 最後に保存したデータを表示中。接続が戻り次第同期します。
 Wieder online – gleiche ab …	Back online – syncing …	De nouveau en ligne – synchronisation …	オンラインに復帰 – 同期中 …
+AN	ON	ACTIVÉ	オン
+Aktuelle Spielzeug-Einstellungen (Geräte, Verknüpfungen, Puls, Stimme, Ampel, Edging) unter einem Namen sichern – z. B. „Solo“ und „Zu zweit“.	Save the current toy settings (devices, links, heart rate, voice, traffic light, edging) under a name – e.g. “Solo” and “Together”.	Enregistrer les réglages actuels des jouets (appareils, liaisons, pouls, voix, feu, edging) sous un nom – p. ex. « Solo » et « À deux ».	現在のトイ設定（デバイス、リンク、心拍、声、信号、エッジング）を名前を付けて保存 – 例：「ソロ」「ふたり」。
+Aktuelles sichern	Save current	Enregistrer l'actuel	現在を保存
+Alles löschen	Delete all	Tout supprimer	すべて削除
+Als Text kopieren	Copy as text	Copier en texte	テキストとしてコピー
+Anfrage(n) warten schon über 3 Tage auf deine Antwort – nach 14 Tagen laufen sie ab.	request(s) have been waiting for your answer for more than 3 days – they expire after 14 days.	demande(s) attendent ta réponse depuis plus de 3 jours – elles expirent après 14 jours.	件のリクエストが3日以上返答を待っています – 14日で期限切れになります。
+Automatisch aus nach	Switch off automatically after	Désactiver automatiquement après	自動オフまで
+Automatisch löschen nach	Delete automatically after	Supprimer automatiquement après	自動削除まで
+Ein Ablauf für alle Wege: gesprochen (Spracheingabe), als Geste (Avatar-Parameter), mit dem Knopf hier, einem Tastenkürzel, dem Stream Deck oder der Nexus Watch.	One procedure for every way: spoken (voice input), as a gesture (avatar parameter), with the button here, a shortcut, the Stream Deck or the Nexus Watch.	Une seule procédure pour tous les moyens : à voix haute (saisie vocale), par geste (paramètre d'avatar), avec ce bouton, un raccourci, le Stream Deck ou la Nexus Watch.	すべての方法で同じ動作：音声入力、ジェスチャー（アバターパラメーター）、このボタン、ショートカット、Stream Deck、Nexus Watch。
+Ein Schalter für alles 18+: keine Chatbox, kein Discord-Status, keine Welt auf der Uhr – und auf Wunsch auch keine 18+-Menüs und Meldungen.	One switch for all 18+: no chatbox, no Discord status, no world on the watch – and optionally no 18+ menus and notifications.	Un interrupteur pour tout le 18+ : pas de chatbox, pas de statut Discord, pas de monde sur la montre – et au choix plus de menus ni notifications 18+.	18+のすべてを1つのスイッチで：チャットボックスなし、Discordステータスなし、時計にワールド表示なし – 希望すれば18+メニューと通知も非表示。
+Eintrag	Entry	Entrée	項目
+Erinnerung	Reminder	Rappel	リマインダー
+Fantasie bearbeiten	Edit fantasy	Modifier le fantasme	ファンタジーを編集
+Fantasie löschen?	Delete fantasy?	Supprimer le fantasme ?	ファンタジーを削除しますか？
+Fantasie-Baukasten	Fantasy builder	Créateur de fantasmes	ファンタジービルダー
+Fantasien	Fantasies	Fantasmes	ファンタジー
+Geräte-Profile	Device profiles	Profils d'appareils	デバイスプロフィール
+Geste: Parameter	Gesture: parameter	Geste : paramètre	ジェスチャー：パラメーター
+Grenzen & Sicherheit	Limits & safety	Limites & sécurité	境界と安全
+Grenzen-Profil	Limits profile	Profil de limites	境界プロフィール
+Hilfe	Help	Aide	ヘルプ
+Hilfe & Erklärungen	Help & explanations	Aide & explications	ヘルプと説明
+Laden	Load	Charger	読み込む
+Name des Profils	Profile name	Nom du profil	プロフィール名
+Neue Fantasie	New fantasy	Nouveau fantasme	新しいファンタジー
+Noch keine Fantasien.	No fantasies yet.	Pas encore de fantasmes.	ファンタジーはまだありません。
+Notiz (optional)	Note (optional)	Note (facultatif)	メモ（任意）
+Plant gemeinsam: Ort, Stimmung, Rollen, Grenzen und Safeword – als Karte zum Teilen (Text oder Chatbox). Vor dem Start immer den Consent-Check machen.	Plan together: place, mood, roles, limits and safeword – as a card to share (text or chatbox). Always do the consent check before starting.	Planifiez ensemble : lieu, ambiance, rôles, limites et safeword – sous forme de carte à partager (texte ou chatbox). Toujours faire la vérif. du consentement avant de commencer.	一緒に計画：場所、雰囲気、役割、境界、セーフワード – 共有できるカードとして（テキストまたはチャットボックス）。始める前に必ず同意チェックを。
+Privat-Modus 2.0	Private mode 2.0	Mode privé 2.0	プライベートモード2.0
+Privat-Modus beenden	End private mode	Quitter le mode privé	プライベートモードを終了
+Protokoll (nur hier, verschlüsselt)	Log (only here, encrypted)	Journal (ici seulement, chiffré)	ログ（この端末のみ、暗号化）
+Protokoll komplett löschen?	Delete the whole log?	Supprimer tout le journal ?	ログをすべて削除しますか？
+Safeword jetzt	Safeword now	Safeword maintenant	今すぐセーフワード
+Safeword – überall gleich	Safeword – the same everywhere	Safeword – partout pareil	セーフワード – どこでも同じ
+Tagen	days	jours	日
+Tastenkürzel: Einstellungen → System → Tastenkürzel. Stream Deck: Aktion „safeword“.	Shortcut: Settings → System → Shortcuts. Stream Deck: action “safeword”.	Raccourci : Paramètres → Système → Raccourcis. Stream Deck : action « safeword ».	ショートカット：設定 → システム → ショートカット。Stream Deck：アクション「safeword」。
+Trag ein, was du magst, was vielleicht geht und was nie. Die Grenzen-Karte für die Chatbox wird daraus automatisch gefüllt. Nur auf diesem Gerät, verschlüsselt.	Enter what you like, what might be okay and what never is. The limits card for the chatbox is filled from it automatically. Only on this device, encrypted.	Indique ce que tu aimes, ce qui est peut-être ok et ce qui ne l'est jamais. La carte des limites pour la chatbox est remplie automatiquement. Seulement sur cet appareil, chiffré.	好きなこと、場合によってOKなこと、絶対NGなことを入力。チャットボックス用の境界カードは自動で作成されます。この端末のみ、暗号化。
+Was macht diese Rolle?	What does this role do?	Que fait ce rôle ?	この役割は何をする？
+Wort	Word	Mot	ワード
+z. B. Kuscheln	e.g. cuddling	p. ex. câlins	例：ハグ
+z. B. Mango	e.g. Mango	p. ex. Mango	例：マンゴー
+Berührung	Touch	Contact	タッチ
+Sprache & Rollen	Language & roles	Langage & rôles	言葉と役割
+Kleidung & Avatar	Clothing & avatar	Vêtements & avatar	服装とアバター
+Öffentlichkeit	Public	En public	公共の場
+Intensität	Intensity	Intensité	強さ
+Tabus	Taboos	Tabous	タブー
+Ampel auf Rot	Traffic light to red	Feu au rouge	信号を赤に
+Hinweis in die Chatbox	Notice in the chatbox	Message dans la chatbox	チャットボックスに通知
+Privat-Modus an	Private mode on	Mode privé activé	プライベートモードON
+18+-Menüs und -Bereiche ausblenden	Hide 18+ menus and areas	Masquer les menus et zones 18+	18+メニューとエリアを隠す
+18+-Meldungen stumm	Mute 18+ notifications	Couper les notifications 18+	18+通知をミュート
+nach Neustart weiter an	stay on after restart	reste actif après redémarrage	再起動後もON
+Panik, Safeword, Ampel, Privat-Modus und Szenen mitschreiben	Log panic, safeword, traffic light, private mode and scenes	Journaliser panique, safeword, feu, mode privé et scènes	パニック、セーフワード、信号、プライベートモード、シーンを記録
+Ort, z. B. Onsen-Welt	Place, e.g. onsen world	Lieu, p. ex. monde onsen	場所（例：温泉ワールド）
+Stimmung, z. B. verspielt	Mood, e.g. playful	Ambiance, p. ex. joueuse	雰囲気（例：遊び心）
+Grenzen für diese Szene	Limits for this scene	Limites pour cette scène	このシーンの境界
+Warum sehe ich das hier?	Why do I see this?	Pourquoi je vois ceci ?	なぜこれが表示される？
+Panik oder Safeword?	Panic or safeword?	Panique ou safeword ?	パニックかセーフワードか？
+Wie funktioniert der Consent-Check?	How does the consent check work?	Comment fonctionne la vérif. du consentement ?	同意チェックの仕組みは？
+Wer sieht meine Grenzen und Fantasien?	Who sees my limits and fantasies?	Qui voit mes limites et fantasmes ?	境界やファンタジーは誰が見られる？
+Was macht der Privat-Modus?	What does private mode do?	Que fait le mode privé ?	プライベートモードの役割は？
+Spielzeug reagiert nicht	Toys don't respond	Les jouets ne réagissent pas	トイが反応しない
+Mir geht es nicht gut	I'm not feeling okay	Je ne me sens pas bien	気分がよくない

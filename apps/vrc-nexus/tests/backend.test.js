@@ -4254,3 +4254,55 @@ test('6.5: Uhr – Meldungen mit Antwort-Knöpfen, nur mit gekoppelter Uhr, nich
     app.nsfw.private = true; assert.strictEqual(w.state().notes.length, 0, 'Privat-Modus: keine Meldungen'); app.nsfw.private = false;
     app.tools.stop(); if (w.stop) w.stop();
 });
+
+test('6.7: Grenzen & Sicherheit – Grenzen-Profil, Safeword über alle Wege, Privat-Modus 2.0, verschlüsseltes Protokoll, Geräte-Profile, Fantasien', async () => {
+    const { NsfwSafe } = require('../backend/nsfwsafe');
+    let store = {}, nsfwCfg = {}, toysCfg = { dev: { A: { max: 50 } }, links: {}, consent: { chat: true } }, chats = [], stopped = 0, consent = 'green';
+    const app = {
+        db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } },
+        nsfw: { private: false, need() {}, access: () => ({ unlocked: true }), saveCfg: c => Object.assign(nsfwCfg, c) },
+        toys: { scene: { name: 'x' }, scenes: { stop() {} }, async stopAll() { stopped++; }, async setConsent(l) { consent = l; }, cfg: () => toysCfg, saveCfg: c => { toysCfg = Object.assign({}, toysCfg, Object.fromEntries(Object.entries(c).map(([k, v]) => [k, typeof v === 'string' && v.startsWith('{') ? JSON.parse(v) : v]))); } },
+        game: { osc: { chatbox: async t => { chats.push(t); } } }, tools: { host: {} },
+    };
+    const crypt = { encrypt: s => 'enc:' + Buffer.from(s).toString('base64'), decrypt: s => Buffer.from(s.slice(4), 'base64').toString() };
+    const s = new NsfwSafe(app, crypt);
+    // Grenzen
+    const lim = await s.action('nsfwx_limits_save', { list: JSON.stringify([{ cat: 'Berührung', label: 'Kuscheln', level: 'yes' }, { cat: 'Tabus', label: 'Blut', level: 'no', note: 'nie' }, { cat: 'Quatsch', label: 'Neues', level: 'maybe' }, { label: '' }]) });
+    assert.strictEqual(lim.limits.length, 3); assert.strictEqual(lim.limits[2].cat, 'Allgemein', 'unbekannte Kategorie → Allgemein');
+    assert.deepStrictEqual([nsfwCfg.yes, nsfwCfg.no, nsfwCfg.maybe], ['Kuscheln', 'Blut', 'Neues'], 'Grenzen-Karte mit gefüllt');
+    assert.match((await s.action('nsfwx_limits_text', {})).text, /Tabus:\n  🔴 Blut – nie/);
+    assert.ok(store.nsfw_safe.startsWith('enc:') && !store.nsfw_safe.includes('Kuscheln'), 'verschlüsselt gespeichert');
+    // Safeword
+    await assert.rejects(s.action('nsfwx_cfg', { part: 'safeword', word: 'ab' }), /mindestens 3/);
+    await s.action('nsfwx_cfg', { part: 'safeword', word: 'Mango', param: 'NX/Safeword', param_value: '1', toys: '1', consent_red: '1', scenes: '1', chat: '1' });
+    assert.strictEqual(s.onSpeech('hallo wie geht es'), false);
+    assert.strictEqual(s.onSpeech('Mango! bitte stopp'), true, 'Wort in der Spracheingabe');
+    await new Promise(r => setTimeout(r, 20));
+    assert.ok(stopped === 1 && consent === 'red' && app.toys.scene === null && chats.some(c => /SAFEWORD/.test(c)));
+    s.onOsc('/avatar/parameters/NX/Safeword', [true]); await new Promise(r => setTimeout(r, 20));
+    assert.strictEqual(stopped, 1, 'doppelte Auslöser innerhalb 3 s zusammengefasst');
+    s.lastSw = 0; s.onOsc('/avatar/parameters/NX/Safeword', [true]); await new Promise(r => setTimeout(r, 20));
+    assert.strictEqual(stopped, 2, 'Geste löst aus');
+    s.lastSw = 0; app.nsfw.access = () => ({ unlocked: false });
+    assert.strictEqual(s.onSpeech('Mango'), false, 'ohne Freigabe kein Safeword per Sprache'); app.nsfw.access = () => ({ unlocked: true });
+    // Privat-Modus 2.0
+    await s.action('nsfwx_cfg', { part: 'private2', hide_ui: '1', mute_notes: '1', persist: '1', auto_off_min: '0' });
+    await s.action('nsfwx_private', { on: '1' });
+    assert.ok(app.nsfw.private && store.nsfw_private_persist === '1');
+    app.nsfw.private = false; s.restorePrivate(); assert.ok(app.nsfw.private, 'übersteht Neustart');
+    await s.action('nsfwx_private', { on: '0' }); assert.ok(!app.nsfw.private && store.nsfw_private_persist === '');
+    // Protokoll mit Auto-Löschen
+    const lg = await s.action('nsfwx_log', {});
+    assert.ok(lg.items.some(i => i.kind === 'safeword') && lg.items.some(i => i.kind === 'privat'));
+    s.load().log.unshift({ t: Date.now() - 40 * 86400000, kind: 'alt', text: 'x' });
+    assert.ok(!(await s.action('nsfwx_log', {})).items.some(i => i.kind === 'alt'), 'älter als 30 Tage gelöscht');
+    // Geräte-Profile
+    await s.action('nsfwx_dev_save', { name: 'Solo' });
+    toysCfg = Object.assign({}, toysCfg, { dev: { A: { max: 90 } } });
+    await s.action('nsfwx_dev_load', { name: 'Solo' });
+    assert.strictEqual(toysCfg.dev.A.max, 50, 'Profil zurückgeladen');
+    // Fantasien
+    await assert.rejects(s.action('nsfwx_fantasy_save', { title: 'X', roles: JSON.stringify([{ name: 'A' }]) }), /zwei Rollen/);
+    const f = (await s.action('nsfwx_fantasy_save', { title: 'Onsen-Abend', place: 'Onsen', roles: JSON.stringify([{ name: 'Gast', desc: 'neugierig' }, { name: 'Wirtin' }]), safeword: 'Mango' })).saved;
+    assert.match((await s.action('nsfwx_fantasy_text', { id: f.id })).text, /🎭 Onsen-Abend\n📍 Onsen\n👤 Gast: neugierig\n👤 Wirtin\n🛑 Safeword: Mango/);
+});

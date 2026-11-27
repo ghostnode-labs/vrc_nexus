@@ -95,6 +95,7 @@ class Automation {
     }
     /** OSC von VRChat */
     onOsc(address, args) {
+        if (this.app.nsfwsafe) { try { this.app.nsfwsafe.onOsc(address, args); } catch (e) { /* egal */ } }   // 6.7: Safeword-Geste
         if (address === '/avatar/change') { this.fire('avatar_change', () => true, { avatar_id: str(args[0]) }); return; }
         if (!address.startsWith('/avatar/parameters/')) return;
         const name = address.slice(19), v = args[0];

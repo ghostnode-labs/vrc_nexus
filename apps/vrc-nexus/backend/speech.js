@@ -210,6 +210,7 @@ class Speech {
             const text = this.clean(r.text), lang = r.lang || (c.lang !== 'auto' ? c.lang : '');
             if (!text) { this.last = ''; return { text: '', sent: '' }; }
             this.last = text;
+            if (!opts.noSend && this.app.nsfwsafe && this.app.nsfwsafe.onSpeech(text)) return { text, sent: '', lang, safeword: true };   // 6.7
             // Sprachbefehle: passt ein gespeicherter Satz, wird der Parameter gesendet (und – wenn eingestellt – nichts in die Chatbox)
             const hit = opts.noSend ? null : this.matchCmd(text);
             if (hit) {

@@ -26,7 +26,7 @@ const THEMES = {
 };
 const BG_KINDS = ['none', 'gradient', 'image'], BG_MAX = 3 * 1024 * 1024;
 /** 5.2.3: was ein gekoppeltes Handy am PC auslösen darf (feste Liste, 🔞-Aktionen prüfen ihre Freigabe selbst) */
-const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfw_allclear', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'nsfw_consent', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise',
+const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'nsfw_allclear', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'nsfw_consent', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise',
     'toys_pattern', 'toys_pattern_stop', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop', 'toys3_get', 'toys3_game', 'toys3_hold', 'toys3_game_stop',
     'comfort_get', 'comfort_sleep', 'preset_list', 'preset_apply', 'client_macros', 'client_macro_run', 'client_osc', 'hr_get']);
 const DISC_PORT = 17873, MAX_DEV = 5, MAX_BODY = 4096;
@@ -236,6 +236,7 @@ class Watch {
             case 'consent': if (!['green', 'yellow', 'red'].includes(str(b.light))) throw new UserError('Ampel: green, yellow oder red.'); r = await post('toys_consent', { light: str(b.light) }); break;
             case 'toys_stop': r = await post('toys_stop', { device: 'all' }); break;
             case 'note_reply': r = await this.noteReply(b.id, str(b.reply)); break;   // 6.5
+            case 'safeword': r = await post('nsfwx_safeword', { source: 'Uhr' }); break;   // 6.7
             case 'theme': this.saveCfg({ theme: str(b.theme) }); r = { msg: '🎨 ' + THEMES[str(b.theme)].name }; break;
             case 'sleep': r = await post('comfort_sleep', { on: b.on === false || b.on === '0' ? '0' : '1', wake: int(b.wake) || 0 }); break;
             default: throw new UserError('Unbekannte Aktion.');

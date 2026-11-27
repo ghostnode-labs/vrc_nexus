@@ -251,6 +251,7 @@ class Tools {
         this.log = this.log.slice(0, 50);
         const text = (str(title) + ' ' + str(body)).toLowerCase(), list = k => str(s[k]).split(',').map(x => x.trim().toLowerCase()).filter(x => x.length >= 2);
         if (list('notify.mute').some(w => text.includes(w))) return;   // 6.3: nie melden
+        if (this.app.nsfw && this.app.nsfw.private && this.app.nsfwsafe && this.app.nsfwsafe.cfg().private2.mute_notes && /🔞|18\+|nsfw|💌|🤝/i.test(text)) return;   // 6.7: Privat-Modus 2.0
         if (webhookKind && s['int.webhook'] && s['int.webhook_' + webhookKind]) this.webhook(title + (body ? '\n' + body : ''));
         if (this.quiet() && !list('notify.vip').some(w => text.includes(w))) return;   // 6.3: VIPs auch in der Nicht-stören-Zeit
         if (this.app.watch && this.app.watch.note) this.app.watch.note(title, body, meta);   // 6.5: auf die Nexus Watch (mit Antwort-Knöpfen)
@@ -1253,6 +1254,7 @@ class Tools {
                 if (!hit) throw new UserError('Keine Regel für „' + (g.state.worldName || 'keine Welt') + '“.');
                 return Object.assign({ ok: true, macro: hit[1] }, await this.app.macros.run(hit[1]));
             }
+            case 'safeword': return Object.assign({ ok: true }, await this.app.post({ act: 'nsfwx_safeword', source: 'Stream Deck' }, {}));   // 6.7
             case 'watch_find': {
                 if (!this.app.watch) throw new UserError('Nexus Watch gibt es nur in der Windows-App.');
                 return Object.assign({ ok: true }, await this.app.watch.actionUi('watch_find', {}));

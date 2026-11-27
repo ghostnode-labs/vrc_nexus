@@ -27,6 +27,7 @@ const need = action => NEED[action] !== undefined ? NEED[action] : 3;
 /** feste Aktionen für Tastenkürzel: [Einstellung, Beschriftung, Aktion der Client-API, Daten] */
 const HOTKEYS = [
     ['keys.panic', '🚨 Panik (NSFW ganz aus)', 'nsfw_panic_full'],
+    ['keys.safeword', '🛑 Safeword (18+)', 'safeword'],
     ['keys.rotator', '🔄 Chatbox-Rotator an/aus', 'rotator'],
     ['keys.sleep', '💤 Schlafmodus an/aus', 'sleep'],
     ['keys.mute', '🔇 Stummschalten (VRChat)', 'input', { name: 'Voice' }],   // kurzer Druck wie die Taste in VRChat
@@ -88,6 +89,7 @@ class ClientTools {
         if (!h) throw new UserError('Unbekanntes Tastenkürzel.');
         const [, label, action, data] = h, host = this.app.tools.host || {};
         if (action === 'nsfw_panic_full') return await this.app.post({ act: 'nsfw_panic_full' }, {});
+        if (action === 'safeword') return await this.app.post({ act: 'nsfwx_safeword', source: 'Tastenkürzel' }, {});
         if (action === 'overlay') { if (!host.overlayToggle) throw new UserError('Overlay nur in der Windows-App.'); return { msg: label, on: await host.overlayToggle() }; }
         if (action === 'show') { if (host.show) host.show(); return { msg: label }; }
         if (action === 'mini') { if (!host.miniToggle) throw new UserError('Mini-Modus nur in der Windows-App.'); return { msg: host.miniToggle() ? '🪟 Mini-Modus an' : '🪟 Mini-Modus aus' }; }

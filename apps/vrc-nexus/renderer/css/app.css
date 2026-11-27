@@ -1483,3 +1483,14 @@ html[data-scheme="light"] body.hi-contrast { --text-muted: #2f3b48; }
 .cbx-bubble-wrap small { margin-top: 6px; }
 .cbx-ph, .cbx-tpl { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 8px; }
 .cbx-ph > span { margin-left: 6px; }
+
+/* 6.7: Grenzen & Sicherheit, Fantasien, Privat-Modus 2.0 */
+.nx4-cat { margin: 6px 0; } .nx4-cat summary { cursor: pointer; padding: 4px 0; }
+.nx4-lim { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 4px 10px; }
+.nx4-lim input[type=text] { flex: 1; min-width: 120px; }
+.nx4-lv { display: flex; gap: 2px; }
+.nx4-log { max-height: 260px; overflow: auto; font-size: .82rem; display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+.nx4-f input[type=text] { width: 100%; margin: 4px 0; }
+.nx4-help { margin: 6px 0; } .nx4-help summary { cursor: pointer; }
+body.nx-priv-hide .ns-tab, body.nx-priv-hide .cm-nsfw-only, body.nx-priv-hide [data-pane="nsfw"], body.nx-priv-hide .ns-head-panic ~ .ns-only { display: none !important; }
+.nx-priv-off { position: fixed; right: 14px; bottom: 14px; z-index: 300; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--accent-gold); background: rgba(0,0,0,.7); font-size: 1.2rem; cursor: pointer; }

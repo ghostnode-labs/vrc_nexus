@@ -281,6 +281,7 @@ public class MainActivity extends Activity {
         if (!err.isEmpty()) text("⚠ " + err, 10, GOLD, false);
         boolean armed = System.currentTimeMillis() - panicArmed < 3000;
         button(armed ? "🚨 NOCHMAL = PANIK" : "🚨 PANIK", RED, v -> panic());
+        button("🛑 Safeword", GOLD, v -> { buzz(120); act("safeword", null, null); });   // 6.7: gleicher Ablauf wie am PC
         if (s.optBoolean("private")) button("✅ Entwarnung", GREEN, v -> act("allclear", null, null));
         else button("🕶 Privat-Modus", CYAN, v -> act("private", "on", true));
         JSONObject t = s.optJSONObject("toys");

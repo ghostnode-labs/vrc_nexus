@@ -715,6 +715,7 @@ class Toys {
     consentFactor() { return this.consent === 'red' ? 0 : this.consent === 'yellow' ? this.cfg().consent.yellow / 100 : 1; }
     async setConsent(light) {
         if (!['green', 'yellow', 'red'].includes(light)) throw new UserError('Ampel: green, yellow oder red.');
+        if (this.consent !== light && this.app.nsfwsafe) this.app.nsfwsafe.log('ampel', { green: '🟢', yellow: '🟡', red: '🔴' }[light]);   // 6.7
         this.consent = light;
         const c = this.cfg().consent, g = this.app.game;
         if (light === 'red') await this.stopAll();

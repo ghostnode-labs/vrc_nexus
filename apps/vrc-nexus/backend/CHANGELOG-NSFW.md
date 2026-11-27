@@ -2,6 +2,17 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 6.7.0 – Limits & safety, fantasies, help
+
+- 📋 **Limits profile 2.0** (🔞 → *🛡 Limits & safety*): entries in categories (general, touch, language & roles, toys, clothing & avatar, public, intensity, taboos), each 🟢 yes / 🟡 maybe / 🔴 no with your own note. The chatbox limits card is filled from it automatically; copy it as text. Stored encrypted on this device only.
+- 🛑 **Safeword – the same everywhere:** one procedure whether you say your word (voice input – it never goes into the chatbox), use a gesture (avatar parameter, e.g. from the action menu), the button, a global shortcut, the Stream Deck or the Nexus Watch (new 🛑 button on the emergency page). Choose what it does: stop toys, end the scene, traffic light to red, chatbox notice, private mode. Two triggers within 3 seconds count as one.
+- 🕶 **Private mode 2.0:** optionally hides all 18+ menus and areas (a small 🕶 button stays to end it), mutes 18+ notifications, switches itself off after a chosen time and can survive a restart.
+- 📓 **Log only on this device, encrypted:** panic, safeword, traffic light, private mode and device profiles – deleted automatically after 1–365 days, or all at once.
+- 🎮 **Device profiles:** save the current toy setup (devices, links, heart rate, voice, traffic light, edging) under a name like “Solo” or “Together” and switch with one click.
+- 🎭 **Fantasy builder:** title, place, mood, 2–4 roles with descriptions, limits and safeword – as a card to copy or send to the chatbox. Always do the consent check before starting.
+- ❓ **Help & explanations** right in the 18+ area (panic vs. safeword, consent check, privacy, toys, getting help).
+- ⏳ **Request reminder:** 18+ requests that have been waiting for your answer for more than 3 days are pointed out (app and Nexus Web) – they expire after 14 days.
+
 ### New in 6.2.0 – Scene builder
 
 - 🧱 **Scene builder** (🔥 Lust & PCS → *Scene builder*): build your own scenes from steps – a pattern (also your own patterns) with strength, speed and duration, or a ⏸ pause. Up to 30 steps, reorder them, save up to 50 scenes on this device only.

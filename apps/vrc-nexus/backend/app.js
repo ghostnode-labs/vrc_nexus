@@ -92,6 +92,8 @@ class NexusApp {
         this.license = new (require('./license').License)(this);   // 5.6: Lizenzen 2.0
         if (opts.licenseTimer) this.license.start();   // nur im echten Programm (main.js / Handy), nie in Tests
         this.nsfwcol = new (require('./nsfwcol').NsfwCollection)(this, opts.crypt);   // NSFW 3.1: eigene Sammlung
+        this.nsfwsafe = new (require('./nsfwsafe').NsfwSafe)(this, opts.crypt);   // 6.7: Grenzen & Sicherheit
+        try { this.nsfwsafe.restorePrivate(); } catch (e) { /* egal */ }
         this.toys = opts.mobile ? null : new (require('./toys').Toys)(this);
         this.remote = opts.mobile ? null : new (require('./remote').Remote)(this);
         this.toyremote = opts.mobile ? null : new (require('./toyremote').ToyRemote)(this);
@@ -261,6 +263,7 @@ class NexusApp {
             if (act.startsWith('lic_')) return await this.license.action(act, input);
             if (act.startsWith('nsfw_')) return await this.nsfw.action(act, input);
             if (act.startsWith('nsfwc_')) return await this.nsfwcol.action(act, input);
+            if (act.startsWith('nsfwx_')) return await this.nsfwsafe.action(act, input);
             if (act.startsWith('admin_')) return await this.admin.action(act, input);
             if (act.startsWith('toys_') || act.startsWith('toys3_')) { if (!this.toys) throw new UserError('Nur in der Windows-App.'); return await this.toys.action(act, input); }
             if (act.startsWith('tremote_')) { if (!this.toyremote) throw new UserError('Nur in der Windows-App.'); return await this.toyremote.action(act, input); }

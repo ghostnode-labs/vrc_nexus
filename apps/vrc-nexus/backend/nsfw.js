@@ -206,6 +206,7 @@ class Nsfw {
     /** Panik: sicherer Avatar, Chatbox aus, Privat-Modus, Spielzeug stopp */
     async panic() {
         const c = this.cfg(), done = [];
+        if (this.app.nsfwsafe) this.app.nsfwsafe.log('panik', 'ausgelöst');   // 6.7: lokales Protokoll
         if (c.panic_toys && this.app.toys) { await this.app.toys.stopAll().catch(() => {}); done.push('Spielzeug gestoppt'); }
         else if (this.app.toys && this.app.toys.scenes && this.app.toys.scenes.run) { this.app.toys.scenes.stop(); await this.app.toys.stopAll().catch(() => {}); done.push('Szene beendet'); }   // 6.2: laufende Szene endet immer
         if (this.app.toyremote && this.app.toyremote.cfg().recv_on) { this.app.toyremote.panic(); done.push('Fernsteuerung aus'); }
@@ -265,7 +266,7 @@ class Nsfw {
 
     state() {
         const a = this.access(), c = this.cfg();
-        const out = { access: a, private: this.private, features: FEATURES, roles: ROLES };
+        const out = { access: a, private: this.private, features: FEATURES, roles: ROLES, priv_hide: this.app.nsfwsafe ? !!this.app.nsfwsafe.cfg().private2.hide_ui : false };
         if (a.owner) { const k = this.ownerKey(); Object.assign(out, { owner_key: k ? k.pub : '', key_known: !!(k && TRUSTED.includes(k.pub)), issued: this.issued(), permlog: this.permLog().slice(0, 50), lic_synced: int(this.app.db.setting('lic_synced', '0')) }); }
         if (!a.unlocked) return out;
         Object.assign(out, { cfg: c, current_avatar: str(this.acc() && this.acc().me && this.acc().me.currentAvatar), toys: this.app.toys ? this.app.toys.status() : null, tremote: this.app.toyremote ? this.app.toyremote.status() : null, remote: this.app.remote ? this.app.remote.status() : null });
@@ -305,7 +306,7 @@ class Nsfw {
             case 'nsfw_panic': return await this.panic();
             case 'nsfw_panic_full': return await this.panicFull();
             case 'nsfw_allclear': return await this.allClear();
-            case 'nsfw_private': { this.private = input.on === undefined ? !this.private : input.on === '1' || input.on === true; if (this.private && this.app.tools.rpc) this.app.tools.rpc.setActivity(null); return { ok: true, private: this.private, msg: this.private ? '🕶 Privat-Modus an' : 'Privat-Modus aus' }; }
+            case 'nsfw_private': { const want = input.on === undefined ? !this.private : input.on === '1' || input.on === true; if (this.app.nsfwsafe) this.app.nsfwsafe.setPrivate(want); else this.private = want; /* 6.7: Auto-Aus & Neustart */ if (this.private && this.app.tools.rpc) this.app.tools.rpc.setActivity(null); return { ok: true, private: this.private, msg: this.private ? '🕶 Privat-Modus an' : 'Privat-Modus aus' }; }
             case 'nsfw_avatar': return await this.toggleAvatar(input.i);
             case 'nsfw_chat': {
                 const t = cut(str(input.text).replace(/\s+/g, ' ').trim(), 144);

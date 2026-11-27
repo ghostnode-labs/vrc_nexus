@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.7.0
+- 🔞 *** (details in the app under “About” when NSFW is unlocked)
+- ⌨ New global shortcut slot for the 🔞 area; Stream Deck / client API action `safeword`
+
 ### New in 6.5.0 – Watch & phone
 - ⌚ **Notifications on the Nexus Watch with reply buttons:** watched friends coming online, “Join Me”, public instances and other alerts appear as watch notifications – 🚪 *Go there* (invite to yourself), 🙋 *Ask for an invite* or 👍. They also arrive in the background while the watch sends your heart rate; never in private mode. Switch off on the watch: Settings → “Meldungen vom PC”
 - ⌚ Watch home screen shows the time and how many friends are in game
