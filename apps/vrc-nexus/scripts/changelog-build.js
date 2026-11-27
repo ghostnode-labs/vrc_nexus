@@ -14,7 +14,7 @@ function parse(file) {
     const out = [];
     let cur = null;
     for (const line of md) {
-        const m = /^### (?:Neu|New) in (v?\d{8}\.\d{1,2}|\d+\.\d+\.\d+)\s*(?:[–-]\s*(.*))?$/.exec(line);   // ab „10“: v20261127.1
+        const m = /^### (?:Neu|New) in (v?20\d\d\.?\d\d\.?\d\d\.\d{1,2}|\d+\.\d+\.\d+)\s*(?:[–-]\s*(.*))?$/.exec(line);   // ab „10“: v2026.11.27.1
         if (m) { cur = { version: V.norm(m[1]), title: (m[2] || '').trim(), body: [] }; out.push(cur); continue; }
         if (cur && /^#{1,3} /.test(line)) cur = null;          // nächster Abschnitt, der kein Changelog ist
         if (cur) cur.body.push(line);

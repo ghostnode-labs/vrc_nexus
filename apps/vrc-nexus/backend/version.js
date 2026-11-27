@@ -2,7 +2,7 @@
 /*
  * Versionsnummern – zwei Schemata:
  *   • bis 9.x: Major.Minor.Patch (je Stelle 0–99), z. B. 8.0.1
- *   • ab „10“ (Entscheidung 27.11.2026): Datum + Nummer des Tages, angezeigt als v20261127.1
+ *   • ab „10“ (Entscheidung 27.11.2026): Datum + Nummer des Tages, angezeigt als v2026.11.27.1 (Jahr.Monat.Tag.Nummer)
  *     Intern (package.json, Tags, Dateinamen): 2026.1127.1 = Jahr.MonatTag.Nummer
  *     – Windows erlaubt je Teil der Datei-Version höchstens 65535, deshalb nicht 20261127 am Stück;
  *     – MonatTag ohne führende Null (5. Januar = 105), damit es gültiges SemVer bleibt und richtig sortiert.
@@ -20,17 +20,17 @@ function isDate(v) {
     return d <= new Date(y, mo, 0).getDate();
 }
 function valid(v) { return OLD.test(String(v || '')) && parts(v)[0] <= 9 || isDate(v); }
-/** Anzeige: alt unverändert, neu als v20261127.1 */
+/** Anzeige: alt unverändert, neu als v2026.11.27.1 */
 function display(v) {
     const s = String(v || '').replace(/^vrc-nexus-/, '').replace(/^v/, '');
     if (!isDate(s)) return s;
     const [y, md, n] = parts(s);
-    return 'v' + y + String(Math.floor(md / 100)).padStart(2, '0') + String(md % 100).padStart(2, '0') + '.' + n;
+    return 'v' + y + '.' + String(Math.floor(md / 100)).padStart(2, '0') + '.' + String(md % 100).padStart(2, '0') + '.' + n;
 }
-/** Eingabe in beiden Schreibweisen → intern („v20261127.1“ → „2026.1127.1“) */
+/** Eingabe in jeder Schreibweise → intern („v2026.11.27.1“ oder „v20261127.1“ → „2026.1127.1“) */
 function norm(v) {
     const s = String(v || '').trim().replace(/^vrc-nexus-/, '').replace(/^v/, '');
-    const m = /^(20\d\d)(\d\d)(\d\d)\.([1-9]\d?)$/.exec(s);
+    const m = /^(20\d\d)\.?(\d\d)\.?(\d\d)\.([1-9]\d?)$/.exec(s);
     return m ? m[1] + '.' + (+m[2] * 100 + +m[3]) + '.' + +m[4] : s;
 }
 /** a neuer als b? (beide Schemata gemischt; neu ist immer neuer als alt) */

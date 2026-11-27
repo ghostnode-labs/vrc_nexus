@@ -54,8 +54,8 @@
     const dur = ts => ts ? hm(now() - ts) : '';
     const clock = ts => new Date(ts * 1000).toLocaleString(nxLoc(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     const isoDate = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString(nxLoc()); };
-    /** Versions-Anzeige: alt unverändert, ab „10“ Datums-Version 2026.1127.1 → v20261127.1 */
-    const ver = v => { const m = /^(20\d\d)\.([1-9]\d{2,3})\.([1-9]\d?)$/.exec(String(v || '')); return m ? 'v' + m[1] + String(Math.floor(m[2] / 100)).padStart(2, '0') + String(m[2] % 100).padStart(2, '0') + '.' + m[3] : String(v || ''); };
+    /** Versions-Anzeige: alt unverändert, ab „10“ Datums-Version 2026.1127.1 → v2026.11.27.1 */
+    const ver = v => { const m = /^(20\d\d)\.([1-9]\d{2,3})\.([1-9]\d?)$/.exec(String(v || '')); return m ? 'v' + m[1] + '.' + String(Math.floor(m[2] / 100)).padStart(2, '0') + '.' + String(m[2] % 100).padStart(2, '0') + '.' + m[3] : String(v || ''); };
     const isoDT = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString(nxLoc(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
     const num = n => Number(n || 0).toLocaleString(nxLoc());
     const launch = loc => 'vrchat://launch?ref=vrc-nexus&id=' + encodeURIComponent(loc);
