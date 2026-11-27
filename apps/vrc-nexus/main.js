@@ -40,6 +40,7 @@ try { prefs = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8')); } catch (e) { pre
 if (prefs['sys.hw_accel'] === false) app.disableHardwareAcceleration();
 
 let win = null, tray = null, nexus = null, db = null, quitting = false, vr = null;
+let miniWin = null;   // 6.4: Mini-Modus
 const { VrOverlay } = require('./vroverlay');
 
 /** Sitzungs-Cookie verschlüsseln: Windows-Schlüsselspeicher (DPAPI) über Electron safeStorage */
@@ -154,10 +155,26 @@ const host = {
         }
     },
     show: () => { if (win) { win.show(); win.focus(); } },
+    /** 6.4: Mini-Modus – kleines, immer sichtbares Fenster mit Puls, Welt und Schnellaktionen */
+    miniToggle: on => {
+        if (miniWin && !miniWin.isDestroyed()) { if (on === true) { miniWin.show(); return true; } miniWin.close(); miniWin = null; return false; }
+        if (on === false) return false;
+        const b = prefs.mini_bounds || {};
+        miniWin = new BrowserWindow({ width: b.width || 300, height: b.height || 230, x: b.x, y: b.y, minWidth: 220, minHeight: 150, frame: false, alwaysOnTop: true, skipTaskbar: true, resizable: true,
+            backgroundColor: '#040609', title: 'VRC Nexus Mini', icon: path.join(RENDERER, 'icon.png'), webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false } });
+        miniWin.setAlwaysOnTop(true, 'screen-saver');
+        miniWin.loadURL('app://nexus/mini.html');
+        miniWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+        miniWin.webContents.on('will-navigate', e => e.preventDefault());
+        const keep = () => { try { prefs.mini_bounds = miniWin.getBounds(); fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs)); } catch (e) { /* egal */ } };
+        miniWin.on('moved', keep); miniWin.on('resized', keep);
+        miniWin.on('closed', () => { miniWin = null; });
+        return true;
+    },
     applySettings: (changed, s) => {
         if (changed.includes('*') || changed.some(k => k.startsWith('keys.'))) host.applyKeys(nexus && nexus.ctools ? nexus.ctools.hotkeys() : []);
         if (vr && (changed.includes('*') || changed.some(k => /^vr\.(overlay|space|fly|turn|walk)/.test(k)))) vr.apply(s);   // inkl. vr.overlay_hud* und 3.3 VR-Bewegung
-        prefs = { 'sys.hw_accel': s['sys.hw_accel'], 'sys.close_to_tray': s['sys.close_to_tray'], 'sys.start_minimized': s['sys.start_minimized'], 'adv.devtools': s['adv.devtools'] };
+        prefs = { mini_bounds: prefs.mini_bounds, 'sys.hw_accel': s['sys.hw_accel'], 'sys.close_to_tray': s['sys.close_to_tray'], 'sys.start_minimized': s['sys.start_minimized'], 'adv.devtools': s['adv.devtools'] };
         try { fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs)); } catch (e) { /* egal */ }
         if (tray && changed.includes('sys.autostart')) tray.setContextMenu(trayMenu());
     },
@@ -193,6 +210,7 @@ function trayMenu() {
     return Menu.buildFromTemplate([
         { label: 'VRC Nexus öffnen', click: () => { win.show(); win.focus(); } },
         { type: 'separator' },
+        { label: '🪟 Mini-Modus', click: () => host.miniToggle() },
         { label: '👥 Spielerliste', click: () => host.showTab('players') },
         { label: '🧰 Werkzeuge', click: () => host.showTab('tools') },
         { label: '▶ VRChat starten', click: () => nexus && nexus.tools.launch('').catch(e => notify('VRC Nexus', e.message)) },

@@ -2,7 +2,7 @@
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "UUID": "de.ghostnode.vrcnexus",
   "Name": "VRC Nexus",
-  "Version": "1.9.0.0",
+  "Version": "1.10.0.0",
   "Author": "GHOST NODE",
   "Description": "Steuert VRChat über die VRC-Nexus-App: Status, Chatbox, Avatar-Parameter, Eingaben, Rotator, Makros, Kamera, Avatar wechseln, Freunde beitreten/einladen, Benachrichtigungen, SteamVR-Overlay, Spracheingabe, Drehregler.",
   "Category": "VRC Nexus",
@@ -646,6 +646,38 @@
       ],
       "Tooltip": "Löst eine Automatik-Regel aus VRC Nexus aus oder schaltet sie an/aus",
       "UUID": "de.ghostnode.vrcnexus.auto",
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/multi_icon",
+      "Name": "Mehrfach-Aktion",
+      "States": [
+        {
+          "Image": "imgs/multi_key",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Tooltip": "Mehrere VRC-Nexus-Aktionen nacheinander, mit Pausen",
+      "UUID": "de.ghostnode.vrcnexus.multi",
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "Icon": "imgs/worldkey_icon",
+      "Name": "Welt-Taste",
+      "States": [
+        {
+          "Image": "imgs/worldkey_key",
+          "FontSize": 10,
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Tooltip": "Je nach Welt ein anderes Makro",
+      "UUID": "de.ghostnode.vrcnexus.worldkey",
       "Controllers": [
         "Keypad"
       ]

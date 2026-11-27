@@ -26,6 +26,13 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.4.0 – Mini mode, chatbox studio, macro blocks, Stream Deck 2.0
+- 🪟 **Mini mode:** a small always-on-top window with world, players, time there, heart rate, friends in game and music, plus quick buttons (rotator, sleep, mute, clear chatbox, panic when NSFW is on). Open it from the tray, the command palette or your own shortcut; size and position are remembered
+- 🎨 **Chatbox studio** (Game & OSC → Chatbox): live preview as a VRChat speech bubble with character count, all placeholders as tap-to-insert chips, ready-made templates (now playing, world info, clock, AFK, greeting, countdown, status)
+- 🧱 **Macro blocks:** build macros from blocks (chatbox, parameter, toggle, wait, input, camera, status, avatar …) – edit, move up/down, duplicate, delete; the text view is still there
+- 🎛 **Stream Deck plugin 1.10:** new keys **Multi action** (several Nexus actions in a row with pauses) and **World key** (a different macro depending on the world you are in)
+- 🔌 Client API: new actions `multi` and `worldkey` (main key / “everything” level only)
+
 ### New in 6.3.2 – Android: app menu
 - 📱 **Menu as an app grid:** “Menu” now opens a full-screen grid of square tiles like an app drawer, sorted into sections (quick access, general, friends, community, game & control, content, tools & stats, system) – with a search field
 - ⚙ **Settings** is always the first tile in quick access (it was missing before)

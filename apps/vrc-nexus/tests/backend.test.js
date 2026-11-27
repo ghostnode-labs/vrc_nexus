@@ -4202,3 +4202,30 @@ test('6.3: Client-Werkzeuge – App-Schlüssel mit Rechten (HTTP + WebSocket), T
     assert.ok(p.mem_mb > 0 && p.uptime_s >= 0 && 'cpu' in p && 'lag_ms' in p);
     ct.stop(); app.tools.stop();
 });
+
+test('6.4: Mehrfach-Aktion, Welt-Taste, Mini-Modus-Daten', async () => {
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir() } });
+    app.game.osc.stopListen();
+    // Mehrfach-Aktion: Schritte nacheinander, Pause, keine Verschachtelung
+    const r = await app.tools.apiAction('multi', { steps: [{ action: 'sleep' }, { action: 'sleep', wait: 0.05 }] });
+    assert.strictEqual(r.steps, 2); assert.ok(!app.comfort.sleep, 'zweimal umgeschaltet = wieder aus');
+    await assert.rejects(app.tools.apiAction('multi', { steps: [{ action: 'multi' }] }), /Ungültiger Schritt/);
+    await assert.rejects(app.tools.apiAction('multi', { steps: [] }), /Keine Schritte/);
+    await assert.rejects(app.tools.apiAction('multi', { steps: Array(21).fill({ action: 'sleep' }) }), /20 Schritte/);
+    assert.ok(!app.ctools.allowed('avatar', 'multi') && !app.ctools.allowed('avatar', 'worldkey'), 'nur der Hauptschlüssel / „alles“');
+    // Welt-Taste
+    const ran = []; app.macros.run = async s => { ran.push(s); return { steps: 1 }; };
+    app.game.state.worldName = 'The Black Cat Club';
+    await app.tools.apiAction('worldkey', { map: 'club = Club-Gruß\n* = Standard' });
+    app.game.state.worldName = 'Home Sweet Home';
+    await app.tools.apiAction('worldkey', { map: 'club = Club-Gruß; * = Standard' });
+    assert.deepStrictEqual(ran, ['Club-Gruß', 'Standard']);
+    await assert.rejects(app.tools.apiAction('worldkey', { map: 'club = X' }), /Keine Regel/);
+    // Mini-Modus
+    const m = app.ctools.miniState();
+    assert.ok('world' in m && 'bpm' in m && 'friends' in m && m.nsfw === false);
+    await assert.rejects(app.ctools.action('ctools_mini', {}), /nur in der Windows-App/);
+    app.tools.stop();
+});

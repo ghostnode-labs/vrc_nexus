@@ -1231,6 +1231,27 @@ class Tools {
                 if (str(d.cmd) === 'toggle') { const r = this.app.auto.find(key); if (!r) throw new UserError('Regel nicht gefunden.'); this.app.auto.toggle(r.id); return { ok: true, value: !r.on, msg: (r.on ? '⏸ ' : '▶ ') + r.name + (r.on ? ' aus' : ' an') }; }
                 return Object.assign({ ok: true }, await this.app.auto.runRule(key));
             }
+            // 6.4: Stream Deck 2.0
+            case 'multi': {   // Mehrfach-Aktion: Schritte nacheinander, optional mit Pause (wait in s); keine verschachtelten Mehrfach-Aktionen
+                let steps = d.steps; if (typeof steps === 'string') { try { steps = JSON.parse(steps); } catch (e) { steps = null; } }
+                if (!Array.isArray(steps) || !steps.length) throw new UserError('Keine Schritte.');
+                if (steps.length > 20) throw new UserError('Höchstens 20 Schritte.');
+                const out = [];
+                for (const s of steps) {
+                    const a = str(s && s.action);
+                    if (!a || a === 'multi' || a === 'worldkey') throw new UserError('Ungültiger Schritt: ' + (a || '(leer)'));
+                    const w = Math.max(0, Math.min(30, Number(s.wait) || 0));
+                    if (w) await new Promise(r => setTimeout(r, w * 1000));
+                    out.push(Object.assign({ action: a }, await this.apiAction(a, Object.assign({}, s, { action: undefined, wait: undefined }))));
+                }
+                return { ok: true, steps: out.length, msg: '⚡ ' + out.length + ' Schritte' };
+            }
+            case 'worldkey': {   // Welt-Taste: je nach aktueller Welt ein anderes Makro („Welt-Teil = Makro“, eine Zeile je Regel, „* = …“ sonst)
+                const world = str(g.state.worldName).toLowerCase(), rules = str(d.map).split(/\r?\n|;/).map(l => l.split('=')).filter(x => x.length >= 2).map(([k, ...v]) => [k.trim().toLowerCase(), v.join('=').trim()]);
+                const hit = rules.find(([k]) => k && k !== '*' && world.includes(k)) || rules.find(([k]) => k === '*');
+                if (!hit) throw new UserError('Keine Regel für „' + (g.state.worldName || 'keine Welt') + '“.');
+                return Object.assign({ ok: true, macro: hit[1] }, await this.app.macros.run(hit[1]));
+            }
             case 'watch_find': {
                 if (!this.app.watch) throw new UserError('Nexus Watch gibt es nur in der Windows-App.');
                 return Object.assign({ ok: true }, await this.app.watch.actionUi('watch_find', {}));

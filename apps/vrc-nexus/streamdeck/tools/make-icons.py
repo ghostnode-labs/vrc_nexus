@@ -153,6 +153,15 @@ def draw(name, d, n, on=False):
         d.line(P((50, 34), (50, 50), (60, 58)), fill=GOLD, width=w)
         for x in (12, 88):
             d.arc(P((x - 10, 36), (x + 10, 64)), 300 if x > 50 else 120, 60 if x > 50 else 240, fill=GOLD, width=max(2, w - 3))
+    elif name == 'multi':
+        for i, y in enumerate((22, 46, 70)):
+            d.rounded_rectangle(P((16, y - 9), (84, y + 9)), radius=4 * s, outline=col, width=max(2, w - 2), fill=(GOLD + (60,)) if i == 1 else None)
+            d.polygon(P((24, y - 5), (32, y), (24, y + 5)), fill=GOLD)
+    elif name == 'worldkey':
+        d.ellipse(P((14, 14), (86, 86)), outline=col, width=w)
+        d.arc(P((32, 14), (68, 86)), 90, 270, fill=col, width=max(2, w - 2)); d.arc(P((32, 14), (68, 86)), 270, 90, fill=col, width=max(2, w - 2))
+        d.line(P((14, 50), (86, 50)), fill=col, width=max(2, w - 2))
+        d.ellipse(P((58, 58), (90, 90)), fill=GOLD)
     elif name == 'auto':
         d.ellipse(P((14, 14), (86, 86)), outline=col, width=w)
         d.polygon(P((56, 12), (30, 54), (50, 54), (42, 88), (72, 42), (52, 42), (62, 12)), fill=GOLD if not on else CYAN)
@@ -169,7 +178,7 @@ def save(name, size, key, on=False, suffix=''):
 
 os.makedirs(OUT, exist_ok=True)
 for name in ('status', 'chatbox', 'param', 'input', 'rotator', 'friends', 'players', 'launch', 'rejoin', 'open', 'camera', 'macro', 'avatar', 'friend', 'notifs', 'overlay', 'speech', 'dial',
-             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance', 'heart', 'sleep', 'avpreset', 'warn', 'watchfind', 'auto'):
+             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance', 'heart', 'sleep', 'avpreset', 'warn', 'watchfind', 'auto', 'multi', 'worldkey'):
     save(name, 20, False, suffix='_icon')
     save(name, 40, False, suffix='_icon@2x')
     save(name, 72, True, suffix='_key')

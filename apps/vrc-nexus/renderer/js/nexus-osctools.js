@@ -4,6 +4,7 @@
     if (!UI) return;
     const esc = UI.esc, api = (a, d) => UI.api(a, d), toast = (m, bad) => UI.toast(m, bad);
     const $ = s => document.querySelector(s);
+    const T = s => (window.t ? window.t(s) : s);   // 6.4
     const fmtT = ms => new Date(ms).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
     const ago = ms => { const s = Math.round((Date.now() - ms) / 1000); return s < 60 ? 'gerade eben' : s < 3600 ? 'vor ' + Math.round(s / 60) + ' min' : s < 86400 ? 'vor ' + Math.round(s / 3600) + ' h' : new Date(ms).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE'); };
     const fail = box => e => { if (box) box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; };
@@ -16,10 +17,28 @@
         if (!wired) wire();
         api('cbx_get').then(d => { cbx = d; renderCbx(); }).catch(fail(box));
     }
+    // 6.4: Chatbox-Studio – Sprechblase wie in VRChat, Platzhalter zum Antippen, Vorlagen
+    const PH = [['🕒', ['zeit', 'uhr', 'datum', 'wochentag']], ['🌐', ['welt', 'zugang', 'region', 'spieler', 'dauer', 'spieler_neu']], ['🎭', ['avatar', 'name', 'status', 'statustext']],
+        ['👥', ['freunde', 'freunde_online']], ['🎵', ['musik', 'musik_titel', 'musik_kuenstler', 'musik_zeit', 'musik_balken']], ['💤', ['afk', 'afk_zeit']], ['🎲', ['zufall:A|B|C', 'countdown:2026-12-24 18:00']]];
+    const TPL = [['🎵 Jetzt läuft', '🎵 {musik_titel} – {musik_kuenstler}/n{musik_balken} {musik_zeit}'], ['🌐 Welt-Info', '🌐 {welt} · 👥 {spieler}/n⏱ seit {dauer}'],
+        ['🕒 Uhr & Datum', '🕒 {uhr} · {wochentag}, {datum}'], ['💤 AFK', '💤 Kurz AFK – seit {afk_zeit}/nBin gleich zurück!'], ['👋 Begrüßung', '{zufall:Hey|Hi|Moin} {spieler_neu}! 👋'],
+        ['🎄 Countdown', '🎄 Noch {countdown:2026-12-24 18:00} bis Heiligabend!'], ['🎮 Status', '{status} · {statustext}/n👥 {freunde_online} Freunde online']];
+    function studioHtml() {
+        return '<details class="cbx-studio" open><summary><b>🎨 ' + esc(T('Chatbox-Studio')) + '</b></summary>'
+            + '<div class="cbx-bubble-wrap"><div class="cbx-bubble" id="cbxBubble" data-no-i18n><span class="muted">' + esc(T('Vorschau wie in VRChat …')) + '</span></div><small id="cbxBubbleLen"></small></div>'
+            + '<div class="cbx-ph">' + PH.map(([ic, l]) => '<span>' + ic + '</span>' + l.map(k => '<button type="button" class="chip" data-cph="' + esc(k) + '">{' + esc(k.split(':')[0]) + '}</button>').join('')).join('') + '</div>'
+            + '<div class="cbx-tpl"><span class="muted small">' + esc(T('Vorlagen:')) + '</span>' + TPL.map((t, i) => '<button type="button" class="chip" data-ctpl="' + i + '">' + esc(T(t[0])) + '</button>').join('') + '</div></details>';
+    }
+    function bubble(text, len) {
+        const b = $('#cbxBubble'), n = $('#cbxBubbleLen'); if (!b) return;
+        b.innerHTML = text ? esc(text).replace(/\n/g, '<br>') : '<span class="muted">' + esc(T('Vorschau wie in VRChat …')) + '</span>';
+        if (n) { n.textContent = text ? len + ' / 144' + (len > 144 ? ' – ' + T('wird aufgeteilt') : '') : ''; n.className = len > 144 ? 'cbx-over' : 'muted'; }
+    }
+    function insertAt(f, s) { const a = f.selectionStart ?? f.value.length, b = f.selectionEnd ?? a; f.value = f.value.slice(0, a) + s + f.value.slice(b); f.focus(); f.selectionStart = f.selectionEnd = a + s.length; f.dispatchEvent(new Event('input', { bubbles: true })); }
     function renderCbx() {
         const box = $('#cbxBox');
         if (!box) return;
-        box.innerHTML = '<h4>⚡ Schnelltexte</h4>'
+        box.innerHTML = studioHtml() + '<h4>⚡ Schnelltexte</h4>'
             + (cbx.quick.length ? '<div class="cbx-quick">' + cbx.quick.map(q => '<span class="cbx-q"><button type="button" class="chip" data-cq="' + esc(q.id) + '" title="' + esc(q.text) + ' – Klick sendet, Umschalt+Klick ins Feld">' + esc(q.label || q.text.slice(0, 28)) + '</button><button type="button" class="cbx-x" data-cqdel="' + esc(q.id) + '" title="Löschen">✕</button></span>').join('') + '</div>'
                 : '<p class="muted small">Noch keine – Text oben eingeben und „＋ Schnelltext“.</p>')
             + '<div class="nc-row"><input type="text" id="cbxLabel" maxlength="30" placeholder="Name (optional)"><button type="button" class="btn btn-sm" data-cbx="quick">＋ Schnelltext aus Feld</button></div>'
@@ -35,8 +54,8 @@
         const f = field(), pv = $('#cbxPrev');
         if (!f || !pv) return;
         const t = f.value;
-        if (!/\{\w+/.test(t) && t.length <= 144) { pv.hidden = true; return; }
-        api('cbx_preview', { text: t }).then(d => {
+        if (!t.trim()) { bubble('', 0); pv.hidden = true; return; }
+        api('cbx_preview', { text: t }).then(d => { bubble(d.text, d.len); if (!/\{\w+/.test(t) && t.length <= 144) { pv.hidden = true; return; }
             pv.hidden = false;
             pv.innerHTML = '<span class="muted">Vorschau:</span> <span data-no-i18n>' + esc(d.text) + '</span> <b class="' + (d.len > 144 ? 'cbx-over' : '') + '">' + d.len + ' / 144' + (d.len > 144 ? ' – wird aufgeteilt' : '') + '</b>';
         }).catch(() => { pv.hidden = true; });
@@ -47,6 +66,9 @@
         if (f) f.addEventListener('input', () => { clearTimeout(prevTimer); prevTimer = setTimeout(preview, 300); });
         document.addEventListener('click', e => {
             if (!e.target.closest('#cbxBox')) return;
+            const ph = e.target.closest('[data-cph]'), tp = e.target.closest('[data-ctpl]');   // 6.4: Studio
+            if (ph && field()) return insertAt(field(), '{' + ph.dataset.cph + '}');
+            if (tp && field()) { field().value = TPL[+tp.dataset.ctpl][1]; field().dispatchEvent(new Event('input', { bubbles: true })); return field().focus(); }
             const q = e.target.closest('[data-cq]');
             if (q) {
                 const it = cbx.quick.find(x => x.id === q.dataset.cq);

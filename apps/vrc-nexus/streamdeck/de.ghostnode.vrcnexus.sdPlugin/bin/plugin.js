@@ -130,6 +130,9 @@ function render(ctx) {
         case 'avpreset': if (!s.title) setTitle(ctx, wrapKey(((st.avpresets && st.avpresets.list) || []).find(p => p.id === s.id || p.name === s.id) ? ((st.avpresets.list.find(p => p.id === s.id || p.name === s.id)).name) : (s.id ? 'nicht für\ndiesen Avatar' : 'Preset'), 9, 2)); break;
         case 'warn': { const w = st.warn || { present: 0 }; setState(ctx, w.present ? 1 : 0); setTitle(ctx, w.present ? '⚠ ' + w.present + '\n' + wrapKey((w.names || [])[0] || '', 9, 1) : 'Warnliste\nok'); break; }
         case 'watchfind': if (!s.title) setTitle(ctx, st.watch && st.watch.devices ? 'Uhr\nfinden' : 'keine\nUhr'); break;
+        case 'multi': if (!s.title) setTitle(ctx, (s.steps ? String(s.steps).split('\n').filter(l => l.trim()).length : 0) + ' ' + 'Schritte'); break;   // 1.10
+        case 'worldkey': { if (s.title) break; const w = String((st.game && st.game.world) || '').toLowerCase(), rules = String(s.map || '').split(/\n|;/).map(l => l.split('=')).filter(x => x.length >= 2);
+            const hit = rules.find(([k]) => k.trim() && k.trim() !== '*' && w.includes(k.trim().toLowerCase())) || rules.find(([k]) => k.trim() === '*'); setTitle(ctx, wrapKey(hit ? hit.slice(1).join('=').trim() : 'keine\nRegel', 9, 2)); break; }
         case 'auto': {   // 1.9: Automatik-Regel
             const k = String(s.id || '').trim().toLowerCase(), r = (st.auto || []).find(x => x.id === s.id || x.name.toLowerCase() === k);
             setState(ctx, r && r.on ? 1 : 0);
@@ -341,6 +344,19 @@ async function keyDown(ctx, action, s) {
         case 'avpreset': if (!s.id) throw new Error('Kein Preset eingetragen.'); return act('avpreset', { id: s.id });
         case 'warn': return act('open', { tab: 'warn' });
         case 'watchfind': return act('watch_find');
+        case 'multi': {   // eine Zeile je Schritt: „aktion feld=wert …“, „wait 1.5“ = Pause vor dem nächsten Schritt
+            const steps = []; let wait = 0;
+            for (const l of String(s.steps || '').split('\n').map(x => x.trim()).filter(Boolean)) {
+                const [a, ...rest] = l.split(/\s+/);
+                if (a === 'wait') { wait += Number(rest[0]) || 0; continue; }
+                const st = { action: a, wait }; wait = 0;
+                for (const kv of rest.join(' ').match(/(\w+)=("[^"]*"|\S+)/g) || []) { const i = kv.indexOf('='); st[kv.slice(0, i)] = kv.slice(i + 1).replace(/^"|"$/g, ''); }
+                steps.push(st);
+            }
+            if (!steps.length) throw new Error('Keine Schritte eingetragen.');
+            return act('multi', { steps });
+        }
+        case 'worldkey': if (!s.map) throw new Error('Keine Regeln eingetragen.'); return act('worldkey', { map: s.map });
         case 'auto': { if (!s.id) throw new Error('Keine Regel eingetragen.'); const r = await act('auto', { id: s.id, cmd: s.cmd || 'run' }); if (r.value !== undefined) setState(ctx, r.value ? 1 : 0); return r; }
         case 'launch': return act('launch');
         case 'rejoin': return act('rejoin');

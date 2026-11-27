@@ -2223,7 +2223,7 @@
         ['📋', 'Zwischenablage prüfen', () => readClipboard(false)],
         // 6.3: Schnellaktionen
         ['💤', 'Schlafmodus an/aus', () => palAct('sleep')], ['🔄', 'Chatbox-Rotator an/aus', () => palAct('rotator')], ['🔇', 'Stummschalten (VRChat)', () => palAct('mute')],
-        ['🧹', 'Chatbox leeren', () => palAct('chatbox_clear')], ['⚙', 'Einstellungen öffnen', () => tab('settings')],
+        ['🧹', 'Chatbox leeren', () => palAct('chatbox_clear')], ['🪟', 'Mini-Modus ein/aus', () => palAct('mini')], ['⚙', 'Einstellungen öffnen', () => tab('settings')],
         ...TABS.map(t => ['➡', 'Reiter: ' + $('[data-tab=' + t + ']').textContent.trim(), () => tab(t)]),
     ];
     function palAct(k) { api('ctools_hotkey', { key: 'keys.' + k }).then(r => toast((r && r.msg) || '✓')).catch(e => toast(e.message, true)); }

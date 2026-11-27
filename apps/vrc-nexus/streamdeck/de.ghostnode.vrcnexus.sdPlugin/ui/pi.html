@@ -156,6 +156,10 @@
     <p class="hint">Was beim Schlafen passiert (Status, Chatbox, Spielzeug, Parameter), stellst du in VRC Nexus unter Komfort ein.</p></div>
 <div id="sec-avpreset" hidden><div class="row"><label>Preset</label><input type="text" data-s="id" placeholder="Name oder ID des Presets"></div>
     <p class="hint">Presets speicherst du in VRC Nexus unter OSC → Avatar-Presets. Die Taste zeigt den Namen, wenn das Preset zum getragenen Avatar gehört.</p></div>
+<div id="sec-multi" hidden><div class="row"><label>Schritte</label><textarea data-s="steps" rows="6" placeholder="status status=&quot;join me&quot; desc=Komm vorbei&#10;wait 1&#10;chatbox text=&quot;Bin da!&quot;&#10;avpreset id=Party"></textarea></div>
+    <p class="hint">Eine Zeile je Schritt: Aktion und Felder (<code>feld=wert</code>, Leerzeichen in <code>"…"</code>). <code>wait 1.5</code> = Pause davor. Aktionen wie in der Client-API (chatbox, status, param, toggle, input, avpreset, sleep, auto, macro …), höchstens 20.</p></div>
+<div id="sec-worldkey" hidden><div class="row"><label>Regeln</label><textarea data-s="map" rows="5" placeholder="Club = Club-Begrüßung&#10;Home = Zuhause-Modus&#10;* = Standard-Makro"></textarea></div>
+    <p class="hint">Eine Zeile je Welt: <code>Teil des Weltnamens = Makro-Name</code>, <code>*</code> = alle anderen Welten. Die Taste zeigt, welches Makro gerade dran ist.</p></div>
 <div id="sec-auto" hidden><div class="row"><label>Regel</label><input type="text" data-s="id" placeholder="Name der Regel (wie in VRC Nexus)"></div>
     <div class="row"><label>Drücken</label><select data-s="cmd"><option value="run">▶ Regel auslösen</option><option value="toggle">⏯ Regel an/aus schalten</option></select></div>
     <p class="hint">Regeln legst du in VRC Nexus unter Spiel &amp; OSC → Automatik an. Für Tasten passt der Auslöser „🎛 Stream Deck / Knopf“; die Abklingzeit der Regel gilt auch hier.</p></div>

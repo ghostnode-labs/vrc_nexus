@@ -5,6 +5,7 @@
     const $ = (s, r) => (r || root).querySelector(s);
     const $$ = (s, r) => [...(r || root).querySelectorAll(s)];
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const T = s => (window.t ? window.t(s) : s);   // 6.4
     const num = n => Number(n || 0).toLocaleString(nxLoc());
     const now = () => Date.now() / 1000;
     const hm = sec => { sec = Math.max(0, Math.round(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60); return h ? h + ' h ' + m + ' min' : m + ' min'; };
@@ -183,7 +184,9 @@
                     <form class="nc-card" id="ncMForm"><h4>✏️ Makro bearbeiten</h4>
                         <input type="hidden" name="id">
                         <div class="nc-row"><input type="text" name="name" maxlength="40" placeholder="Name, z. B. Ohren wackeln" required style="flex:1"></div>
-                        <textarea name="script" rows="9" class="mono" placeholder="chatbox Hallo {name}!&#10;param Ears = 1&#10;wait 1.5&#10;param Ears = 0"></textarea>
+                        <div class="mb-bar" id="ncMBar"></div><div class="mb-list" id="ncMBlocks"></div>
+                        <details class="small"><summary>✍ Als Text bearbeiten</summary>
+                        <textarea name="script" rows="9" class="mono" placeholder="chatbox Hallo {name}!&#10;param Ears = 1&#10;wait 1.5&#10;param Ears = 0"></textarea></details>
                         <div class="nc-row"><button class="btn btn-sm btn-gold">💾 Speichern</button><button type="button" class="btn btn-sm" id="ncMTry">▶ Testen</button></div>
                         <details class="small"><summary>Schritte</summary><div class="muted">
                             <code>chatbox Text</code> (Platzhalter, /n) · <code>typing an|aus</code> · <code>param Name = Wert</code> · <code>toggle Name</code> · <code>wait Sekunden</code> ·
@@ -732,20 +735,57 @@
             const f = $('#ncMForm');
             f.addEventListener('submit', e => { e.preventDefault(); api('client_macro_save', { id: f.id.value, name: f.name.value, script: f.script.value }).then(d => { mList = d.macros; const m = mList.find(x => x.name === f.name.value.trim()); if (m) f.id.value = m.id; renderMacros(); toast(d.msg); }).catch(fail); });
             $('#ncMTry').addEventListener('click', () => api('client_macro_run', { script: f.script.value }).then(d => toast('⚡ ' + d.msg)).catch(fail));
-            $('#ncMNew').addEventListener('click', () => { f.reset(); f.id.value = ''; f.name.focus(); });
+            $('#ncMNew').addEventListener('click', () => { f.reset(); f.id.value = ''; mbRender(); f.name.focus(); });
             $('#ncMStop').addEventListener('click', () => api('client_macro_stop').then(d => toast(d.msg)).catch(fail));
             $('#ncMList').addEventListener('click', e => {
                 const b = e.target.closest('[data-m]');
                 if (!b) return;
                 const m = mList.find(x => x.id === b.dataset.id);
                 if (b.dataset.m === 'run') api('client_macro_run', { id: m.id }).then(d => toast('⚡ ' + m.name + ': ' + d.msg)).catch(fail);
-                if (b.dataset.m === 'edit') { f.id.value = m.id; f.name.value = m.name; f.script.value = m.script; }
+                if (b.dataset.m === 'edit') { f.id.value = m.id; f.name.value = m.name; f.script.value = m.script; mbRender(); }
                 if (b.dataset.m === 'del' && confirm('Makro „' + m.name + '“ löschen?')) api('client_macro_delete', { id: m.id }).then(d => { mList = d.macros; renderMacros(); }).catch(fail);
             });
         }
         return api('client_macros').then(d => { mList = d.macros; renderMacros(); }).catch(fail);
     }
+    // 6.4: Makro-Bausteine – jede Zeile ein Block (Art + Inhalt), verschieben, löschen, einfügen; Text bleibt die Grundlage
+    const MB = [['chatbox', '💬', 'Chatbox', 'Hallo {name}!'], ['param', '🎚', 'Parameter', 'Name = 1'], ['toggle', '🔁', 'Umschalten', 'Name'], ['wait', '⏳', 'Warten', '1.5'],
+        ['input', '🎮', 'Eingabe', 'Jump'], ['cam', '📷', 'Kamera', 'Capture'], ['status', '🟢', 'Status', 'join_me Komm vorbei'], ['avatar', '🎭', 'Avatar', 'avtr_…'],
+        ['rotator', '🔄', 'Rotator', 'an'], ['typing', '⌨', 'Tippen', 'an'], ['speak', '🔊', 'Vorlesen', 'Hallo'], ['notify', '🔔', 'Hinweis', 'Fertig!'], ['preset', '🎬', 'Szene', 'Name'], ['webhook', '🪝', 'Webhook', 'Text']];
+    const mbInfo = k => MB.find(x => x[0] === k) || [k, '❔', k, ''];
+    function mbLines() { return $('#ncMForm').script.value.replace(/\r/g, '').split('\n'); }
+    function mbWrite(lines) { const f = $('#ncMForm'); f.script.value = lines.join('\n').replace(/^\n+|\n+$/g, ''); mbRender(); }
+    function mbRender() {
+        const bar = $('#ncMBar'), list = $('#ncMBlocks'); if (!bar || !list) return;
+        if (!bar.innerHTML) bar.innerHTML = '<span class="muted small">' + esc(T('Baustein hinzufügen:')) + '</span>' + MB.map(b => '<button type="button" class="chip" data-mbadd="' + b[0] + '" title="' + esc(b[0] + ' ' + b[3]) + '">' + b[1] + ' ' + esc(T(b[2])) + '</button>').join('');
+        const lines = mbLines();
+        list.innerHTML = lines.map((l, i) => {
+            const m = /^\s*(\w+)\s*(.*)$/.exec(l); if (!l.trim() || !m) return '';
+            const com = l.trim().startsWith('#') || l.trim().startsWith('//'), info = mbInfo(m[1].toLowerCase());
+            return '<div class="mb-blk' + (com ? ' com' : '') + '" data-mi="' + i + '"><span class="mb-ic">' + (com ? '💭' : info[1]) + '</span><b>' + esc(com ? T('Notiz') : T(info[2])) + '</b>'
+                + '<input type="text" data-mbarg="' + i + '" value="' + esc(com ? l.trim() : m[2]) + '"' + (m[1].toLowerCase() === 'wait' ? ' inputmode="decimal"' : '') + '>' + (m[1].toLowerCase() === 'wait' ? '<small>s</small>' : '')
+                + '<button type="button" class="nc-link" data-mbmv="' + i + ':-1" title="' + esc(T('nach oben')) + '">↑</button><button type="button" class="nc-link" data-mbmv="' + i + ':1" title="' + esc(T('nach unten')) + '">↓</button>'
+                + '<button type="button" class="nc-link" data-mbdup="' + i + '" title="' + esc(T('verdoppeln')) + '">⧉</button><button type="button" class="nc-x" data-mbdel="' + i + '">✕</button></div>';
+        }).join('') || '<p class="muted small">' + esc(T('Noch leer – Bausteine oben antippen.')) + '</p>';
+    }
+    document.addEventListener('click', e => {
+        const t = e.target; if (!t.closest || !t.closest('#ncMForm')) return;
+        const a = t.closest('[data-mbadd]'), mv = t.closest('[data-mbmv]'), del = t.closest('[data-mbdel]'), dup = t.closest('[data-mbdup]');
+        if (!(a || mv || del || dup)) return;
+        const l = mbLines().filter((x, i, arr) => x.trim() || i < arr.length - 1);
+        if (a) { const b = mbInfo(a.dataset.mbadd); l.push(b[0] + ' ' + b[3]); }
+        if (mv) { const [i, d] = mv.dataset.mbmv.split(':').map(Number), j = i + d; if (j >= 0 && j < l.length) { const x = l[i]; l[i] = l[j]; l[j] = x; } }
+        if (del) l.splice(+del.dataset.mbdel, 1);
+        if (dup) l.splice(+dup.dataset.mbdup + 1, 0, l[+dup.dataset.mbdup]);
+        mbWrite(l);
+    });
+    document.addEventListener('input', e => {
+        const i = e.target.closest && e.target.closest('[data-mbarg]');
+        if (i) { const l = mbLines(), k = +i.dataset.mbarg, m = /^\s*(\w+)/.exec(l[k] || ''); if (!m) return; const com = l[k].trim().startsWith('#') || l[k].trim().startsWith('//'); l[k] = com ? i.value : m[1] + ' ' + i.value; $('#ncMForm').script.value = l.join('\n'); return; }
+        if (e.target.name === 'script' && e.target.closest('#ncMForm')) mbRender();
+    });
     function renderMacros() {
+        mbRender();
         $('#ncMList').innerHTML = mList.length ? mList.map(m => '<div class="nc-mrow"><button type="button" class="btn btn-sm btn-gold" data-m="run" data-id="' + esc(m.id) + '">▶</button><b>' + esc(m.name) + '</b>'
             + '<span class="muted small">' + m.script.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length + ' Schritte</span>'
             + '<button type="button" class="nc-link" data-m="edit" data-id="' + esc(m.id) + '">bearbeiten</button><button type="button" class="nc-x" data-m="del" data-id="' + esc(m.id) + '">✕</button></div>').join('')

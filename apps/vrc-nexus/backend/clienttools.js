@@ -33,6 +33,7 @@ const HOTKEYS = [
     ['keys.chatbox_clear', '🧹 Chatbox leeren', 'chatbox', { text: '' }],
     ['keys.overlay', '🥽 VR-Overlay ein/aus', 'overlay'],
     ['keys.show', '🪟 VRC Nexus nach vorne holen', 'show'],
+    ['keys.mini', '🪟 Mini-Modus ein/aus', 'mini'],
 ];
 /** nie aus einer Datei übernehmen: Server-Adressen und Webhooks (eine fremde Sicherung könnte sonst Daten umleiten) */
 const IMPORT_DENY = /(api_base|webhook|_url$|relay|server|endpoint|\.host$)/i;
@@ -89,6 +90,7 @@ class ClientTools {
         if (action === 'nsfw_panic_full') return await this.app.post({ act: 'nsfw_panic_full' }, {});
         if (action === 'overlay') { if (!host.overlayToggle) throw new UserError('Overlay nur in der Windows-App.'); return { msg: label, on: await host.overlayToggle() }; }
         if (action === 'show') { if (host.show) host.show(); return { msg: label }; }
+        if (action === 'mini') { if (!host.miniToggle) throw new UserError('Mini-Modus nur in der Windows-App.'); return { msg: host.miniToggle() ? '🪟 Mini-Modus an' : '🪟 Mini-Modus aus' }; }
         return await this.app.tools.apiAction(action, Object.assign({}, data || {}));
     }
 
@@ -113,6 +115,16 @@ class ClientTools {
         if (!Object.keys(take).length) throw new UserError('In der Datei sind keine passenden Einstellungen.');
         const res = this.settings.save(take);
         return Object.assign(res || {}, { imported: Object.keys(take).length, skipped, msg: Object.keys(take).length + ' Einstellungen übernommen' + (skipped ? ', ' + skipped + ' übersprungen (unbekannt oder geheim)' : '') + '.' });
+    }
+
+    // ---------- 6.4: Mini-Modus (Daten für das kleine Fenster) ----------
+    miniState() {
+        const a = this.app, g = a.game, st = g.state, h = a.heart && a.heart.active ? a.heart.bpm : 0;
+        let fr = []; try { fr = a.vrc.friendList(); } catch (e) { fr = []; }
+        const m = a.media ? a.media.now() : null;
+        return { running: !!st.running, world: st.worldName || '', players: st.players ? st.players.size : 0, since: st.since || 0, bpm: h, friends: fr.filter(f => f.state === 'online').length,
+            music: m && m.status === 'playing' ? (m.title + (m.artist ? ' – ' + m.artist : '')) : '', sleep: !!(a.comfort && a.comfort.sleep), rotator: !!(g.cfg && g.cfg().rotator_enabled),
+            nsfw: !!(a.nsfw && a.nsfw.access().unlocked), theme: a.settings.get('ui.theme'), accent: a.settings.get('ui.accent') };
     }
 
     // ---------- Leistung ----------
@@ -145,6 +157,8 @@ class ClientTools {
             case 'ctools_export': return this.exportSettings();
             case 'ctools_import': return this.importSettings(input.data);
             case 'ctools_perf': return this.perf();
+            case 'ctools_mini': return await this.hotkey('keys.mini');
+            case 'ctools_mini_state': return this.miniState();
         }
         throw new UserError('Unbekannte Aktion.');
     }
