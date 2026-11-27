@@ -38,6 +38,7 @@
             + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : x.kind === 'pc' ? '🖥 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('zuletzt')) + ' ' + esc(ago(x.last))) + (x.ver ? ' · v' + esc(x.ver) : '') + '</small></div>'
                 + (x.kind !== 'watch' && x.kind ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + '<button type="button" class="btn btn-sm" data-nwa="nsfw" data-id="' + esc(x.id) + '" data-on="' + (x.nsfw === false ? '1' : '0') + '" title="' + esc(x.nsfw === false ? T('🔞 auf diesem Gerät zeigen') : T('🔞 auf diesem Gerät ausblenden (Panik & Safeword bleiben)')) + '">' + (x.nsfw === false ? '🙈' : '🔞') + '</button><button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
                 : '<p class="small muted">' + esc(T('Noch kein Gerät gekoppelt.')) + '</p>') + '<p class="small muted">📱 ' + esc(T('Handy: in der VRC-Nexus-App unter 🎮 PC-Fernbedienung Adresse und Code eingeben. Laptop: Einstellungen → System → Heimnetz-Abgleich.')) + '</p>'
+            + '<div class="nc-row small" title="' + esc(T('Kräftig schütteln (3× in gut einer Sekunde) – nur solange die Uhr-App offen ist.')) + '">🤚 ' + esc(T('Uhr schütteln')) + ' <select data-nwshake>' + [['off', T('nichts')], ['stop', T('Spielzeug stoppen')], ['safeword', T('Safeword')]].map(([k, l]) => '<option value="' + k + '"' + ((c.shake || 'off') === k ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></div>'   // 8.2
             + (d.heart ? '<div class="nw-hr"><span>💓</span><b>' + (d.heart.bpm || '–') + '</b><small>bpm' + (d.heart.from === 'watch' ? ' · ⌚' : d.heart.bpm ? ' · ' + esc(d.heart.from) : '') + '</small>'
                 + (d.heart.source !== 'watch' ? '<button type="button" class="btn btn-sm" data-nwa="usewatch">' + esc(T('Uhr als Puls-Quelle')) + '</button>' : '<span class="small ok">✔ ' + esc(T('Puls-Quelle')) + '</span>') + '</div>' : '')
             + '</div>';
@@ -88,6 +89,7 @@
             const el = e.target;
             if (el.matches('[data-nw=on]')) return run('watch_cfg', { on: el.checked ? '1' : '0' });
             if (el.matches('[data-nwport]')) return run('watch_cfg', { port: el.value });
+            if (el.matches('[data-nwshake]')) return run('watch_cfg', { shake: el.value });
             if (el.matches('[data-nwdim]')) return run('watch_cfg', { bg_dim: el.value });
             if (el.matches('[data-nwfile]') && el.files && el.files[0]) {
                 const f = el.files[0]; el.value = '';

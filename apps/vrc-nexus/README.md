@@ -26,6 +26,11 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.14 – Watch gestures, synchronised devices
+- 🤚 **Shake the watch** (🧰 Tools → 📡 Devices → *Shake watch*): shaking firmly three times stops everything or triggers your safeword – your choice, off by default. Works while the Nexus Watch app is open, no extra permission.
+- ⏱ **Devices in sync:** each connected device can get its own reaction time, so all of them react at the same moment; an extra offset keeps your own devices in step with a remote partner. Stopping always happens instantly.
+- 🔞 ***
+
 ### New in 8.0.13 – Per-device visibility
 - 🙈 **Hide 18+ content per device** (🧰 Tools → 📡 Devices → 🔞 button next to each paired watch or phone): that device then shows and controls no 18+ content at all. Panic, safeword and "stop" keep working on every device, always.
 - 🔞 ***

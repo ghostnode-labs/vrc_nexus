@@ -32,7 +32,7 @@ function patDecrypt(code, pass) {
 }
 const H = require('./haptics');
 
-const DEF = { url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idle_stop: 3, ogb: false, ogb_self: false, ogb_device: 'all', ogb_min: 0.05, links: {}, links_on: false,
+const DEF = { sync_extra: 0, url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idle_stop: 3, ogb: false, ogb_self: false, ogb_device: 'all', ogb_min: 0.05, links: {}, links_on: false,
     // 4.1
     reconnect: true, auto_scan: true, sps_enable: true, osc_out: true, dev: {}, custom: [], button_action: 'stop', battery_warn: 15,
     pcs: { on: false, device: 'all', w_depth: 60, w_speed: 80, w_lust: 20, impulses: true },
@@ -43,7 +43,7 @@ const DEF = { url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idl
     consent: { param: 'NX/Consent', chat: true, yellow: 50 },
     aftercare: { on: true, after_min: 3, chat: '' },
     autopause: { on: false, max_min: 30, pause_min: 5, hr_on: false, hr_max: 150 } };   // 8.2: automatische Pausen nach Zeit oder Puls
-const DEV_DEF = { alias: '', on: true, min: 0, max: 100, curve: 1, smooth: 0, rot: 'cw', rot_alt: 8, lin_min: 0, lin_max: 100, types: {} };
+const DEV_DEF = { alias: '', on: true, min: 0, max: 100, curve: 1, smooth: 0, lag: 0, rot: 'cw', rot_alt: 8, lin_min: 0, lin_max: 100, types: {} };
 const TYPE_DEF = { Vibrate: 100, Oscillate: 100, Rotate: 100, Constrict: 60, Inflate: 60, Position: 100 };
 const LINK_TYPES = ['plugs', 'sockets', 'touch', 'constant', 'param', 'pcs', 'heart', 'voice', 'lust'];
 /** „berührt von“: Schalter → Wert-Namen */
@@ -111,6 +111,7 @@ class Toys {
         for (const k of ['auto', 'links_on', 'ogb', 'ogb_self', 'reconnect', 'auto_scan', 'sps_enable', 'osc_out']) if (c[k] !== undefined) n[k] = yes(c[k]);
         if (c.max !== undefined) n.max = Math.max(5, Math.min(100, int(c.max)));
         if (c.idle_stop !== undefined) n.idle_stop = Math.max(0, Math.min(60, int(c.idle_stop)));
+        if (c.sync_extra !== undefined) n.sync_extra = Math.max(0, Math.min(3000, int(c.sync_extra)));   // 8.2: Versatz für synchrone Fern-Szenen
         if (c.battery_warn !== undefined) n.battery_warn = Math.max(0, Math.min(50, int(c.battery_warn)));
         if (c.button_action !== undefined) n.button_action = ['stop', 'surprise', 'next', 'none'].includes(c.button_action) ? c.button_action : 'stop';
         if (c.links !== undefined) {
@@ -141,7 +142,7 @@ class Toys {
                 const o = Object.assign({}, DEV_DEF, cur.dev[name] || {});
                 if (x.alias !== undefined) o.alias = cut(str(x.alias), 40);
                 if (x.on !== undefined) o.on = yes(x.on);
-                for (const [k, lo, hi] of [['min', 0, 90], ['max', 5, 100], ['lin_min', 0, 95], ['lin_max', 5, 100], ['smooth', 0, 3000], ['rot_alt', 0, 120]]) if (x[k] !== undefined) o[k] = Math.max(lo, Math.min(hi, int(x[k])));
+                for (const [k, lo, hi] of [['min', 0, 90], ['max', 5, 100], ['lin_min', 0, 95], ['lin_max', 5, 100], ['smooth', 0, 3000], ['rot_alt', 0, 120], ['lag', 0, 1000]]) if (x[k] !== undefined) o[k] = Math.max(lo, Math.min(hi, int(x[k])));
                 if (x.curve !== undefined) o.curve = Math.max(0.3, Math.min(3, Number(x.curve) || 1));
                 if (x.rot !== undefined) o.rot = ['cw', 'ccw', 'alt'].includes(x.rot) ? x.rot : 'cw';
                 if (x.types !== undefined) o.types = Object.fromEntries(Object.keys(TYPE_DEF).map(k => [k, Math.max(0, Math.min(100, int((x.types || {})[k] !== undefined ? x.types[k] : (o.types || {})[k] !== undefined ? o.types[k] : TYPE_DEF[k])))]));
@@ -437,7 +438,18 @@ class Toys {
         }
         if (!msgs.length) return;
         d.lastSend = t;
+        const wait = this.syncDelay(dc);
+        if (wait > 0 && cur > 0.001) {   // 8.2: Latenz-Ausgleich – schnellere Geräte warten auf das langsamste; Stopp geht immer sofort
+            setTimeout(() => { if ((this.cur.get(d.index) || 0) <= 0.001 || !this.ws || this.ws.readyState !== 1) return; for (const m of msgs) this.req(m).catch(() => {}); }, wait);
+            return;
+        }
         for (const m of msgs) await this.req(m).catch(() => {});
+    }
+    /** 8.2: Wartezeit für dieses Gerät = langsamstes verwendetes Gerät − eigene Reaktionszeit + Versatz für Fern-Szenen */
+    syncDelay(dc) {
+        let max = 0;
+        for (const x of this.devices.values()) { const c = this.devCfg(x.name); if (c.on && c.lag > max) max = c.lag; }
+        return Math.max(0, max - (dc.lag || 0)) + (this.cfg().sync_extra || 0);
     }
     driveAll() {
         if (!this.ws || this.ws.readyState !== 1 || !this.devices.size) return;

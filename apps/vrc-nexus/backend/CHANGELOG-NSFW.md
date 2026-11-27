@@ -2,6 +2,11 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.14 – Latency compensation, gestures on watch and controller
+
+- ⏱ **Latency compensation for synchronous scenes:** under ⚙ per toy you can enter its **reaction time** (0–1000 ms, e.g. slow Bluetooth toys); faster toys then wait for the slowest one, so everything starts together. The new card *⏱ Feel it at the same time* adds an extra delay (0–3000 ms) for your own toys during remote scenes, so you and your partner feel it simultaneously despite the internet delay. **Stops are never delayed**, and a delayed command is dropped if a stop came in between.
+- 🤚 **Gestures:** shaking the Nexus Watch firmly 3× in about a second can **stop all toys** or trigger the **safeword** (setting on the PC: 🧰 Tools → 📡 Devices, off by default). On the controller, the existing safeword gesture via avatar parameter (🛡 Limits & safety) keeps working – together with holding Y on a gamepad and the VR hand menu, you have a stop at hand everywhere.
+
 ### New in 8.0.13 – Encrypted pattern sharing, visibility per device
 
 - 📤 **Share your own patterns only end-to-end encrypted** (🔞 → Fun → ✏️ Own patterns → 📤): you get a code `NXP1.…` that is encrypted with a password of your choice (scrypt + AES-256-GCM, the name is not readable either). Pass on the code and the password separately – or send the code straight to a VRChat ID through the encrypted chat (the password never goes along). **📥 Import** takes a code plus password; a wrong password or a modified code is rejected.

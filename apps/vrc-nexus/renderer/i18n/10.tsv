@@ -2860,3 +2860,11 @@ Muster-Code (kopieren):	Pattern code (copy):	Code du motif (copier) :	パター�
 Passwort für den Muster-Code:	Password for the pattern code:	Mot de passe du code du motif :	パターンコードのパスワード：
 🔞 auf diesem Gerät zeigen	Show 🔞 on this device	Afficher 🔞 sur cet appareil	このデバイスで🔞を表示
 🔞 auf diesem Gerät ausblenden (Panik & Safeword bleiben)	Hide 🔞 on this device (panic & safeword stay)	Masquer 🔞 sur cet appareil (panique et safeword restent)	このデバイスで🔞を非表示（パニックとセーフワードは残ります）
+Wie lange das Gerät braucht, bis es reagiert (Bluetooth, Funk). Schnellere Geräte warten dann auf das langsamste – alle spüren es gleichzeitig.	How long the device takes to react (Bluetooth, radio). Faster devices then wait for the slowest – everyone feels it at the same time.	Temps de réaction de l'appareil (Bluetooth, radio). Les appareils plus rapides attendent alors le plus lent – tout le monde ressent en même temps.	デバイスが反応するまでの時間（Bluetooth、無線）。速いデバイスは最も遅いデバイスを待つので、全員が同時に感じます。
+Reaktionszeit	Reaction time	Temps de réaction	反応時間
+Gleichzeitig spüren	Feel it at the same time	Ressentir en même temps	同時に感じる
+Eigene Geräte zusätzlich verzögern um	Delay own devices additionally by	Retarder ses propres appareils de	自分のデバイスを追加で遅らせる
+Für Fern-Szenen: die Befehle zum Partner brauchen über das Internet etwas länger. Mit dem passenden Versatz spürt ihr beide es gleichzeitig. Je Gerät lässt sich unter ⚙ die Reaktionszeit einstellen. Stopp wirkt immer sofort.	For remote scenes: commands to your partner take a little longer over the internet. With the right offset you both feel it at the same time. Each device's reaction time can be set under ⚙. Stop always works instantly.	Pour les scènes à distance : les commandes vers le partenaire mettent un peu plus de temps via Internet. Avec le bon décalage, vous ressentez tous les deux en même temps. Le temps de réaction de chaque appareil se règle sous ⚙. Stop agit toujours immédiatement.	リモートシーン用：パートナーへの命令はインターネット経由で少し遅れます。適切なオフセットで二人同時に感じられます。各デバイスの反応時間は⚙で設定できます。停止は常に即時です。
+Kräftig schütteln (3× in gut einer Sekunde) – nur solange die Uhr-App offen ist.	Shake firmly (3× within about a second) – only while the watch app is open.	Secouer fermement (3× en une seconde environ) – seulement quand l'app montre est ouverte.	強く振る（約1秒で3回）– ウォッチアプリが開いている間のみ。
+Uhr schütteln	Shake watch	Secouer la montre	ウォッチを振る
+nichts	nothing	rien	なし

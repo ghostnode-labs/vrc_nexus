@@ -3278,6 +3278,23 @@ test('4.1: Buttplug-Funktionen (Aktoren, Rotation, Stroker, Sensoren, Gerät-Ein
     assert.ok(psent.length === 1 && psent[0][1].includes(sh.code) && !psent[0][1].includes('geheim-42'), 'Passwort geht nie mit');
     app.chat = realChat;
     await app.post({ act: 'toys_cfg', custom: '[]' }, {});
+    // 8.2: Latenz-Ausgleich – langsamstes Gerät gibt den Takt vor, Versatz für Fern-Szenen, Stopp immer sofort
+    const d0 = t.devices.get(0);
+    await app.post({ act: 'toys_dev', name: d0.name, data: JSON.stringify({ lag: 250 }) }, {});
+    assert.strictEqual(t.devCfg(d0.name).lag, 250);
+    assert.strictEqual(t.syncDelay(t.devCfg(d0.name)), 0, 'langsamstes Gerät wartet nicht');
+    assert.strictEqual(t.syncDelay({ lag: 50 }), 200, 'schnelleres Gerät wartet die Differenz');
+    await app.post({ act: 'toys_cfg', sync_extra: '100' }, {});
+    assert.strictEqual(t.syncDelay(t.devCfg(d0.name)), 100);
+    await app.post({ act: 'toys_cfg', sync_extra: '99999' }, {}); assert.strictEqual(t.cfg().sync_extra, 3000, 'Obergrenze 3 s');
+    await app.post({ act: 'toys_cfg', sync_extra: '100' }, {});
+    t.paused = null; t.consent = 'green'; t.lust.edgeHold = false;
+    let n0 = sent.length; t.level.set(0, 0.7); d0.sentKey = ''; d0.rotKey = ''; await t.drive(d0, true);
+    assert.strictEqual(sent.length, n0, 'noch nicht gesendet');
+    await U.sleep(160); assert.ok(sent.length > n0, 'nach dem Versatz gesendet');
+    n0 = sent.length; t.level.set(0, 0); d0.sentKey = 'x'; d0.rotKey = 'x'; await t.drive(d0, true);
+    assert.ok(sent.length > n0, 'Stopp geht sofort raus');
+    await app.post({ act: 'toys_cfg', sync_extra: '0' }, {}); await app.post({ act: 'toys_dev', name: d0.name, data: JSON.stringify({ lag: 0 }) }, {});
     // Puls & Stimme
     app.heart.push(120, 'test');
     await app.post({ act: 'toys_cfg', heart: JSON.stringify({ lo: 80, hi: 160 }) }, {});
@@ -5060,6 +5077,12 @@ test('8.2: Geräte-Hub (dieser PC, Uhr mit Akkustand aus der Kopfzeile, Puls-Que
         s1 = await req(w.token, '/watch/state'); assert.strictEqual(s1.j.nsfw, app.nsfw.access().unlocked, 'die Uhr ist nicht betroffen');
         r = await app.post({ act: 'watch_dev_nsfw', id: pid, on: '1' }, {}); assert.ok(r.devices.find(d => d.id === pid).nsfw);
         await assert.rejects(app.post({ act: 'watch_dev_nsfw', id: 'nope', on: '0' }, {}), /nicht gefunden/);
+        // 8.2: Schüttel-Geste – Einstellung am PC, die Uhr bekommt sie im Zustand
+        s1 = await req(w.token, '/watch/state'); assert.strictEqual(s1.j.shake, 'off', 'aus ab Werk');
+        r = await app.post({ act: 'watch_cfg', shake: 'safeword' }, {}); assert.strictEqual(r.cfg.shake, 'safeword');
+        s1 = await req(w.token, '/watch/state'); assert.strictEqual(s1.j.shake, 'safeword');
+        await assert.rejects(app.post({ act: 'watch_cfg', shake: 'rm -rf' }, {}), /Geste/);
+        await app.post({ act: 'watch_cfg', shake: 'off' }, {});
     } finally { app.watch.stop(); }
 });
 

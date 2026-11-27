@@ -14,7 +14,8 @@ const crypto = require('crypto');
 const os = require('os');
 const { str, int, cut, UserError } = require('./util');
 
-const DEF = { on: false, port: 17874, devices: [], theme: 'cyber', theme_at: 0, bg: 'none', bg_dim: 55, bg_rev: '' };
+const DEF = { on: false, port: 17874, devices: [], theme: 'cyber', theme_at: 0, bg: 'none', bg_dim: 55, bg_rev: '', shake: 'off' };
+const SHAKE = ['off', 'stop', 'safeword'];   // 8.2: Schüttel-Geste an der Uhr
 /** 5.2.3: Themen der Uhr (Farben als #RRGGBB: Hintergrund, Akzent, Highlight, Gefahr, Text gedämpft) */
 const THEMES = {
     cyber:  { name: 'Cyber',            bg: '#0B1016', accent: '#38D5E6', hi: '#F3C262', danger: '#FF5555', muted: '#8A93A6', grad: ['#0B1016', '#0E2A33'] },
@@ -53,6 +54,7 @@ class Watch {
         if (c.on !== undefined) n.on = c.on === true || c.on === '1';
         if (c.port !== undefined) n.port = Math.max(1024, Math.min(65535, int(c.port) || DEF.port));
         if (c.devices !== undefined) n.devices = c.devices;
+        if (c.shake !== undefined) { if (!SHAKE.includes(str(c.shake))) throw new UserError('Geste: off, stop oder safeword.'); n.shake = str(c.shake); }
         if (c.theme !== undefined) { if (!THEMES[str(c.theme)]) throw new UserError('Unbekanntes Thema.'); n.theme = str(c.theme); n.theme_at = Date.now(); }
         if (c.bg !== undefined) { if (!BG_KINDS.includes(str(c.bg))) throw new UserError('Unbekannter Hintergrund.'); if (c.bg === 'image' && !this.bgFile()) throw new UserError('Erst ein Bild hochladen.'); n.bg = str(c.bg); n.theme_at = Date.now(); }
         if (c.bg_dim !== undefined) { n.bg_dim = Math.max(0, Math.min(85, int(c.bg_dim))); n.theme_at = Date.now(); }
@@ -86,7 +88,7 @@ class Watch {
 
     status() {
         const c = this.cfg();
-        return { cfg: { on: c.on, port: c.port }, look: this.look(), faces: FACES, themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v])), has_bg: !!this.bgFile(),
+        return { cfg: { on: c.on, port: c.port, shake: c.shake || 'off' }, look: this.look(), faces: FACES, themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v])), has_bg: !!this.bgFile(),
             heart: this.app.heart ? { bpm: this.app.heart.active ? this.app.heart.bpm : 0, from: this.app.heart.from || '', source: this.app.heart.cfg().source } : null, running: !!this.server, error: this.error, pin: c.on ? this.pin : '', addresses: this.addresses(),
             devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '', battery: this.batt[d.id] === undefined ? null : this.batt[d.id], nsfw: d.nsfw !== false })) };
     }
@@ -200,7 +202,7 @@ class Watch {
         const ts = nsfw && t ? { connected: t.state === 'verbunden' || !!t.ws, devices: t.devices ? t.devices.size : 0, consent: t.consent || 'green' } : null;
         return { ok: true, t: Date.now(), world: n && n.private ? '' : cut(str(st.worldName), 60), players: st.players ? st.players.size : 0, running: !!st.running,
             bpm: h && h.active ? h.bpm : 0, hr_src: h ? h.cfg().source : 'off', private: !!(n && n.private), nsfw, nsfw_reason: nsfw ? '' : cut(str(acc.reason), 160), toys: ts,
-            sleeping: !!(a.comfort && a.comfort.sleep), look: this.look(),
+            sleeping: !!(a.comfort && a.comfort.sleep), look: this.look(), shake: SHAKE.includes(this.cfg().shake) ? this.cfg().shake : 'off',
             health: a.health ? (() => { try { return a.health.today(); } catch (e) { return null; } })() : null,   // 8.0.5: für das Zifferblatt „Gesundheit“
             coach_next: a.coach && a.coach.next ? Math.max(0, Math.round((a.coach.next.brk - Date.now()) / 60000)) : null,
             // 6.5: Zifferblatt-Daten und Benachrichtigungen (im Privat-Modus keine)

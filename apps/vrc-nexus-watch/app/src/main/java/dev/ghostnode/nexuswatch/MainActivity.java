@@ -52,6 +52,7 @@ public class MainActivity extends Activity {
     private final Handler ui = new Handler(Looper.getMainLooper());
     private LinearLayout root;
     private JSONObject state, upd;
+    private Shake shake;   // 8.2: Schüttel-Geste
     private String err = "", screen = "main", updMsg = "";
     private int updPct = -1;
     private long panicArmed = 0;
@@ -85,8 +86,18 @@ public class MainActivity extends Activity {
         if (p().getBoolean("auto_update", true) && System.currentTimeMillis() - p().getLong("upd_checked", 0) > 12 * 3600 * 1000L) checkUpdate(false);
         render();
     }
-    @Override protected void onResume() { super.onResume(); resumed = true; ui.removeCallbacks(poll); ui.post(poll); }
-    @Override protected void onPause() { super.onPause(); resumed = false; ui.removeCallbacks(poll); }
+    @Override protected void onResume() { super.onResume(); resumed = true; ui.removeCallbacks(poll); ui.post(poll); syncShake(); }
+    @Override protected void onPause() { super.onPause(); resumed = false; ui.removeCallbacks(poll); if (shake != null) shake.enable(false); }
+    /** 8.2: Schüttel-Geste nach Einstellung am PC („shake“: off / stop / safeword) */
+    private void syncShake() {
+        String g = state != null ? state.optString("shake", "off") : "off";
+        if (shake == null) shake = new Shake(this, () -> ui.post(() -> {
+            String mode = state != null ? state.optString("shake", "off") : "off";
+            if ("stop".equals(mode)) { buzz(300); act("toys_stop", null, null); }
+            else if ("safeword".equals(mode)) { buzz(600); act("safeword", null, null); }
+        }));
+        shake.enable(resumed && !"off".equals(g));
+    }
     @Override protected void onDestroy() { net.shutdownNow(); super.onDestroy(); }
     @Override public void onBackPressed() { if (!"main".equals(screen)) go("main"); else super.onBackPressed(); }
 
@@ -447,7 +458,7 @@ public class MainActivity extends Activity {
             }));
         }
         net.execute(() -> {
-            try { state = Nexus.call(this, "/watch/state", null); err = ""; Notes.handle(this, state); }
+            try { state = Nexus.call(this, "/watch/state", null); err = ""; Notes.handle(this, state); ui.post(this::syncShake); }
             catch (Exception e) { err = String.valueOf(e.getMessage()); }
             ui.post(() -> {
                 if (state != null) {
