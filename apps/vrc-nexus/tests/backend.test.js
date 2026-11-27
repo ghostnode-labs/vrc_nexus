@@ -1,5 +1,6 @@
 'use strict';
 process.env.NEXUS_NO_SERVER_CHECK = '1';   // Tests: keine echten Server-Prüfungen
+process.env.NEXUS_NO_LIVE = '1';           // Tests: kein Live-Dienst (WebSocket) – nur im Live-Test eingeschaltet
 /* Tests ohne Netzwerk und ohne Electron:  npm test */
 const assert = require('assert');
 const fs = require('fs');
@@ -5357,4 +5358,51 @@ test('8.0.19: Uhren-Installer per ADB – adb laden (nur adb entpackt), koppeln/
         assert.deepStrictEqual(Object.keys(readZip(zip, { only: n => n.endsWith('/adb') })), ['platform-tools/adb']);
         assert.throws(() => readZip(Buffer.concat([zip, Buffer.alloc(7 * 1048576)])), /zu groß/);
     } finally { process.env.PATH = savedPath; }
+});
+
+test('8.0.20: Fernsteuerung über den Live-Dienst (WebSocket, Root-Server) – sofort statt Abfragen, nur mit Freigabe, Rückfall ohne Live', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const { uidHash } = require('../backend/toyremote');
+    const { createLive } = require('../../nexus-live/live.js');
+    const OWN = 'usr_' + '7'.repeat(8) + '-1111-2222-3333-444444444444', PART = 'usr_' + '8'.repeat(8) + '-1111-2222-3333-444444444444';
+    const tokens = {}, denied = new Set();
+    const L = createLive({ secret: 'x'.repeat(40), auth: async t => { if (!tokens[t] || denied.has(t)) throw new Error('Fernsteuerung nur mit Verified 18+ und NSFW an.'); return uidHash(tokens[t]); } });
+    await new Promise(r => L.server.listen(0, '127.0.0.1', r));
+    delete process.env.NEXUS_NO_LIVE;
+    process.env.NEXUS_OWNER_HASH = hashId(OWN); process.env.NEXUS_TOY_UDP = '17981';
+    process.env.NEXUS_RELAY_BASE = 'http://127.0.0.1:' + L.server.address().port;   // dort gibt es nur /live/ws – Briefkasten (toyrelay.php) fehlt absichtlich
+    const mk = async uid => { const db = await openDatabase(null); const a = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-212-')) } }); a.game.osc.stopListen(); a.vrc.account = () => ({ vrc_id: uid, me: {}, display_name: uid === OWN ? 'Besitzer' : 'Partner' }); return a; };
+    const O = await mk(OWN), P = await mk(PART);
+    const pub = O.nsfw.makeOwnerKey(); P.nsfw.trusted.push(pub);
+    grant18(O); grant18(P);
+    const tO = 'c'.repeat(64), tP = 'd'.repeat(64); tokens[tO] = OWN; tokens[tP] = PART;
+    O.account.store(Object.assign(O.account.load(), { token: tO })); P.account.store(Object.assign(P.account.load(), { token: tP }));
+    O.account.peer = P.account.peer = async () => true;
+    const t = O.toys, sent = []; t.ws = { readyState: 1 }; t.req = async m => { sent.push(m); return {}; };
+    t.devices.set(0, { index: 0, name: 'Testgerät', motors: [{ index: 0, type: 'Vibrate', steps: 100 }] });
+    const last = () => { const l = sent.filter(m => m.ScalarCmd); return l.length ? l[l.length - 1].ScalarCmd.Scalars[0].Scalar : null; };
+    try {
+        await O.post({ act: 'tremote_cfg', recv_on: '1', lan: '0', max: '60', allow: PART + ' | Partner' }, {});
+        await P.post({ act: 'tremote_cfg', t_uid: OWN, t_via: 'web' }, {});
+        const until = async (f, ms = 3000) => { const t0 = Date.now(); while (!f()) { if (Date.now() - t0 > ms) return false; O.toyremote.liveTick(); P.toyremote.liveTick(); await U.sleep(30); } return true; };
+        assert.ok(await until(() => O.toyremote.liveOk && P.toyremote.liveOk), 'beide live verbunden');
+        assert.strictEqual(O.toyremote.status().live, true);
+        let st = await P.post({ act: 'tremote_send', c: 'set', lv: '1' }, {});
+        assert.ok(st.ctrl.via === 'web', 'über das Internet');
+        assert.ok(await until(() => last() === 0.6, 1500), 'Befehl kam sofort an (ohne Abfragen) – gedeckelt auf 60 %');
+        assert.ok(await until(() => P.toyremote.status().ctrl.ack && P.toyremote.status().ctrl.ack.ok, 1500), 'Antwort kam live zurück');
+        // Freigabe entzogen → Live lehnt ab, App fällt zurück (kein Absturz)
+        O.toyremote.liveClose(); denied.add(tO); O.toyremote.liveRetryAt = 0;
+        await until(() => false, 300);
+        assert.strictEqual(O.toyremote.liveOk, false, 'ohne Freigabe keine Live-Verbindung');
+        // ohne Live-Dienst: Senden geht über den Briefkasten (hier nicht vorhanden → verständlicher Fehler statt Hänger)
+        P.toyremote.liveClose(); P.toyremote.liveRetryAt = Date.now() + 60000;
+        await assert.rejects(P.post({ act: 'tremote_send', c: 'ping' }, {}), /toyrelay\.php|HTTP 404/);
+    } finally {
+        for (const a of [O, P]) { a.toyremote.stop(); a.toys.stop(); a.tools.stop(); }
+        L.server.close();
+        process.env.NEXUS_NO_LIVE = '1';
+        for (const k of ['NEXUS_OWNER_HASH', 'NEXUS_TOY_UDP', 'NEXUS_RELAY_BASE']) delete process.env[k];
+    }
 });

@@ -2,6 +2,9 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.20
+- 🎮 **Toy remote control in real time:** commands and replies between two Nexus apps travel over the live connection of the GhostNode root server and arrive immediately (before: up to one second delay from polling). The same checks apply: Verified 18+ with NSFW on, re-checked every 10 minutes; if access is withdrawn, the connection is closed. Without the live service, the mailbox is used as before.
+
 ### New in 8.0.17 – Local scene companion without cloud
 
 - 🫶 **Scene companion** (🔞 → 🔥 Lust & PCS → *🫶 Scene companion*): accompanies a session with short hints – greeting at the start, a **check-in** every X minutes ("all green?"), edging announcements, "slowing down" on yellow, a **breathing hint** above a heart rate you choose, break, scene end and aftercare. Three styles: 💙 gentle, 😏 playful, ▪ brief. Only reacts to transitions (no spam), at most one message per tick.

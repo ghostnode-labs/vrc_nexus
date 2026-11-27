@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.20",
+  "title": "",
+  "body": "- 🎮 **Toy remote control in real time:** commands and replies between two Nexus apps travel over the live connection of the GhostNode root server and arrive immediately (before: up to one second delay from polling). The same checks apply: Verified 18+ with NSFW on, re-checked every 10 minutes; if access is withdrawn, the connection is closed. Without the live service, the mailbox is used as before."
+ },
+ {
   "version": "8.0.17",
   "title": "Local scene companion without cloud",
   "body": "- 🫶 **Scene companion** (🔞 → 🔥 Lust & PCS → *🫶 Scene companion*): accompanies a session with short hints – greeting at the start, a **check-in** every X minutes (\"all green?\"), edging announcements, \"slowing down\" on yellow, a **breathing hint** above a heart rate you choose, break, scene end and aftercare. Three styles: 💙 gentle, 😏 playful, ▪ brief. Only reacts to transitions (no spam), at most one message per tick.\n  - **Completely local:** fixed texts, no cloud, no AI service, nothing leaves the PC – it only reads session time, lust meter, edging, heart rate, breaks and the consent light.\n  - Output as desktop notice and on the watch; **chatbox only if you tick it** – never the heart rate, and nothing at all in private mode (then only in the history)."

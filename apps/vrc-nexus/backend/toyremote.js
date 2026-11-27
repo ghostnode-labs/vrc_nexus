@@ -9,6 +9,8 @@
  * Nichts einzutragen außer der User-ID – der Weg wird automatisch gewählt:
  *   lan  – Heimnetz: HTTP direkt an den PC des Partners (Suche per UDP-Rundruf nach der User-ID)
  *   web  – sonst über die GhostNode-Webseite (RELAY/toyrelay.php) als Briefkasten; lesen nur mit dem Briefkasten-Schlüssel des Empfängers
+ *          8.0.20: läuft dort der Live-Dienst (Root-Server, /live/ws), dauerhaft per WebSocket in Echtzeit statt jede Sekunde
+ *          abzufragen; ohne Live-Dienst (z. B. Plesk) oder bei Abbruch automatisch zurück zum Briefkasten
  * (Ein öffentlicher Dienst mit Kopplungscode ist noch eingebaut, aber in der Oberfläche aus.)
  *
  * Sicherheit: Höchststärke für Fernsteuerung, Befehle nur 60 s gültig + nur einmal (Nonce), Regler-Stärke fällt nach 15 s ohne
@@ -59,6 +61,7 @@ class ToyRemote {
         this.remoteLv = 0; this.remoteAt = 0;
         this.ctrl = { lv: 0, sentAt: 0, at: 0, ack: null, err: '', addr: '' };
         this.streams = new Map(); this.selfTok = null;
+        this.live = null; this.liveOk = false; this.liveRetryAt = 0; this.liveBackoff = 5000; this.lastPollAt = 0;
         this.timer = setInterval(() => this.tick(), 1000); if (this.timer.unref) this.timer.unref();
         setTimeout(() => this.apply(), 1500).unref?.();
     }
@@ -148,7 +151,48 @@ class ToyRemote {
             this.udp = u;
         } catch (e) { /* ohne Suche */ }
     }
+    // ---------- 8.0.20 Live-Dienst (WebSocket) ----------
+    /** Live nur zum eigenen GhostNode-Server (dorthin geht auch das Konto-Token) und nur, wenn Empfang oder Steuern übers Internet läuft */
+    liveWanted() {
+        if (process.env.NEXUS_NO_LIVE || typeof WebSocket !== 'function') return '';
+        const c = this.cfg(), host = c.recv_on && c.web && this.allowed(), ctl = (this.ctrlActive() && this.ctrl.via === 'web') || (c.t_via === 'web' && UIDRE.test(c.t_uid) && this.allowed());
+        const url = ((host ? c.web_url : c.t_url) || RELAY()).replace(/\/+$/, '');
+        const acc = this.app.account ? this.app.account.current() : null;
+        return (host || ctl) && url === RELAY() && acc && acc.token ? acc.token : '';
+    }
+    liveTick() {
+        const tok = this.liveWanted();
+        if (!tok || (this.live && this.live.tok !== tok)) { if (this.live) this.liveClose(); if (!tok) return; }
+        if (this.live || Date.now() < this.liveRetryAt) return;
+        let ws;
+        try { ws = new WebSocket(RELAY().replace(/^http/, 'ws') + '/live/ws'); } catch (e) { this.liveRetryAt = Date.now() + this.liveBackoff; return; }
+        const L = this.live = { ws, tok };
+        ws.onopen = () => { try { ws.send(JSON.stringify({ t: 'hello', token: tok })); } catch (e) { /* zu */ } };
+        ws.onmessage = ev => {
+            let m; try { m = JSON.parse(String(ev.data)); } catch (e) { return; }
+            if (m.t === 'ready') { this.liveOk = true; this.liveBackoff = 5000; if (this.cfg().recv_on) this.st.web = { ok: true, err: '', at: Date.now(), live: true }; return; }
+            if (m.t === 'msg') { let o; try { o = JSON.parse(str(m.msg)); } catch (e) { return; } this.dispatch(o, 'web').catch(() => {}); return; }
+            if (m.t === 'error' && !this.liveOk) this.st.web = Object.assign({}, this.st.web, { live: false });
+        };
+        const gone = () => {
+            if (this.live !== L) return;
+            this.live = null; this.liveOk = false;
+            this.liveRetryAt = Date.now() + this.liveBackoff; this.liveBackoff = Math.min(this.liveBackoff * 2, 60000);
+            if (this.st.web.live) this.st.web = Object.assign({}, this.st.web, { live: false });
+        };
+        ws.onclose = gone; ws.onerror = gone;
+    }
+    liveClose() { const L = this.live; this.live = null; this.liveOk = false; if (L) { try { L.ws.close(); } catch (e) { /* egal */ } } }
+    /** über den Live-Dienst schicken (true) – sonst false, dann geht es über den Briefkasten */
+    liveSend(url, to, msg) {
+        if (!this.liveOk || !this.live || str(url).replace(/\/+$/, '') !== RELAY()) return false;
+        try { this.live.ws.send(JSON.stringify({ t: 'send', to: uidHash(to), msg })); return true; } catch (e) { return false; }
+    }
+
     async pollWeb() {
+        // Live verbunden: Nachrichten kommen sofort – den Briefkasten nur noch alle 20 s zur Sicherheit leeren
+        if (this.liveOk && Date.now() - this.lastPollAt < 20000) return;
+        this.lastPollAt = Date.now();
         const c = this.cfg(), host = c.recv_on && c.web && this.allowed(), ctl = this.ctrlActive() && this.ctrl.via === 'web';
         if (!host && !ctl) return;
         const url = (host ? c.web_url : c.t_url) || RELAY();
@@ -193,6 +237,7 @@ class ToyRemote {
     }
     async reply(to, via, o) {
         const c = this.cfg();
+        if (via === 'web' && this.liveSend(c.web_url || RELAY(), to, JSON.stringify(o))) return;
         if (via === 'web') await fetch((c.web_url || RELAY()) + '/toyrelay.php?a=send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: relayBody(this.app, c.web_url || RELAY(), { to: uidHash(to), msg: JSON.stringify(o) }), signal: AbortSignal.timeout(8000) });
         if (via === 'pub' && c.code) await fetch(PUB() + '/' + topic(to, c.code), { method: 'POST', body: enc(o, c.code), signal: AbortSignal.timeout(8000) });
     }
@@ -249,6 +294,7 @@ class ToyRemote {
         if (this.remoteLv > 0 && Date.now() - this.remoteAt > 15000 && this.app.toys) { this.remoteLv = 0; this.app.toys.set('all', 0).catch(() => {}); this.note(this.active ? this.active.name : '?', '⌛ kein Signal mehr → aus'); }
         // eigener Regler: Lebenszeichen alle 5 s
         if (this.ctrl.lv > 0 && this.ctrlActive() && Date.now() - this.ctrl.sentAt > 5000) this.send('set', { lv: this.ctrl.lv }).catch(e => { this.ctrl.err = e.message; });
+        this.liveTick();
         this.pollWeb();
         if (this.pubCheckAt === undefined || Date.now() - this.pubCheckAt > 10000) { this.pubCheckAt = Date.now(); this.apply(); }
     }
@@ -305,6 +351,7 @@ class ToyRemote {
             return Object.assign({ sent: true }, d);
         }
         if (via === 'web') {
+            if (this.liveSend(c.t_url || RELAY(), c.t_uid, JSON.stringify(m))) return { sent: true, live: true, msg: 'gesendet (Internet, live)' };
             const r = await fetch((c.t_url || RELAY()) + '/toyrelay.php?a=send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: relayBody(this.app, c.t_url || RELAY(), { to: uidHash(c.t_uid), msg: JSON.stringify(m) }), signal: AbortSignal.timeout(8000) }).catch(e => { throw new UserError('Webseite nicht erreichbar' + (e.message === 'fetch failed' ? '' : ': ' + e.message) + '.'); });
             const d = await require('./servers').readJson(r, 'toyrelay.php');
             if (d.error) throw new UserError(d.error);
@@ -321,7 +368,7 @@ class ToyRemote {
     status() {
         const c = this.cfg();
         return { cfg: c, my_uid: this.myId(), listen: this.st, active: this.active && Date.now() - this.active.at < 120000 ? this.active : null, log: this.log.slice(0, 15),
-            relay: RELAY(), remote_lv: Math.round(this.remoteLv * 100), ctrl: { via: this.ctrl.via || '', lv: Math.round(this.ctrl.lv * 100), active: this.ctrlActive(), ack: this.ctrl.ack, err: this.ctrl.err, addr: this.ctrl.addr } };
+            relay: RELAY(), live: this.liveOk, remote_lv: Math.round(this.remoteLv * 100), ctrl: { via: this.ctrl.via || '', lv: Math.round(this.ctrl.lv * 100), active: this.ctrlActive(), ack: this.ctrl.ack, err: this.ctrl.err, addr: this.ctrl.addr } };
     }
     async action(act, input) {
         this.app.nsfw.need('toys');
@@ -342,7 +389,7 @@ class ToyRemote {
         }
         throw new UserError('Unbekannte Aktion.');
     }
-    stop() { clearInterval(this.timer); this.lan(0); for (const s of this.streams.values()) s.abort.abort(); this.streams.clear(); }
+    stop() { clearInterval(this.timer); this.liveClose(); this.lan(0); for (const s of this.streams.values()) s.abort.abort(); this.streams.clear(); }
 }
 
 module.exports = { ToyRemote, uidHash, topic, enc, dec };

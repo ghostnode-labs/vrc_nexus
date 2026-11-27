@@ -1,0 +1,10 @@
+{
+  "name": "ghostnode-live",
+  "version": "1.0.0",
+  "description": "GhostNode Live – real-time WebSocket service for VRC Nexus (remote control, push notifications), no dependencies",
+  "main": "live.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node live.js" }
+}
