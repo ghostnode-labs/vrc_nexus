@@ -26,6 +26,11 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.3.2 – Android: app menu
+- 📱 **Menu as an app grid:** “Menu” now opens a full-screen grid of square tiles like an app drawer, sorted into sections (quick access, general, friends, community, game & control, content, tools & stats, system) – with a search field
+- ⚙ **Settings** is always the first tile in quick access (it was missing before)
+- 🎨 Design, 👑 admin, 🛡 moderation and the language button sit in one even row at the bottom instead of narrow stacked boxes
+
 ### New in 6.3.1 – Profile banners
 - 🖼 **Profile banners on friend cards:** the large VRChat profile picture (VRC+) now fills the background of each friend card – with a darker gradient on the left so name, status and world stay readable. Settings → Interface → Friends: strong, subtle or off. Your own Nexus decoration still takes priority
 - 🌐 Nexus Web shows the same banners in the friend list (switch “Profilbanner” next to “kompakt”)

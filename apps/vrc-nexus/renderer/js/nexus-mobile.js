@@ -1,6 +1,6 @@
 /* VRC Nexus – 📱 Handy-Oberfläche (3.2.4): schlicht und übersichtlich.
  *   - feste Leiste unten: Start · Freunde · Community · Knöpfe · Menü
- *   - Menü als ausklappbare Liste (gleiche Gruppen wie die PC-Seitenleiste, mit Namen statt nur Symbolen)
+ *   - Menü als App-Raster (6.3.2): quadratische Kacheln nach Bereichen, Schnellzugriff mit ⚙ Einstellungen, Suche
  *   - kompakte Kopfzeile, Abgleich-Zeile nur als kleine Zeile, Design/Sprache im Menü statt schwebender Knöpfe
  *   - Filter der Freundesliste hinter „Filter“
  * Nur aktiv mit body.mobile (Android-App). Ändert keine Funktionen, nur die Anordnung. */
@@ -32,13 +32,75 @@
     foot.className = 'm-mfoot';
     menu.appendChild(foot);
     const park = () => { const c = document.querySelector('.i18n-corner'); if (c && c.parentNode !== foot) foot.appendChild(c); };
-    park();
-    new MutationObserver(park).observe(document.body, { childList: true });
+    new MutationObserver(() => parkS()).observe(document.body, { childList: true });
     // Einstellungen im Menü immer zeigen (am PC über den Kopf-Knopf)
     const st = menu.querySelector('[data-tab="settings"]');
     if (st) { st.hidden = false; st.classList.add('m-show'); }
 
-    const open = on => { body.classList.toggle('m-menu', on); if (on) { const a = menu.querySelector('.vx-tabbtn.active'); if (a) a.scrollIntoView({ block: 'center' }); } };
+    // ---------- 6.3.2: Menü als App-Raster (quadratische Kacheln, sortiert nach Bereichen) ----------
+    const SECTIONS = [
+        ['🏠', 'Allgemein', ['home', 'notifs', 'search', 'feed']],
+        ['👥', 'Freunde', ['friends', 'locations', 'players', 'network', 'netgraph', 'recap', 'moderation']],
+        ['🫂', 'Community', ['community', 'groups', 'pulse']],
+        ['🎮', 'Spiel & Steuerung', ['client', 'remote', 'buttons', 'osc', 'stream', 'nsfw']],
+        ['🎨', 'Inhalte', ['avatars', 'worlds', 'favs', 'coll', 'global', 'gallery', 'shop']],
+        ['🧰', 'Werkzeuge & Auswertung', ['tools', 'warn', 'mod', 'calendar', 'stats', 'activity']],
+        ['⚙', 'System', ['plugins', 'admin']],
+    ];
+    const QUICK = ['settings', 'buttons', 'remote', 'osc', 'notifs', 'search'];   // feste Kacheln oben – ⚙ Einstellungen immer zuerst
+    const sheet = document.createElement('div');
+    sheet.className = 'm-sheet';
+    sheet.setAttribute('role', 'dialog');
+    sheet.innerHTML = '<div class="m-shead"><b>VRC <i>Nexus</i></b><input type="search" class="m-sq" placeholder="' + UI.esc(T('Suchen …')) + '" aria-label="' + UI.esc(T('Menü durchsuchen')) + '"><button type="button" class="m-close" aria-label="' + UI.esc(T('Schließen')) + '">✕</button></div><div class="m-sbody"></div><div class="m-sfoot"></div>';
+    document.body.appendChild(sheet);
+    const visible = b => !b.hidden && !b.closest('[hidden]') && !b.classList.contains('nc-pc-only');
+    function entries() {
+        const seen = new Set(), out = [];
+        menu.querySelectorAll('.vx-tabbtn').forEach(b => {
+            if (!visible(b) && !b.classList.contains('m-show')) return;
+            const key = b.dataset.tab + '|' + (b.dataset.msub || '');
+            if (seen.has(key)) return; seen.add(key);
+            const grp = b.closest('.vx-mgroup'), gname = grp ? (grp.querySelector('.vx-mtop em') || {}).textContent || '' : '';
+            out.push({ b, key, tab: b.dataset.tab, sub: b.dataset.msub || '', ic: (b.querySelector('span') || {}).textContent || '•', label: (b.querySelector('em') || {}).textContent || b.textContent.trim(), group: gname,
+                badge: (b.querySelector('.vx-badge') || {}).textContent || '', active: b.classList.contains('active') });
+        });
+        return out;
+    }
+    const tile = e => '<button type="button" class="m-tile' + (e.active ? ' on' : '') + '" data-k="' + UI.esc(e.key) + '"><span>' + e.ic + '</span><em>' + UI.esc(e.label) + '</em>' + (e.badge ? '<i>' + UI.esc(e.badge) + '</i>' : '') + '</button>';
+    let all = [];
+    function build() {
+        all = entries();
+        const q = sheet.querySelector('.m-sq').value.trim().toLowerCase(), body2 = sheet.querySelector('.m-sbody');
+        if (q) { const hit = all.filter(e => (e.label + ' ' + e.group).toLowerCase().includes(q)); body2.innerHTML = hit.length ? '<div class="m-grid">' + hit.map(tile).join('') + '</div>' : '<p class="vx-empty">' + UI.esc(T('Nichts gefunden.')) + '</p>'; return; }
+        const used = new Set();
+        let h = '';
+        const quick = QUICK.map(t => all.find(e => e.tab === t && !e.sub) || all.find(e => e.tab === t)).filter(Boolean).slice(0, 4);
+        quick.forEach(e => used.add(e.key));
+        if (quick.length) h += '<section class="m-sec quick"><h4>⭐ ' + UI.esc(T('Schnellzugriff')) + '</h4><div class="m-grid">' + quick.map(tile).join('') + '</div></section>';
+        for (const [ic, name, tabs] of SECTIONS) {
+            const list = all.filter(e => tabs.includes(e.tab) && !used.has(e.key));
+            list.forEach(e => used.add(e.key));
+            if (list.length) h += '<section class="m-sec"><h4>' + ic + ' ' + UI.esc(T(name)) + '</h4><div class="m-grid">' + list.map(tile).join('') + '</div></section>';
+        }
+        const rest = all.filter(e => !used.has(e.key));
+        if (rest.length) h += '<section class="m-sec"><h4>➕ ' + UI.esc(T('Mehr')) + '</h4><div class="m-grid">' + rest.map(tile).join('') + '</div></section>';
+        body2.innerHTML = h;
+    }
+    const sfoot = sheet.querySelector('.m-sfoot');
+    const parkS = () => { const c = document.querySelector('.i18n-corner'); if (c && c.parentNode !== sfoot) sfoot.appendChild(c); };
+    const open = on => {
+        body.classList.toggle('m-menu', on);
+        if (on) { sheet.querySelector('.m-sq').value = ''; build(); parkS(); sheet.querySelector('.m-sbody').scrollTop = 0; }
+    };
+    sheet.addEventListener('click', e => {
+        if (e.target.closest('.m-close')) return open(false);
+        const t = e.target.closest('.m-tile'); if (!t) return;
+        const en = all.find(x => x.key === t.dataset.k); if (!en) return;
+        open(false);
+        en.b.click();
+    });
+    sheet.querySelector('.m-sq').addEventListener('input', build);
+    parkS();
     bar.addEventListener('click', e => {
         const b = e.target.closest('[data-mb]'); if (!b) return;
         const t = b.dataset.mb;
