@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wp_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:gravity="center_vertical" android:background="@drawable/nexus_widget_bg">
+    <TextView android:id="@+id/wp_bpm" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#FF5C7A" android:textSize="30sp" android:textStyle="bold" android:maxLines="1" android:text="❤ –" />
+    <TextView android:id="@+id/wp_line" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#38D5E6" android:textSize="12sp" android:maxLines="2" android:ellipsize="end" android:text="Puls &amp; PC" />
+    <TextView android:id="@+id/wp_sub" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#7A8794" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>

@@ -1,11 +1,8 @@
 package de.ghostnode.vrcnexus;
 
-import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.widget.RemoteViews;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,18 +12,14 @@ import org.json.JSONObject;
 
 /** Homescreen-Widget: Freunde im Spiel/online, ungelesene Benachrichtigungen, die ersten Freunde mit Welt. Tippen öffnet die App. */
 public class NexusWidget extends AppWidgetProvider {
-    static final String PREFS = "nexus_widget";
+    static final String PREFS = WidgetKit.PREFS;
 
     @Override
     public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
         for (int id : ids) mgr.updateAppWidget(id, build(ctx));
     }
 
-    static void refreshAll(Context ctx) {
-        AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
-        int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, NexusWidget.class));
-        for (int id : ids) mgr.updateAppWidget(id, build(ctx));
-    }
+    static void refreshAll(Context ctx) { WidgetKit.refreshAll(ctx); }
 
     static RemoteViews build(Context ctx) {
         RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.nexus_widget);
@@ -51,10 +44,7 @@ public class NexusWidget extends AppWidgetProvider {
         v.setTextViewText(R.id.w_line, line);
         v.setTextViewText(R.id.w_list, list);
         v.setTextViewText(R.id.w_foot, foot);
-        Intent open = new Intent(ctx, MainActivity.class);
-        open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pi = PendingIntent.getActivity(ctx, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        v.setOnClickPendingIntent(R.id.w_root, pi);
+        v.setOnClickPendingIntent(R.id.w_root, WidgetKit.open(ctx, "open", "friends"));
         return v;
     }
 

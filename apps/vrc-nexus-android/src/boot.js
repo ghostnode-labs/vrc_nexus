@@ -98,17 +98,54 @@ if (native) {
     // Homescreen-Widget mit einer Zusammenfassung versorgen (beim Start, jede Minute, beim Verlassen der App)
     const NexusWidget = native ? registerPlugin('NexusWidget') : null;
     // Homescreen-Widget: Text in der gewählten Sprache (Übersetzer aus nexus-i18n.js, sobald geladen)
+    // 7.0.1: Texte für alle Widgets (Puls & PC, Events, Benachrichtigungen, Schnellzugriff) – Schlüssel = deutsche Originale aus 10.tsv
+    const WL = { stand: 'Stand', live: 'läuft gerade', in: 'in', today: 'heute', days: 'Tagen', years: 'Jahre', events: 'Nächste Events', no_events: 'Keine Events geplant.',
+        no_data: 'Noch keine Daten – App einmal öffnen.', notifs: 'Benachrichtigungen', no_notifs: 'Alles gelesen 🎉', pc_none: 'Nicht mit dem PC gekoppelt – tippen zum Koppeln',
+        pc_old: 'PC gerade nicht erreichbar', vrc_off: 'VRChat aus', private: 'Privat-Modus', sleep: 'Schlafmodus an',
+        q_friends: 'Freunde', q_events: 'Events', q_clubs: 'Clubs', q_buttons: 'Knöpfe', q_panic: 'Panik' };
     const widgetData = () => {
         const d = app.home.summary();
         const t = typeof window.t === 'function' ? window.t : s => s;
         d.line = t(d.in_game + ' im Spiel') + ' · ' + t(d.online + ' online');
         d.stand = t('Stand');
+        d.L = Object.fromEntries(Object.entries(WL).map(([k, v]) => [k, t(v)]));
         return d;
     };
-    const pushWidget = () => { if (!NexusWidget) return; try { NexusWidget.update({ data: JSON.stringify(widgetData()) }).catch(() => {}); } catch (e) { /* egal */ } };
+    let pcAt = 0;
+    const pushWidget = async () => {
+        if (!NexusWidget) return;
+        // Puls & PC: höchstens jede Minute beim gekoppelten PC nachfragen (nur solange die App läuft)
+        if (app.pclink && app.pclink.paired() && Date.now() - pcAt > 55000) { pcAt = Date.now(); await app.pclink.state().catch(() => {}); }
+        try { NexusWidget.update({ data: JSON.stringify(widgetData()) }).catch(() => {}); } catch (e) { /* egal */ }
+    };
     setTimeout(pushWidget, 8000);
     setInterval(pushWidget, 60000);
     document.addEventListener('visibilitychange', () => { if (document.hidden) pushWidget(); });
+
+    // 7.0.1: Tippen auf ein Widget → Bereich öffnen oder Aktion ausführen (Android hat das Ziel geprüft und gemerkt)
+    const runPending = async () => {
+        if (!NexusWidget) return;
+        let p = '';
+        try { p = (await NexusWidget.takePending()).pending || ''; } catch (e) { return; }
+        if (!p) return;
+        for (let i = 0; i < 50 && !window.NexusUI; i++) await new Promise(r => setTimeout(r, 200));   // Oberfläche erst fertig laden
+        const UI = window.NexusUI; if (!UI) return;
+        const t = typeof window.t === 'function' ? window.t : s => s;
+        const [kind, what] = p.split(':');
+        if (kind === 'open') {
+            if (what === 'pc') { if (window.NexusOpenTool) window.NexusOpenTool('pc'); return; }
+            UI.tab(what);
+            return;
+        }
+        if (kind === 'act' && what === 'panic') {
+            if (!app.pclink || !app.pclink.paired()) { UI.toast(t('Für Panik vom Handy erst mit dem PC koppeln.'), true); if (window.NexusOpenTool) window.NexusOpenTool('pc'); return; }
+            try { await app.pclink.act('nsfw_panic', {}); UI.toast('🛑 ' + t('Panik an den PC gesendet – alles gestoppt.')); }
+            catch (e) { UI.toast('⚠ ' + e.message, true); }
+            pushWidget();
+        }
+    };
+    if (NexusWidget) { try { NexusWidget.addListener('pending', () => { runPending(); }); } catch (e) { /* egal */ } }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) runPending(); });
 
     window.NexusMobile = { download, imgFix, pushWidget };
     status('Starte …');
@@ -120,6 +157,7 @@ if (native) {
     const cs = document.getElementById('clientStandalone');
     if (cs) cs.parentNode.removeChild(cs);
     setTimeout(imgFix, 0);
+    runPending();   // Start über ein Widget
 })().catch(e => { status('⚠ Start fehlgeschlagen: ' + e.message); console.error(e); });
 
 // ---------- Bilder: „nexus.php?img=…“ gibt es nicht als Datei → über fetch holen ----------

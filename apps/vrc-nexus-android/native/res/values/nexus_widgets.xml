@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nexus_w_friends">Freunde online</string>
+    <string name="nexus_w_pulse">Puls &amp; PC</string>
+    <string name="nexus_w_events">Nächste Events</string>
+    <string name="nexus_w_notifs">Benachrichtigungen</string>
+    <string name="nexus_w_quick">Schnellzugriff &amp; Panik</string>
+    <style name="NexusQuickBtn">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">3dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#E2E8F0</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:background">@drawable/nexus_widget_btn</item>
+    </style>
+</resources>

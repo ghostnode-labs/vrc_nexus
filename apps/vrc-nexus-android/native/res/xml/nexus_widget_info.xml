@@ -8,5 +8,5 @@
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/nexus_widget"
     android:previewLayout="@layout/nexus_widget"
-    android:description="@string/app_name"
+    android:description="@string/nexus_w_friends"
     android:widgetCategory="home_screen" />

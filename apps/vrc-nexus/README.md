@@ -26,6 +26,14 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.0.1 – More Android widgets
+Long-press the home screen → Widgets → VRC Nexus. All widgets use the app language and are refreshed by the app every minute while it runs.
+- ❤ **Heart rate & PC** (2×1): heart rate, world and player count from the paired PC (phone ↔ PC); no world in private mode, notice when the PC is unreachable; tap opens the PC connection
+- 📅 **Next events** (3×2): next group events with countdown (“in 25 min”, “happening now”), ⭐ for followed events, plus birthdays and friendship anniversaries
+- 🔔 **Notifications** (3×2): unread count as a badge and the latest invites/requests
+- ⚡ **Quick access & panic** (4×1): Friends, Events, Clubs and Buttons with one tap – and 🛑 **Panic**, which immediately stops toys, scenes and 18+ on the paired PC (only ever in the safe direction)
+- 👥 The existing friends widget now opens the friend list directly
+
 ### New in 7.0.0 – Clubs & Events
 - 🏠 **Clubs** (Community → Clubs, in the app and on the GhostNode website with the same Nexus account): name, address, description, rules, topic, language, colour and banner; joining is *open*, *by application* (with up to 5 entry questions) or *invite only*
 - 👑 **Roles:** leaders, moderators and members – accept or decline applications, invite, make moderator, remove, ban and hand over leadership

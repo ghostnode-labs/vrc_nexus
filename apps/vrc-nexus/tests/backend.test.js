@@ -4329,3 +4329,25 @@ test('7.0: Clubs & Events – App reicht an nexusclubs.php durch (JSON aus „da
         await assert.rejects(c.club('view', { data: '{"club":"x"}' }), /Club nicht gefunden/);
     } finally { globalThis.fetch = old; }
 });
+
+test('7.0.1: Android-Widgets – Zusammenfassung mit Events, Jubiläen, Benachrichtigungen und PC-Puls (kurz, ohne Welt im Privat-Modus)', () => {
+    const { Home } = require('../backend/home');
+    const now = Math.floor(Date.now() / 1000);
+    let pcState = { bpm: 77, world: 'Club Nachtfalter', players: 9, running: true, private: false, t: Date.now() };
+    const app = { game: { state: {} }, mobile: true,
+        vrc: { account: () => ({ display_name: 'Me', me: { status: 'active' } }), friendList: () => [], feed: () => [],
+            calendarList: () => [{ id: 1, title: 'Vorbei', starts: now - 7200, ends: now - 3600 }, { id: 2, title: 'Später', group_name: 'B', starts: now + 7200, ends: now + 9000 }, { id: 3, title: 'Gleich', group_name: 'A', starts: now + 600, ends: now + 4000, following: true }] },
+        x: { notifList: () => ({ unseen: 3, items: [{ type: 'invite', title: 'Einladung', message: 'x'.repeat(300), ts: 5 }] }) }, updater: { status: () => null },
+        insights: { anniversaries: () => [{ name: 'Mira', kind: 'birthday', in_days: 0, years: 0 }] },
+        pclink: { status: () => ({ paired: true, pc: 'Gaming-PC', error: '', state: pcState }) } };
+    const s = new Home(app).summary();
+    assert.deepStrictEqual(s.events.map(e => e.title), ['Gleich', 'Später'], 'nur kommende, nach Beginn sortiert');
+    assert.strictEqual(s.events[0].following, true);
+    assert.deepStrictEqual(s.anniv, [{ name: 'Mira', kind: 'birthday', in_days: 0, years: 0 }]);
+    assert.strictEqual(s.notif_items[0].message.length, 80, 'Texte gekürzt');
+    assert.deepStrictEqual([s.pc.paired, s.pc.bpm, s.pc.world, s.pc.players, s.pc.name], [true, 77, 'Club Nachtfalter', 9, 'Gaming-PC']);
+    pcState = { bpm: 0, world: '', players: 0, running: true, private: true, t: Date.now() };   // PC liefert im Privat-Modus keine Welt
+    assert.deepStrictEqual([new Home(app).summary().pc.private, new Home(app).summary().pc.world], [true, '']);
+    delete app.pclink; assert.strictEqual(new Home(app).summary().pc, null, 'ohne Kopplung kein PC-Teil');
+    assert.ok(JSON.stringify(s).length < 32768, 'passt ins Widget (Grenze in WidgetBridge)');
+});

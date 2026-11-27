@@ -5,7 +5,12 @@ cd "$(dirname "$0")/.."
 SRC=android/app/src/main
 cp native/java/de/ghostnode/vrcnexus/*.java "$SRC/java/de/ghostnode/vrcnexus/"
 cp -r native/res/* "$SRC/res/"
-grep -q 'NexusWidget' "$SRC/AndroidManifest.xml" || sed -i 's#</application>#    <receiver android:name=".NexusWidget" android:exported="true" android:label="VRC Nexus">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/nexus_widget_info" />\n        </receiver>\n    </application>#' "$SRC/AndroidManifest.xml"
+grep -q 'NexusWidget' "$SRC/AndroidManifest.xml" || sed -i 's#</application>#    <receiver android:name=".NexusWidget" android:exported="true" android:label="@string/nexus_w_friends">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/nexus_widget_info" />\n        </receiver>\n    </application>#' "$SRC/AndroidManifest.xml"
+# 7.0.1: weitere Widgets (Puls & PC, Nächste Events, Benachrichtigungen, Schnellzugriff & Panik)
+for W in PulseWidget:nexus_widget_pulse_info:nexus_w_pulse EventWidget:nexus_widget_events_info:nexus_w_events NotifWidget:nexus_widget_notifs_info:nexus_w_notifs QuickWidget:nexus_widget_quick_info:nexus_w_quick; do
+    C=${W%%:*}; R=${W#*:}; I=${R%%:*}; L=${R#*:}
+    grep -q "\.$C\"" "$SRC/AndroidManifest.xml" || sed -i "s#</application>#    <receiver android:name=\".$C\" android:exported=\"true\" android:label=\"@string/$L\">\n            <intent-filter><action android:name=\"android.appwidget.action.APPWIDGET_UPDATE\" /></intent-filter>\n            <meta-data android:name=\"android.appwidget.provider\" android:resource=\"@xml/$I\" />\n        </receiver>\n    </application>#" "$SRC/AndroidManifest.xml"
+done
 # Updates selbst installieren dürfen (Android fragt den Nutzer trotzdem)
 grep -q 'REQUEST_INSTALL_PACKAGES' "$SRC/AndroidManifest.xml" || sed -i 's#<application#<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application#' "$SRC/AndroidManifest.xml"
 # 5.2.3: Handy ↔ PC im Heimnetz läuft über http://PC:17874 – Klartext-Verbindungen erlauben (Kopplung mit eigenem Schlüssel je Gerät)
