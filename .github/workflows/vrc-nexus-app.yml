@@ -40,6 +40,13 @@ jobs:
             apps/vrc-nexus/
             !apps/vrc-nexus/node_modules/
           retention-days: 1
+      # 8.1.1: der Live-Dienst wird vom Fernsteuerungs-Test (8.0.20) gebraucht – ohne ihn scheiterte „Tests (Windows)“ und es gab keine Windows-Version
+      - name: Live-Dienst für die Tests weitergeben
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-src
+          path: apps/nexus-live/
+          retention-days: 1
 
   build-windows:
     needs: test
@@ -50,6 +57,11 @@ jobs:
         with:
           name: app-src
           path: app
+      - name: Live-Dienst für die Tests holen
+        uses: actions/download-artifact@v4
+        with:
+          name: live-src
+          path: nexus-live
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
