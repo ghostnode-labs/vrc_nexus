@@ -10,6 +10,7 @@ const path = require('path');
 const SCHEMA_VERSION = 8;
 
 const SCHEMA = `
+CREATE TABLE IF NOT EXISTS friend_banners (user_id TEXT NOT NULL, vrc_id TEXT NOT NULL, banner TEXT NOT NULL DEFAULT '', PRIMARY KEY (user_id, vrc_id));
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS user_cache (vrc_id TEXT PRIMARY KEY, data TEXT NOT NULL, fetched INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS mutual_cache (vrc_id TEXT PRIMARY KEY, data TEXT NOT NULL, fetched INTEGER NOT NULL);

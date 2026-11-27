@@ -14,7 +14,7 @@ const SYNC_MIN = 45;
 const OFFLINE_SYNC = 900;
 const FEED_KEEP_DAYS = 180;
 const UID = 1;   // die App hat genau ein Konto
-const VERSION = '6.3.0';
+const VERSION = '6.3.1';
 
 class Vrc {
     /**
@@ -227,6 +227,7 @@ class Vrc {
         const up = db.prepare(`INSERT OR REPLACE INTO friends (user_id, vrc_id, display_name, state, status, status_desc, location, platform, image, avatar_thumb, tags, bio, last_login, since, updated, fav_group, friend_since, pronouns)
                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
         const log = (type, id, name, o = '', n = '') => { if (!first) feed.run(UID, t, type, id, name, str(o), str(n)); };
+        const banUp = db.prepare('INSERT OR REPLACE INTO friend_banners (user_id, vrc_id, banner) VALUES (?, ?, ?)');   // 6.3: Profilbanner (großes Profilbild, VRC+)
         const worlds = [];
         const watchHits = [], watchEvents = [];
         db.tx(() => {
@@ -269,6 +270,7 @@ class Vrc {
                 }
                 if (state === 'online') { const l = U.location(loc); if (l.world) worlds.push(l.world); }
                 if (this.onUserData) try { this.onUserData(id, f); } catch (e) { /* Dekoration egal */ }
+                banUp.run(UID, id, U.https(f.profilePicOverride) || '');
                 up.run(UID, id, row.name, row.state, row.status, row.sd, row.loc, row.pf, row.img, row.av, row.tags, row.bio, row.ll, since, t,
                     o ? o.fav_group : '', o ? int(o.friend_since) : (first ? 0 : t), cut(f.pronouns || (o && o.pronouns) || '', 32));
             }
@@ -343,7 +345,8 @@ class Vrc {
     }
 
     friendList() {
-        const rows = this.db.prepare(`SELECT f.*, n.note, n.favorite, n.tags AS ltags, n.watch FROM friends f LEFT JOIN notes n ON n.user_id = f.user_id AND n.vrc_id = f.vrc_id
+        const rows = this.db.prepare(`SELECT f.*, n.note, n.favorite, n.tags AS ltags, n.watch, b.banner FROM friends f LEFT JOIN notes n ON n.user_id = f.user_id AND n.vrc_id = f.vrc_id
+                                      LEFT JOIN friend_banners b ON b.user_id = f.user_id AND b.vrc_id = f.vrc_id
                                       WHERE f.user_id = ? ORDER BY f.display_name COLLATE NOCASE`).all(UID);
         const worlds = this.worlds(rows.map(r => U.location(r.location).world || ''));
         return rows.map(r => {
@@ -352,7 +355,7 @@ class Vrc {
             const tags = r.tags !== '' ? r.tags.split(' ') : [];
             return { id: r.vrc_id, name: r.display_name, state: r.state, status: r.status, status_desc: r.status_desc, loc, platform: U.VRC_PLATFORM[r.platform] || r.platform,
                 image: r.image, trust: U.trust(tags), since: int(r.since), note: str(r.note), favorite: !!r.favorite, last_login: r.last_login, pf: r.platform, fav_group: r.fav_group,
-                friend_since: int(r.friend_since), status_key: r.status, lists: str(r.ltags).split(',').map(s => s.trim()).filter(Boolean), watch: !!r.watch, pronouns: str(r.pronouns) };
+                friend_since: int(r.friend_since), status_key: r.status, lists: str(r.ltags).split(',').map(s => s.trim()).filter(Boolean), watch: !!r.watch, pronouns: str(r.pronouns), banner: str(r.banner) };
         });
     }
 

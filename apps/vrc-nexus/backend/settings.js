@@ -76,6 +76,7 @@ const FIELDS = [
     ['ui.show_images', 'ui', 'Aussehen', 'bool', true, 'Bilder (Avatare, Welten) anzeigen', 'Aus spart Datenvolumen.'],
     ['ui.compact', 'ui', 'Aussehen', 'bool', false, 'Kompakte Freundesliste', ''],
     ['ui.nav', 'ui', 'Menü', 'select', 'side', 'Hauptmenü', 'Links: Menü als Seitenleiste, oben stehen die Unterpunkte der aktuellen Seite.', [['side', 'links (Seitenleiste)'], ['top', 'oben']]],
+    ['ui.friend_banner', 'ui', 'Freunde', 'select', 'strong', 'Profilbanner auf den Freundes-Karten', 'Das große Profilbild aus VRChat (VRC+) als Hintergrund der Karte.', [['strong', 'kräftig'], ['soft', 'dezent'], ['off', 'aus']]],
     ['ui.menu_style', 'ui', 'Menü', 'select', 'both', 'Menü-Darstellung', '', [['both', 'Symbol + Text'], ['icons', 'nur Symbole'], ['text', 'nur Text']]],
     ['ui.sticky_menu', 'ui', 'Menü', 'bool', true, 'Menü beim Scrollen oben festhalten', ''],
     ['ui.start_tab', 'ui', 'Menü', 'select', 'last', 'Beim Start öffnen', '', [['last', 'zuletzt geöffnete Seite']].concat(START_TABS)],

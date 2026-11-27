@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.3.1 – Profile banners
+- 🖼 **Profile banners on friend cards:** the large VRChat profile picture (VRC+) now fills the background of each friend card – with a darker gradient on the left so name, status and world stay readable. Settings → Interface → Friends: strong, subtle or off. Your own Nexus decoration still takes priority
+- 🌐 Nexus Web shows the same banners in the friend list (switch “Profilbanner” next to “kompakt”)
+
 ### New in 6.3.0 – Client tools
 - 🔑 **App keys with permissions** (Tools → Stream Deck): every script, bot or overlay gets its own key – 📖 read only, 💬 chatbox & status, 🎚 avatar & OSC or 🔓 everything. Only a checksum is stored, each key can be revoked on its own; works for the HTTP API and the WebSocket client API
 - ⌨ **Free global keyboard shortcuts** (Settings → System): panic, chatbox rotator, sleep mode, mute, clear chatbox, VR overlay, bring VRC Nexus to front – also while VRChat is in front

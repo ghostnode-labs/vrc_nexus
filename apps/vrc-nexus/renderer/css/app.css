@@ -1453,3 +1453,15 @@ html[data-scheme="light"] body.hi-contrast { --text-muted: #2f3b48; }
 .perf-tile span { font-size: 1.1rem; } .perf-tile b { font-size: 1.05rem; } .perf-tile small { opacity: .7; }
 .perf-tile.warn { border-color: rgba(255,170,60,.7); background: rgba(255,170,60,.08); }
 .set-hit { outline: 2px solid var(--accent, #38d5e6); outline-offset: 3px; border-radius: 6px; transition: outline-color .4s; }
+
+/* 6.3: Profilbanner (großes VRChat-Profilbild) als Hintergrund der Freundes-Karte */
+.vx-friend.fc.fc-ban { position: relative; isolation: isolate; overflow: hidden; min-height: 92px; }
+.vx-friend.fc.fc-ban::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--fb) center 30% / cover no-repeat; transition: transform .4s; }
+.vx-friend.fc.fc-ban::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(100deg, rgba(var(--panel-rgb), .78) 0%, rgba(var(--panel-rgb), .45) 45%, rgba(var(--panel-rgb), .2) 100%); }
+.vx-friend.fc.fc-ban.fb-soft::after { background: linear-gradient(100deg, rgba(var(--panel-rgb), .94) 38%, rgba(var(--panel-rgb), .6) 75%, rgba(var(--panel-rgb), .35)); }
+.vx-friend.fc.fc-ban:hover::before { transform: scale(1.04); }
+.vx-friend.fc.fc-ban .fc-name b { background: rgba(0, 0, 0, .42); padding: 1px 8px; border-radius: 6px; }
+.vx-friend.fc.fc-ban .fc-name, .vx-friend.fc.fc-ban .fc-sd, .vx-friend.fc.fc-ban .fc-loc, .vx-friend.fc.fc-ban .vx-f-since { text-shadow: 0 1px 3px rgba(0, 0, 0, .9), 0 0 8px rgba(0, 0, 0, .6); }
+.vx-friend.fc.fc-ban .fc-av .vx-av { box-shadow: 0 0 0 2px rgba(0, 0, 0, .35), 0 4px 14px rgba(0, 0, 0, .5); }
+.vx-friend.fc.fc-ban.st-offline { opacity: .7; }
+.vx-friend.fc.fc-ban.dc-has-bg::before, .vx-friend.fc.fc-ban.dc-has-bg::after { display: none; }   /* eigene Nexus-Dekoration hat Vorrang */

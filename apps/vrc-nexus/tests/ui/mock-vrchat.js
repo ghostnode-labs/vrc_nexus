@@ -13,7 +13,7 @@ const names = ['Luna Fox', 'Wolf Byte', 'Pixel Cat', 'Nova Star', 'Ember Fae', '
 const friends = names.map((name, i) => ({
     id: uid(10 + i), displayName: name, status: ['join me', 'active', 'ask me', 'busy'][i % 4], statusDescription: i % 2 ? 'chillen 🎶' : '',
     location: i < 3 ? WORLD + ':1234~friends(' + ME + ')~region(eu)' : i < 6 ? 'offline' : 'private', platform: 'standalonewindows', last_platform: 'standalonewindows',
-    tags: ['system_trust_basic', 'system_trust_known'], currentAvatarThumbnailImageUrl: '', userIcon: '', profilePicOverride: '', bio: 'Testprofil', bioLinks: [],
+    tags: ['system_trust_basic', 'system_trust_known'], currentAvatarThumbnailImageUrl: '', userIcon: '', profilePicOverride: i % 3 === 0 ? 'https://api.vrchat.cloud/api/1/file/file_banner' + i + '/1/file' : '', bio: 'Testprofil', bioLinks: [],
     last_login: new Date().toISOString(), last_activity: new Date().toISOString(), date_joined: '2021-01-01', isFriend: true,
 }));
 // Profil-Dekorationen (3.1): Katalog-ID, Name oder URL – wie bei VRChat nicht dokumentiert, darum alle drei Fälle

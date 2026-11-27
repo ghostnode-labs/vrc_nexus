@@ -417,8 +417,10 @@
         return '<span class="vx-loc">🌐 <a href="#" data-world="' + esc(l.world) + '">' + esc(l.world_name || 'Welt wird geladen …') + '</a> <small>' + esc(l.access) + ' · ' + esc(l.region) + '</small></span>';
     };
     const FLAG = { EU: '🇪🇺', US: '🇺🇸', USE: '🇺🇸', USW: '🇺🇸', USX: '🇺🇸', JP: '🇯🇵' };
+    const banMode = () => { const m = ((window.VRCX || {}).ui || {})['ui.friend_banner']; return m === 'off' || m === 'soft' ? m : 'strong'; };   // 6.3: Profilbanner
+    const banStyle = u => { const p = u && pic(u); return p ? ';--fb:url(\'' + esc(p.replace(/['"()\\\s]/g, encodeURIComponent)) + '\')' : ''; };
     function friendCard(f) {
-        const compact = $('#compactView').checked;
+        const compact = $('#compactView').checked, bm = banMode(), fb = bm !== 'off' && f.banner ? banStyle(f.banner) : '';
         const st = f.state === 'offline' ? 'offline' : f.status, col = (ST[st] || ST.offline).color, l = f.loc || {};
         let where;
         if (f.state === 'online' && l.kind === 'world') where = '<span class="fc-loc"><span class="fc-flag" title="Region ' + esc(l.region) + '">' + (FLAG[l.region] || '🌐') + '</span><a href="#" data-world="' + esc(l.world) + '">'
@@ -426,7 +428,7 @@
         else if (f.state === 'online') where = '<span class="fc-loc muted"><span class="fc-flag">🔒</span>' + esc(l.label || 'Private Welt') + '</span>';
         else if (f.state === 'active') where = '<span class="fc-loc muted"><span class="fc-flag">💻</span>' + esc(f.platform || 'Website / App') + '</span>';
         else where = '<span class="fc-loc muted">Offline' + (f.since ? ' · ' + ago(f.since) : '') + '</span>';
-        return '<div class="vx-friend fc st-' + f.state + (f.favorite ? ' fav' : '') + (compact ? ' compact' : '') + '" data-user="' + esc(f.id) + '" tabindex="0" role="button" style="--sc:' + esc(col) + '">'
+        return '<div class="vx-friend fc st-' + f.state + (f.favorite ? ' fav' : '') + (compact ? ' compact' : '') + (fb ? ' fc-ban fb-' + bm : '') + '" data-user="' + esc(f.id) + '" tabindex="0" role="button" style="--sc:' + esc(col) + fb + '">'
             + '<span class="fc-av">' + img(f.image, 'vx-av', f.name) + '</span>'
             + '<span class="vx-f-main"><span class="fc-name"><b style="color:' + esc(tcol(f)) + '">' + esc(f.name) + '</b>' + (f.favorite ? ' ⭐' : '')
             + (f.fav_group ? ' <span class="vx-vfav" title="VRChat-Favorit: ' + esc((state.fav_groups || {})[f.fav_group] || f.fav_group) + '">♥</span>' : '') + (f.pronouns ? ' <span class="vx-pron" data-nogender>' + esc(f.pronouns) + '</span>' : '') + '</span>'
