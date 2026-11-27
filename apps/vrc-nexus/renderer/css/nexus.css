@@ -715,3 +715,26 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 .st-x:hover { color: var(--accent-red); border-color: var(--accent-red); }
 .st-favshop { vertical-align: middle; margin-left: 8px; }
 #shopSaved:not(:empty) { margin-bottom: 18px; }
+/* 7.0 Clubs & Events (gleiche Datei wie auf der Webseite: nexus-clubs.js) */
+.nw-card { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 14px 16px; margin-bottom: 10px; }
+#nwClubs .nw-card h3 { margin: 0 0 10px; font-size: 0.95rem; color: var(--accent-cyan); letter-spacing: 1px; }
+#nwClubs .nw-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#nwClubs .nw-row .sp { flex: 1; }
+#nwClubs .nw-muted { color: var(--text-muted); font-size: 0.82rem; }
+#nwClubs .nw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+#nwClubs .nw-text { white-space: pre-wrap; word-break: break-word; }
+#nwClubs .nw-row select, #nwClubs .nw-row input[type=search] { width: auto; flex: 1; min-width: 130px; }
+#nwClubs a[data-goclub] { color: var(--accent-cyan); }
+.cl-ban { height: 70px; margin: -14px -16px 10px; background: center/cover no-repeat; }
+.cl-ban-big { height: 140px; margin: 0 0 10px; border: 1px solid var(--border-color); }
+.cl-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.cl-form label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--text-muted); }
+.cl-form label:has(> input[type=checkbox]) { flex-direction: row; align-items: center; }
+.cl-form .cl-wide { grid-column: 1 / -1; }
+.cl-form input:not([type=checkbox]):not([type=color]), .cl-form select, .cl-form textarea { width: 100%; box-sizing: border-box; }
+.cl-day { margin: 14px 0 6px; font-size: .9rem; color: var(--accent-cyan); text-transform: capitalize; }
+.cl-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
+.cl-gal figure { margin: 0; background: var(--panel-bg); border: 1px solid var(--border-color); }
+.cl-gal img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
+.cl-gal figcaption { padding: 6px 8px; font-size: .82rem; }
+.cl-mem { padding: 4px 0; border-bottom: 1px solid var(--border-color); }

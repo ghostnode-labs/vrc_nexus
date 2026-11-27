@@ -4306,3 +4306,26 @@ test('6.7: Grenzen & Sicherheit – Grenzen-Profil, Safeword über alle Wege, Pr
     const f = (await s.action('nsfwx_fantasy_save', { title: 'Onsen-Abend', place: 'Onsen', roles: JSON.stringify([{ name: 'Gast', desc: 'neugierig' }, { name: 'Wirtin' }]), safeword: 'Mango' })).saved;
     assert.match((await s.action('nsfwx_fantasy_text', { id: f.id })).text, /🎭 Onsen-Abend\n📍 Onsen\n👤 Gast: neugierig\n👤 Wirtin\n🛑 Safeword: Mango/);
 });
+
+test('7.0: Clubs & Events – App reicht an nexusclubs.php durch (JSON aus „data“, Token nicht überschreibbar, nur bekannte Aktionen)', async () => {
+    const { Community } = require('../backend/community');
+    const sent = [];
+    const fake = { account: { current: () => ({ token: 'tok' }) }, nsfw: { serviceToken: () => '', roles: () => ({ roles: [] }), access: () => ({ unlocked: false }) } };
+    const c = new Community(fake);
+    const old = globalThis.fetch;
+    globalThis.fetch = async (url, o) => { const u = new URL(url); sent.push({ path: u.pathname, a: u.searchParams.get('a'), body: JSON.parse(o.body) }); return { ok: true, status: 200, json: async () => ({ msg: 'ok', items: [] }) }; };
+    try {
+        const d = await c.club('rsvp', { data: JSON.stringify({ id: 5, status: 'going', token: 'fremd', key: 'NXK1-x' }) });
+        let s = sent.pop();
+        assert.strictEqual(s.path, '/nexusclubs.php'); assert.strictEqual(s.a, 'rsvp');
+        assert.deepStrictEqual(s.body, { id: 5, status: 'going', token: 'tok', key: '' }, 'eigenes Token gewinnt, fremder Schlüssel fliegt raus');
+        assert.ok(d._site, 'Webseiten-Adresse für iCal-Links');
+        await c.club('join', { data: JSON.stringify({ club: 'mein-club', answers: ['Musik'] }) });
+        assert.deepStrictEqual(sent.pop().body.answers, ['Musik']);
+        await c.club('list', { data: 'kaputt' }); assert.deepStrictEqual(sent.pop().body, { token: 'tok', key: '' }, 'kaputtes JSON = leere Anfrage');
+        await assert.rejects(c.club('media', { data: '{}' }), /Unbekannte Aktion/);
+        await assert.rejects(c.club('../nexuscomm', { data: '{}' }), /Unbekannte Aktion/);
+        globalThis.fetch = async () => ({ ok: false, status: 400, json: async () => ({ error: 'Club nicht gefunden.' }) });
+        await assert.rejects(c.club('view', { data: '{"club":"x"}' }), /Club nicht gefunden/);
+    } finally { globalThis.fetch = old; }
+});

@@ -71,6 +71,8 @@
                 <button type="button" class="vx-tabbtn cm-nsfw-only" data-tab="community" data-msub="nsfw" hidden><span>🔞</span><em>NSFW-Feed</em></button>
                 <button type="button" class="vx-tabbtn cm-nsfw-only" data-tab="community" data-msub="links18" hidden><span>💌</span><em>18+-Anfragen</em></button>
                 <button type="button" class="vx-tabbtn" data-tab="community" data-msub="chat"><span>💬</span><em>Chat</em></button>
+                <button type="button" class="vx-tabbtn" data-tab="clubs" data-msub="browse"><span>🏠</span><em>Clubs</em></button>
+                <button type="button" class="vx-tabbtn" data-tab="clubs" data-msub="cal"><span>🗓️</span><em>Event-Kalender</em></button>
                 <button type="button" class="vx-tabbtn" data-tab="netgraph"><span>🕸</span><em>Gemeinsames Netzwerk</em></button>
                 <button type="button" class="vx-tabbtn" data-tab="feed" data-msub="friendlog"><span>📜</span><em>Freundes-Log</em></button>
                 <button type="button" class="vx-tabbtn" data-tab="moderation"><span>🚫</span><em>Blockiert &amp; stumm</em></button>
@@ -307,6 +309,8 @@
         <div id="modBox"></div>
     </section>
 
+    <section class="vx-tab" data-pane="clubs" hidden><div id="nwClubs" class="nw"></div></section>
+
     <section class="vx-tab" data-pane="community" hidden>
         <nav class="nc-sub" id="cmtSub"></nav>
         <div id="cmtBox"></div>
@@ -431,6 +435,7 @@
 <script src="js/nexus-profile18.js"></script>
 <script src="js/nexus-linkcards.js"></script>
 <script src="js/nexus-community.js"></script>
+<script src="js/nexus-clubs.js"></script>
 <script src="js/nexus-buttons.js"></script>
 <script src="js/nexus-chatmods.js"></script>
 <script src="js/nexus-osctools.js"></script>

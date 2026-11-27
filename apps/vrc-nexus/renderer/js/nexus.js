@@ -192,6 +192,7 @@
         if (name === 'warn' && window.NexusWarn) window.NexusWarn.open();
         if (name === 'pulse' && window.NexusPulse) window.NexusPulse.open();   // 3.9
         if (name === 'community' && window.NexusCommunity) window.NexusCommunity.open(sub);
+        if (window.NexusClubs) window.NexusClubs.open(name, sub);   // 7.0
         if (name === 'buttons' && window.NexusButtons) window.NexusButtons.open();
         if (name === 'osc' && window.NexusMOsc) window.NexusMOsc.open();
         if (name === 'netgraph' && window.NexusNet) window.NexusNet.open();   // 3.2.3: Gemeinsames Netzwerk

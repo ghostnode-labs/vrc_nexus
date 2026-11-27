@@ -1,5 +1,10 @@
 [
  {
+  "version": "7.0.0",
+  "title": "Clubs & Events",
+  "body": "- 🏠 **Clubs** (Community → Clubs, in the app and on the GhostNode website with the same Nexus account): name, address, description, rules, topic, language, colour and banner; joining is *open*, *by application* (with up to 5 entry questions) or *invite only*\n- 👑 **Roles:** leaders, moderators and members – accept or decline applications, invite, make moderator, remove, ban and hand over leadership\n- 📰 **Club feed** with pinned posts and a 🖼 **gallery** (https image links) – visible to members (open clubs: to everyone)\n- 📅 **Events** with place (world/instance), spots, ✅ sign-up, 🤔 maybe and a ⏳ **waitlist that moves up automatically** when someone cancels or spots are added; events can be members-only or cancelled\n- 📆 **iCal per club** to subscribe in Google/Apple/Outlook calendars (public events only) and an 🗄 **archive** of past events\n- 🗓️ **Event calendar** across all public clubs, filterable by topic, language, time of day and period – also as a public page on the website (`events.php`)"
+ },
+ {
   "version": "6.7.0",
   "title": "",
   "body": "- 🔞 *** (details in the app under “About” when NSFW is unlocked)\n- ⌨ New global shortcut slot for the 🔞 area; Stream Deck / client API action `safeword`"
