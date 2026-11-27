@@ -170,7 +170,7 @@ class Automation {
     }
     start() {
         this.app.game.osc.onMessage = (a, args) => this.onOsc(a, args);
-        this.timer = setInterval(() => { try { this.tick(); } catch (e) { /* egal */ } }, 5000);
+        this.timer = setInterval(() => { if (this.app.energy && this.app.energy.skip('automation', 5000)) return; try { this.tick(); } catch (e) { /* egal */ } }, 5000);
         if (this.timer.unref) this.timer.unref();
     }
     stop() { clearInterval(this.timer); }

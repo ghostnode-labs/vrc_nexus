@@ -36,7 +36,7 @@ class OscTools {
         o.rawTaps = o.rawTaps || new Set();
         o.taps.add((a, args) => this.onMsg(a, args));
         o.rawTaps.add(buf => this.forward(buf));
-        this.timer = setInterval(() => this.tick(), 15000);
+        this.timer = setInterval(() => (this.app.energy && this.app.energy.skip('osctools', 15000)) || this.tick(), 15000);
         if (this.timer.unref) this.timer.unref();
     }
     stop() { clearInterval(this.timer); this.timer = null; this.stopPlay(); if (this.fwdSock) { try { this.fwdSock.close(); } catch (e) { /* egal */ } this.fwdSock = null; } }

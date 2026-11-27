@@ -142,7 +142,7 @@ class StreamBot {
         if (c.youtube.on && c.youtube.video && k.youtube) { if (!this.yt.timer) this.ytStart(); } else this.ytStop('aus');
         if (c.ext.on && k.ext) { if (!this.ext.timer) { this.ext.timer = setInterval(() => { this.extPush().catch(() => {}); }, 15000); if (this.ext.timer.unref) this.ext.timer.unref(); this.extPush().catch(() => {}); } }
         else if (this.ext.timer) { clearInterval(this.ext.timer); this.ext.timer = null; this.ext.state = 'aus'; }
-        if ((c.twitch.on || c.youtube.on) && !this.watchTimer) { this.watchTimer = setInterval(() => this.watchTick(), 60000); if (this.watchTimer.unref) this.watchTimer.unref(); }
+        if ((c.twitch.on || c.youtube.on) && !this.watchTimer) { this.watchTimer = setInterval(() => (this.app.energy && this.app.energy.skip('stream_watch', 60000)) || this.watchTick(), 60000); if (this.watchTimer.unref) this.watchTimer.unref(); }
     }
     stop() { if (this.ext.timer) clearInterval(this.ext.timer); this.ext.timer = null; this.twClose('aus'); this.ytStop('aus'); clearInterval(this.watchTimer); this.watchTimer = null; if (this.pts) this.app.db.setSetting('stream_points', JSON.stringify(this.pts)); }
 

@@ -180,7 +180,7 @@ class Insights {
             for (const a of this.anniversaries(0)) t.alert(a.kind === 'birthday' ? '🎂 ' + a.name + ' hat heute Geburtstag!' : '💛 ' + a.years + ' Jahre Freunde mit ' + a.name, 'Heute, ' + a.date);
         }
     }
-    start() { if (this.app.mobile) return; this.timer = setInterval(() => { try { this.tick(); } catch (e) { /* egal */ } }, 60000); if (this.timer.unref) this.timer.unref(); }
+    start() { if (this.app.mobile) return; this.timer = setInterval(() => { if (this.app.energy && this.app.energy.skip('insights', 60000)) return; try { this.tick(); } catch (e) { /* egal */ } }, 60000); if (this.timer.unref) this.timer.unref(); }
     stop() { clearInterval(this.timer); }
 
     async action(act, input) {

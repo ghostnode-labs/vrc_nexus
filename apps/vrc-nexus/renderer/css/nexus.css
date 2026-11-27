@@ -828,3 +828,7 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 .dy-people { display: flex; flex-wrap: wrap; gap: 4px; } .dy-moods .chip { font-size: 1.1em; }
 .dg-list > div { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
 .dg-bad { color: #fca5a5; } .dg-warn { color: #fcd34d; }
+
+/* 8.0.1 Energie-Modus: Animationen sparen */
+body.nx-eco *, body.nx-eco *::before, body.nx-eco *::after { animation: none !important; transition: none !important; }
+.sh-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,.3); }

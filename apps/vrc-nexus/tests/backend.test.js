@@ -4708,3 +4708,64 @@ test('8.0: Tages-Tagebuch (Welten, Begegnungen, Fotos, Puls, Notiz), VR-Pausen-C
     assert.match(text, /\[tick\] Fehler mit usr_…/);
     db.close();
 });
+
+test('8.0.1: Energie-Modus drosselt nur bei Akku/an (jeder N-te Takt) · Smart-Home: WLED/Home Assistant/Webhook, Token verschlüsselt, Welt/Puls/Panik/Schlaf, Privat-Modus', async () => {
+    const { Energy } = require('../backend/energy');
+    const { SmartHome, nameColor } = require('../backend/smarthome');
+    const store = {};
+    let battery = false;
+    const app = { db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } }, tools: { host: { onBattery: () => battery } }, nsfw: { private: false }, heart: { active: true, bpm: 70 } };
+    const en = app.energy = new Energy(app);
+    assert.strictEqual(en.skip('x', 5000, 0), false, 'auto + Netzteil = nie drosseln');
+    battery = true;
+    const t = 1e6, runs = [0, 5000, 10000, 15000, 20000, 25000, 30000].map(dt => !en.skip('x', 5000, t + dt));
+    assert.deepStrictEqual(runs, [true, false, false, true, false, false, true], 'Faktor 3: jeder dritte Takt');
+    await en.action('energy_cfg', { mode: 'off', factor: 3, ui_eco: '1' });
+    assert.strictEqual(en.skip('x', 5000, t + 31000), false, 'aus = nie drosseln, auch mit Akku');
+    assert.strictEqual((await en.action('energy_status', {})).battery, true);
+    // Smart-Home
+    const crypt = { encrypt: s => 'enc:' + Buffer.from(s).toString('base64'), decrypt: s => Buffer.from(s.slice(4), 'base64').toString() };
+    const sh = new SmartHome(app, crypt), sent = [];
+    const old = globalThis.fetch;
+    globalThis.fetch = async (url, o) => { sent.push({ url, body: JSON.parse(o.body), auth: (o.headers || {}).Authorization || '' }); return { ok: !url.includes('kaputt'), status: url.includes('kaputt') ? 500 : 200 }; };
+    try {
+        await assert.rejects(sh.action('shome_target_save', { kind: 'wled', url: 'ftp://x' }), /http/);
+        await assert.rejects(sh.action('shome_target_save', { kind: 'ha', url: 'http://ha.local:8123', entity: 'switch.x', token: 't' }), /light\./);
+        await assert.rejects(sh.action('shome_target_save', { kind: 'ha', url: 'http://ha.local:8123', entity: 'light.wohnzimmer' }), /Token/);
+        await sh.action('shome_target_save', { kind: 'wled', url: '192.168.1.50' });
+        await sh.action('shome_target_save', { kind: 'ha', url: 'http://ha.local:8123/', entity: 'light.wohnzimmer', token: 'GEHEIM-TOKEN-123' });
+        await sh.action('shome_target_save', { kind: 'hook', url: 'https://example.test/hook', name: 'Mein Hook' });
+        const st = await sh.action('shome_status', {});
+        assert.deepStrictEqual(st.targets.map(x => [x.kind, x.url]), [['wled', 'http://192.168.1.50'], ['ha', 'http://ha.local:8123'], ['hook', 'https://example.test/hook']]);
+        assert.ok(!JSON.stringify(st).includes('GEHEIM-TOKEN') && st.targets[1].has_token, 'Token nie in der Oberfläche');
+        assert.ok(store.smarthome_targets.startsWith('enc:') && !store.smarthome_targets.includes('GEHEIM'), 'Token verschlüsselt gespeichert');
+        // aus = nichts
+        assert.strictEqual(sh.onWorld('Lofi Café'), null);
+        await sh.action('shome_cfg', { on: '1', world: '1', heart: '1', panic: '1', sleep: '1', panic_color: '#ff0000', panic_bri: 100, sleep_bri: 5 });
+        sent.length = 0; await sh.onWorld('Lofi Café');
+        const w = sent.find(x => x.url === 'http://192.168.1.50/json/state'), ha = sent.find(x => x.url.includes('/api/services/light/turn_on')), hk = sent.find(x => x.url.includes('hook'));
+        const col = nameColor('Lofi Café'), rgb = [1, 3, 5].map(i => parseInt(col.slice(i, i + 2), 16));
+        assert.deepStrictEqual(w.body.seg[0].col[0], rgb, 'WLED bekommt die Weltfarbe');
+        assert.ok(ha.auth === 'Bearer GEHEIM-TOKEN-123' && ha.body.entity_id === 'light.wohnzimmer' && ha.body.rgb_color.join() === rgb.join());
+        assert.strictEqual(hk.body.world, 'Lofi Café');
+        await sh.action('shome_map', { world: 'Lofi Café', color: '#112233' });
+        app.nsfw.private = true; sent.length = 0; await sh.onWorld('LOFI CAFÉ');
+        const hk2 = sent.find(x => x.url.includes('hook'));
+        assert.ok(!hk2.body.world && hk2.body.color === '#112233', 'eigene Farbe; im Privat-Modus kein Weltname');
+        app.nsfw.private = false;
+        // Puls: nur alle 10 s und nur bei Farbwechsel
+        sent.length = 0; assert.ok(sh.tickHeart(1e9)); await new Promise(r => setTimeout(r, 5));
+        assert.strictEqual(sh.tickHeart(1e9 + 5000), null, 'nicht öfter als alle 10 s');
+        assert.strictEqual(sh.tickHeart(1e9 + 11000), null, 'gleiche Farbe = nichts senden');
+        app.heart.bpm = 150; assert.ok(sh.tickHeart(1e9 + 22000));
+        // Panik und Schlaf
+        sent.length = 0; await sh.onPanic();
+        assert.ok(sent.some(x => x.url.endsWith('/json/state') && x.body.bri === 255 && x.body.seg[0].col[0].join() === '255,0,0'));
+        sent.length = 0; await sh.onSleep(true);
+        assert.ok(sent.some(x => x.url.endsWith('/json/state') && x.body.bri === Math.round(5 * 2.55)));
+        // Fehler landen im Protokoll, nicht als Absturz
+        await sh.action('shome_target_save', { kind: 'hook', url: 'https://kaputt.test/x' });
+        const r = await sh.action('shome_test', {});
+        assert.match(r.msg, /Fehler/); assert.ok(r.log.some(l => /HTTP 500/.test(l.m)));
+    } finally { globalThis.fetch = old; }
+});

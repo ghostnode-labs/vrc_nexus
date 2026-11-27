@@ -196,6 +196,7 @@
         if (name === 'together' && window.NexusTogether) window.NexusTogether.open();   // 7.1
         if (name === 'perf' && window.NexusPerf) window.NexusPerf.open();   // 7.3.4
         if (name === 'diary' && window.NexusDiary) window.NexusDiary.open();   // 8.0
+        if (name === 'smarthome' && window.NexusSmartHome) window.NexusSmartHome.open();   // 8.0.1
         if (window.NexusWiki) window.NexusWiki.open(name);   // 7.2
         if (name === 'buttons' && window.NexusButtons) window.NexusButtons.open();
         if (name === 'osc' && window.NexusMOsc) window.NexusMOsc.open();

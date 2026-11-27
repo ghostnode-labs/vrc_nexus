@@ -308,6 +308,7 @@ class Tools {
         }
         if (e.kind === 'player_leave' && this.whoMatches(s['notify.player_leave'], e.player_id)) this.alert('⬅ ' + e.player_name, 'hat die Instanz verlassen');
         if (e.kind === 'world_join' && s['int.webhook_world']) this.webhook('🌐 Neue Welt: ' + (e.world_name || e.world_id));
+        if (e.kind === 'world_join' && this.app.smarthome) Promise.resolve(this.app.smarthome.onWorld(e.world_name || e.world_id)).catch(x => this.debug('smarthome', x));   // 8.0.1
         if (e.kind === 'screenshot') this.onScreenshot(e).catch(x => this.debug('screenshot', x));
         if (['print', 'sticker', 'emoji'].includes(e.kind)) this.saveInstanceFile(e).catch(x => this.debug('save_' + e.kind, x));
         if (e.kind === 'vrc_start' || e.kind === 'world_join' && !this.wasRunning) this.onVrcStart();

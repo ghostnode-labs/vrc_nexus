@@ -207,6 +207,7 @@ class Nsfw {
     async panic() {
         const c = this.cfg(), done = [];
         if (this.app.nsfwsafe) this.app.nsfwsafe.log('panik', 'ausgelöst');   // 6.7: lokales Protokoll
+        if (this.app.smarthome) Promise.resolve(this.app.smarthome.onPanic()).catch(() => {});   // 8.0.1: Panik-Licht
         if (c.panic_toys && this.app.toys) { await this.app.toys.stopAll().catch(() => {}); done.push('Spielzeug gestoppt'); }
         else if (this.app.toys && this.app.toys.scenes && this.app.toys.scenes.run) { this.app.toys.scenes.stop(); await this.app.toys.stopAll().catch(() => {}); done.push('Szene beendet'); }   // 6.2: laufende Szene endet immer
         if (this.app.toyremote && this.app.toyremote.cfg().recv_on) { this.app.toyremote.panic(); done.push('Fernsteuerung aus'); }

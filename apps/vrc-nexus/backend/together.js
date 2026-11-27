@@ -36,7 +36,7 @@ class Together {
         this.clubSeen = new Set();
         this.badgeCache = null;
     }
-    start() { if (this.timer) return; this.timer = setInterval(() => { this.tick().catch(() => {}); }, 60000); if (this.timer.unref) this.timer.unref(); }
+    start() { if (this.timer) return; this.timer = setInterval(() => { if (this.app.energy && this.app.energy.skip('together', 60000)) return; this.tick().catch(() => {}); }, 60000); if (this.timer.unref) this.timer.unref(); }
     stop() { if (this.timer) clearInterval(this.timer); this.timer = null; }
 
     load() {

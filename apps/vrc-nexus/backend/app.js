@@ -83,6 +83,9 @@ class NexusApp {
         this.diary = new (require('./diary').Diary)(this);   // 8.0 Tages-Tagebuch
         this.coach = new (require('./coach').Coach)(this);   // 8.0 VR-Pausen-Coach
         this.diag = new (require('./diag').Diag)(this);   // 8.0 Diagnose-Bericht
+        this.energy = new (require('./energy').Energy)(this);   // 8.0.1 Energie-Modus
+        this.smarthome = new (require('./smarthome').SmartHome)(this, opts.crypt);   // 8.0.1 Smart-Home
+        if (!opts.noTimers && !opts.mobile) this.smarthome.start();
         if (!opts.noTimers) { this.diary.start(); this.coach.start(); }
         this.buttons = new (require('./buttons').Buttons)(this);
         this.deco = new (require('./deco').Deco)(this);                    // 3.1: Profil-Dekorationen
@@ -302,6 +305,8 @@ class NexusApp {
             if (act.startsWith('diary_')) return await this.diary.action(act, input);   // 8.0
             if (act.startsWith('coach_')) return await this.coach.action(act, input);   // 8.0
             if (act.startsWith('diag_')) return await this.diag.action(act, input);   // 8.0
+            if (act.startsWith('energy_')) return await this.energy.action(act, input);   // 8.0.1
+            if (act.startsWith('shome_')) return await this.smarthome.action(act, input);   // 8.0.1 Smart-Home
             if (act.startsWith('mod_')) return await this.mod.action(act, input);
             if (act.startsWith('coll_')) return await this.coll.action(act, input);
             if (act === 'about') return this.about(input);

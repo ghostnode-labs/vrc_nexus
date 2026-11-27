@@ -25,7 +25,7 @@ class Diary {
         this.timer = null;
     }
     get db() { return this.app.db; }
-    start() { if (this.timer) return; this.timer = setInterval(() => { try { this.tick(); } catch (e) { /* weiter */ } }, 60000); if (this.timer.unref) this.timer.unref(); }
+    start() { if (this.timer) return; this.timer = setInterval(() => { if (this.app.energy && this.app.energy.skip('diary', 60000)) return; try { this.tick(); } catch (e) { /* weiter */ } }, 60000); if (this.timer.unref) this.timer.unref(); }
     stop() { clearInterval(this.timer); this.timer = null; }
 
     row(day) {

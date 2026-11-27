@@ -60,7 +60,7 @@ class DashLink {
         return Object.assign(this.info(), { msg: '✔ Verbunden mit „' + str(d.server && d.server.title) + '“ als ' + str(d.user && d.user.name) + ' (Gerät „' + str(d.device) + '“).' });
     }
 
-    start() { this.stop(); this.timer = setInterval(() => this.tick().catch(() => {}), 3000); if (this.timer.unref) this.timer.unref(); }
+    start() { this.stop(); this.timer = setInterval(() => (this.app.energy && this.app.energy.skip('dashlink', 3000)) || this.tick().catch(() => {}), 3000); if (this.timer.unref) this.timer.unref(); }
     stop() { if (this.timer) clearInterval(this.timer); this.timer = null; }
     async tick() {
         if (!this.s('link.enabled') || this.busy || !this.token() || !this.base()) { if (!this.s('link.enabled')) this.status.msg = 'aus'; return; }

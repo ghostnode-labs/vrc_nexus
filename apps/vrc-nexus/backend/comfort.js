@@ -40,6 +40,7 @@ class Comfort {
 
     // ---------- Schlafmodus ----------
     async sleepOn(wakeMin) {
+        if (this.app.smarthome) Promise.resolve(this.app.smarthome.onSleep(true)).catch(() => {});   // 8.0.1
         if (this.sleep) return this.status();
         const c = this.cfg(), g = this.app.game, done = [];
         this.sleep = { since: Date.now(), wake: wakeMin > 0 ? Date.now() + wakeMin * 60000 : 0, prevRot: g.suppressRotator };
@@ -50,6 +51,7 @@ class Comfort {
         return Object.assign(this.status(), { msg: '💤 Schlafmodus an' + (done.length ? ' (' + done.join(', ') + ')' : '') + (this.sleep.wake ? ' – Wecker in ' + wakeMin + ' min' : '') });
     }
     async sleepOff(byAlarm) {
+        if (this.app.smarthome) Promise.resolve(this.app.smarthome.onSleep(false)).catch(() => {});   // 8.0.1
         if (!this.sleep) return this.status();
         const c = this.cfg(), g = this.app.game, s = this.sleep;
         this.sleep = null;

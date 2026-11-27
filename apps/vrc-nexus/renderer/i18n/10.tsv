@@ -2681,3 +2681,36 @@ Erneut prüfen	Check again	Vérifier à nouveau	再確認
 ⏰ später	⏰ later	⏰ plus tard	⏰ 後で
 📔 Gespeichert.	📔 Saved.	📔 Enregistré.	📔 保存しました。
 🌿 Pause eingetragen – der Zähler startet neu.	🌿 Break logged – the counter restarts.	🌿 Pause enregistrée – le compteur repart.	🌿 休憩を記録しました – カウンターを再開します。
+Energie-Modus	Energy mode	Mode économie	省エネモード
+Für Laptops und Akku: Hintergrund-Aufgaben ohne Sicherheitsbezug laufen seltener, die Oberfläche spart Animationen. Spielzeug, Panik, Safeword, Puls und OSC-Empfang werden nie gedrosselt.	For laptops and battery: background tasks without a safety role run less often and the interface skips animations. Toys, panic, safeword, heart rate and OSC input are never throttled.	Pour portables et batterie : les tâches de fond sans rôle de sécurité tournent moins souvent et l'interface économise les animations. Jouets, panique, safeword, pouls et réception OSC ne sont jamais ralentis.	ノートPC・バッテリー向け：安全に関係しないバックグラウンド処理の頻度を下げ、アニメーションを省きます。おもちゃ、パニック、セーフワード、心拍、OSC受信は制限しません。
+Akkubetrieb	on battery	sur batterie	バッテリー駆動
+am Netzteil	plugged in	sur secteur	電源接続中
+Akkustatus unbekannt	battery state unknown	état de batterie inconnu	バッテリー状態不明
+Takte gespart	ticks saved	cycles économisés	回の処理を省略
+Automatisch bei Akku	Automatically on battery	Automatique sur batterie	バッテリー時に自動
+Immer an	Always on	Toujours activé	常にオン
+Hintergrund seltener um Faktor	Background less often by factor	Arrière-plan moins souvent, facteur	バックグラウンド頻度の倍率
+weniger Animationen	fewer animations	moins d'animations	アニメーションを減らす
+Smart-Home	Smart home	Maison connectée	スマートホーム
+Licht reagiert auf deine Welt, deinen Puls, die Panik-Taste und den Schlafmodus. Unterstützt Home Assistant, WLED und eigene Webhooks – alles direkt im Heimnetz, ohne Cloud-Konto. Zugangs-Tokens werden verschlüsselt gespeichert.	Lights react to your world, heart rate, the panic button and sleep mode. Supports Home Assistant, WLED and custom webhooks – directly in your home network, no cloud account. Access tokens are stored encrypted.	La lumière réagit à ton monde, ton pouls, la touche panique et le mode sommeil. Prend en charge Home Assistant, WLED et des webhooks – directement sur ton réseau, sans compte cloud. Les jetons sont chiffrés.	ライトがワールド、心拍、パニックボタン、スリープモードに反応します。Home Assistant、WLED、独自Webhookに対応 – ホームネットワーク内で直接、クラウド不要。トークンは暗号化保存。
+Smart-Home an	Smart home on	Maison connectée activée	スマートホーム オン
+🌐 Farbe je Welt	🌐 Color per world	🌐 Couleur par monde	🌐 ワールドごとの色
+❤ Puls-Farbe	❤ Heart-rate color	❤ Couleur du pouls	❤ 心拍の色
+🚨 Panik-Licht	🚨 Panic light	🚨 Lumière panique	🚨 パニックライト
+😴 Schlafmodus dimmt	😴 Sleep mode dims	😴 Le mode sommeil tamise	😴 スリープで減光
+blau bis	blue up to	bleu jusqu'à	青：〜まで
+rot ab	red from	rouge dès	赤：〜から
+Ziele	Targets	Cibles	ターゲット
+Test	Test	Test	テスト
+Noch kein Ziel.	No target yet.	Pas encore de cible.	ターゲットはまだありません。
+Ziel hinzufügen	Add target	Ajouter une cible	ターゲットを追加
+Token gespeichert – leer lassen zum Behalten	Token saved – leave empty to keep	Jeton enregistré – laisser vide pour le garder	トークン保存済み – 空欄のままで維持
+Langzeit-Zugangs-Token	Long-lived access token	Jeton d'accès longue durée	長期アクセストークン
+Welt-Farben	World colors	Couleurs des mondes	ワールドの色
+Ohne eigene Farbe bekommt jede Welt automatisch eine feste Farbe aus ihrem Namen.	Without a custom color, every world automatically gets a fixed color from its name.	Sans couleur personnalisée, chaque monde reçoit une couleur fixe tirée de son nom.	独自の色がない場合、ワールド名から自動で固定色が決まります。
+Weltname	World name	Nom du monde	ワールド名
+Ziel entfernen?	Remove target?	Supprimer la cible ?	ターゲットを削除しますか？
+Smart-Home & Energie	Smart home & energy	Maison connectée & énergie	スマートホームと省エネ
+💡 Ziel gespeichert.	💡 Target saved.	💡 Cible enregistrée.	💡 ターゲットを保存しました。
+Welt-Farbe gespeichert.	World color saved.	Couleur du monde enregistrée.	ワールドの色を保存しました。
+🔋 Gespeichert.	🔋 Saved.	🔋 Enregistré.	🔋 保存しました。

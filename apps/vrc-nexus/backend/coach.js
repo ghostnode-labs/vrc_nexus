@@ -23,7 +23,7 @@ class Coach {
         this.app.db.setSetting('coach_cfg', JSON.stringify(c));
         return c;
     }
-    start() { if (this.timer) return; this.timer = setInterval(() => { try { this.tick(); } catch (e) { /* weiter */ } }, 30000); if (this.timer.unref) this.timer.unref(); }
+    start() { if (this.timer) return; this.timer = setInterval(() => { if (this.app.energy && this.app.energy.skip('coach', 30000)) return; try { this.tick(); } catch (e) { /* weiter */ } }, 30000); if (this.timer.unref) this.timer.unref(); }
     stop() { clearInterval(this.timer); this.timer = null; }
 
     /** Ist gerade VR an? */
