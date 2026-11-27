@@ -498,7 +498,7 @@
             html += '<div class="vx-sec"><h3>' + title + ' <small>' + items.length + '</small></h3>'
                 + (items.length ? '<div class="vx-grid' + ($('#compactView').checked ? ' compact' : '') + '">' + items.map(friendCard).join('') + '</div>' : '<div class="vx-empty">Niemand.</div>') + '</div>';
         });
-        if (!state.friends.length) html = '<div class="vx-empty">Noch keine Freunde geladen – oben auf „⟳ Aktualisieren“ klicken.</div>';
+        if (!state.friends.length) html = '<div class="vx-empty">' + (document.body.classList.contains('has-gestures') ? 'Noch keine Freunde geladen – zum Aktualisieren nach unten ziehen.' : 'Noch keine Freunde geladen – oben auf „⟳ Aktualisieren“ klicken.') + '</div>';
         $('#friendsBox').innerHTML = html;
     }
     const FILTERS = ['#friendSearch', '#friendSort', '#friendPlatform', '#friendTrust', '#showOffline', '#onlyNotes', '#compactView'];

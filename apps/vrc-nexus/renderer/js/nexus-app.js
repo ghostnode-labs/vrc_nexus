@@ -94,6 +94,7 @@
         b.classList.toggle('wide-spacing', !!s['ui.spacing']);
         b.classList.toggle('hi-contrast', !!s['ui.contrast']);
         if (window.NexusA11y) NexusA11y.apply(s);   // 8.0.3
+        if (window.NexusGestures) NexusGestures.apply(s);   // 8.0.7 Wischgesten
         if (window.NexusPad) { NexusPad.apply(s); if (!applyLook.plat && !MOBILE) { applyLook.plat = 1; api('platform_info').then(i => NexusPad.apply(s, i)).catch(() => {}); } }   // 8.0.4 Controller / Steam Deck
         let svg = document.getElementById('cvdFilters');
         if (CVD[s['ui.cvd']]) {

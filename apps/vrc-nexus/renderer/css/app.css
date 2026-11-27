@@ -1529,3 +1529,16 @@ body.deck .vx-tabbtn { min-height: 46px; }
 /* 8.0.6 Plugin-Tabs */
 .pl-tabs { margin: 10px 0 12px; overflow-x: auto; flex-wrap: nowrap; }
 .pl-tabs button { white-space: nowrap; }
+
+/* 8.0.7 Wischgesten: Aktualisieren-Knöpfe weg, Ziehen-Anzeige, Seitenwechsel-Animation */
+body.has-gestures #refreshBtn, body.has-gestures #galRefresh { display: none !important; }
+.g-pull { position: fixed; top: 6px; left: 50%; transform: translate(-50%, -60px); opacity: 0; z-index: 9999; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--surface, #0b121b); border: 1px solid var(--border-color); box-shadow: 0 4px 14px rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; pointer-events: none; transition: opacity .15s; }
+.g-pull i { font-style: normal; font-size: 22px; color: var(--text-muted); }
+.g-pull.ready i { color: var(--accent-cyan); }
+.g-pull.spin { transform: translate(-50%, 40px) !important; opacity: 1 !important; }
+.g-pull.spin i { color: var(--accent-cyan); animation: gspin .8s linear infinite; }
+@keyframes gspin { to { transform: rotate(360deg); } }
+body.g-left .vx-tab:not([hidden]) { animation: gl .25s ease-out; } body.g-right .vx-tab:not([hidden]) { animation: gr .25s ease-out; }
+@keyframes gl { from { transform: translateX(40px); opacity: .4; } } @keyframes gr { from { transform: translateX(-40px); opacity: .4; } }
+body.reduce-motion.g-left .vx-tab, body.reduce-motion.g-right .vx-tab { animation: none; }

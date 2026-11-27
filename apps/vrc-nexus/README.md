@@ -26,6 +26,15 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.7 – Swipe gestures
+- 👆 **Swipe gestures in the phone app** (also on touch screens) – the "⟳ Refresh" button is gone:
+  - ⬇ **Pull down** at the top of a page = refresh. A spinner follows your finger; pages with their own reload, like the gallery, use theirs.
+  - ⬅ ➡ **Swipe sideways** = previous/next page of the bottom bar (Home · Friends · Community · Buttons), with a short slide animation.
+  - ➡ **Swipe in from the left edge** = open the menu; ⬅ swipe inside the menu = close it.
+  - ⬇ **Swipe down on an open profile** = close it.
+- Gestures never fire on text fields, sliders or sideways-scrolling bars, and pull-to-refresh only works when the page is scrolled to the top.
+- They can be turned off under Settings → Appearance → Accessibility → "Swipe gestures", which brings the ⟳ button back. On the PC with a mouse, nothing changes: the button and the R key stay.
+
 ### New in 8.0.6 – Plugin tabs
 - 🧩 **Every plugin gets its own tab**: the plugin page now has a tab bar `⚙ Settings | 🛒 Marketplace | Plugin 1 | Plugin 2 | …`. Each plugin tab shows the plugin's status dot.
   - **Settings**: install (.nxp or example), plugin folder, pause all, and the overview of every plugin with on/off, rights, restart, log and remove.
