@@ -32,6 +32,12 @@ const DEF = {
     },
     games: { gamble: { on: true, min: 10, max: 1000, cooldown: 30 }, coinflip: { on: true, min: 5, max: 500, cooldown: 20 }, slots: { on: true, cost: 20, cooldown: 30 }, duel: { on: true, max: 1000, cooldown: 60 } },
     tts: { on: false, cost: 100, max: 150 },
+    // 7.2: Ziel (z. B. Abo-Ziel) für Stream-Leiste und Twitch-Panel
+    goal: { on: false, text: 'Abo-Ziel', cur: 0, max: 10, auto: 'subs' },
+    // 7.2: Stream-Leiste oben (OBS) – wechselnde Infozeilen
+    bar: { infos: ['💜 Danke fürs Zuschauen!', '⌨ Befehle: !befehle'] },
+    // 7.2: Twitch-Panel-Erweiterung (über die GhostNode-Webseite) – was Zuschauer sehen dürfen
+    ext: { on: false, world: true, heart: true, music: true, top: true, commands: true, rewards: true, poll: true, goal: true, recent: true, discord: '' },
     quotes: [],
     counters: [{ name: 'tode', value: 0, text: '💀 Bisher {wert} Tode' }],
     rewards: [
@@ -65,6 +71,8 @@ class StreamBot {
         this.watchTimer = null;
         this.pts = null;
         this.saveT = null;
+        this.recent = [];             // 7.2: letzte Unterstützer (Abo, Bits, Raid …) für Leiste und Panel
+        this.ext = { timer: null, state: 'aus', error: '', at: 0, seen: new Set() };
     }
     // ---------- Speicher ----------
     cfg() {
@@ -74,7 +82,8 @@ class StreamBot {
             commands: Array.isArray(c.commands) ? c.commands : DEF.commands, rewards: Array.isArray(c.rewards) ? c.rewards : DEF.rewards,
             timers: Array.isArray(c.timers) ? c.timers : DEF.timers, quotes: Array.isArray(c.quotes) ? c.quotes : [], counters: Array.isArray(c.counters) ? c.counters : DEF.counters,
             events: Object.fromEntries(Object.entries(DEF.events).map(([k, v]) => [k, { ...v, ...((c.events || {})[k] || {}) }])),
-            games: Object.fromEntries(Object.entries(DEF.games).map(([k, v]) => [k, { ...v, ...((c.games || {})[k] || {}) }])), tts: { ...DEF.tts, ...(c.tts || {}) } };
+            games: Object.fromEntries(Object.entries(DEF.games).map(([k, v]) => [k, { ...v, ...((c.games || {})[k] || {}) }])), tts: { ...DEF.tts, ...(c.tts || {}) },
+            goal: { ...DEF.goal, ...(c.goal || {}) }, bar: { ...DEF.bar, ...(c.bar || {}) }, ext: { ...DEF.ext, ...(c.ext || {}) } };
     }
     saveCfg(input) {
         const c = this.cfg(), b = v => v === true || v === '1' || v === 'true' || v === 'on';
@@ -102,6 +111,7 @@ class StreamBot {
         value = str(value).trim();
         if (kind === 'twitch') { if (value && !/^(oauth:)?[a-z0-9]{20,40}$/i.test(value)) throw new UserError('Das sieht nicht wie ein Twitch-Token aus (30 Zeichen, evtl. mit „oauth:“ davor).'); k.twitch = value.replace(/^oauth:/i, ''); }
         else if (kind === 'youtube') { if (value && !/^[\w-]{30,45}$/.test(value)) throw new UserError('Das sieht nicht wie ein Google-API-Schlüssel aus.'); k.youtube = value; }
+        else if (kind === 'ext') { if (value && !/^gnx_[a-f0-9]{40}$/.test(value)) throw new UserError('Das ist kein Verbindungscode aus dem Twitch-Panel (beginnt mit „gnx_“).'); k.ext = value; }
         else throw new UserError('Unbekannt.');
         if (!k[kind]) delete k[kind];
         this.app.db.setSetting('stream_keys', Object.keys(k).length ? this.crypt.encrypt(JSON.stringify(k)) : '');
@@ -130,9 +140,11 @@ class StreamBot {
         const c = this.cfg(), k = this.keys();
         if (c.twitch.on && c.twitch.channel && k.twitch) { if (!this.tw.ws) this.twConnect(); } else this.twClose('aus');
         if (c.youtube.on && c.youtube.video && k.youtube) { if (!this.yt.timer) this.ytStart(); } else this.ytStop('aus');
+        if (c.ext.on && k.ext) { if (!this.ext.timer) { this.ext.timer = setInterval(() => { this.extPush().catch(() => {}); }, 15000); if (this.ext.timer.unref) this.ext.timer.unref(); this.extPush().catch(() => {}); } }
+        else if (this.ext.timer) { clearInterval(this.ext.timer); this.ext.timer = null; this.ext.state = 'aus'; }
         if ((c.twitch.on || c.youtube.on) && !this.watchTimer) { this.watchTimer = setInterval(() => this.watchTick(), 60000); if (this.watchTimer.unref) this.watchTimer.unref(); }
     }
-    stop() { this.twClose('aus'); this.ytStop('aus'); clearInterval(this.watchTimer); this.watchTimer = null; if (this.pts) this.app.db.setSetting('stream_points', JSON.stringify(this.pts)); }
+    stop() { if (this.ext.timer) clearInterval(this.ext.timer); this.ext.timer = null; this.twClose('aus'); this.ytStop('aus'); clearInterval(this.watchTimer); this.watchTimer = null; if (this.pts) this.app.db.setSetting('stream_points', JSON.stringify(this.pts)); }
 
     twConnect() {
         const c = this.cfg(), token = this.keys().twitch;
@@ -525,6 +537,8 @@ class StreamBot {
         const c = this.cfg(), e = c.events[kind];
         const label = { sub: 'Abo', resub: 'Abo-Verlängerung', subgift: 'Geschenk-Abo', raid: 'Raid', bits: 'Bits', superchat: 'Super Chat', member: 'Mitglied', first: 'Erster im Chat' }[kind] || kind;
         this.event('alert', platform, user, label + (data.menge ? ' · ' + data.menge : '') + (data.betrag ? ' · ' + data.betrag : '') + (data.text ? ' – ' + data.text : ''));
+        if (kind !== 'first') { this.recent.unshift({ kind, label, user: cut(clean(user), 40), menge: str(data.menge || data.betrag || ''), t: Date.now() }); this.recent = this.recent.slice(0, 8); }
+        this.goalAuto(kind, data);
         if (!e || !e.on) return;
         if ((kind === 'raid' || kind === 'bits') && int(data.menge) < int(e.min)) return;
         const acc = this.account(platform, 'ev_' + lc(user), user);
@@ -532,6 +546,19 @@ class StreamBot {
         const m = { platform, name: user };
         if (e.response) this.reply(platform, this.fill(e.response, m, acc, vars));
         this.runScript(e.script, vars).catch(err => this.event('system', platform, '', '⚠ Ereignis-Aktion „' + label + '“: ' + err.message));
+    }
+    /** 7.2: Ziel automatisch hochzählen (Abos zählen Geschenk-Menge, Bits die Anzahl) */
+    goalAuto(kind, data) {
+        const c = this.cfg(), g = c.goal;
+        if (!g.on) return;
+        let add = 0;
+        if (g.auto === 'subs' && ['sub', 'resub', 'member'].includes(kind)) add = 1;
+        if (g.auto === 'subs' && kind === 'subgift') add = Math.max(1, int(data.menge));
+        if (g.auto === 'bits' && kind === 'bits') add = int(data.menge);
+        if (g.auto === 'raids' && kind === 'raid') add = 1;
+        if (!add) return;
+        g.cur = Math.max(0, int(g.cur) + add);
+        this.writeCfg(c);
     }
     // ----- Verlosung / Umfrage -----
     giveawayStart(keyword, cost) { this.giveaway = { keyword: str(keyword).slice(0, 30), cost: Math.max(0, int(cost)), entries: new Map(), started: Date.now() }; }
@@ -550,12 +577,12 @@ class StreamBot {
         this.event('reward', 'twitch', w, '🎉 gewinnt die Verlosung');
         return w;
     }
-    pollStart(q, options) { this.poll = { q: str(q).slice(0, 120), options: options.map(o => str(o).slice(0, 60)), votes: new Map(), started: Date.now() }; }
+    pollStart(q, options) { this.poll = { q: str(q).slice(0, 120), options: options.map(o => str(o).slice(0, 60)), votes: new Map(), started: Date.now() }; this.extPush().catch(() => {}); }
     pollResult() {
         if (!this.poll) return null;
         const n = this.poll.options.map(() => 0);
         for (const v of this.poll.votes.values()) n[v]++;
-        return { q: this.poll.q, options: this.poll.options.map((o, k) => ({ text: o, votes: n[k] })), total: this.poll.votes.size };
+        return { id: this.poll.started, q: this.poll.q, options: this.poll.options.map((o, k) => ({ text: o, votes: n[k] })), total: this.poll.votes.size };
     }
     pollEnd() {
         const r = this.pollResult();
@@ -593,7 +620,8 @@ class StreamBot {
     status() {
         const c = this.cfg(), k = this.keys();
         return { cfg: c, has: { twitch: !!k.twitch, youtube: !!k.youtube }, twitch: { state: this.tw.state, error: this.tw.error }, youtube: { state: this.yt.state, error: this.yt.error, title: this.yt.title || '' },
-            seq: this.seq, users: Object.keys(this.points()).length, poll: this.pollResult(),
+            seq: this.seq, users: Object.keys(this.points()).length, poll: this.pollResult(), recent: this.recent.slice(0, 5),
+            ext: { state: this.ext.state, error: this.ext.error, at: this.ext.at, has_key: !!k.ext },
             giveaway: this.giveaway ? { keyword: this.giveaway.keyword, cost: this.giveaway.cost, entries: [...this.giveaway.entries.values()].slice(0, 200) } : null };
     }
     feed(since) { return this.buf.filter(e => e.i > int(since)).slice(-200); }
@@ -705,6 +733,31 @@ class StreamBot {
                 if (op === 'start') this.reply(c.twitch.on ? 'twitch' : 'youtube', '🎁 Verlosung gestartet! Mitmachen mit „' + this.giveaway.keyword + '“' + (this.giveaway.cost ? ' (' + this.giveaway.cost + ' ' + c.points.name + ')' : '') + '.');
                 return Object.assign(this.status(), { msg });
             }
+            case 'stream_goal_save': {
+                const g = c.goal, b = v => v === true || v === '1' || v === 'true' || v === 'on';
+                if (input.on !== undefined) g.on = b(input.on);
+                if (input.text !== undefined) g.text = cut(clean(input.text), 40) || 'Ziel';
+                if (input.cur !== undefined) g.cur = Math.max(0, Math.min(1e9, int(input.cur)));
+                if (input.max !== undefined) g.max = Math.max(1, Math.min(1e9, int(input.max)));
+                if (input.auto !== undefined) g.auto = ['none', 'subs', 'bits', 'raids'].includes(str(input.auto)) ? str(input.auto) : 'none';
+                this.writeCfg(c); this.extPush().catch(() => {});
+                return Object.assign(this.status(), { msg: 'Ziel gespeichert.' });
+            }
+            case 'stream_goal_step': c.goal.cur = Math.max(0, int(c.goal.cur) + (int(input.add) || 1)); this.writeCfg(c); return Object.assign(this.status(), { msg: '🎯 ' + c.goal.cur + ' / ' + c.goal.max });
+            case 'stream_bar_save': {
+                const infos = str(input.infos).split('\n').map(x => cut(clean(x), 120)).filter(Boolean).slice(0, 10);
+                c.bar.infos = infos; this.writeCfg(c);
+                return Object.assign(this.status(), { msg: 'Leiste gespeichert.' });
+            }
+            case 'stream_ext_save': {
+                const b = v => v === true || v === '1' || v === 'true' || v === 'on';
+                for (const k of ['on', 'world', 'heart', 'music', 'top', 'commands', 'rewards', 'poll', 'goal', 'recent']) if (input[k] !== undefined) c.ext[k] = b(input[k]);
+                if (input.discord !== undefined) { const u = str(input.discord).trim(); if (u && !/^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]{2,40}$/.test(u)) throw new UserError('Discord-Link bitte als https://discord.gg/…'); c.ext.discord = u; }
+                if (input.key !== undefined) this.setKey('ext', input.key);
+                this.writeCfg(c); this.apply();
+                return Object.assign(this.status(), { msg: c.ext.on ? '🟣 Twitch-Panel: wird jede 15 s aktualisiert.' : 'Twitch-Panel aus.' });
+            }
+            case 'stream_ext_preview': return { state: this.extSnapshot() };
             case 'stream_poll': {
                 const op = str(input.op);
                 if (op === 'start') { const opts = str(input.options).split('\n').map(x => x.trim()).filter(Boolean); if (!str(input.q).trim() || opts.length < 2) throw new UserError('Frage und mindestens 2 Antworten.'); this.pollStart(str(input.q), opts.slice(0, 6)); this.reply(c.twitch.on ? 'twitch' : 'youtube', '📊 ' + this.poll.q + ' – ' + this.poll.options.map((o, k) => (k + 1) + ') ' + o).join(' · ') + ' → ' + c.prefix + 'stimme Nummer'); }
@@ -717,6 +770,56 @@ class StreamBot {
         throw new UserError('Unbekannte Aktion.');
     }
     overlay() { return { items: this.buf.filter(e => e.kind !== 'system').slice(-30), seq: this.seq, poll: this.pollResult() }; }
+
+    /** 7.2: Daten für die Stream-Leiste oben (OBS /bar) */
+    barState() {
+        const c = this.cfg(), a = this.app, g = a.game, st = g && g.state ? g.state : {};
+        const priv = !!(a.nsfw && a.nsfw.private);
+        const h = a.heart && a.heart.active ? a.heart.bpm : 0;
+        const cnt = c.counters.filter(x => x.on !== false && x.text).slice(0, 2).map(x => str(x.text).replace(/\{wert\}/g, String(int(x.value))));
+        return { running: !!st.running, world: priv ? '' : str(st.worldName), players: st.players ? st.players.size : 0, since: int(st.since), private: priv,
+            heart: h, music: a.auto ? str(a.auto.music) : '', goal: c.goal.on ? { text: c.goal.text, cur: int(c.goal.cur), max: Math.max(1, int(c.goal.max)) } : null,
+            recent: this.recent.slice(0, 5), poll: this.pollResult(), giveaway: this.giveaway ? { keyword: this.giveaway.keyword, entries: this.giveaway.entries.size } : null,
+            infos: (c.bar.infos || []).concat(cnt).filter(Boolean).slice(0, 12), chatters: [...this.active.values()].filter(t => t > Date.now() - 15 * 60000).length,
+            live: this.tw.state === 'verbunden' || this.yt.state === 'verbunden' };
+    }
+
+    /** 7.2: Stand für das Twitch-Panel (nur freigegebene Teile, nie Welt im Privat-Modus, nichts aus 18+) */
+    extSnapshot() {
+        const c = this.cfg(), x = c.ext, b = this.barState();
+        const o = { v: 1, t: Math.floor(Date.now() / 1000), name: c.points.name, prefix: c.prefix, live: b.live, running: b.running };
+        if (x.world && b.running && !b.private) { o.world = cut(b.world, 80); o.players = b.players; o.since = b.since; }
+        if (x.heart && b.heart) o.heart = b.heart;
+        if (x.music && b.music) o.music = cut(b.music, 120);
+        if (x.top) o.top = this.leaderboard('', 5).map(e => ({ name: cut(e.name, 30), p: e.p }));
+        if (x.commands) o.commands = c.commands.filter(m => m.on !== false && m.perm === 'all').slice(0, 25).map(m => ({ name: m.name, usage: cut(str(m.usage), 40), cost: int(m.cost), text: cut(str(m.response).replace(/\{[^}]*\}/g, '…'), 90) }));
+        if (x.rewards) o.rewards = c.rewards.slice(0, 20).map(r => ({ name: r.name, cost: int(r.cost) }));
+        if (x.poll && b.poll) o.poll = b.poll;
+        if (x.goal && b.goal) o.goal = b.goal;
+        if (x.recent) o.recent = b.recent.map(r => ({ kind: r.kind, label: r.label, user: r.user, menge: r.menge }));
+        if (x.discord && /^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]{2,40}$/.test(x.discord)) o.discord = x.discord;
+        return o;
+    }
+    extBase() { return (process.env.NEXUS_COMM_BASE || process.env.NEXUS_ACCT_BASE || require('./servers').nexus()).replace(/\/+$/, ''); }
+    /** alle 15 s: Stand an die Webseite, Panel-Stimmen für die laufende Umfrage zurück */
+    async extPush() {
+        const c = this.cfg(), key = this.keys().ext;
+        if (!c.ext.on || !key) return;
+        let r;
+        try {
+            r = await fetch(this.extBase() + '/twitchext.php?a=push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, state: this.extSnapshot() }), signal: AbortSignal.timeout(10000) });
+        } catch (e) { this.ext.state = 'fehler'; this.ext.error = 'GhostNode-Webseite nicht erreichbar.'; return; }
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.error) { this.ext.state = 'fehler'; this.ext.error = str(d.error) || 'Fehler ' + r.status; return; }
+        this.ext.state = 'verbunden'; this.ext.error = ''; this.ext.at = Date.now();
+        // Stimmen aus dem Panel: je Twitch-Zuschauer (anonyme ID) eine Stimme in der laufenden Umfrage
+        if (this.poll && Array.isArray(d.votes)) for (const v of d.votes) {
+            if (int(v.poll) !== this.poll.started) continue;
+            const k = int(v.option);
+            if (k < 0 || k >= this.poll.options.length || !/^[\w-]{3,64}$/.test(str(v.uid))) continue;
+            this.poll.votes.set('ext:' + str(v.uid), k);
+        }
+    }
 }
 
 module.exports = { StreamBot };

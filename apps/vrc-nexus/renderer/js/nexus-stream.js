@@ -24,7 +24,7 @@
     const STATE = s => /verbunden/.test(s) && !/getrennt/.test(s) ? 'ok' : /fehler/.test(s) ? 'bad' : '';
 
     function shell() {
-        box.innerHTML = '<div class="nx-row rc-bar"><span class="chips">' + [['chat', '💬 Live-Chat'], ['points', '🏆 Punkte'], ['cmds', '⌨️ Befehle'], ['rewards', '🎁 Belohnungen'], ['events', '⭐ Ereignisse'], ['timers', '⏰ Timer'], ['extras', '🎲 Spiele & Extras'], ['setup', '🔌 Verbindung']]
+        box.innerHTML = '<div class="nx-row rc-bar"><span class="chips">' + [['chat', '💬 Live-Chat'], ['points', '🏆 Punkte'], ['cmds', '⌨️ Befehle'], ['rewards', '🎁 Belohnungen'], ['events', '⭐ Ereignisse'], ['overlay', '📺 Leiste & Twitch-Panel'], ['timers', '⏰ Timer'], ['extras', '🎲 Spiele & Extras'], ['setup', '🔌 Verbindung']]
             .map(v => '<button type="button" class="chip' + (view === v[0] ? ' on' : '') + '" data-sv="' + v[0] + '">' + v[1] + '</button>').join('') + '</span><span id="stState" class="small"></span></div><div id="stBody"></div>';
     }
     function stateHtml() {
@@ -121,6 +121,32 @@
                 + '<form class="nx-row" id="sbQuote"><input type="text" name="text" placeholder="Neues Zitat" style="flex:1" required><button class="btn btn-sm">＋</button></form></div>'
                 + '</div>';
         }
+        if (view === 'overlay') {   // 7.2: Ziel, Stream-Leiste oben, Twitch-Panel
+            const g = c.goal, x = c.ext, e = st.ext || {};
+            const chk = (n, v, t) => '<label class="check small"><input type="checkbox" name="' + n + '"' + (v ? ' checked' : '') + '> ' + t + '</label>';
+            const sel = (n, v, o) => '<select name="' + n + '">' + o.map(([k, t]) => '<option value="' + k + '"' + (v === k ? ' selected' : '') + '>' + t + '</option>').join('') + '</select>';
+            b.innerHTML = '<div class="nc-grid">'
+                + '<form class="nc-card" id="sbGoal"><h4>🎯 Ziel</h4>' + chk('on', g.on, 'Ziel anzeigen (Leiste + Twitch-Panel)')
+                + '<div class="nx-row"><input type="text" name="text" value="' + esc(g.text) + '" maxlength="40" style="flex:1"><input type="number" name="cur" value="' + int0(g.cur) + '" min="0" style="width:80px"> / <input type="number" name="max" value="' + int0(g.max) + '" min="1" style="width:80px"></div>'
+                + '<div class="nx-row small">Zählt automatisch: ' + sel('auto', g.auto, [['none', 'nichts (nur von Hand)'], ['subs', 'Abos & Geschenk-Abos'], ['bits', 'Bits'], ['raids', 'Raids']]) + '</div>'
+                + '<div class="sb-goal"><i style="width:' + Math.min(100, Math.round(int0(g.cur) / Math.max(1, int0(g.max)) * 100)) + '%"></i></div>'
+                + '<div class="nx-row"><button type="button" class="chip" data-gstep="-1">−1</button><button type="button" class="chip" data-gstep="1">+1</button><span style="flex:1"></span><button class="btn btn-sm btn-gold">Speichern</button></div></form>'
+                + '<form class="nc-card" id="sbBar"><h4>📺 Stream-Leiste oben</h4><p class="muted small">OBS → Quelle „Browser“ → Adresse aus Einstellungen → Integrationen („Stream-Leiste oben“), Größe 1920 × 260. Zeigt Welt, Puls, Song, Ziel, Umfrage und ein Laufband mit den letzten Unterstützern und diesen Infos:</p>'
+                + '<textarea name="infos" rows="5" style="width:100%" placeholder="Eine Info pro Zeile">' + esc((c.bar.infos || []).join('\n')) + '</textarea>'
+                + '<p class="muted small">Zähler (z. B. 💀 Tode) laufen automatisch mit. Im Privat-Modus steht „🔒 Privat“ statt der Welt.</p><button class="btn btn-sm btn-gold">Speichern</button>'
+                + (st.recent && st.recent.length ? '<h4 style="margin-top:12px">Zuletzt</h4>' + st.recent.map(r => '<div class="small">⭐ ' + esc(r.user) + ' – ' + esc(r.label) + (r.menge ? ' (' + esc(r.menge) + ')' : '') + '</div>').join('') : '') + '</form>'
+                + '<form class="nc-card" id="sbExt"><h4>🟣 Twitch-Panel (Erweiterung unter dem Stream)</h4>'
+                + '<p class="small">Status: <span class="' + STATE(e.state || '') + '">' + esc(e.state || 'aus') + '</span>' + (e.error ? ' – ' + esc(e.error) : '') + (e.at ? ' · ' + new Date(e.at).toLocaleTimeString(nxLoc()) : '') + '</p>'
+                + chk('on', x.on, '<b>Panel mit Daten versorgen</b> (alle 15 s über die GhostNode-Webseite)')
+                + '<div class="nx-row"><input type="password" name="key" placeholder="' + (e.has_key ? '•••• Verbindungscode gespeichert' : 'Verbindungscode gnx_… aus dem Panel') + '" style="flex:1" autocomplete="off"></div>'
+                + '<p class="muted small">Den Code zeigt die Erweiterung in deinem Twitch-Dashboard unter „Konfigurieren“. Er wird verschlüsselt gespeichert.</p>'
+                + '<div class="sb-ext">' + chk('world', x.world, '🌐 Welt & Spieler') + chk('heart', x.heart, '❤ Puls') + chk('music', x.music, '🎵 Song') + chk('top', x.top, '🏆 Bestenliste')
+                + chk('commands', x.commands, '⌨️ Befehle') + chk('rewards', x.rewards, '🎁 Belohnungen') + chk('poll', x.poll, '📊 Umfrage (Zuschauer stimmen im Panel ab)') + chk('goal', x.goal, '🎯 Ziel') + chk('recent', x.recent, '⭐ Letzte Unterstützer') + '</div>'
+                + '<input type="url" name="discord" value="' + esc(x.discord || '') + '" placeholder="https://discord.gg/… (optional)" style="width:100%">'
+                + '<p class="muted small">Nie im Panel: Welt im Privat-Modus, 18+-Inhalte, Chat-Nachrichten, Befehle nur für Mods/Subs.</p>'
+                + '<div class="nx-row"><button type="button" class="btn btn-sm" data-extprev>👁 Vorschau der Daten</button><span style="flex:1"></span><button class="btn btn-sm btn-gold">Speichern</button></div><pre id="sbExtPrev" class="small mono" hidden></pre></form>'
+                + '</div>';
+        }
         if (view === 'rewards') {
             b.innerHTML = '<div class="nc-grid"><div class="nc-card"><h4>🎁 Belohnungen</h4><p class="muted small">Zuschauer lösen sie mit ' + esc(c.prefix) + 'Name im Chat ein – die Punkte werden abgezogen und das Makro läuft in VRChat (Avatar-Parameter, Chatbox, Kamera, Webhook …).</p>'
                 + (c.rewards.length ? c.rewards.map(r => '<div class="nc-mrow"><code>' + esc(c.prefix + r.name) + '</code><b>' + r.cost + '</b><span class="small mono" style="flex:1">' + esc(r.script.split('\n')[0]) + (r.script.includes('\n') ? ' …' : '') + '</span><span class="muted small">' + r.cooldown + ' s</span>'
@@ -213,6 +239,9 @@
         if (ctd && confirm('Zähler löschen?')) return api('stream_counter_delete', { name: ctd.dataset.ctdel }).then(d => { st = d; render(); }).catch(fail);
         const qd = e.target.closest('[data-qdel]');
         if (qd) return api('stream_quote_delete', { index: qd.dataset.qdel }).then(d => { st = d; render(); }).catch(fail);
+        const gs = e.target.closest('[data-gstep]');
+        if (gs) return api('stream_goal_step', { add: gs.dataset.gstep }).then(d => { st = d; toast(d.msg); render(); }).catch(fail);
+        if (e.target.closest('[data-extprev]')) return api('stream_ext_preview').then(d => { const pr = $('#sbExtPrev'); pr.hidden = false; pr.textContent = JSON.stringify(d.state, null, 2); }).catch(fail);
         const pe = e.target.closest('[data-poll]');
         if (pe) return api('stream_poll', { op: pe.dataset.poll }).then(d => { st = d; if (d.msg) toast(d.msg); render(); }).catch(fail);
         const gaB = e.target.closest('[data-ga]');
@@ -237,6 +266,9 @@
         if (f.id === 'sbTest') return api('stream_test', Object.assign(data, { since: seq })).then(() => { f.text.value = ''; poll(); }).catch(fail);
         if (f.id === 'sbCmd') return api('stream_cmd_save', data).then(d => { st = d; toast(d.msg); render(); }).catch(fail);
         if (f.id === 'sbRw') return api('stream_reward_save', data).then(d => { st = d; toast(d.msg); render(); }).catch(fail);
+        if (f.id === 'sbGoal') return api('stream_goal_save', data).then(d => { st = d; toast(d.msg); render(); }).catch(fail);
+        if (f.id === 'sbBar') return api('stream_bar_save', data).then(d => { st = d; toast(d.msg); render(); }).catch(fail);
+        if (f.id === 'sbExt') { if (!data.key) delete data.key; return api('stream_ext_save', data).then(d => { st = d; toast(d.msg); render(); }).catch(fail); }
         if (f.id === 'sbCfg') return api('stream_cfg', data).then(d => { st = d; toast(d.msg); render(); }).catch(fail);
     });
     let qt = null;

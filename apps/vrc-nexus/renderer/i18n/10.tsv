@@ -2342,3 +2342,33 @@ nur VIP-Meldungen	VIP notifications only	notifications VIP seulement	VIPの通�
 z. B. Clubnacht	e.g. club night	p. ex. soirée club	例：クラブナイト
 z. B. Filmabend	e.g. movie night	p. ex. soirée film	例：映画の夜
 Alle im Spiel einladen	Invite everyone in game	Inviter tous ceux en jeu	ゲーム中の全員を招待
+Leiste & Twitch-Panel	Bar & Twitch panel	Barre & panneau Twitch	バーとTwitchパネル
+Ziel anzeigen (Leiste + Twitch-Panel)	Show goal (bar + Twitch panel)	Afficher l'objectif (barre + panneau Twitch)	目標を表示（バー＋Twitchパネル）
+Zählt automatisch:	Counts automatically:	Compte automatiquement :	自動カウント：
+nichts (nur von Hand)	nothing (manual only)	rien (seulement à la main)	なし（手動のみ）
+Abos & Geschenk-Abos	Subs & gift subs	Abos & abos offerts	サブスク＆ギフト
+Bits	Bits	Bits	ビッツ
+Raids	Raids	Raids	レイド
+Stream-Leiste oben	Stream bar on top	Barre de stream en haut	上部のストリームバー
+OBS → Quelle „Browser“ → Adresse aus Einstellungen → Integrationen („Stream-Leiste oben“), Größe 1920 × 260. Zeigt Welt, Puls, Song, Ziel, Umfrage und ein Laufband mit den letzten Unterstützern und diesen Infos:	OBS → source “Browser” → address from Settings → Integrations (“Stream bar on top”), size 1920 × 260. Shows world, heart rate, song, goal, poll and a ticker with the latest supporters and these infos:	OBS → source « Navigateur » → adresse dans Paramètres → Intégrations (« Barre de stream en haut »), taille 1920 × 260. Affiche monde, pouls, musique, objectif, sondage et un bandeau avec les derniers soutiens et ces infos :	OBS → ソース「ブラウザ」→ 設定 → 連携（「上部のストリームバー」）のアドレス、サイズ1920×260。ワールド、心拍、曲、目標、投票、最新サポーターとこの情報のティッカーを表示：
+Eine Info pro Zeile	One info per line	Une info par ligne	1行に1つの情報
+Zähler (z. B. 💀 Tode) laufen automatisch mit. Im Privat-Modus steht „🔒 Privat“ statt der Welt.	Counters (e.g. 💀 deaths) are included automatically. In private mode it shows “🔒 Private” instead of the world.	Les compteurs (p. ex. 💀 morts) suivent automatiquement. En mode privé, « 🔒 Privé » remplace le monde.	カウンター（例：💀 死亡数）も自動で表示。プライベートモードではワールドの代わりに「🔒 プライベート」。
+Twitch-Panel (Erweiterung unter dem Stream)	Twitch panel (extension below the stream)	Panneau Twitch (extension sous le stream)	Twitchパネル（配信下の拡張機能）
+Panel mit Daten versorgen	Supply the panel with data	Alimenter le panneau en données	パネルにデータを送る
+(alle 15 s über die GhostNode-Webseite)	(every 15 s via the GhostNode website)	(toutes les 15 s via le site GhostNode)	（GhostNodeサイト経由で15秒ごと）
+Verbindungscode gnx_… aus dem Panel	Connection code gnx_… from the panel	Code de connexion gnx_… du panneau	パネルの接続コード gnx_…
+•••• Verbindungscode gespeichert	•••• connection code saved	•••• code de connexion enregistré	•••• 接続コード保存済み
+Den Code zeigt die Erweiterung in deinem Twitch-Dashboard unter „Konfigurieren“. Er wird verschlüsselt gespeichert.	The extension shows the code in your Twitch dashboard under “Configure”. It is stored encrypted.	L'extension affiche le code dans ton tableau de bord Twitch sous « Configurer ». Il est stocké chiffré.	コードはTwitchダッシュボードの拡張機能「設定」に表示されます。暗号化して保存されます。
+Welt & Spieler	World & players	Monde & joueurs	ワールドとプレイヤー
+Bestenliste	Leaderboard	Classement	ランキング
+Umfrage (Zuschauer stimmen im Panel ab)	Poll (viewers vote in the panel)	Sondage (les spectateurs votent dans le panneau)	投票（視聴者がパネルで投票）
+Letzte Unterstützer	Latest supporters	Derniers soutiens	最近のサポーター
+Nie im Panel: Welt im Privat-Modus, 18+-Inhalte, Chat-Nachrichten, Befehle nur für Mods/Subs.	Never in the panel: world in private mode, 18+ content, chat messages, mod/sub-only commands.	Jamais dans le panneau : monde en mode privé, contenu 18+, messages du chat, commandes réservées aux mods/abonnés.	パネルに出さないもの：プライベートモード中のワールド、18+コンテンツ、チャットメッセージ、Mod/サブ限定コマンド。
+Vorschau der Daten	Preview the data	Aperçu des données	データのプレビュー
+Ziel gespeichert.	Goal saved.	Objectif enregistré.	目標を保存しました。
+Leiste gespeichert.	Bar saved.	Barre enregistrée.	バーを保存しました。
+Twitch-Panel aus.	Twitch panel off.	Panneau Twitch désactivé.	Twitchパネルはオフ。
+Twitch-Panel: wird jede 15 s aktualisiert.	Twitch panel: updated every 15 s.	Panneau Twitch : mis à jour toutes les 15 s.	Twitchパネル：15秒ごとに更新。
+Discord-Link bitte als https://discord.gg/…	Please enter the Discord link as https://discord.gg/…	Lien Discord sous la forme https://discord.gg/…	Discordリンクは https://discord.gg/… の形式で
+Das ist kein Verbindungscode aus dem Twitch-Panel (beginnt mit „gnx_“).	That's not a connection code from the Twitch panel (starts with “gnx_”).	Ce n'est pas un code de connexion du panneau Twitch (commence par « gnx_ »).	Twitchパネルの接続コードではありません（「gnx_」で始まります）。
+Welt, Laufband mit Unterstützern und Infos, Puls, Song, Ziel und Umfrage. Größe 1920 × 260, ganz oben über den Stream legen (&pos=bottom für unten).	World, ticker with supporters and infos, heart rate, song, goal and poll. Size 1920 × 260, place at the very top of the stream (&pos=bottom for the bottom).	Monde, bandeau avec soutiens et infos, pouls, musique, objectif et sondage. Taille 1920 × 260, à placer tout en haut du stream (&pos=bottom pour le bas).	ワールド、サポーターと情報のティッカー、心拍、曲、目標、投票。サイズ1920×260、配信の一番上に配置（下なら &pos=bottom）。

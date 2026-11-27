@@ -6,6 +6,7 @@ on:
       - 'apps/vrc-nexus-android/**'
       - 'apps/vrc-nexus-watch/**'
       - 'apps/nexus-pet/**'
+      - 'apps/twitch-extension/**'
       - 'apps/vrc-nexus/backend/**'
       - 'apps/vrc-nexus/renderer/**'
       - '.github/workflows/vrc-nexus-android.yml'
@@ -119,6 +120,7 @@ jobs:
             "| VRC-Nexus-$VER-android.apk | Android (without PC features) |" \
             "| VRC-Nexus-Watch-$VER-wearos.apk | Wear OS watch app (heart rate, panic, quick actions) |" \
             "| Nexus-Pet-$(cat apps/nexus-pet/version.txt).apk | Nexus Pet – virtual pet for Android (separate app) |" \
+            "| VRC-Nexus-Twitch-Extension.zip | Twitch panel extension (upload in the Twitch developer console) |" \
             "| VRC-Nexus.streamDeckPlugin | Stream Deck plugin (double-click to install) |" "" \
             "The Windows files are still being built. Unsigned: Windows SmartScreen → “More info” → “Run anyway”; Android asks to allow installing from unknown sources." "" \
             "Build: ${GITHUB_SHA:0:7} · $(date -u '+%Y-%m-%d %H:%M') UTC")
@@ -212,3 +214,23 @@ jobs:
         run: |
           VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
           gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber Nexus-Pet-*.apk
+
+  # 7.2: Twitch-Panel-Erweiterung als ZIP (zum Hochladen in der Twitch-Entwicklerkonsole) am Release
+  twitch:
+    runs-on: ubuntu-latest
+    needs: apk
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prüfen und packen
+        run: |
+          cd apps/twitch-extension
+          for f in *.js; do node --check "$f"; done
+          ! grep -n "<script>" *.html
+          zip -j ../../VRC-Nexus-Twitch-Extension.zip panel.html config.html common.js panel.js config.js style.css
+      - name: An das VRC-Nexus-Release hängen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
+          gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-Twitch-Extension.zip

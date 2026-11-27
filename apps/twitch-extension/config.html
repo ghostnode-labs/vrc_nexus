@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VRC Nexus – Einrichtung</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="config">
+    <h1>🥽 VRC Nexus – Twitch-Panel einrichten</h1>
+    <ol>
+        <li>Unten auf <b>„Verbindungscode erzeugen“</b> klicken.</li>
+        <li>In der Windows-App <b>VRC Nexus</b>: Stream-Bot → <b>📺 Leiste &amp; Twitch-Panel</b> → Code einfügen, „Panel mit Daten versorgen“ anhaken, speichern.</li>
+        <li>Dort wählst du auch, was Zuschauer sehen (Welt, Puls, Song, Befehle, Belohnungen, Bestenliste, Umfrage, Ziel).</li>
+    </ol>
+    <p><button type="button" id="gen">🔑 Verbindungscode erzeugen</button></p>
+    <p id="codeBox" hidden><input id="code" readonly> <button type="button" id="copy">Kopieren</button></p>
+    <p id="status" class="muted">Status wird geprüft …</p>
+    <p class="muted small">Ein neuer Code macht den alten ungültig. Der Code wird auf dem GhostNode-Server nur als Prüfsumme gespeichert. Das Panel zeigt nie 18+-Inhalte und keine Welt, solange der Privat-Modus an ist.</p>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <script src="common.js"></script>
+    <script src="config.js"></script>
+</body>
+</html>

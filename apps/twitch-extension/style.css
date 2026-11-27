@@ -1,0 +1,30 @@
+/* VRC Nexus Twitch-Panel – dunkel, GhostNode-Farben, 318 px breit */
+:root { --bg: #0b1018; --card: #121a26; --line: #22324a; --text: #e2e8f0; --muted: #8a97a6; --cyan: #38d5e6; --gold: #f3c262; --red: #ff5c7a; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 "Segoe UI", system-ui, sans-serif; }
+body.panel { width: 100%; max-width: 318px; min-height: 100vh; display: flex; flex-direction: column; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 2px solid var(--cyan); }
+.logo { font-weight: 700; letter-spacing: .5px; } .logo b { color: var(--cyan); }
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #222b38; color: var(--muted); } .pill.on { background: rgba(56, 213, 230, .15); color: var(--cyan); }
+nav { display: flex; gap: 2px; padding: 6px 8px 0; } nav button { flex: 1; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 6px 0; font: inherit; font-size: 12px; cursor: pointer; }
+nav button.on { color: var(--gold); border-bottom-color: var(--gold); }
+main { flex: 1; padding: 8px; overflow-y: auto; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+.card h3 { margin: 0 0 8px; font-size: 13px; color: var(--cyan); }
+.world { font-weight: 700; color: var(--gold); margin-bottom: 4px; word-break: break-word; }
+.row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.04); } .row b { color: var(--gold); white-space: nowrap; }
+.heart { color: var(--red); font-weight: 700; margin-top: 6px; } .heart i { display: inline-block; font-style: normal; animation: beat 1s infinite; }
+@keyframes beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.25); } }
+.music { margin-top: 6px; color: var(--muted); word-break: break-word; }
+.bar { height: 10px; background: #1d2736; border-radius: 5px; overflow: hidden; } .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--gold)); }
+.opt { position: relative; display: flex; justify-content: space-between; width: 100%; margin: 4px 0; padding: 7px 8px; background: #19232f; border: 1px solid var(--line); border-radius: 6px; color: var(--text); font: inherit; cursor: pointer; overflow: hidden; text-align: left; }
+.opt i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(56, 213, 230, .18); z-index: 0; } .opt span, .opt b { position: relative; z-index: 1; }
+.opt.mine { border-color: var(--gold); } .opt:hover { border-color: var(--cyan); }
+.cmd { padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04); } .cmd code { color: var(--cyan); font-size: 13px; } .cost { float: right; color: var(--gold); font-size: 12px; }
+.small { font-size: 11px; } .muted { color: var(--muted); }
+footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--line); }
+.btn { color: #0b1018; background: var(--cyan); padding: 4px 10px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 12px; }
+.toast { position: fixed; left: 10px; right: 10px; bottom: 50px; background: #1c2a3c; border: 1px solid var(--cyan); border-radius: 6px; padding: 8px; font-size: 12px; text-align: center; }
+body.config { padding: 20px; max-width: 720px; } body.config h1 { font-size: 20px; color: var(--cyan); }
+body.config button { background: var(--cyan); color: #0b1018; border: 0; border-radius: 6px; padding: 8px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+body.config input { width: 420px; max-width: 100%; padding: 7px; background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 6px; font-family: monospace; }

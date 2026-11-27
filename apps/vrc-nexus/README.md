@@ -26,6 +26,12 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.1.1 – Stream bar on top & Twitch panel extension
+Stream-Bot → 📺 **Bar & Twitch panel**
+- 📺 **Stream bar on top** (OBS browser source `/bar`, 1920 × 260): world, players and session time, a ticker with your latest supporters (subs, gift subs, bits, raids), your own info lines and counters, ❤ heart rate, 🎵 song, 🎯 goal with progress bar and the running poll; `&pos=bottom` puts it at the bottom, `&theme=light` for a light look; private mode shows “🔒 Private” instead of the world
+- 🎯 **Goal:** e.g. a subscriber goal that counts subs/gift subs, bits or raids automatically (or by hand)
+- 🟣 **Twitch panel extension** (below the stream, via the GhostNode website): viewers see world, heart rate, song, goal, latest supporters, chat commands, rewards and the points leaderboard – and **vote in your stream-bot poll right in the panel** (logged-in viewers, one vote each, counted together with `!stimme`). You choose what's shared; never shown: world in private mode, 18+ content, chat messages, mod/sub-only commands. Setup: `apps/twitch-extension/README.md`; the ready zip is attached to the release
+
 ### New in 7.1.0 – Together
 Community → 🎉 **Together** – everything stays local in the app.
 - 👥 **Friend groups:** fixed crews (e.g. “Friday crew”) with online status – 📨 invite everyone who's in game to your instance with one click

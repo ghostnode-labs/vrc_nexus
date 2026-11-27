@@ -4417,3 +4417,51 @@ test('7.1: Gemeinsam – Freundes-Gruppen + Sammel-Einladung, Treffen mit Erinne
     assert.ok(bd.find(x => x.id === 'play10').got && !bd.find(x => x.id === 'play100').got && bd.find(x => x.id === 'worlds25').got && bd.find(x => x.id === 'events1').got);
     assert.strictEqual(bd.find(x => x.id === 'play100').value, 12);
 });
+
+test('7.2: Stream-Bot – Ziel zählt mit, Stream-Leiste oben, Twitch-Panel nur mit Freigaben (Privat-Modus, keine Mod-Befehle), Panel-Stimmen zählen', async () => {
+    const { StreamBot } = require('../backend/streambot');
+    const store = {};
+    const crypt = { encrypt: s => 'e:' + s, decrypt: s => s.startsWith('e:') ? s.slice(2) : '' };
+    const app = { db: { setting: (k, d) => store[k] ?? d, setSetting: (k, v) => { store[k] = v; } }, game: { state: { running: true, worldName: 'The Black Cat', players: new Map([['a', {}], ['b', {}]]), since: 1 } },
+        heart: { active: true, bpm: 91 }, auto: { music: 'Lofi – Snow' }, nsfw: { private: false } };
+    const sb = new StreamBot(app, crypt);
+    sb.reply = () => {};
+    let c = sb.cfg();
+    c.commands.push({ name: 'geheim', response: 'nur mods', perm: 'mod', on: true });
+    sb.writeCfg(c);
+    await sb.action('stream_goal_save', { on: '1', text: 'Abo-Ziel', cur: '2', max: '10', auto: 'subs' });
+    sb.onEvent('sub', 'twitch', 'Mira', {});
+    sb.onEvent('subgift', 'twitch', 'Kai', { menge: '5' });
+    sb.onEvent('bits', 'twitch', 'Ole', { menge: '300' });
+    assert.strictEqual(sb.cfg().goal.cur, 8, 'Abo + 5 Geschenk-Abos, Bits zählen hier nicht');
+    const bar = sb.barState();
+    assert.deepStrictEqual([bar.world, bar.players, bar.heart, bar.music, bar.goal.cur, bar.recent[0].user], ['The Black Cat', 2, 91, 'Lofi – Snow', 8, 'Ole']);
+    await sb.action('stream_bar_save', { infos: 'Hallo\n\nFolgt gern' });
+    assert.deepStrictEqual(sb.barState().infos.slice(0, 2), ['Hallo', 'Folgt gern']);
+    // Panel-Daten
+    let snap = sb.extSnapshot();
+    assert.ok(snap.world === 'The Black Cat' && snap.heart === 91 && snap.goal.cur === 8);
+    assert.ok(!snap.commands.some(x => x.name === 'geheim'), 'nur Befehle für alle');
+    app.nsfw.private = true; snap = sb.extSnapshot();
+    assert.ok(!('world' in snap), 'Privat-Modus: keine Welt'); app.nsfw.private = false;
+    await sb.action('stream_ext_save', { heart: '0', top: '0', discord: 'https://discord.gg/ghost' });
+    snap = sb.extSnapshot();
+    assert.ok(!('heart' in snap) && !('top' in snap) && snap.discord === 'https://discord.gg/ghost');
+    await assert.rejects(sb.action('stream_ext_save', { discord: 'javascript:alert(1)' }), /discord/i);
+    await assert.rejects(sb.action('stream_ext_save', { key: 'falsch' }), /Verbindungscode/);
+    // Push + Stimmen aus dem Panel
+    const sent = [];
+    const old = globalThis.fetch;
+    sb.pollStart('Welche Welt?', ['Strand', 'Club']);
+    const pid = sb.poll.started;
+    globalThis.fetch = async (u, o) => { sent.push({ u: String(u), b: JSON.parse(o.body) }); return { ok: true, status: 200, json: async () => ({ ok: true, votes: [{ poll: pid, uid: 'U1aa', option: 1 }, { poll: pid, uid: 'U2bb', option: 1 }, { poll: 1, uid: 'U3cc', option: 0 }, { poll: pid, uid: 'U4dd', option: 9 }, { poll: pid, uid: 'x', option: 0 }] }) }; };
+    try {
+        await sb.action('stream_ext_save', { on: '1', key: 'gnx_' + 'a'.repeat(40) });
+        await sb.extPush();
+        assert.ok(sent.length >= 1 && sent[0].u.endsWith('/twitchext.php?a=push') && sent[0].b.key === 'gnx_' + 'a'.repeat(40));
+        assert.ok(store.stream_keys.startsWith('e:'), 'Code verschlüsselt gespeichert');
+        const r = sb.pollResult();
+        assert.deepStrictEqual(r.options.map(o => o.votes), [0, 2], 'nur gültige Stimmen der laufenden Umfrage');
+        assert.strictEqual(sb.status().ext.state, 'verbunden');
+    } finally { globalThis.fetch = old; sb.stop(); }
+});

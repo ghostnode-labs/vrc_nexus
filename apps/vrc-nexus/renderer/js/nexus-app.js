@@ -780,6 +780,7 @@
             + (s['int.obs'] ? '' : '<p class="nx-hint">⚠ Erst oben „Browser-Quelle für OBS/Streamlabs“ einschalten.</p>')
             + row('Info-Leiste', base + 'obs?token=' + tok, 'Welt, Spieler, Zeit, Musik, Chatbox. Größe z. B. 900 × 220, Hintergrund transparent.')
             + row('Stream-Chat', base + 'chat?token=' + tok, 'Twitch/YouTube-Chat + Punkte-Einlösungen (Stream-Bot). z. B. 420 × 600.')
+            + row('Stream-Leiste oben', base + 'bar?token=' + tok, 'Welt, Laufband mit Unterstützern und Infos, Puls, Song, Ziel und Umfrage. Größe 1920 × 260, ganz oben über den Stream legen (&amp;pos=bottom für unten).')
             + '<p class="nx-hint">Optionen anhängen: <code>&amp;theme=light</code>, <code>&amp;hide=players,time,music,chat</code>. Die Adresse funktioniert nur auf diesem PC.</p></div>';
     }
     /** 3.2: „Verbindung & Daten“ (+ Tastenkürzel/Direkt-Zugriff) aus dem früheren „Konto & Status“ – angezeigt in Einstellungen → System */
