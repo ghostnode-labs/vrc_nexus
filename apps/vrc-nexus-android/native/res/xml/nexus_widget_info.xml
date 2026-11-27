@@ -9,4 +9,6 @@
     android:initialLayout="@layout/nexus_widget"
     android:previewLayout="@layout/nexus_widget"
     android:description="@string/nexus_w_friends"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:configure="de.ghostnode.vrcnexus.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

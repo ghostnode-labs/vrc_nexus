@@ -5,6 +5,7 @@
     <string name="nexus_w_events">Nächste Events</string>
     <string name="nexus_w_notifs">Benachrichtigungen</string>
     <string name="nexus_w_quick">Schnellzugriff &amp; Panik</string>
+    <string name="nexus_w_cfg">Widget-Einstellungen</string>
     <style name="NexusQuickBtn">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>

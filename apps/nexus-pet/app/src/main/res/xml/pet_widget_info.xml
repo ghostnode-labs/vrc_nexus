@@ -7,4 +7,6 @@
     android:initialLayout="@layout/pet_widget"
     android:previewLayout="@layout/pet_widget"
     android:description="@string/widget_desc"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:configure="dev.ghostnode.nexuspet.PetWidgetConfig"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

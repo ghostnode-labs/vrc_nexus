@@ -7,4 +7,6 @@
     android:initialLayout="@layout/nexus_widget_notifs"
     android:previewLayout="@layout/nexus_widget_notifs"
     android:description="@string/nexus_w_notifs"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    android:configure="de.ghostnode.vrcnexus.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

@@ -2,5 +2,6 @@
 <resources>
     <string name="app_name">Nexus Pet</string>
     <string name="widget_name">Nexus Pet – Geistling</string>
+    <string name="widget_cfg">Widget-Einstellungen</string>
     <string name="widget_desc">Dein Geistling mit Hunger, Laune und Rufen</string>
 </resources>

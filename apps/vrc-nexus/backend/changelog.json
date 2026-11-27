@@ -1,5 +1,10 @@
 [
  {
+  "version": "7.3.3",
+  "title": "Settings for every Android widget",
+  "body": "- ⚙ **Every home-screen widget now has its own settings** – tap the small ⚙ on the widget, or long-press → “Customize widget” on Android 12+ (on older Android the settings open when you add a widget; Back keeps the defaults). Each widget instance keeps its own values, so the same widget can look different on two home screens\n- 🎨 **For all widgets:** theme (dark / light / transparent), text size (small / normal / large), show or hide the “as of” time, and which section opens when you tap the widget\n- 👥 **Friends online:** number of friends in the list (0–8), status dot, unread-notification count\n- ❤ **Heart rate & PC:** show world (never in private mode) and player count, “sleep mode on” note\n- 📅 **Next events:** number of events (1–6), only groups you follow ⭐, anniversaries and birthdays on/off\n- 🔔 **Notifications:** number of entries (1–6), message text on/off, counter on/off\n- ⚡ **Quick access:** choose the four buttons (friends, events, clubs, buttons, community, notifications, PC, home, settings) and show or hide 🛑 panic\n- 🐾 **Nexus Pet 1.1:** widget settings as well – theme, text size, name, status line, values as numbers instead of hearts"
+ },
+ {
   "version": "7.3.2",
   "title": "",
   "body": "- 🔞 *** (details in the app under “About” when NSFW is unlocked)\n- 🚪 **Door list for club events:** club staff can tick off people with a confirmed RSVP at the entrance (`🚪 Door list` on each event) – app and Nexus Web\n- 🗄 The website was tested against MySQL/MariaDB as well as SQLite for all club, profile, Twitch and new features"

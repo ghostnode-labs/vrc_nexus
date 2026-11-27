@@ -10,6 +10,7 @@ You raise a **Geistling**, a small original ghost creature in the GhostNode styl
 - **Evolution:** 13 forms – care mistakes, neglect, discipline and weight decide the path; one secret form
 - **Gentle mode (default):** the pet never leaves because of neglect; **classic mode** is stricter (neglect or long illness ends the life, mistakes shorten it)
 - **Modern extras:** vacation mode (pauses time), shift bedtime ±3 h, collection of discovered forms, memories of past pets, statistics, notifications for calls and evolutions, home-screen widget
+- **Widget settings (1.1):** tap ⚙ on the widget (or “Customize widget” on Android 12+): dark / light / transparent theme, text size, show name, show status line, values as numbers instead of hearts – separately for every widget
 - Save state stays on the device (SharedPreferences); no network, no tracking
 
 ## Build

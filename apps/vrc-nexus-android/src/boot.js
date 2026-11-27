@@ -133,7 +133,19 @@ bootStep('start');
     const WL = { stand: 'Stand', live: 'läuft gerade', in: 'in', today: 'heute', days: 'Tagen', years: 'Jahre', events: 'Nächste Events', no_events: 'Keine Events geplant.',
         no_data: 'Noch keine Daten – App einmal öffnen.', notifs: 'Benachrichtigungen', no_notifs: 'Alles gelesen 🎉', pc_none: 'Nicht mit dem PC gekoppelt – tippen zum Koppeln',
         pc_old: 'PC gerade nicht erreichbar', vrc_off: 'VRChat aus', private: 'Privat-Modus', sleep: 'Schlafmodus an',
-        q_friends: 'Freunde', q_events: 'Events', q_clubs: 'Clubs', q_buttons: 'Knöpfe', q_panic: 'Panik' };
+        q_friends: 'Freunde', q_events: 'Events', q_clubs: 'Clubs', q_buttons: 'Knöpfe', q_panic: 'Panik',
+        // 7.3.3: Widget-Einstellungen
+        q_community: 'Community', q_notifs: 'Meldungen', q_pc: 'PC', q_home: 'Start', q_settings: 'Einstellungen',
+        cfg_title: 'Widget-Einstellungen', cfg_look: 'Aussehen', cfg_theme: 'Design', theme_dark: 'Dunkel', theme_light: 'Hell', theme_clear: 'Durchsichtig',
+        cfg_size: 'Schriftgröße', size_s: 'Klein', size_m: 'Normal', size_l: 'Groß', cfg_foot: '„Stand“ (Uhrzeit der Daten) zeigen', cfg_content: 'Inhalt',
+        cfg_rows: 'Freunde in der Liste', cfg_dot: 'Status-Punkt hinter dem Namen', cfg_bell: 'Ungelesene Benachrichtigungen zeigen',
+        cfg_world: 'Welt zeigen (nie im Privat-Modus)', cfg_players: 'Spielerzahl zeigen', cfg_sleep: 'Hinweis „Schlafmodus an“',
+        cfg_count: 'Anzahl Events', cfg_star: 'Nur Gruppen, denen ich folge (⭐)', cfg_anniv: 'Jubiläen und Geburtstage',
+        cfg_count2: 'Anzahl Einträge', cfg_msg: 'Nachrichtentext zeigen', cfg_badge: 'Zähler oben rechts', cfg_btn: 'Knopf', cfg_panic: '🛑 Panik-Knopf zeigen',
+        cfg_tap: 'Beim Tippen öffnen', cfg_unknown: 'Dieses Widget hat keine weiteren Einstellungen.', save: 'Speichern', cancel: 'Abbrechen',
+        w_friends: 'Freunde online', w_pulse: 'Puls & PC', w_events: 'Nächste Events', w_notifs: 'Benachrichtigungen', w_quick: 'Schnellzugriff & Panik',
+        tab_home: '🏠 Start', tab_friends: '👥 Freunde', tab_community: '🫂 Community', tab_clubs: '🏠 Clubs', tab_calendar: '📅 Kalender', tab_notifs: '🔔 Benachrichtigungen',
+        tab_buttons: '🎛 Knöpfe', tab_pc: '🖥 PC', tab_nsfw: '🔞 18+', tab_settings: '⚙ Einstellungen' };
     const widgetData = () => {
         const d = app.home.summary();
         const t = typeof window.t === 'function' ? window.t : s => s;

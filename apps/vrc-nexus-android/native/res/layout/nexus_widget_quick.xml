@@ -7,4 +7,5 @@
     <TextView android:id="@+id/wq_clubs" style="@style/NexusQuickBtn" android:text="🏠" />
     <TextView android:id="@+id/wq_buttons" style="@style/NexusQuickBtn" android:text="🎛" />
     <TextView android:id="@+id/wq_panic" style="@style/NexusQuickBtn" android:textColor="#FF5C7A" android:background="@drawable/nexus_widget_panic" android:text="🛑" />
+    <TextView android:id="@+id/wq_cfg" android:layout_width="wrap_content" android:layout_height="match_parent" android:gravity="center" android:paddingLeft="4dp" android:paddingRight="4dp" android:textColor="#7A8794" android:textSize="12sp" android:text="⚙" android:contentDescription="@string/nexus_w_cfg" />
 </LinearLayout>

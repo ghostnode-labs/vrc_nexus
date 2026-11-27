@@ -11,6 +11,8 @@ for W in PulseWidget:nexus_widget_pulse_info:nexus_w_pulse EventWidget:nexus_wid
     C=${W%%:*}; R=${W#*:}; I=${R%%:*}; L=${R#*:}
     grep -q "\.$C\"" "$SRC/AndroidManifest.xml" || sed -i "s#</application>#    <receiver android:name=\".$C\" android:exported=\"true\" android:label=\"@string/$L\">\n            <intent-filter><action android:name=\"android.appwidget.action.APPWIDGET_UPDATE\" /></intent-filter>\n            <meta-data android:name=\"android.appwidget.provider\" android:resource=\"@xml/$I\" />\n        </receiver>\n    </application>#" "$SRC/AndroidManifest.xml"
 done
+# 7.3.3: Einstellungen je Widget (Activity mit APPWIDGET_CONFIGURE)
+grep -q 'WidgetConfigActivity' "$SRC/AndroidManifest.xml" || sed -i 's#</application>#    <activity android:name=".WidgetConfigActivity" android:exported="true" android:label="@string/nexus_w_cfg" android:excludeFromRecents="true" android:taskAffinity="de.ghostnode.vrcnexus.widgetcfg" android:theme="@android:style/Theme.Material.NoActionBar">\n            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>\n        </activity>\n    </application>#' "$SRC/AndroidManifest.xml"
 # Updates selbst installieren dürfen (Android fragt den Nutzer trotzdem)
 grep -q 'REQUEST_INSTALL_PACKAGES' "$SRC/AndroidManifest.xml" || sed -i 's#<application#<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application#' "$SRC/AndroidManifest.xml"
 # 5.2.3: Handy ↔ PC im Heimnetz läuft über http://PC:17874 – Klartext-Verbindungen erlauben (Kopplung mit eigenem Schlüssel je Gerät)
