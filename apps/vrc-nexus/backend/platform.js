@@ -9,7 +9,8 @@
  */
 const fs = require('fs');
 const os = require('os');
-const path = require('path');
+const nodePath = require('path');
+let path = nodePath;   // je Aufruf: posix für Linux/macOS, win32 für Windows (Tests laufen auch auf der jeweils anderen Plattform)
 
 const APP = '438100';
 const TAIL = ['pfx', 'drive_c', 'users', 'steamuser', 'AppData', 'LocalLow', 'VRChat', 'VRChat'];
@@ -34,6 +35,7 @@ function libraries(home, exists = fs.existsSync, read = f => fs.readFileSync(f, 
 /** VRChat-Datenordner (mit Log-Dateien, config.json, OSC/) */
 function vrchatDir(o = {}) {
     const plat = o.platform || process.platform, home = o.home || os.homedir(), env = o.env || process.env, exists = o.exists || fs.existsSync;
+    path = plat === 'win32' ? nodePath.win32 : nodePath.posix;
     if (env.NEXUS_VRCHAT_DIR) return env.NEXUS_VRCHAT_DIR;
     if (plat === 'win32') return path.join(env.USERPROFILE || home, 'AppData', 'LocalLow', 'VRChat', 'VRChat');
     if (plat === 'linux') {
