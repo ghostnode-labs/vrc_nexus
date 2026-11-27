@@ -71,6 +71,10 @@ final class Nexus {
         String tok = prefs(c).getString("token", "");
         if (!tok.isEmpty()) h.setRequestProperty("X-Nexus-Watch", tok);
         h.setRequestProperty("X-Nexus-Watch-Version", Updater.installedName(c));
+        try {   // 8.2: Akkustand für den Geräte-Hub am PC (ohne Berechtigung, „sticky“ Broadcast)
+            android.content.Intent bi = c.registerReceiver(null, new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
+            if (bi != null) { int lv = bi.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1), sc = bi.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1); if (lv >= 0 && sc > 0) h.setRequestProperty("X-Nexus-Battery", String.valueOf(Math.round(lv * 100f / sc))); }
+        } catch (Exception e) { /* ohne Akkustand */ }
         if (body != null) {
             h.setRequestMethod("POST"); h.setDoOutput(true);
             try (OutputStream o = h.getOutputStream()) { o.write(body.toString().getBytes(StandardCharsets.UTF_8)); }

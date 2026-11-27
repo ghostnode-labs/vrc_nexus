@@ -41,7 +41,7 @@ class Watch {
     constructor(app) {
         this.app = app;
         this.server = null; this.udp = null; this.port = 0; this.error = '';
-        this.pin = newPin(); this.fails = []; this.seen = {}; this.ver = {}; this.buzz = {};
+        this.pin = newPin(); this.fails = []; this.seen = {}; this.ver = {}; this.buzz = {}; this.batt = {};
         setTimeout(() => this.apply(), 0);
     }
     cfg() { try { return Object.assign({}, DEF, JSON.parse(this.app.db.setting('watch_cfg', '{}')) || {}); } catch (e) { return Object.assign({}, DEF); } }
@@ -85,7 +85,7 @@ class Watch {
         const c = this.cfg();
         return { cfg: { on: c.on, port: c.port }, look: this.look(), faces: FACES, themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v])), has_bg: !!this.bgFile(),
             heart: this.app.heart ? { bpm: this.app.heart.active ? this.app.heart.bpm : 0, from: this.app.heart.from || '', source: this.app.heart.cfg().source } : null, running: !!this.server, error: this.error, pin: c.on ? this.pin : '', addresses: this.addresses(),
-            devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '' })) };
+            devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '', battery: this.batt[d.id] === undefined ? null : this.batt[d.id] })) };
     }
 
     // ---------- Server ----------
@@ -129,7 +129,7 @@ class Watch {
         if (!/^[a-f0-9]{64}$/.test(tok)) return null;
         const h = sha(tok);
         const d = this.cfg().devices.find(x => x.hash.length === h.length && crypto.timingSafeEqual(Buffer.from(x.hash), Buffer.from(h)));
-        if (d) { this.seen[d.id] = Date.now(); const v = str(req.headers['x-nexus-watch-version']); if (/^\d+\.\d+\.\d+$/.test(v)) this.ver[d.id] = v; }
+        if (d) { this.seen[d.id] = Date.now(); const v = str(req.headers['x-nexus-watch-version']); if (/^\d+\.\d+\.\d+$/.test(v)) this.ver[d.id] = v; const b = str(req.headers['x-nexus-battery']); if (/^\d{1,3}$/.test(b) && +b <= 100) this.batt[d.id] = +b; }   // 8.2: Akkustand für den Geräte-Hub
         return d || null;
     }
     async handle(req, res) {

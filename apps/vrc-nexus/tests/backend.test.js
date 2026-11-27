@@ -4996,6 +4996,36 @@ test('8.2: Notfall-Stopp auf allen gekoppelten PCs (Laptop → Zentrale sofort, 
     } finally { hub.watch.stop(); lap.lansync.stop(); hub.lansync.stop(); }
 });
 
+test('8.2: Geräte-Hub (dieser PC, Uhr mit Akkustand aus der Kopfzeile, Puls-Quelle, Spielzeug nur mit 18+-Sicht, Warnung bei wenig Akku)', async () => {
+    const { NexusApp } = require('../backend/app');
+    const app = new NexusApp({ db: await openDatabase(null), crypt: { encrypt: s => s, decrypt: s => s }, noTimers: true, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-dh-')) } });
+    app.game.osc.stopListen(); app.tools.alert = () => {};
+    const PORT = 18000 + Math.floor(Math.random() * 800);
+    try {
+        await app.post({ act: 'watch_cfg', on: '1', port: String(PORT) }, {});
+        for (let i = 0; i < 50 && !app.watch.server.listening; i++) await U.sleep(10);
+        const w = await (await fetch('http://127.0.0.1:' + PORT + '/watch/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: app.watch.pin, name: 'Galaxy Watch' }) })).json();
+        assert.ok(w.token, JSON.stringify(w));
+        let r = await app.post({ act: 'devhub_list' }, {});
+        assert.strictEqual(r.devices[0].name, 'Dieser PC');
+        let watch = r.devices.find(x => x.kind === 'watch');
+        assert.ok(watch && watch.battery === null && !watch.low);
+        await fetch('http://127.0.0.1:' + PORT + '/watch/state', { headers: { 'X-Nexus-Watch': w.token, 'X-Nexus-Battery': '14' } });
+        await fetch('http://127.0.0.1:' + PORT + '/watch/state', { headers: { 'X-Nexus-Watch': w.token, 'X-Nexus-Battery': '999' } });   // Unsinn wird ignoriert
+        r = await app.post({ act: 'devhub_list' }, {});
+        watch = r.devices.find(x => x.kind === 'watch');
+        assert.ok(watch.online && watch.battery === 14 && watch.low && r.low === 1, JSON.stringify(watch));
+        // Spielzeug erscheint nur mit 18+-Sicht
+        const fakeToys = { status: () => ({ devices: [{ index: 0, name: 'Lush', label: 'Lush', battery: 80, out: 0 }] }) };
+        const realToys = app.toys; app.toys = fakeToys;
+        app.nsfwVisible = () => false; assert.ok(!(await app.post({ act: 'devhub_list' }, {})).devices.some(x => x.kind === 'toy'));
+        app.nsfwVisible = () => true; r = await app.post({ act: 'devhub_list' }, {});
+        assert.ok(r.devices.some(x => x.kind === 'toy' && x.battery === 80 && !x.low));
+        app.toys = realToys;
+        await assert.rejects(app.post({ act: 'devhub_nope' }, {}), /Unbekannt/);
+    } finally { app.watch.stop(); }
+});
+
 test('8.0.5: Gesundheit (7/30 Tage, Pausen pro Stunde, Schritte, Trend, Hinweise, CSV) · Uhr: Schritte & Zifferblätter', async () => {
     const { NexusApp } = require('../backend/app');
     const { dayOf } = require('../backend/diary');

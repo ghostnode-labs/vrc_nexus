@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.11 – Device hub
+- 🧭 **All devices at a glance** (🧰 Tools → 📡 Devices): this PC, paired watches, phones and laptops, and the heart rate source, each with connection status and **battery level**. Devices below 20 % are highlighted. The Nexus Watch now reports its battery to the PC (no extra permission needed).
+- 🔞 ***
+
 ### New in 8.0.10 – Automatic breaks
 - ⏸ **Automatic breaks** for long sessions: after a set time in a row, or optionally above a heart rate limit, output goes to zero for a few minutes and then continues where it left off. You can end the break early.
 - 🔞 ***

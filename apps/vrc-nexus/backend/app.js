@@ -318,6 +318,7 @@ class NexusApp {
             if (act.startsWith('vcmd_')) return await this.voicecmd.action(act, input);   // 8.0.3
             if (act.startsWith('lsync_')) { if (!this.lansync) throw new UserError('Nur in der PC-App.'); return await this.lansync.action(act, input); }   // 8.0.4
             if (act === 'platform_info') return require('./platform').info();
+            if (act.startsWith('devhub_')) { if (!this.devhub) this.devhub = new (require('./devhub').DevHub)(this); return await this.devhub.action(act, input); }   // 8.2 Geräte-Hub
             if (act.startsWith('sync_')) return await this.settingsync.action(act, input);   // 8.0.2 Abgleich
             if (act === 'portable_state') { const h = this.tools && this.tools.host; return h && h.portable ? h.portable() : { portable: false }; }   // 8.0.2
             if (act === 'portable_move') { const h = this.tools && this.tools.host; if (!h || !h.portableMove) throw new UserError('Nur in der portablen Windows-Version.'); return await h.portableMove(); }

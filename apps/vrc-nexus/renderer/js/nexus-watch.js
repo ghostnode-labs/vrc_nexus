@@ -3,7 +3,7 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = UI.api, toast = (m, b) => UI.toast(m, b), T = s => (window.t ? window.t(s) : s);
-    let box = null, d = null, timer = null, prevImg = { rev: '', url: '' };
+    let box = null, d = null, hub = null, timer = null, prevImg = { rev: '', url: '' };
     const ago = ms => { if (!ms) return T('noch nie'); const s = Math.round((Date.now() - ms) / 1000); return s < 60 ? T('vor') + ' ' + s + ' s' : s < 3600 ? T('vor') + ' ' + Math.round(s / 60) + ' min' : new Date(ms).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); };
 
     /** kleine runde Vorschau der Uhr mit Thema & Hintergrund */
@@ -20,6 +20,10 @@
         if (box.contains(document.activeElement) && document.activeElement.matches('input[type=number], input[type=text]')) return;
         const c = d.cfg, L = d.look, on = c.on;
         let h = '<div class="nc-grid">';
+        // 8.2: Geräte-Hub – alles auf einen Blick, mit Akkustand
+        if (hub && hub.devices) h += '<div class="nc-card" style="grid-column:1/-1"><h4>🧭 ' + esc(T('Alle Geräte')) + (hub.low ? ' <span class="bad small">🪫 ' + hub.low + ' ' + esc(T('mit wenig Akku')) + '</span>' : '') + '</h4><ul class="nw-devs">'
+            + hub.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + x.icon + ' ' + esc(T(x.name)) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('nicht verbunden')))
+                + (x.detail ? ' · ' + esc(T(x.detail)) : '') + '</small></div>' + (x.battery !== null ? '<span class="small' + (x.low ? ' bad' : '') + '">' + (x.low ? '🪫' : '🔋') + ' ' + x.battery + ' %</span>' : '') + '</li>').join('') + '</ul></div>';
         // Verbindung
         h += '<div class="nc-card"><h4>📡 ' + esc(T('Verbindung')) + '</h4>'
             + '<label class="check"><input type="checkbox" data-nw="on"' + (on ? ' checked' : '') + '> ' + esc(T('Geräte-Verbindung im Heimnetz erlauben (Uhr, Handy, PC)')) + '</label>'
@@ -49,7 +53,7 @@
         h += '</div>';
         box.innerHTML = h;
     }
-    function load() { return api('watch_get').then(r => { d = r; render(); }).catch(e => { if (box) box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
+    function load() { api('devhub_list').then(r => { hub = r; }).catch(() => { hub = null; }); return api('watch_get').then(r => { d = r; render(); }).catch(e => { if (box) box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
     const run = (act, data) => api(act, data || {}).then(r => { d = r; render(); if (r.msg) toast(T(r.msg)); }).catch(e => toast('⚠ ' + e.message, true));
 
     /** Bild verkleinern (max. 600 px, JPEG) – spart Übertragung zur Uhr */

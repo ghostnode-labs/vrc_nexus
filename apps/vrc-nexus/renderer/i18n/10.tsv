@@ -2847,3 +2847,7 @@ min am Stück	min in a row	min d'affilée	分連続
 min Pause	min break	min de pause	分休憩
 auch ab Puls	also from heart rate	aussi à partir du pouls	心拍数でも
 Während der Pause ist die Stärke 0; Muster und Szenen laufen danach weiter. Puls braucht die Puls-Verbindung (HypeRate, Uhr …).	During the break the strength is 0; patterns and scenes continue afterwards. Heart rate needs the heart rate connection (HypeRate, watch …).	Pendant la pause, l'intensité est à 0 ; les motifs et scènes reprennent ensuite. Le pouls nécessite la connexion cardio (HypeRate, montre …).	休憩中は強さ0になり、その後パターンとシーンが再開します。心拍数には心拍接続（HypeRate、ウォッチなど）が必要です。
+Alle Geräte	All devices	Tous les appareils	すべてのデバイス
+mit wenig Akku	with low battery	batterie faible	バッテリー残量少
+Dieser PC	This PC	Ce PC	このPC
+Zentrale	Hub	Centrale	ハブ

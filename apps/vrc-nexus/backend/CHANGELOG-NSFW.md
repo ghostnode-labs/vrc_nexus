@@ -2,6 +2,10 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.11 – Device hub with battery levels
+
+- 🧭 **Device hub** (🧰 Tools → 📡 Devices → *All devices*): toys now show up next to the watch, phone, paired PCs and the heart rate source, with **battery level** and current strength. Low batteries (≤ 20 %) are marked 🪫. Toys only appear while 18+ is unlocked and private mode is off.
+
 ### New in 8.0.10 – Automatic breaks by time or heart rate
 
 - ⏸ **Automatic breaks** (🔞 → Toys → *⏸ Automatic breaks*, next to Aftercare): after **X minutes in a row** (5–180) the strength goes to 0 for **Y minutes** (1–60); optionally also as soon as your **heart rate** reaches a limit (90–210 bpm, needs the heart rate connection – HypeRate, watch …). Patterns and scenes keep running and simply continue after the break; the session timer starts fresh. A notification shows why the break started ("30 min in a row" or "heart rate 152"), and *▶ End break* resumes immediately. Off by default.
