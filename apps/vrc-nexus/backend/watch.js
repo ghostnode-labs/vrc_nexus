@@ -193,9 +193,10 @@ class Watch {
         this.notes = (this.notes || []).filter(x => Date.now() - x.t < 600000).slice(-7);
         const m = meta || {}, uid = /^usr_[\w-]+$/.test(str(m.uid)) ? str(m.uid) : '', loc = str(m.loc);
         const joinable = /^wrld_[^:]+:[^~]+(~region\([a-z]+\))?$/.test(loc) || /~(friends|hidden)\(/.test(loc) && loc.startsWith('wrld_');
-        const replies = uid ? [...(joinable ? [['join', '🚪 Hin']] : []), ['request', '🙋 Einladen lassen'], ['ok', '👍']] : [['ok', '👍']];
+        const custom = Array.isArray(m.replies) && m.replies.length ? m.replies.slice(0, 3).map(r => [cut(str(r[0]), 12), cut(str(r[1]), 24)]) : null;
+        const replies = custom || (uid ? [...(joinable ? [['join', '🚪 Hin']] : []), ['request', '🙋 Einladen lassen'], ['ok', '👍']] : [['ok', '👍']]);
         this.noteSeq = (this.noteSeq || 0) + 1;
-        this.notes.push({ id: this.noteSeq, t: Date.now(), title: cut(str(title), 80), body: cut(str(body), 120), replies, uid, loc, done: '' });
+        this.notes.push({ id: this.noteSeq, t: Date.now(), title: cut(str(title), 80), body: cut(str(body), 120), replies, uid, loc, done: '', cb: typeof m.onReply === 'function' ? m.onReply : null });
     }
     notesSafe() { return this.app.nsfw && this.app.nsfw.private ? [] : this.notesFor(); }
     notesFor() { return (this.notes || []).filter(x => Date.now() - x.t < 600000 && !x.done).map(x => ({ id: x.id, t: x.t, title: x.title, body: x.body, replies: x.replies })); }
@@ -204,6 +205,7 @@ class Watch {
         if (!x) throw new UserError('Benachrichtigung nicht mehr da.');
         if (!x.replies.some(r => r[0] === reply)) throw new UserError('Unbekannte Antwort.');
         x.done = reply;
+        if (x.cb) { const r = await x.cb(reply); return { msg: (r && r.tip) || '👍' }; }   // 7.3: eigene Antworten (Check-in, Aftercare)
         if (reply === 'join') return Object.assign({ msg: '🚪 Einladung an dich – im Spiel annehmen' }, await this.app.post({ act: 'invite_self', location: x.loc }, {}));
         if (reply === 'request') return Object.assign({ msg: '🙋 Anfrage gesendet' }, await this.app.post({ act: 'request_invite', id: x.uid }, {}));
         return { msg: '👍' };

@@ -81,7 +81,7 @@
         let h = '<div class="ns-top"><span class="muted small">🚨 ' + esc(T('Panik-Knopf: oben in der Kopfzeile')) + '</span>'
             + '<button type="button" class="btn ' + (st.private ? 'btn-gold' : '') + '" data-ns="private">🕶 Privat-Modus ' + (st.private ? 'AN' : 'aus') + '</button>'
             + '<span class="muted small">' + (a.owner ? '👑 Besitzer' : '🔓 freigeschaltet' + (a.exp ? ' bis ' + esc(new Date(a.exp * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE')) : '')) + '</span></div>';
-        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['col', '🗂 Sammlung', has('nsfw') && window.NexusNsfwCol], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['safe2', '🛡 ' + T('Grenzen & Sicherheit'), window.NexusNsfw4], ['fantasy', '🎭 ' + T('Fantasien'), window.NexusNsfw4], ['help', '❓ ' + T('Hilfe'), window.NexusNsfw4], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
+        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['col', '🗂 Sammlung', has('nsfw') && window.NexusNsfwCol], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['safe2', '🛡 ' + T('Grenzen & Sicherheit'), window.NexusNsfw4], ['fantasy', '🎭 ' + T('Fantasien'), window.NexusNsfw4], ['care', '💗 ' + T('Vertrauen & Fürsorge'), window.NexusNsfw5], ['help', '❓ ' + T('Hilfe'), window.NexusNsfw4], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
         if (!tabs.some(x => x[0] === sub)) sub = 'main';
         h += '<div class="chips ns-sub">' + tabs.map(([k, n]) => '<button type="button" class="chip' + (sub === k ? ' on' : '') + '" data-nsub="' + k + '">' + n + '</button>').join('') + '</div>';
         h += '<div class="nc-grid">';
@@ -91,6 +91,7 @@
         if (sub === 'x3' && has('toys') && t && window.NexusNsfw3) h += window.NexusNsfw3.html(t);
         if (sub === 'net' && st.tremote) h += netHtml(st.tremote, t);
         if (['safe2', 'fantasy', 'help'].includes(sub) && window.NexusNsfw4) h += window.NexusNsfw4.html(sub, render);   // 6.7
+        if (sub === 'care' && window.NexusNsfw5) h += window.NexusNsfw5.html(sub, render);   // 7.3
         if (sub === 'main') {
         // Avatar-Paare
         h += sec('🎭 SFW ↔ NSFW-Avatar', '<div class="ns-pairs">' + (c.pairs || []).map((p, i) => '<button type="button" class="btn ' + (st.current_avatar === p.nsfw ? 'btn-gold' : '') + '" data-ns="avatar" data-i="' + i + '">'
@@ -210,6 +211,7 @@
         if (window.NexusToyLinks && window.NexusToyLinks.onClick(e, render)) return;
         if (window.NexusNsfw2 && window.NexusNsfw2.onClick(e, toysDo, render)) return;
         if (window.NexusNsfw4 && window.NexusNsfw4.onClick(e, render)) return;   // 6.7
+        if (window.NexusNsfw5 && window.NexusNsfw5.onClick(e, render)) return;   // 7.3
         const g = e.target.closest('[data-tab-go]'); if (g) return UI.tab(g.dataset.tabGo);
         if (e.target.closest('[data-od]')) { UI.tab('client'); setTimeout(() => { const c = document.querySelector('#ncSub [data-sub="debug"]'); if (c) c.click(); }, 400); return; }
         const sb = e.target.closest('[data-nsub]'); if (sb) { e.preventDefault(); sub = sb.dataset.nsub; lsSet('sub', sub); return render(); }
@@ -285,6 +287,7 @@
         if (window.NexusToyLinks && window.NexusToyLinks.onInput(e)) return;
         if (window.NexusNsfw2 && window.NexusNsfw2.onInput(e, toysDo)) return;
         if (window.NexusNsfw4 && window.NexusNsfw4.onInput(e)) return;   // 6.7
+        if (window.NexusNsfw5 && window.NexusNsfw5.onInput(e)) return;   // 7.3
         const tl = e.target.closest('input[type=range][data-trlv]');
         if (tl) { const s = tl.parentNode.querySelector('span'); if (s) s.textContent = tl.value + ' %'; clearTimeout(trT); trT = setTimeout(() => trSend('set', { lv: tl.value / 100 }), 350); return; }
         const tr = e.target.closest('input[type=range][data-tr]'); if (tr) { const s = tr.nextElementSibling; if (s) s.textContent = tr.value + ' %'; return; }

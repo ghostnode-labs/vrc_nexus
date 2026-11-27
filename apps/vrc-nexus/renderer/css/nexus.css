@@ -790,3 +790,7 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 #nwWiki .nw-muted { color: var(--text-muted); font-size: 0.82rem; } #nwWiki .nw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 #nwWiki .nw-text { white-space: pre-wrap; word-break: break-word; } #nwWiki .nw-card h3 { margin: 0 0 10px; font-size: 0.95rem; color: var(--accent-cyan); }
 #nwWiki .nw-row select, #nwWiki .nw-row input[type=search] { width: auto; flex: 1; min-width: 130px; }
+/* 7.3 Vertrauen & Fürsorge */
+.nx5-form { display: grid; gap: 6px; padding: 8px; border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 10px; margin-top: 6px; }
+.nx5-due { color: #f3c262; font-weight: 600; }
+.nx5-miss { color: #ef4444; font-weight: 600; }

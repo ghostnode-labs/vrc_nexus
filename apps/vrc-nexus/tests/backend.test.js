@@ -4471,3 +4471,73 @@ test('7.2: Stream-Bot – Ziel zählt mit, Stream-Leiste oben, Twitch-Panel nur 
         assert.strictEqual(sb.status().ext.state, 'verbunden');
     } finally { globalThis.fetch = old; sb.stop(); }
 });
+
+test('7.3: Vertrauen & Fürsorge – Vertrauensliste mit Rechten, Check-in-Timer (Uhr, E2E-Nachricht), Aftercare, Event-Ampel, Gruppen-Safeword ohne Schleife', async () => {
+    const { NsfwCare, GSW } = require('../backend/nsfwcare');
+    const { NsfwSafe } = require('../backend/nsfwsafe');
+    const store = {}, sent = [], chats = [], params = [], notes = [];
+    let unlocked = true, stopped = 0;
+    const app = {
+        db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } },
+        nsfw: { private: false, need() { if (!unlocked) throw new Error('Gesperrt'); }, access: () => ({ unlocked }), saveCfg() {} },
+        toys: { scenes: { stop() {} }, async stopAll() { stopped++; }, async setConsent() {} },
+        game: { state: { worldName: 'Lofi Café' }, osc: { chatbox: async t => { chats.push(t); }, sendParam: (n, v, t) => { params.push([n, v, t]); } } },
+        chat: { async send(id, text) { if (id.includes('dead')) throw new Error('offline'); sent.push([id, text]); } },
+        watch: { note: (t, b, m) => notes.push({ t, b, m }) }, tools: { host: { notify() {} } },
+    };
+    const crypt = { encrypt: s => 'enc:' + Buffer.from(s).toString('base64'), decrypt: s => Buffer.from(s.slice(4), 'base64').toString() };
+    app.nsfwsafe = new NsfwSafe(app, crypt); const c = app.nsfwcare = new NsfwCare(app, crypt);
+    const A = 'usr_aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', B = 'usr_bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', K = 'usr_cccccccc-cccc-cccc-cccc-cccccccccccc';
+    // Vertrauensliste
+    await assert.rejects(c.action('nsfwc_trust_save', { id: 'Mira', level: 'partner' }), /VRChat-ID/);
+    await c.action('nsfwc_trust_save', { id: A.toUpperCase(), name: 'Mira', level: 'partner' });
+    await c.action('nsfwc_trust_save', { id: B, name: 'Kai', level: 'trusted', perms: JSON.stringify({ group_sw: false }) });
+    await c.action('nsfwc_trust_save', { id: K, name: 'Neu', level: 'known' });
+    assert.ok(c.allowed(A, 'remote') && !c.allowed(B, 'remote') && c.allowed(B, 'checkin') && !c.allowed(B, 'group_sw') && !c.allowed(K, 'checkin'), 'Stufen + einzelne Rechte');
+    assert.deepStrictEqual(c.state().trust.map(t => t.name), ['Mira', 'Kai', 'Neu'], 'sortiert nach Stufe');
+    assert.ok(store.nsfw_care.startsWith('enc:') && !store.nsfw_care.includes('Mira'), 'verschlüsselt');
+    // Check-in
+    await assert.rejects(c.action('nsfwc_checkin_start', { minutes: 2 }), /5 bis 480/);
+    const t0 = Date.now();
+    const ci = c.checkinStart({ label: 'Treffen mit Neu', minutes: 30, grace: 5, contacts: JSON.stringify([A, B, K]), share_world: '1' }, t0);
+    assert.deepStrictEqual(ci.contacts, [A, B], 'nur Personen mit Check-in-Recht');
+    await c.tick(t0 + 29 * 60000); assert.strictEqual(notes.length, 0);
+    await c.tick(t0 + 30 * 60000);
+    const n = notes.pop(); assert.match(n.t, /Ist alles ok/); assert.deepStrictEqual(n.m.replies.map(r => r[0]), ['ok', 'extend', 'help']);
+    await n.m.onReply('extend'); assert.strictEqual(c.load().checkin.state, 'running', 'auf der Uhr verlängert');
+    await c.tick(t0 + 46 * 60000); await c.tick(t0 + 52 * 60000);
+    assert.strictEqual(sent.length, 2); assert.match(sent[0][1], /^🛟 Mein Check-in ist ausgeblieben.*Treffen mit Neu.*Welt: Lofi Café/);
+    app.nsfw.private = true; assert.strictEqual(c.worldText(), '', 'im Privat-Modus keine Welt'); app.nsfw.private = false;
+    assert.match((await c.action('nsfwc_checkin_ok', {})).msg, /Schreib deinen Vertrauenspersonen/);
+    assert.strictEqual(c.load().checkin, null);
+    c.checkinStart({ minutes: 60 }, t0); sent.length = 0;
+    assert.match((await c.action('nsfwc_checkin_help', {})).msg, /2 Person/); assert.match(sent[0][1], /^🆘/);
+    c.checkinOk();
+    // Aftercare
+    await c.action('nsfwc_cfg', { part: 'aftercare', on: '1', delay_min: 10, after_safeword: '1' });
+    const af = c.afterSession('session', t0); assert.strictEqual(af.due, t0 + 600000);
+    await c.tick(t0 + 600000); const an = notes.pop(); assert.match(an.t, /Aftercare/);
+    assert.match((await an.m.onReply('break')).tip, /Zeit/); assert.strictEqual(c.state().moods[0].m, 'break', 'Stimmung lokal gemerkt');
+    // Event-Ampel
+    await c.action('nsfwc_cfg', { part: 'ampel', chatbox: '1', param: 'NX/Ampel' });
+    await assert.rejects(c.action('nsfwc_cfg', { part: 'ampel', param: '../x y' }), /ungültig/);
+    await c.setAmpel('yellow', 2, t0);
+    assert.deepStrictEqual(params.pop(), ['NX/Ampel', 2, 'int']); assert.strictEqual(chats.pop(), '🟡 Nur nach Absprache');
+    app.nsfw.private = true; await c.setAmpel('green', 1, t0); assert.strictEqual(chats.length, 0, 'Privat-Modus: keine Chatbox'); app.nsfw.private = false;
+    await c.tick(t0 + 3600000 + 1); assert.strictEqual(c.load().ampel, null, 'geht nach Ablauf aus'); assert.deepStrictEqual(params.pop(), ['NX/Ampel', 0, 'int']);
+    // Gruppen-Safeword: eigenes → an Mira (Kai hat kein Recht), Aftercare vorgemerkt
+    sent.length = 0; c.load().after = null;
+    const sw = await app.nsfwsafe.safeword('Knopf');
+    assert.deepStrictEqual(sent.map(x => x[0]), [A]); assert.ok(sent[0][1].startsWith(GSW)); assert.ok(sw.done.includes('Gruppe (1)'));
+    assert.ok(c.load().after, 'Aftercare nach dem Safeword');
+    // eingehend: von Mira → stoppt hier, ohne zurückzusenden; von Kai/Fremden → nichts
+    sent.length = 0; app.nsfwsafe.lastSw = 0; const before = stopped;
+    assert.strictEqual(c.onChat(B, GSW + ' – bitte alles stoppen.'), false);
+    assert.strictEqual(c.onChat('usr_dddddddd-dddd-dddd-dddd-dddddddddddd', GSW), false);
+    assert.strictEqual(c.onChat(A, GSW + ' – bitte alles stoppen.'), true);
+    await new Promise(r => setTimeout(r, 20));
+    assert.strictEqual(stopped, before + 1); assert.strictEqual(sent.length, 0, 'keine Schleife');
+    // ohne Freigabe: nichts
+    unlocked = false; assert.strictEqual(c.allowed(A, 'remote'), false); await assert.rejects(c.action('nsfwc_state', {}), /Gesperrt/);
+    c.stop();
+});

@@ -83,7 +83,7 @@ class NsfwSafe {
         return c;
     }
     /** ein Ablauf für alle Wege (Wort, Geste, Knopf, Uhr, Stream Deck, Tastenkürzel) */
-    async safeword(source) {
+    async safeword(source, opt) {
         if (Date.now() - this.lastSw < 3000) return { ok: true, msg: '🛑 Safeword läuft schon', dup: true };   // doppelte Auslöser (Geste + Wort) zusammenfassen
         this.lastSw = Date.now();
         const c = this.cfg().safeword, a = this.app, done = [];
@@ -94,6 +94,8 @@ class NsfwSafe {
         if (c.chat && a.game && !(a.nsfw && a.nsfw.private && !c.private)) await a.game.osc.chatbox('🛑 SAFEWORD – Pause bitte. Alles gut, wir reden kurz.', true).catch(() => {});
         if (a.tools && a.tools.host && a.tools.host.notify) a.tools.host.notify('🛑 Safeword', 'Ausgelöst über ' + source + (done.length ? ' – ' + done.join(', ') : ''));
         this.log('safeword', 'über ' + source + (done.length ? ': ' + done.join(', ') : ''));
+        // 7.3: an die Gruppe weitergeben (nicht zurück, wenn es von dort kam) und Aftercare vormerken
+        if (a.nsfwcare) { if (!(opt && opt.relayed)) { const n = await a.nsfwcare.groupSafeword().catch(() => 0); if (n) done.push('Gruppe (' + n + ')'); } a.nsfwcare.afterSession('safeword'); }
         return { ok: true, msg: '🛑 Safeword (' + source + ')' + (done.length ? ' – ' + done.join(', ') : ''), done };
     }
     /** Spracheingabe: enthält der erkannte Text das Safeword? */

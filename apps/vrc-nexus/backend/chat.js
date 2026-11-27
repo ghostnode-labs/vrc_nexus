@@ -138,6 +138,7 @@ class Chat {
             if (p.img && typeof p.img === 'object' && /^[0-9a-f]{32}$/.test(str(p.img.b))) m.img = { b: str(p.img.b), k: str(p.img.k), n: str(p.img.n), m: /^image\/(png|jpeg|gif|webp)$/.test(str(p.img.m)) ? str(p.img.m) : 'image/png', s: int(p.img.s) };
             if (p.t === 'hr') m.hr = Math.max(0, Math.min(300, int(p.hr)));
             l.push(m); l.sort((a, b) => a.at - b.at);
+            if (!fromMe && !grp && p.t === 'msg' && this.app.nsfwcare) try { this.app.nsfwcare.onChat(conv, m.text); } catch (e) { /* egal */ }   // 7.3 Gruppen-Safeword
             if (l.length > KEEP) l.splice(0, l.length - KEEP);
         } else if (p.t === 'react') {
             const m = find(p.ref); if (!m || m.deleted || !EMOJI.includes(str(p.emoji))) return false;

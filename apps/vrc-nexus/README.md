@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.3.0
+- 🔞 *** (details in the app under “About” when NSFW is unlocked)
+- ⌚ Watch notifications can now carry their own answer buttons (used for check-ins)
+
 ### New in 7.2.2 – World & avatar profiles, creator profiles, Discord club sync
 - 📚 **Profiles for worlds and avatars (Steckbriefe):** anyone with a GhostNode account can create a profile for a world (`wrld_…`) or avatar (`avtr_…`) with image, description and creator; the community rates it with 1–5 stars plus a short review (one per person, can be changed or deleted) and votes on tags (`#chill`, `#mirror` …); search by name, creator, ID or tag, sort by best, most reviews or newest. Safe-for-work only, no content from third-party avatar databases; reviews that hit the word filter wait for a moderator
 - 🎨 **Creator profiles:** bio, what you make, and shop/profile links (Booth, Gumroad, Jinxxy, Ko-fi, Patreon … – https only, recognised automatically); profiles with your VRChat ID as creator appear on your page with average rating

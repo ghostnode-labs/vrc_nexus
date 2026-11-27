@@ -2491,3 +2491,46 @@ Bewertung gelöscht.	Review deleted.	Avis supprimé.	レビューを削除しま
 Heute in VRChat	Today in VRChat	Aujourd'hui sur VRChat	今日のVRChat
 📚 Neue Steckbriefe	📚 New profiles	📚 Nouvelles fiches	📚 新しいプロフィール
 🏠 Neue Clubs	🏠 New clubs	🏠 Nouveaux clubs	🏠 新しいクラブ
+Vertrauen & Fürsorge	Trust & care	Confiance & bienveillance	信頼とケア
+💞 Partner	💞 Partner	💞 Partenaire	💞 パートナー
+🤝 Vertraut	🤝 Trusted	🤝 De confiance	🤝 信頼
+👋 Bekannt	👋 Acquaintance	👋 Connaissance	👋 知り合い
+Fernsteuerung	Remote control	Contrôle à distance	リモート操作
+Gemeinsame Szenen	Shared scenes	Scènes partagées	共有シーン
+Grenzen sehen	See limits	Voir les limites	境界を見る
+Check-in-Kontakt	Check-in contact	Contact de check-in	チェックイン連絡先
+Gruppen-Safeword	Group safeword	Safeword de groupe	グループセーフワード
+keine Rechte	no rights	aucun droit	権限なし
+Noch niemand auf deiner Vertrauensliste.	Nobody on your trust list yet.	Personne sur ta liste de confiance.	信頼リストはまだ空です。
+Person hinzufügen	Add person	Ajouter une personne	人を追加
+Vertrauensliste	Trust list	Liste de confiance	信頼リスト
+Wer darf was? Die Stufe setzt passende Rechte vor – du kannst jedes Recht einzeln ändern. Nur auf diesem Gerät, verschlüsselt.	Who may do what? The level presets matching rights – you can change each one. Only on this device, encrypted.	Qui peut faire quoi ? Le niveau prérègle les droits – tu peux modifier chacun. Uniquement sur cet appareil, chiffré.	誰が何をできる？レベルで権限が設定され、個別に変更できます。この端末のみ、暗号化。
+Check-in-Timer	Check-in timer	Minuteur de check-in	チェックインタイマー
+Ist alles ok? Bitte bestätigen.	Is everything ok? Please confirm.	Tout va bien ? Merci de confirmer.	大丈夫？確認してください。
+Deine Vertrauenspersonen wurden benachrichtigt.	Your trusted people have been notified.	Tes personnes de confiance ont été prévenues.	信頼する人に通知しました。
+Alles ok	All ok	Tout va bien	大丈夫
+Für Treffen mit neuen Leuten: Zur geplanten Zeit fragt VRC Nexus „Ist alles ok?“ (auch auf der Uhr). Kommt keine Antwort, bekommen deine Check-in-Kontakte eine verschlüsselte Nachricht.	For meetings with new people: at the planned time VRC Nexus asks “Is everything ok?” (also on the watch). Without an answer, your check-in contacts get an encrypted message.	Pour les rencontres avec de nouvelles personnes : à l'heure prévue, VRC Nexus demande « Tout va bien ? » (aussi sur la montre). Sans réponse, tes contacts reçoivent un message chiffré.	初めての人と会うとき：予定時刻に「大丈夫？」と確認します（ウォッチにも）。応答がなければ連絡先に暗号化メッセージが届きます。
+Mit wem / was?	With whom / what?	Avec qui / quoi ?	誰と / 何？
+Nachfrist	Grace period	Délai de grâce	猶予
+Welt mitschicken	Include world	Inclure le monde	ワールドを含める
+ohne Antwort auch Safeword auslösen	also trigger safeword without an answer	déclencher aussi le safeword sans réponse	応答がなければセーフワードも発動
+Lege zuerst eine Vertrauensperson mit dem Recht „Check-in“ an.	First add a trusted person with the “check-in” right.	Ajoute d'abord une personne de confiance avec le droit « check-in ».	まず「チェックイン」権限のある信頼する人を追加してください。
+Aftercare	Aftercare	Aftercare	アフターケア
+Nach einer Session (oder nach dem Safeword) fragt VRC Nexus sanft nach, wie es dir geht. Deine Antwort bleibt hier.	After a session (or after the safeword) VRC Nexus gently asks how you are. Your answer stays here.	Après une session (ou après le safeword), VRC Nexus demande doucement comment tu vas. Ta réponse reste ici.	セッション後（またはセーフワード後）にやさしく様子を尋ねます。回答はここに残ります。
+Nächster Check-in um	Next check-in at	Prochain check-in à	次のチェックイン
+💚 Gut	💚 Good	💚 Bien	💚 良い
+🫖 Brauche eine Pause	🫖 Need a break	🫖 Besoin d'une pause	🫖 休憩したい
+💬 Möchte reden	💬 Want to talk	💬 Envie de parler	💬 話したい
+auch nach dem Safeword	also after the safeword	aussi après le safeword	セーフワード後も
+Session beendet	Session ended	Session terminée	セッション終了
+Event-Ampel	Event traffic light	Feu d'événement	イベント信号
+Zeig auf Events, ob du gerade offen für Anfragen bist – in der Chatbox und als Avatar-Parameter (0 aus, 1 grün, 2 gelb, 3 rot). Geht nach der gewählten Zeit von selbst aus.	Show at events whether you are open to requests – in the chatbox and as an avatar parameter (0 off, 1 green, 2 yellow, 3 red). Switches off by itself after the chosen time.	Montre lors d'événements si tu es ouvert·e aux demandes – dans la chatbox et en paramètre d'avatar (0 éteint, 1 vert, 2 jaune, 3 rouge). S'éteint seul après la durée choisie.	イベントでリクエスト受付中か表示します（チャットボックスとアバターパラメーター：0オフ、1緑、2黄、3赤）。指定時間後に自動でオフ。
+Offen für Anfragen	Open to requests	Ouvert·e aux demandes	リクエスト受付中
+Nur nach Absprache	Only after talking	Seulement après discussion	相談の上で
+Bitte keine Anfragen	Please no requests	Pas de demandes svp	リクエストはご遠慮ください
+in die Chatbox	to the chatbox	dans la chatbox	チャットボックスへ
+Dein Safeword stoppt auch bei allen Vertrauenspersonen mit dem Recht „Gruppen-Safeword“ – und ihr Safeword bei dir. Läuft verschlüsselt über den Nexus-Chat.	Your safeword also stops everyone on your trust list with the “group safeword” right – and theirs stops you. Runs encrypted through the Nexus chat.	Ton safeword arrête aussi toutes les personnes de confiance avec le droit « safeword de groupe » – et le leur t'arrête. Chiffré via le chat Nexus.	あなたのセーフワードは「グループセーフワード」権限を持つ全員を止め、相手のものもあなたを止めます。Nexusチャットで暗号化。
+mein Safeword weitergeben	pass on my safeword	transmettre mon safeword	自分のセーフワードを共有
+Safeword der Gruppe annehmen	accept the group's safeword	accepter le safeword du groupe	グループのセーフワードを受け入れる
+Von der Vertrauensliste entfernen?	Remove from the trust list?	Retirer de la liste de confiance ?	信頼リストから削除しますか？
+Jetzt deine Check-in-Kontakte um Hilfe bitten?	Ask your check-in contacts for help now?	Demander de l'aide à tes contacts maintenant ?	今すぐ連絡先に助けを求めますか？

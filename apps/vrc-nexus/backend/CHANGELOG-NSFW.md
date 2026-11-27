@@ -2,6 +2,14 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 7.3.0 – Trust & care
+
+- 🤝 **Trust list** (🔞 → *💗 Trust & care*): people by VRChat ID with a level – 💞 partner, 🤝 trusted, 👋 acquaintance. The level presets the rights, each right can be changed: remote control, shared scenes, see limits, check-in contact, group safeword. Stored encrypted on this device only; other features ask the list before they allow something.
+- 🛟 **Check-in timer for meetings with new people:** label, duration (5–480 min) and grace period (2–30 min), choose check-in contacts. At the planned time VRC Nexus asks “Is everything ok?” – on the desktop and on the Nexus Watch with 💚 OK / ⏱ +15 min / 🆘 help. Without an answer after the grace period, your contacts get an **end-to-end encrypted** message through the Nexus chat (optionally with the world name – never in private mode; optionally also triggers your safeword). 🆘 asks for help right away.
+- 💗 **Aftercare check-in:** after a session (button “Session ended”) or after the safeword, VRC Nexus gently asks how you are after 0–120 minutes – 💚 good, 🫖 need a break, 💬 want to talk – with a short tip. Your answers stay on this device (last 90 days).
+- 🚦 **Event traffic light:** show at events whether you are open to requests – 🟢 open, 🟡 only after talking, 🔴 please no requests – in the chatbox (not in private mode) and as an avatar parameter (int 0–3, e.g. for a badge on your avatar). Switches itself off after 1–12 hours.
+- 🛑 **Group safeword:** your safeword (any way: word, gesture, button, watch, Stream Deck) is passed on to everyone on your trust list with the right “group safeword” and stops their toys and scenes too – and theirs stops yours. It is never passed on again (no loops); messages from people without that right are ignored.
+
 ### New in 6.7.0 – Limits & safety, fantasies, help
 
 - 📋 **Limits profile 2.0** (🔞 → *🛡 Limits & safety*): entries in categories (general, touch, language & roles, toys, clothing & avatar, public, intensity, taboos), each 🟢 yes / 🟡 maybe / 🔴 no with your own note. The chatbox limits card is filled from it automatically; copy it as text. Stored encrypted on this device only.
