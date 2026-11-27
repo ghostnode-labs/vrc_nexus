@@ -2727,3 +2727,33 @@ Gleicht deine Einstellungen zwischen PC, Laptop und Handy ab – Ende-zu-Ende-ve
 Portable vom Stick	Portable from a stick	Portable depuis une clé	スティックからポータブル
 Stoppt alle Plugins sofort – bleibt auch nach einem Neustart so, bis du es wieder ausschaltest.	Stops all plugins immediately – stays that way after a restart until you switch it off again.	Arrête immédiatement tous les plugins – reste ainsi même après un redémarrage jusqu'à ce que tu le désactives.	すべてのプラグインを即座に停止します。再起動後も、オフにするまでこの状態が続きます。
 genutzt	used	utilisé	使用
+Alt + Zahl springt ins Menü	Alt + number jumps into the menu	Alt + chiffre ouvre le menu	Alt + 数字でメニューへ移動
+Alt+1 … Alt+9 öffnen die ersten Menüpunkte, Alt+0 die Suche. Pfeiltasten wandern durchs Menü, Tab + Enter bedienen alles.	Alt+1 … Alt+9 open the first menu items, Alt+0 the search. Arrow keys move through the menu, Tab + Enter operate everything.	Alt+1 … Alt+9 ouvrent les premiers éléments du menu, Alt+0 la recherche. Les flèches parcourent le menu, Tab + Entrée commandent tout.	Alt+1〜Alt+9 で最初のメニュー項目、Alt+0 で検索を開きます。矢印キーでメニューを移動し、Tab と Enter ですべて操作できます。
+App-Sprachbefehle	App voice commands	Commandes vocales de l'app	アプリ音声コマンド
+App-Sprachbefehle an	App voice commands on	Commandes vocales activées	アプリ音声コマンドをオン
+Barrierefreiheit	Accessibility	Accessibilité	アクセシビリティ
+Bei Bedienung mit der Tastatur zeigt ein kräftiger Rahmen, wo du gerade bist.	When using the keyboard, a strong outline shows where you are.	Au clavier, un cadre bien visible montre où tu te trouves.	キーボード操作時、現在位置を太い枠で表示します。
+Deutlicher Fokus-Rahmen	Clear focus outline	Cadre de focus bien visible	はっきりしたフォーカス枠
+Links sind nicht nur an der Farbe zu erkennen.	Links are recognizable by more than their color.	Les liens ne se reconnaissent pas qu'à leur couleur.	リンクを色だけでなく下線でも区別できます。
+Links unterstreichen	Underline links	Souligner les liens	リンクに下線
+Sag das Weckwort und dann den Befehl – z. B. „Nexus Panik“ oder „Nexus öffne Freunde“. Läuft über die Spracherkennung oben (lokal offline mit whisper.cpp), nichts davon geht in die Chatbox.	Say the wake word and then the command – e.g. "Nexus panic" or "Nexus open friends". Uses the speech recognition above (local and offline with whisper.cpp); none of it goes to the chatbox.	Dis le mot d'activation puis la commande – p. ex. « Nexus panique » ou « Nexus ouvre amis ». Utilise la reconnaissance vocale ci-dessus (locale et hors ligne avec whisper.cpp) ; rien n'est envoyé dans la chatbox.	ウェイクワードの後にコマンドを言います（例：「Nexus パニック」「Nexus フレンドを開く」）。上の音声認識（whisper.cpp でローカル・オフライン）を使い、チャットボックスには何も送りません。
+Satz zum Ausprobieren (löst nichts aus)	Sentence to try (triggers nothing)	Phrase à tester (ne déclenche rien)	試す文（何も実行しません）
+Weckwort	Wake word	Mot d'activation	ウェイクワード
+Weniger Bewegung schaltet Animationen und weiches Scrollen ab.	Reduced motion turns off animations and smooth scrolling.	Moins de mouvement désactive les animations et le défilement fluide.	動きを減らすとアニメーションとスムーズスクロールをオフにします。
+Zum Inhalt springen	Skip to content	Aller au contenu	本文へスキップ
+alle Animationen	all animations	toutes les animations	すべてのアニメーション
+weniger Bewegung	reduced motion	moins de mouvement	動きを減らす
+wie im Betriebssystem eingestellt	as set in the operating system	comme dans le système d'exploitation	OS の設定に従う
+„Panik“ auch ohne Weckwort (kurzer Satz)	"Panic" even without wake word (short sentence)	« Panique » même sans mot d'activation (phrase courte)	ウェイクワードなしでも「パニック」（短い文）
+❔ zeigt alle Befehle	❔ shows all commands	❔ affiche toutes les commandes	❔ すべてのコマンドを表示
+🌿 Pause eintragen (Pausen-Coach)	🌿 Log a break (break coach)	🌿 Noter une pause (coach de pauses)	🌿 休憩を記録（休憩コーチ）
+🎬 OBS-Szene wechseln (Name danach sagen)	🎬 Switch OBS scene (say the name after)	🎬 Changer de scène OBS (dire le nom ensuite)	🎬 OBS シーン切替（後に名前を言う）
+💡 Smart-Home-Licht an (weiß)	💡 Smart-home light on (white)	💡 Lumière maison connectée allumée (blanc)	💡 スマートホーム照明オン（白）
+💡 Smart-Home-Licht aus	💡 Smart-home light off	💡 Lumière maison connectée éteinte	💡 スマートホーム照明オフ
+📂 Seite öffnen (Freunde, Start, Feed, Tagebuch, Leistung, Einstellungen …)	📂 Open a page (friends, home, feed, diary, performance, settings …)	📂 Ouvrir une page (amis, accueil, fil, journal, performances, réglages …)	📂 ページを開く（フレンド、ホーム、フィード、日記、パフォーマンス、設定など）
+🔘 Knopf aus dem Knopf-Baukasten (Name danach sagen)	🔘 Button from the button builder (say the name after)	🔘 Bouton du créateur de boutons (dire le nom ensuite)	🔘 ボタン作成ツールのボタン（後に名前を言う）
+🔴 VRChat-Status „Beschäftigt“	🔴 VRChat status "Busy"	🔴 Statut VRChat « Occupé »	🔴 VRChat ステータス「取り込み中」
+🔵 VRChat-Status „Join Me“	🔵 VRChat status "Join Me"	🔵 Statut VRChat « Join Me »	🔵 VRChat ステータス「Join Me」
+🕶 Privat-Modus an	🕶 Private mode on	🕶 Mode privé activé	🕶 プライベートモードオン
+🚨 Panik (wie der Panik-Knopf)	🚨 Panic (like the panic button)	🚨 Panique (comme le bouton panique)	🚨 パニック（パニックボタンと同じ）
+🟢 VRChat-Status „Online“	🟢 VRChat status "Online"	🟢 Statut VRChat « En ligne »	🟢 VRChat ステータス「オンライン」

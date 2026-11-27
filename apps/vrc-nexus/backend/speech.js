@@ -211,6 +211,12 @@ class Speech {
             if (!text) { this.last = ''; return { text: '', sent: '' }; }
             this.last = text;
             if (!opts.noSend && this.app.nsfwsafe && this.app.nsfwsafe.onSpeech(text)) return { text, sent: '', lang, safeword: true };   // 6.7
+            // 8.0.3: App-Sprachbefehle („Nexus …“) – vor den Parameter-Befehlen, nie in die Chatbox
+            const vc = opts.noSend || !this.app.voicecmd ? null : await this.app.voicecmd.handle(text);
+            if (vc) {
+                if (c.log) this.addLog({ t: Date.now(), text, sent: '🗣 ' + vc.msg, target: '', lang, engine: 'App-Befehl', ms: Date.now() - t0, via: str(opts.via) || 'ptt' });
+                return { text, sent: '', lang, prob: r.prob, voice: vc };
+            }
             // Sprachbefehle: passt ein gespeicherter Satz, wird der Parameter gesendet (und – wenn eingestellt – nichts in die Chatbox)
             const hit = opts.noSend ? null : this.matchCmd(text);
             if (hit) {
@@ -350,7 +356,7 @@ class Speech {
             case 'speech_transcribe': {
                 const b64 = str(input.audio).replace(/^data:[^,]*,/, '');
                 const r = await this.transcribe(Buffer.from(b64, 'base64'), { noSend: input.test === '1', via: str(input.via) });
-                return Object.assign(r, { msg: r.text ? '🎙 „' + r.text + '“' : 'Nichts verstanden.' });
+                return Object.assign(r, { msg: r.voice ? r.voice.msg : r.text ? '🎙 „' + r.text + '“' : 'Nichts verstanden.' }, r.voice && r.voice.tab ? { tab: r.voice.tab } : {});
             }
         }
         throw new UserError('Unbekannte Aktion.');

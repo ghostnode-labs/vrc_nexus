@@ -57,7 +57,7 @@
         const wav = encodeWav(resample(r.chunks, r.ctx.sampleRate || 16000, 16000), 16000);
         const b64 = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.readAsDataURL(new Blob([wav], { type: 'audio/wav' })); });
         toast('⏳ Erkenne Sprache …');
-        api('speech_transcribe', { audio: b64, via: 'ptt' }).then(d => { toast(d.msg); refresh(); loadHist(); }).catch(e => { toast('⚠ ' + e.message, true); refresh(); });
+        api('speech_transcribe', { audio: b64, via: 'ptt' }).then(d => { toast(d.msg); if (d.tab && window.NexusUI) NexusUI.tab(d.tab); refresh(); loadHist(); }).catch(e => { toast('⚠ ' + e.message, true); refresh(); });
     }
     /** gewähltes Mikrofon öffnen – fehlt es (abgesteckt, neue ID), per Name suchen, sonst Standard */
     async function openMic(c) {
@@ -206,7 +206,7 @@
         const wav = encodeWav(resample(chunks, rate, 16000), 16000);
         queue = queue.then(async () => {
             const b64 = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.readAsDataURL(new Blob([wav], { type: 'audio/wav' })); });
-            try { const d = await api('speech_transcribe', { audio: b64, via }); if (d.text) toast(d.msg); } catch (e) { toast('⚠ ' + e.message, true); }
+            try { const d = await api('speech_transcribe', { audio: b64, via }); if (d.text) toast(d.msg); if (d.tab && window.NexusUI) NexusUI.tab(d.tab); } catch (e) { toast('⚠ ' + e.message, true); }
             refresh(); loadHist();
         });
     }
@@ -290,10 +290,39 @@
             + Object.entries(st.models).map(([k, v]) => '<div class="nc-row"><span class="small">' + esc(v[0]) + ' · ' + v[1] + ' MB</span>' + (st.have[k] ? '<span class="nc-badge ok">vorhanden</span><button type="button" class="nc-x" data-spdel="' + k + '" title="löschen">✕</button>' : '<button type="button" class="btn btn-sm" data-sp="' + k + '">⬇ laden</button>') + '</div>').join('')
             + '<p class="muted small">Tiny/Base sind schnell, Small/Medium genauer (brauchen mehr CPU). Modelle von huggingface.co/ggerganov/whisper.cpp, Programm von github.com/ggml-org/whisper.cpp.</p>'
             + '<h4 style="margin-top:10px">🔑 OpenAI-Schlüssel</h4><form class="nc-row" id="spKey"><input type="password" name="key" placeholder="' + (st.has_key ? '•••••• gespeichert' : 'sk-…') + '" style="flex:1" autocomplete="off"><button class="btn btn-sm">Speichern</button>' + (st.has_key ? '<button type="button" class="btn btn-sm" id="spKeyDel">Entfernen</button>' : '') + '</form></div>'
-            + cmdCard()
+            + cmdCard() + vcCard()
             + '</div>';
         renderHist();
     }
+    // ---------- 8.0.3: App-Sprachbefehle („Nexus Panik“, „Nexus öffne Freunde“ …) ----------
+    let vc = null;
+    const T = s => (window.t ? window.t(s) : s);
+    function loadVc() { return api('vcmd_status').then(d => { vc = d; render(); }).catch(() => {}); }
+    function vcCard() {
+        if (!vc) return '';
+        const c = vc.cfg;
+        return '<form class="nc-card" id="vcCfg"><h4>🗣 ' + esc(T('App-Sprachbefehle')) + '</h4>'
+            + '<p class="small muted">' + esc(T('Sag das Weckwort und dann den Befehl – z. B. „Nexus Panik“ oder „Nexus öffne Freunde“. Läuft über die Spracherkennung oben (lokal offline mit whisper.cpp), nichts davon geht in die Chatbox.')) + '</p>'
+            + '<div class="nc-row"><label class="check"><input type="checkbox" name="on"' + (c.on ? ' checked' : '') + '> ' + esc(T('App-Sprachbefehle an')) + '</label>'
+            + '<span class="small">' + esc(T('Weckwort')) + '</span><input type="text" name="wake" value="' + esc(c.wake) + '" style="width:110px" maxlength="30"></div>'
+            + '<div class="nc-row"><label class="check small"><input type="checkbox" name="panic_any"' + (c.panic_any ? ' checked' : '') + '> ' + esc(T('„Panik“ auch ohne Weckwort (kurzer Satz)')) + '</label>'
+            + '<button class="btn btn-sm btn-gold">💾 ' + esc(T('Speichern')) + '</button></div>'
+            + '<table class="vc-list"><tbody>' + vc.commands.map(x => '<tr><td>' + esc(T(x.label)) + '</td><td class="small mono">' + x.say.map(s => esc(c.wake + ' ' + s.replace(' *', ' …'))).join('<br>') + '</td></tr>').join('') + '</tbody></table>'
+            + '<div class="nc-row"><input type="text" id="vcTry" placeholder="' + esc(T('Satz zum Ausprobieren (löst nichts aus)')) + '" style="flex:1"><button type="button" class="btn btn-sm" id="vcTryBtn">🧪 ' + esc(T('Prüfen')) + '</button></div>'
+            + (vc.last ? '<p class="small">' + esc(T('Zuletzt')) + ': „' + esc(vc.last.text) + '“ → ' + esc(vc.last.msg) + '</p>' : '')
+            + '</form>';
+    }
+    document.addEventListener('submit', e => {
+        if (e.target.id !== 'vcCfg') return;
+        e.preventDefault();
+        const f = e.target;
+        api('vcmd_cfg', { on: f.on.checked ? '1' : '0', panic_any: f.panic_any.checked ? '1' : '0', wake: f.wake.value }).then(d => { vc = d; toast(T(d.msg)); render(); }).catch(x => toast('⚠ ' + x.message, true));
+    });
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#vcTryBtn')) return;
+        const i = document.getElementById('vcTry');
+        api('vcmd_try', { text: i.value }).then(d => toast(d.msg)).catch(x => toast('⚠ ' + x.message, true));
+    });
     // ---------- Sprachbefehle: Satz sagen → Avatar-Parameter ----------
     let cmdList = null, cmdDel = false;
     function loadCmds() { return api('speech_cmds').then(d => { cmdList = d.items; render(); }).catch(() => {}); }
@@ -377,6 +406,6 @@
     });
 
     document.addEventListener('input', e => { if (e.target.id === 'spHistQ') { histQ = e.target.value; clearTimeout(e.target._t); e.target._t = setTimeout(loadHist, 250); } });
-    window.NexusSpeech = { cmd, start, stop, open() { refresh(); loadHist(); loadCmds(); if (!mics) loadMics(); }, get recording() { return !!rec; }, get listening() { return !!lis; } };
+    window.NexusSpeech = { cmd, start, stop, open() { refresh(); loadHist(); loadCmds(); loadVc(); if (!mics) loadMics(); }, get recording() { return !!rec; }, get listening() { return !!lis; } };
     poll();
 })();

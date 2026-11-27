@@ -26,6 +26,24 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.3 – Accessibility & local voice commands
+- ♿ **Accessibility** (⚙️ Settings → Appearance → Accessibility):
+  - Full keyboard control: a "Skip to content" link on the first Tab, arrow keys / Home / End in the main menu, Alt+1 … Alt+9 for the first menu items and Alt+0 for the search.
+  - Clickable cards (friends, worlds, avatars, groups) can be reached with Tab and opened with Enter or Space.
+  - Dialogs move the focus inside, keep Tab inside, and return the focus when closed.
+  - A strong focus outline appears only when you use the keyboard.
+  - Text size now goes up to 160 %.
+  - New options: underline links, and reduced motion (follows the operating system or can be set by hand).
+  - Screen readers: icon-only buttons get their tooltip as their name, page changes and toasts are announced, and the page language is set.
+- 🗣 **App voice commands** (🎙 Speech → App voice commands): say the wake word (default "Nexus") followed by a command:
+  - panic, private mode on/off, log a break, smart-home light on/off;
+  - VRChat status busy / online / join me;
+  - switch OBS scene by name, open a page ("Nexus open friends"), press any button from the button builder by name, and "Nexus help".
+  - Recognition is the existing local whisper.cpp pipeline (offline, or your own OpenAI key), and command sentences never go to the chatbox.
+  - "Panic" also works without the wake word in a short sentence (can be turned off).
+  - A test field checks a sentence without triggering anything.
+  - The wake word can be changed (one or two words, e.g. "Hey Ghost").
+
 ### New in 8.0.2 – Settings sync, portable stick, plugin rights 2.0 & multiple monitors
 - 🔄 **Encrypted settings sync** (⚙️ Settings → System): keeps PC, laptop and phone on the same settings over your existing dashboard connection. The server only stores one block encrypted with your backup password (AES-256-GCM, same technique as the cloud backup). Merging works per setting: changes made on only one device are kept on both, and if both changed the same setting the version already on the server wins. Secrets, tokens, device-specific addresses and the energy mode always stay on each device. Comfort, break-coach and smart-home rules are synced too (without devices or tokens). Sync runs automatically every 10 minutes or with a button. Simultaneous changes are detected (HTTP 409) and merged again
 - 📦 **Portable from a stick**: the portable Windows version can now keep all data (account, settings, database) in a `VRC-Nexus-Daten` folder next to the .exe. One button in ⚙️ Settings → System copies everything over and restarts, after which nothing is written to the PC. Caches are skipped

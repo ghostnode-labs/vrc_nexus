@@ -82,7 +82,7 @@
         } else if (st) st.remove();
         if (font && (font !== 'custom' || useCustom)) { r.setProperty('--ui-font', FONT_STACK[font]); b.classList.add('font-set'); } else { r.removeProperty('--ui-font'); b.classList.remove('font-set'); }
         if (head && (head !== 'custom' || useCustom)) { r.setProperty('--ui-font-head', FONT_STACK[head]); b.classList.add('font-head-set'); } else { r.removeProperty('--ui-font-head'); b.classList.remove('font-head-set'); }
-        const ts = Math.max(85, Math.min(130, +s['ui.text_size'] || 100));
+        const ts = Math.max(85, Math.min(160, +s['ui.text_size'] || 100));
         if (ts !== 100) r.setProperty('font-size', (16 * ts / 100) + 'px'); else r.removeProperty('font-size');
         b.classList.toggle('density-compact', s['ui.density'] === 'compact');
         b.classList.toggle('density-comfy', s['ui.density'] === 'comfy');
@@ -91,6 +91,7 @@
         b.classList.toggle('no-caps', s['ui.caps'] === false);
         b.classList.toggle('wide-spacing', !!s['ui.spacing']);
         b.classList.toggle('hi-contrast', !!s['ui.contrast']);
+        if (window.NexusA11y) NexusA11y.apply(s);   // 8.0.3
         let svg = document.getElementById('cvdFilters');
         if (CVD[s['ui.cvd']]) {
             if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.id = 'cvdFilters'; svg.setAttribute('aria-hidden', 'true'); svg.style.cssText = 'position:absolute;width:0;height:0';

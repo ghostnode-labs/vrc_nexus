@@ -42,12 +42,17 @@ const FIELDS = [
     // 5.5: Oberfläche 2.0
     ['ui.font_head', 'ui', 'Schrift & Darstellung', 'select', 'same', 'Schrift für Überschriften', 'Menü-Gruppen, Seitentitel und Kartenköpfe.', [['same', 'wie oben']].concat([['default', 'Standard (GhostNode)'], ['system', 'Segoe UI (Windows)'], ['bahn', 'Bahnschrift (technisch, schmal)'], ['readable', 'Verdana (sehr gut lesbar)'], ['trebuchet', 'Trebuchet (freundlich)'], ['serif', 'Cambria / Georgia (mit Serifen)'], ['mono', 'Cascadia Mono (Monospace)'], ['comic', 'Comic Sans (verspielt)'], ['impact', 'Impact (nur Überschriften, kräftig)'], ['custom', '📁 Eigene Schrift-Datei']].slice(1))],
     ['ui.font_file', 'ui', 'Schrift & Darstellung', 'fontfile', '', 'Eigene Schrift-Datei', 'TTF, OTF, WOFF oder WOFF2 (max. 3 MB) – bleibt nur auf diesem Gerät.'],
-    ['ui.text_size', 'ui', 'Schrift & Darstellung', 'range', 100, 'Textgröße (%)', 'Nur die Schrift – „Zoom“ vergrößert alles.', [85, 130]],
+    ['ui.text_size', 'ui', 'Schrift & Darstellung', 'range', 100, 'Textgröße (%)', 'Nur die Schrift – „Zoom“ vergrößert alles.', [85, 160]],
     ['ui.density', 'ui', 'Schrift & Darstellung', 'select', 'normal', 'Abstände', '', [['compact', 'kompakt (mehr auf einen Blick)'], ['normal', 'normal'], ['comfy', 'großzügig (leichter zu treffen)']]],
     ['ui.radius', 'ui', 'Schrift & Darstellung', 'range', 0, 'Abgerundete Ecken (px)', '0 = typische GhostNode-Kanten mit abgeschnittener Ecke.', [0, 18]],
     ['ui.caps', 'ui', 'Schrift & Darstellung', 'bool', true, 'Überschriften in GROSSBUCHSTABEN', 'Aus = normale Schreibweise, ruhiger zu lesen.'],
     ['ui.spacing', 'ui', 'Schrift & Darstellung', 'bool', false, 'Mehr Zeichen- und Wortabstand', 'Hilft bei Leseschwäche und auf kleinen Bildschirmen.'],
     ['ui.contrast', 'ui', 'Schrift & Darstellung', 'bool', false, 'Hoher Kontrast', 'Hellere Nebentexte, kräftigere Rahmen.'],
+    // 8.0.3: Barrierefreiheit
+    ['ui.focus_ring', 'ui', 'Barrierefreiheit', 'bool', true, 'Deutlicher Fokus-Rahmen', 'Bei Bedienung mit der Tastatur zeigt ein kräftiger Rahmen, wo du gerade bist.'],
+    ['ui.alt_keys', 'ui', 'Barrierefreiheit', 'bool', true, 'Alt + Zahl springt ins Menü', 'Alt+1 … Alt+9 öffnen die ersten Menüpunkte, Alt+0 die Suche. Pfeiltasten wandern durchs Menü, Tab + Enter bedienen alles.'],
+    ['ui.underline_links', 'ui', 'Barrierefreiheit', 'bool', false, 'Links unterstreichen', 'Links sind nicht nur an der Farbe zu erkennen.'],
+    ['ui.motion', 'ui', 'Barrierefreiheit', 'select', 'system', 'Bewegung', 'Weniger Bewegung schaltet Animationen und weiches Scrollen ab.', [['system', 'wie im Betriebssystem eingestellt'], ['reduce', 'weniger Bewegung'], ['full', 'alle Animationen']]],
     ['ui.cvd', 'ui', 'Schrift & Darstellung', 'select', 'none', 'Farbsehen', 'Farbfilter für Farbschwächen – gilt für die ganze App.', [['none', 'normal'], ['protan', 'Rot-Schwäche (Protanopie)'], ['deutan', 'Grün-Schwäche (Deuteranopie)'], ['tritan', 'Blau-Schwäche (Tritanopie)'], ['gray', 'Graustufen']]],
     ['ui.animations', 'ui', 'Aussehen', 'bool', true, 'Animationen', ''],
     ['ui.decorations', 'ui', 'Aussehen', 'bool', true, 'Profil-Dekorationen', 'Rahmen ums Profilbild, Banner-Farbe und Namens-Effekt aus VRChat – überall, wo Profile angezeigt werden.'],

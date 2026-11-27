@@ -835,3 +835,6 @@ body.nx-eco *, body.nx-eco *::before, body.nx-eco *::after { animation: none !im
 
 /* 8.0.2 Plugin-Rechte */
 .pl-right { cursor: pointer; } .pl-right input { margin: 0 3px 0 0; vertical-align: middle; } .pl-right.off { opacity: .55; text-decoration: line-through; }
+
+/* 8.0.3 App-Sprachbefehle */
+.vc-list { width: 100%; border-collapse: collapse; margin: 6px 0; } .vc-list td { padding: 3px 6px; border-top: 1px solid var(--line, rgba(255,255,255,.08)); vertical-align: top; }

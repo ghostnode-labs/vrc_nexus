@@ -4850,3 +4850,42 @@ test('8.0.2: Einstellungs-Abgleich (3-Wege, verschlüsselt, Konflikt 409, falsch
         assert.strictEqual(P.list().find(x => x.id === id).status, 'running');
     } finally { P.stop(); await wait(300); }
 });
+
+test('8.0.3: App-Sprachbefehle – Weckwort, Panik auch ohne, Seiten/Knöpfe/OBS per Name, Prüfen löst nichts aus, nie in die Chatbox', async () => {
+    const { VoiceCmd } = require('../backend/voicecmd');
+    const store = {}, did = [];
+    const app = { db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } },
+        nsfw: { private: false, panic: async () => { did.push('panic'); return {}; } }, nsfwsafe: { onSpeech: () => false, setPrivate: on => { did.push('private:' + on); app.nsfw.private = on; return on; } },
+        coach: { breakTaken: () => did.push('break') }, smarthome: { apply: async s => { did.push('light:' + s.bri); return { sent: 1, failed: 0 }; } },
+        post: async q => { did.push('status:' + q.status); return {}; }, obs: { status: () => ({ scenes: ['Just Chatting', 'BRB Pause'] }), scene: async n => did.push('scene:' + n) },
+        buttons: { cfg: () => ({ pages: [{ buttons: [{ id: 'b1', label: 'Beschäftigt' }, { id: 'b2', label: 'Ohren wackeln' }] }] }), run: async id => { did.push('btn:' + id); return {}; } },
+        game: { osc: {}, oscSend: async () => {} } };
+    const v = new VoiceCmd(app);
+    assert.strictEqual(await v.handle('Nexus Panik'), null, 'aus = nichts');
+    await v.action('vcmd_cfg', { on: '1' });
+    assert.strictEqual(await v.handle('Ich habe heute Pause gemacht'), null, 'ohne Weckwort kein Befehl');
+    let r = await v.handle('Hey Nexus, öffne die Freunde!'); assert.strictEqual(r.tab, 'friends');
+    r = await v.handle('Panik!'); assert.strictEqual(r.id, 'panic', 'Panik auch ohne Weckwort');
+    assert.strictEqual(await v.handle('das war echt keine panik heute abend bei uns'), null, 'langer Satz mit „Panik“ löst nichts aus');
+    await v.handle('nexus privat an'); await v.handle('Nexus Pause.'); await v.handle('Nexus Licht aus'); await v.handle('Nexus Status beschäftigt');
+    await v.handle('Nexus Szene brb'); await v.handle('Nexus Knopf Ohren');
+    assert.deepStrictEqual(did, ['panic', 'private:true', 'break', 'light:0', 'status:busy', 'scene:BRB Pause', 'btn:b2']);
+    r = await v.handle('Nexus Szene Gibtsnicht'); assert.match(r.msg, /nicht gefunden/);
+    r = await v.handle('Nexus tanz mal'); assert.strictEqual(r.id, 'unknown'); assert.match(r.msg, /Hilfe/);
+    did.length = 0; r = await v.action('vcmd_try', { text: 'Nexus Panik' }); assert.match(r.msg, /Panik/); assert.deepStrictEqual(did, [], 'Prüfen löst nichts aus');
+    await assert.rejects(v.action('vcmd_cfg', { wake: 'a' }), /Weckwort/);
+    await v.action('vcmd_cfg', { wake: 'Hallo Geist', panic_any: '0' });
+    assert.strictEqual(await v.handle('Panik'), null, 'ohne Weckwort aus');
+    assert.strictEqual((await v.handle('hallo geist pause')).id, 'break');
+    // Einbindung in die Spracherkennung: Befehl geht nie in die Chatbox
+    const { Speech } = require('../backend/speech');
+    const chat = [];
+    const sp = Object.create(Speech.prototype);
+    sp.app = Object.assign({}, app, { voicecmd: v, game: { oscSend: async (k, p) => { if (k === 'chatbox') chat.push(p.text); }, osc: {} } });
+    sp.cfg = () => ({ log: false, typing: false, cmd_only: true, prefix: '' }); sp.recognize = async () => ({ text: 'Hallo Geist, öffne Tagebuch' });
+    r = await sp.action('speech_transcribe', { audio: Buffer.alloc(2000).toString('base64') });
+    assert.ok(r.tab === 'diary' && !chat.length && /tagebuch/i.test(r.msg), JSON.stringify(r));
+    sp.recognize = async () => ({ text: 'Hallo zusammen' });
+    r = await sp.action('speech_transcribe', { audio: Buffer.alloc(2000).toString('base64') });
+    assert.deepStrictEqual(chat, ['Hallo zusammen'], 'normale Sätze gehen weiter in die Chatbox');
+});
