@@ -81,7 +81,7 @@
         let h = '<div class="ns-top"><span class="muted small">🚨 ' + esc(T('Panik-Knopf: oben in der Kopfzeile')) + '</span>'
             + '<button type="button" class="btn ' + (st.private ? 'btn-gold' : '') + '" data-ns="private">🕶 Privat-Modus ' + (st.private ? 'AN' : 'aus') + '</button>'
             + '<span class="muted small">' + (a.owner ? '👑 Besitzer' : '🔓 freigeschaltet' + (a.exp ? ' bis ' + esc(new Date(a.exp * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE')) : '')) + '</span></div>';
-        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['col', '🗂 Sammlung', has('nsfw') && window.NexusNsfwCol], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['safe2', '🛡 ' + T('Grenzen & Sicherheit'), window.NexusNsfw4], ['fantasy', '🎭 ' + T('Fantasien'), window.NexusNsfw4], ['care', '💗 ' + T('Vertrauen & Fürsorge'), window.NexusNsfw5], ['help', '❓ ' + T('Hilfe'), window.NexusNsfw4], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
+        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['col', '🗂 Sammlung', has('nsfw') && window.NexusNsfwCol], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['safe2', '🛡 ' + T('Grenzen & Sicherheit'), window.NexusNsfw4], ['fantasy', '🎭 ' + T('Fantasien'), window.NexusNsfw4], ['care', '💗 ' + T('Vertrauen & Fürsorge'), window.NexusNsfw5], ['couple', '💞 ' + T('Paar-Profil'), window.NexusAdult], ['lib', '📚 ' + T('Vorlagen'), window.NexusAdult], ['help', '❓ ' + T('Hilfe'), window.NexusNsfw4], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
         if (!tabs.some(x => x[0] === sub)) sub = 'main';
         h += '<div class="chips ns-sub">' + tabs.map(([k, n]) => '<button type="button" class="chip' + (sub === k ? ' on' : '') + '" data-nsub="' + k + '">' + n + '</button>').join('') + '</div>';
         h += '<div class="nc-grid">';
@@ -92,6 +92,7 @@
         if (sub === 'net' && st.tremote) h += netHtml(st.tremote, t);
         if (['safe2', 'fantasy', 'help'].includes(sub) && window.NexusNsfw4) h += window.NexusNsfw4.html(sub, render);   // 6.7
         if (sub === 'care' && window.NexusNsfw5) h += window.NexusNsfw5.html(sub, render);   // 7.3
+        if ((sub === 'couple' || sub === 'lib') && window.NexusAdult) { h += '<div class="nw ns-wide" id="nxAdultBox"></div>'; setTimeout(() => window.NexusAdult.render(document.getElementById('nxAdultBox'), sub), 0); }   // 7.3.2
         if (sub === 'main') {
         // Avatar-Paare
         h += sec('🎭 SFW ↔ NSFW-Avatar', '<div class="ns-pairs">' + (c.pairs || []).map((p, i) => '<button type="button" class="btn ' + (st.current_avatar === p.nsfw ? 'btn-gold' : '') + '" data-ns="avatar" data-i="' + i + '">'

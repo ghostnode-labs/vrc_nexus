@@ -794,3 +794,14 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 .nx5-form { display: grid; gap: 6px; padding: 8px; border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 10px; margin-top: 6px; }
 .nx5-due { color: #f3c262; font-weight: 600; }
 .nx5-miss { color: #ef4444; font-weight: 600; }
+
+/* 7.3.2 – 18+-Clubs, Einlass, Paar-Profile, Vorlagen */
+.cl-18 { display: inline-block; padding: 0 6px; border-radius: 6px; background: #be123c; color: #fff; font-size: .75rem; font-weight: 700; vertical-align: middle; }
+.cl-rules18 { border: 1px solid #be123c; margin-top: 10px; }
+.ad-couple { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+.ad-draft { border: 1px dashed #f3c262; margin-top: 8px; }
+.ad-stars { color: #f3c262; letter-spacing: 1px; }
+.ad-star { background: none; border: 0; color: #64748b; font-size: 1.25rem; cursor: pointer; padding: 0 2px; }
+.ad-star.on { color: #f3c262; }
+.ad-body { white-space: pre-wrap; font: inherit; background: rgba(0,0,0,.2); padding: 8px; border-radius: 8px; margin: 8px 0; }
+.ad-lim summary { cursor: pointer; }

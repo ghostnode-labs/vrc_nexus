@@ -14,7 +14,8 @@ const ACTS = { comm_me: 'me', comm_feed: 'feed', comm_thread: 'thread', comm_pos
     comm_sess_start: 'sess_start', comm_sess_answer: 'sess_answer', comm_sess_end: 'sess_end' };
 const CLUB_ACTS = ['list', 'view', 'create', 'update', 'join', 'leave', 'manage', 'post', 'post_mod', 'gallery_add', 'gallery_del', 'event_save', 'event_cancel', 'rsvp', 'calendar',
     'ban', 'unban', 'appeal', 'appeal_decide', 'queue', 'queue_decide', 'wordfilter', 'ticket_new', 'tickets', 'ticket_view', 'ticket_reply',   // 7.2
-    'partners', 'partner_request', 'partner_answer', 'invite_new', 'invites', 'invite_delete', 'stats'];
+    'partners', 'partner_request', 'partner_answer', 'invite_new', 'invites', 'invite_delete', 'stats',
+    'door', 'door_check', 'couple_list', 'couple_invite', 'couple_answer', 'couple_edit', 'couple_end', 'tpl_list', 'tpl_get', 'tpl_save', 'tpl_rate', 'tpl_del', 'tpl_queue'];   // 7.3.2 (18+ prüft der Server)
 const WIKI_ACTS = ['list', 'get', 'creator', 'save', 'review', 'tag', 'creator_save', 'queue', 'queue_decide'];   // 7.2
 const MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
@@ -93,6 +94,7 @@ class Community {
         }
         if (a === 'feed' && body.rating === 'nsfw' && !this.app.nsfw.access().unlocked) throw new UserError('NSFW ist nicht freigegeben.');
         if (/^(req_|sess_|compat)/.test(a) && !this.app.nsfw.access().unlocked) throw new UserError('NSFW ist nicht freigegeben.');   // 6.0: 18+-Anfragen nur mit NSFW
+        if (a === 'req_send') { delete body.with_limits; body.limits = ''; if (input.with_limits && this.app.nsfwsafe) { try { body.limits = this.app.nsfwsafe.limitsText().slice(0, 1500); } catch (e) { /* Profil leer */ } } }   // 7.3.2: Grenzen-Vorschau
         return this.call(a, body);
     }
 }

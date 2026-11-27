@@ -38,7 +38,7 @@
         if (!sEd) {
             h += built.scenes.length ? built.scenes.map(x => '<div class="nc-mrow"><b>' + esc(x.name) + '</b><span class="muted small">' + x.steps.length + ' ' + esc(T('Schritte')) + ' · ' + x.rounds + '× · ' + (x.ramp ? '+' + x.ramp + ' %/' + esc(T('Runde')) + ' · ' : '') + Math.round(x.total / 60) + ' min</span>'
                 + '<button type="button" class="btn btn-sm btn-gold" data-n2a="bplay" data-id="' + esc(x.id) + '">▶</button><button type="button" class="nc-link" data-n2a="bedit" data-id="' + esc(x.id) + '">' + esc(T('bearbeiten')) + '</button>'
-                + '<button type="button" class="nc-x" data-n2a="bdel" data-id="' + esc(x.id) + '">✕</button></div>').join('') : '<p class="muted small">' + esc(T('Noch keine eigenen Szenen.')) + '</p>';
+                + '<button type="button" class="nc-link" data-n2a="bshare" data-id="' + esc(x.id) + '">📤 ' + esc(T('Teilen')) + '</button><button type="button" class="nc-x" data-n2a="bdel" data-id="' + esc(x.id) + '">✕</button></div>').join('') : '<p class="muted small">' + esc(T('Noch keine eigenen Szenen.')) + '</p>';
             return h + '<button type="button" class="btn btn-sm" data-n2a="bnew">＋ ' + esc(T('Neue Szene bauen')) + '</button>';
         }
         const total = sEd.steps.reduce((a, x) => a + (+x.seconds || 0), 0) * (+sEd.rounds || 1);
@@ -69,6 +69,8 @@
         if (a === 'bsdel') { sEd.steps.splice(+b.dataset.i, 1); render(); return true; }
         if (a === 'bup') { const i = +b.dataset.i; if (i > 0) { const x = sEd.steps[i]; sEd.steps[i] = sEd.steps[i - 1]; sEd.steps[i - 1] = x; } render(); return true; }
         if (a === 'bsave') { api('toys_scenes_save', { id: sEd.id, name: sEd.name, rounds: sEd.rounds, ramp: sEd.ramp, steps: JSON.stringify(sEd.steps) }).then(d => { sEd = null; done(d); }).catch(fail); return true; }
+        if (a === 'bshare') { const x = built.scenes.find(y => y.id === b.dataset.id); if (!x || !window.NexusAdult) return true; const d0 = prompt(T('Kurze Beschreibung für die Vorlagen-Bibliothek (optional):'), ''); if (d0 === null) return true;
+            window.NexusAdult.share('scene', x.name, { steps: x.steps, rounds: x.rounds, ramp: x.ramp }, d0).then(d => toast(d.msg)).catch(fail); return true; }   // 7.3.2
         if (a === 'bdel') { if (!confirm(T('Szene löschen?'))) return true; api('toys_scenes_delete', { id: b.dataset.id }).then(done).catch(fail); return true; }
         if (a === 'bplay') { api('toys_scenes_play', { id: b.dataset.id }).then(d => { done(d); toysDo('toys_status'); }).catch(fail); return true; }
         if (a === 'bskip') { api('toys_scenes_skip').then(done).catch(fail); return true; }

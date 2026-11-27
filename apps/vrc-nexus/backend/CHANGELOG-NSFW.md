@@ -2,6 +2,14 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 7.3.2 – 18+ clubs, couple profiles, template library
+
+- 🔞 **Private 18+ clubs:** when creating or editing a club, accounts with Verified 18+ and NSFW on can mark it as 18+. It is then invisible to everyone else – in the directory, the calendar, the club page, iCal, the Discord feed and the “Today in VRChat” widget. 18+ clubs need rules (min. 20 characters), and members **confirm the rules before joining** (the time is stored). Switching 18+ on or off only works while the club has no other members; 18+ clubs and other clubs cannot become partners. The club's own moderation tools (bans, word filter, queue, tickets) apply as usual.
+- 🚪 **Door list with age check:** at 18+ events only people whose Verified 18+ and NSFW are still valid can be let in.
+- 💞 **Couple profiles** (🔞 → *💞 Couple profile*, also on Nexus Web → 18+ / ERP): a shared 18+ profile for two people who are connected through an 18+ request. It only appears after **both** confirmed, and every later change is shown to the other person first and goes live only after their confirmation. Either side can delete it; it disappears while one of you no longer has 18+ access.
+- 📚 **Template library** (🔞 → *📚 Templates*): share your own fantasies (🛡 Limits & safety → 🎭 Fantasies → 📤 Share) and scenes (scene builder → 📤 Share), rate others' templates with 1–5 stars (one rating per person, not your own) and **📥 take one over** as your own fantasy or scene to adapt it. Scenes are checked on the server (max. 30 steps, strength 5–100 %, 5–600 s per step, max. 10 rounds); patterns you don't have are reported when importing. Templates hitting the word filter wait for a moderator.
+- 📋 **Limits preview on 18+ requests:** when sending a request you can choose to attach your limits profile (🟢/🟡/🔴 from 🛡 Limits & safety); the other person sees it as a folded “Limits preview” in their inbox. Without your consent nothing is attached.
+
 ### New in 7.3.0 – Trust & care
 
 - 🤝 **Trust list** (🔞 → *💗 Trust & care*): people by VRChat ID with a level – 💞 partner, 🤝 trusted, 👋 acquaintance. The level presets the rights, each right can be changed: remote control, shared scenes, see limits, check-in contact, group safeword. Stored encrypted on this device only; other features ask the list before they allow something.

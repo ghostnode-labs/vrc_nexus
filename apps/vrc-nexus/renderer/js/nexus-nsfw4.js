@@ -51,7 +51,7 @@
     function fantasyHtml() {
         const f = fEd;
         const list = x.fantasies.length ? x.fantasies.map(z => '<div class="nc-mrow"><b>' + esc(z.title) + '</b><span class="muted small">' + z.roles.length + ' ' + esc(T('Rollen')) + '</span>'
-            + '<button type="button" class="nc-link" data-x4="fedit" data-id="' + esc(z.id) + '">' + esc(T('bearbeiten')) + '</button><button type="button" class="nc-link" data-x4="fcopy" data-id="' + esc(z.id) + '">📋</button><button type="button" class="nc-link" data-x4="fchat" data-id="' + esc(z.id) + '">💬</button>'
+            + '<button type="button" class="nc-link" data-x4="fshare" data-id="' + esc(z.id) + '">📤 ' + esc(T('Teilen')) + '</button>' + '<button type="button" class="nc-link" data-x4="fedit" data-id="' + esc(z.id) + '">' + esc(T('bearbeiten')) + '</button><button type="button" class="nc-link" data-x4="fcopy" data-id="' + esc(z.id) + '">📋</button><button type="button" class="nc-link" data-x4="fchat" data-id="' + esc(z.id) + '">💬</button>'
             + '<button type="button" class="nc-x" data-x4="fdel" data-id="' + esc(z.id) + '">✕</button></div>').join('') : '<p class="muted small">' + esc(T('Noch keine Fantasien.')) + '</p>';
         if (!f) return sec('🎭 ' + esc(T('Fantasie-Baukasten')), '<p class="muted small">' + esc(T('Plant gemeinsam: Ort, Stimmung, Rollen, Grenzen und Safeword – als Karte zum Teilen (Text oder Chatbox). Vor dem Start immer den Consent-Check machen.')) + '</p>'
             + list + '<button type="button" class="btn btn-sm btn-gold" data-x4="fnew">＋ ' + esc(T('Neue Fantasie')) + '</button>', 'ns-wide');
@@ -109,6 +109,8 @@
         if (a === 'frdel') { fEd.roles.splice(i, 1); render(); return true; }
         if (a === 'fsave') { api('nsfwx_fantasy_save', Object.assign({}, fEd, { roles: JSON.stringify(fEd.roles) })).then(d => { fEd = null; st(d); }).catch(fail); return true; }
         if (a === 'fdel') { if (!confirm(T('Fantasie löschen?'))) return true; api('nsfwx_fantasy_del', { id: b.dataset.id }).then(st).catch(fail); return true; }
+        if (a === 'fshare') { const z = x.fantasies.find(f => f.id === b.dataset.id); if (!z || !window.NexusAdult) return true; const d0 = prompt(T('Kurze Beschreibung für die Vorlagen-Bibliothek (optional):'), ''); if (d0 === null) return true;
+            window.NexusAdult.share('fantasy', z.title, { place: z.place, mood: z.mood, roles: z.roles, limits: z.limits, safeword: z.safeword }, d0).then(d => toast(d.msg)).catch(fail); return true; }   // 7.3.2
         if (a === 'fcopy') { api('nsfwx_fantasy_text', { id: b.dataset.id }).then(d => navigator.clipboard.writeText(d.text)).then(() => toast(T('Kopiert.'))).catch(fail); return true; }
         if (a === 'fchat') { api('nsfwx_fantasy_text', { id: b.dataset.id }).then(d => api('nsfw_chat', { text: d.text.split('\n').slice(0, 3).join(' · ') })).then(d => toast(d.msg)).catch(fail); return true; }
         return false;

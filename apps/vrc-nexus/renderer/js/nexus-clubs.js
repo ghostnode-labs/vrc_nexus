@@ -16,7 +16,7 @@
     const dIn = ts => { const d = new Date(ts * 1000); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
     const ROLE = { owner: '👑 Leitung', mod: '🛡 Moderation', member: 'Mitglied', site_mod: '🛡 Seiten-Moderation', pending: '⏳ Bewerbung offen', banned: '🚫 ausgeschlossen' };
     const fail = e => toast(e.message || String(e), 'error');
-    let meta = { topics: {}, langs: {}, join: {} }, view = 'browse', cur = '';
+    let meta = { topics: {}, langs: {}, join: {}, adult_ok: false }, view = 'browse', cur = '', staffNow = false;
     let invite = (new URLSearchParams(location.search).get('invite') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 12);   // 7.2: Einladungslink
 
     function shell(inner) {
@@ -31,7 +31,7 @@
     function card(c) {
         return '<div class="nw-card cl-card" data-club="' + esc(c.slug) + '" style="cursor:pointer' + (c.color ? ';border-left:4px solid ' + c.color : '') + '">'
             + (c.banner ? '<div class="cl-ban" style="background-image:url(\'' + encodeURI(c.banner) + '\')"></div>' : '')
-            + '<b>' + esc(c.name) + '</b> <span class="nw-muted">/' + esc(c.slug) + '</span>'
+            + (c.adult ? '<span class="cl-18">🔞 18+</span> ' : '') + '<b>' + esc(c.name) + '</b> <span class="nw-muted">/' + esc(c.slug) + '</span>'
             + '<div class="nw-muted">' + esc(meta.topics[c.topic] || c.topic) + ' · ' + esc(meta.langs[c.lang] || c.lang) + ' · 👥 ' + c.members + ' · 📅 ' + c.upcoming + ' · ' + esc(meta.join[c.join_mode] || '') + '</div>'
             + '<div class="nw-text" style="margin-top:6px">' + esc(c.descr.slice(0, 180)) + '</div>'
             + (c.my_role ? '<div class="nw-muted" style="margin-top:4px">' + (ROLE[c.my_role] || '') + '</div>' : '') + '</div>';
@@ -52,12 +52,28 @@
         $$('[data-ev]', root).forEach(el => $$('[data-rsvp]', el).forEach(b => b.onclick = () => call('rsvp', { id: +el.dataset.ev, status: b.dataset.rsvp })
             .then(d => { toast(d.msg); el.outerHTML = evCard(d.event, false); bindEv(root); }).catch(fail)));
         $$('[data-goclub]', root).forEach(a => a.onclick = ev => { ev.preventDefault(); openClub(a.dataset.goclub); });
+        if (staffNow) $$('[data-ev]', root).forEach(el => { if ($('[data-door]', el)) return; const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-sm'; b.dataset.door = '1'; b.textContent = '🚪 Einlass-Liste'; b.onclick = () => door(+el.dataset.ev, el); const row = el.querySelector('.nw-row:last-child') || el; row.appendChild(b); });
+    }
+    /** 7.3.2: Einlass-Liste – Zusagen beim Einlass abhaken (bei 18+-Clubs nur mit gültiger Freigabe) */
+    function door(id, el) {
+        // hinter die Knopfzeile der Leitung (Absagen) setzen, falls vorhanden
+        const nx = el.nextElementSibling, anchor = nx && !nx.matches('[data-doorbox],[data-ev]') && nx.classList.contains('nw-row') ? nx : el;
+        const open = anchor.nextElementSibling && anchor.nextElementSibling.matches('[data-doorbox]') ? anchor.nextElementSibling : null;
+        if (open) { open.hidden = !open.hidden; if (open.hidden) return; }
+        const box2 = open || document.createElement('div');
+        if (!open) { box2.className = 'nw-card'; box2.dataset.doorbox = '1'; anchor.after(box2); }
+        const draw = d => {
+            box2.innerHTML = '<div class="nw-row"><b>🚪 Einlass – ' + esc(d.event.title) + '</b>' + (d.adult ? ' <span class="cl-18">🔞</span>' : '') + '<span class="sp"></span><span class="nw-muted">' + d.count.in + ' / ' + d.count.going + ' eingelassen</span></div>'
+                + (d.list.length ? d.list.map(p => '<label class="cl-chk"><input type="checkbox" data-in="' + esc(p.vrc_id) + '"' + (p.in ? ' checked' : '') + (p.status !== 'going' ? ' disabled' : '') + '> ' + esc(p.name || p.vrc_id) + (p.status !== 'going' ? ' <span class="nw-muted">(Warteliste)</span>' : '') + '</label>').join('') : '<div class="nw-muted">Noch keine Zusagen.</div>');
+            $$('[data-in]', box2).forEach(cb => cb.onchange = () => call('door_check', { id, target: cb.dataset.in, on: cb.checked ? 1 : 0 }).then(draw).catch(e => { cb.checked = !cb.checked; fail(e); }));
+        };
+        call('door', { id }).then(draw).catch(fail);
     }
 
     function browse(mine) {
         const body = shell('<div class="nw-row" style="margin-bottom:10px"><input type="search" placeholder="Clubs suchen …" data-q style="flex:1;min-width:160px"><select data-topic></select><select data-lang></select></div><div class="nw-grid" data-list><span class="nw-muted">Lädt …</span></div>');
         const load = () => call('list', { mine: mine ? '1' : '', q: $('[data-q]', body).value, topic: $('[data-topic]', body).value, lang: $('[data-lang]', body).value }).then(d => {
-            meta = { topics: d.topics, langs: d.langs, join: d.join };
+            meta = { topics: d.topics, langs: d.langs, join: d.join, adult_ok: !!d.adult_ok };
             const t = $('[data-topic]', body), l = $('[data-lang]', body);
             if (!t.options.length) { t.innerHTML = opts(d.topics, '', 'Alle Themen'); l.innerHTML = opts(d.langs, '', 'Alle Sprachen'); }
             const list = $('[data-list]', body);
@@ -95,31 +111,32 @@
                 + '<label class="cl-wide">Regeln<textarea data-f="rules" maxlength="3000" rows="4" placeholder="1. Respekt …">' + esc(c.rules) + '</textarea></label>'
                 + '<label class="cl-wide">Einlass-Fragen bei Bewerbung (eine pro Zeile, höchstens 5)<textarea data-f="questions" rows="3">' + esc((c.questions || []).join('\n')) + '</textarea></label>'
                 + '<label class="cl-wide">Banner (https-Bildadresse, optional)<input data-f="banner" value="' + esc(c.banner) + '"></label>'
-                + '<label class="cl-chk"><input type="checkbox" data-f="listed"' + (c.listed ? ' checked' : '') + '> im Verzeichnis und Kalender zeigen</label></div>'
+                + '<label class="cl-chk"><input type="checkbox" data-f="listed"' + (c.listed ? ' checked' : '') + '> im Verzeichnis und Kalender zeigen</label>'
+                + (meta.adult_ok || c.adult ? '<label class="cl-chk cl-wide"><input type="checkbox" data-f="adult"' + (c.adult ? ' checked' : '') + '> 🔞 18+-Club – nur für Konten mit Verified 18+ und NSFW sichtbar; Regeln sind Pflicht und werden vor dem Beitritt bestätigt</label>' : '') + '</div>'
                 + '<div class="nw-row" style="margin-top:10px"><span class="sp"></span>' + (c.id ? '<button type="button" class="btn btn-sm" data-back>Zurück</button>' : '') + '<button type="button" class="btn btn-sm btn-gold" data-save>Speichern</button></div></div>';
             const body = c.id ? $('[data-body]', box) : shell('');
             body.innerHTML = html;
             const v = k => { const el = $('[data-f="' + k + '"]', body); return !el ? undefined : el.type === 'checkbox' ? el.checked : el.value; };
             $('[data-save]', body).onclick = () => {
-                const d = { club: c.slug, name: v('name'), slug: v('slug'), topic: v('topic'), lang: v('lang'), join_mode: v('join_mode'), color: v('color'), descr: v('descr'), rules: v('rules'), banner: v('banner').trim(), listed: v('listed') ? 1 : 0,
+                const d = { club: c.slug, name: v('name'), slug: v('slug'), topic: v('topic'), lang: v('lang'), join_mode: v('join_mode'), color: v('color'), descr: v('descr'), rules: v('rules'), banner: v('banner').trim(), listed: v('listed') ? 1 : 0, adult: v('adult') ? 1 : 0,
                     questions: v('questions').split('\n').map(s => s.trim()).filter(Boolean) };
                 call(c.id ? 'update' : 'create', d).then(r => { toast(r.msg); openClub(r.club.slug); }).catch(fail);
             };
             const bk = $('[data-back]', body); if (bk) bk.onclick = () => openClub(c.slug);
         };
-        if (!Object.keys(meta.join).length) call('list', {}).then(d => { meta = { topics: d.topics, langs: d.langs, join: d.join }; go2(); }).catch(fail); else go2();
+        if (!Object.keys(meta.join).length) call('list', {}).then(d => { meta = { topics: d.topics, langs: d.langs, join: d.join, adult_ok: !!d.adult_ok }; go2(); }).catch(fail); else go2();
     }
 
     function openClub(slug) {
         cur = slug; view = 'club';
         const body = shell('<span class="nw-muted">Lädt …</span>');
         const reload = () => openClub(slug);
-        call('view', { club: slug }).then(d => {
+        call('view', { club: slug }).then(d => { staffNow = !!d.is_staff;
             const c = d.club, staff = d.is_staff;
-            if (!Object.keys(meta.join).length) call('list', {}).then(x => { meta = { topics: x.topics, langs: x.langs, join: x.join }; }).catch(() => {});
+            if (!Object.keys(meta.join).length) call('list', {}).then(x => { meta = { topics: x.topics, langs: x.langs, join: x.join, adult_ok: !!x.adult_ok }; }).catch(() => {});
             let tab = 'feed';
             const head = (c.banner ? '<div class="cl-ban cl-ban-big" style="background-image:url(\'' + encodeURI(c.banner) + '\')"></div>' : '')
-                + '<div class="nw-card"' + (c.color ? ' style="border-left:4px solid ' + c.color + '"' : '') + '><div class="nw-row"><h3 style="margin:0">' + esc(c.name) + '</h3><span class="nw-muted">/' + esc(c.slug) + '</span><span class="sp"></span>'
+                + '<div class="nw-card"' + (c.color ? ' style="border-left:4px solid ' + c.color + '"' : '') + '><div class="nw-row"><h3 style="margin:0">' + (c.adult ? '<span class="cl-18">🔞 18+</span> ' : '') + esc(c.name) + '</h3><span class="nw-muted">/' + esc(c.slug) + '</span><span class="sp"></span>'
                 + '<span class="nw-muted">' + (ROLE[c.my_role] || '') + '</span>'
                 + (!d.is_member && !d.ban && c.my_role !== 'pending' && c.my_role !== 'banned' && (c.join_mode !== 'invite' || invite) ? '<button type="button" class="btn btn-sm btn-gold" data-join>' + (invite && c.join_mode !== 'open' ? '🔗 Mit Einladung beitreten' : c.join_mode === 'apply' ? '📨 Bewerben' : '➕ Beitreten') + '</button>' : '')
                 + (d.is_member && c.my_role !== 'owner' && c.my_role !== 'site_mod' ? '<button type="button" class="btn btn-sm" data-leave>Verlassen</button>' : '')
@@ -274,12 +291,20 @@
             $$('[data-goclub]', body).forEach(a => a.onclick = ev => { ev.preventDefault(); openClub(a.dataset.goclub); });
             const j = $('[data-join]', body);
             if (j) j.onclick = () => {
-                if (invite && c.join_mode !== 'open') return call('join', { club: slug, code: invite }).then(r => { invite = ''; toast(r.msg); reload(); }).catch(fail);
-                if (c.join_mode !== 'apply' || !c.questions.length) return call('join', { club: slug }).then(r => { toast(r.msg); reload(); }).catch(fail);
+                if (c.adult && !j.dataset.ok) {   // 7.3.2: 18+-Club – Regeln zuerst bestätigen
+                    const jb0 = $('[data-joinbox]', body);
+                    jb0.innerHTML = '<div class="nw-card cl-rules18"><b>🔞 Regeln dieses 18+-Clubs</b><div class="nw-text" style="white-space:pre-wrap;margin:6px 0">' + esc(c.rules) + '</div>'
+                        + '<label class="cl-chk"><input type="checkbox" data-acc> Ich habe die Regeln gelesen und halte mich daran.</label><div class="nw-row"><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-accgo>Weiter</button></div></div>';
+                    $('[data-accgo]', jb0).onclick = () => { if (!$('[data-acc]', jb0).checked) return toast('Bitte bestätige die Regeln.', 'error'); j.dataset.ok = '1'; jb0.innerHTML = ''; j.click(); };
+                    return;
+                }
+                const acc = c.adult ? { accept_rules: 1 } : {};
+                if (invite && c.join_mode !== 'open') return call('join', Object.assign({ club: slug, code: invite }, acc)).then(r => { invite = ''; toast(r.msg); reload(); }).catch(fail);
+                if (c.join_mode !== 'apply' || !c.questions.length) return call('join', Object.assign({ club: slug }, acc)).then(r => { toast(r.msg); reload(); }).catch(fail);
                 const jb = $('[data-joinbox]', body);
                 jb.innerHTML = '<div class="cl-form" style="margin-top:10px">' + c.questions.map((q, i) => '<label class="cl-wide">' + esc(q) + '<textarea rows="2" maxlength="500" data-ans="' + i + '"></textarea></label>').join('')
                     + '</div><div class="nw-row"><span class="nw-muted">Mit der Bewerbung akzeptierst du die Regeln des Clubs.</span><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-apply>📨 Bewerbung senden</button></div>';
-                $('[data-apply]', jb).onclick = () => call('join', { club: slug, answers: $$('[data-ans]', jb).map(t => t.value) }).then(r => { toast(r.msg); reload(); }).catch(fail);
+                $('[data-apply]', jb).onclick = () => call('join', Object.assign({ club: slug, answers: $$('[data-ans]', jb).map(t => t.value) }, acc)).then(r => { toast(r.msg); reload(); }).catch(fail);
             };
             const lv = $('[data-leave]', body); if (lv) lv.onclick = () => confirm('Club verlassen?') && call('leave', { club: slug }).then(r => { toast(r.msg); go('mine'); }).catch(fail);
             const ed = $('[data-edit]', body); if (ed) ed.onclick = () => clubForm(c);

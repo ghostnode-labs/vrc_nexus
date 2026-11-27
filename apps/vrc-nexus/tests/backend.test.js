@@ -4566,3 +4566,22 @@ test('7.3.1: Handy-Datenbank klein halten – alte Verläufe weg, Aktuelles und 
     assert.strictEqual(trimForPhone(db, { now }).total, 0, 'zweiter Lauf: nichts mehr zu tun');
     db.close();
 });
+
+test('7.3.2: 18+ – Paar-Profile/Vorlagen/Einlass-Liste gehen an nexusclubs.php, Grenzen-Vorschau nur auf Wunsch und nur aus dem eigenen Profil', async () => {
+    const { Community } = require('../backend/community');
+    const sent = [];
+    const fake = { account: { current: () => ({ token: 'tok' }) }, nsfw: { serviceToken: () => '', roles: () => ({ roles: [] }), access: () => ({ unlocked: true }) },
+        nsfwsafe: { limitsText: () => 'Tabus:\n  🔴 Blut' } };
+    const c = new Community(fake);
+    const old = globalThis.fetch;
+    globalThis.fetch = async (url, o) => { const u = new URL(url); sent.push({ path: u.pathname, a: u.searchParams.get('a'), body: JSON.parse(o.body) }); return { ok: true, status: 200, json: async () => ({ msg: 'ok', items: [] }) }; };
+    try {
+        for (const a of ['couple_invite', 'couple_answer', 'tpl_list', 'tpl_save', 'tpl_rate', 'door', 'door_check']) { await c.club(a, { data: '{"id":1}' }); const s = sent.pop(); assert.strictEqual(s.path, '/nexusclubs.php', a); assert.strictEqual(s.a, a); }
+        await c.action('comm_req_send', { id: 'usr_x', message: 'Hallo', limits: 'gefälscht' });
+        let s = sent.pop(); assert.strictEqual(s.body.limits, '', 'ohne Wunsch keine Vorschau, fremder Text fliegt raus');
+        await c.action('comm_req_send', { id: 'usr_x', message: 'Hallo', with_limits: '1' });
+        s = sent.pop(); assert.strictEqual(s.body.limits, 'Tabus:\n  🔴 Blut'); assert.ok(!('with_limits' in s.body));
+        fake.nsfw.access = () => ({ unlocked: false });
+        await assert.rejects(c.action('comm_req_send', { id: 'usr_x', with_limits: '1' }), /nicht freigegeben/);
+    } finally { globalThis.fetch = old; }
+});

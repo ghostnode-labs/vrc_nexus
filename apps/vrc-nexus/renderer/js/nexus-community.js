@@ -323,7 +323,7 @@
         return (d.remind ? '<div class="nc-card" style="border-color:var(--accent-gold)">⏳ ' + esc(T('Erinnerung')) + ': ' + d.remind + ' ' + esc(T('Anfrage(n) warten schon über 3 Tage auf deine Antwort – nach 14 Tagen laufen sie ab.')) + '</div>' : '')
             + '<div class="tts-help">💌 ' + esc(T('Anfragen gibt es nur zwischen Konten mit Verified 18+ und NSFW an. Erst wenn beide zustimmen, seid ihr verbunden – dann seht ihr Kompatibilität und könnt einen Consent-Check starten. Ablehnen bleibt anonym („nicht angenommen“).')) + '</div>'
             + '<div class="nc-grid">'
-            + card('📥 ' + esc(T('Eingang')) + ' (' + d.incoming.length + ')', d.incoming.length ? d.incoming.map(r => '<div class="l18-item">' + prof(r) + ' <span class="small muted">' + esc(dt(r.created)) + '</span>' + (r.message ? '<div class="cm-text">' + esc(r.message) + '</div>' : '')
+            + card('📥 ' + esc(T('Eingang')) + ' (' + d.incoming.length + ')', d.incoming.length ? d.incoming.map(r => '<div class="l18-item">' + prof(r) + ' <span class="small muted">' + esc(dt(r.created)) + '</span>' + (r.message ? '<div class="cm-text">' + esc(r.message) + '</div>' : '') + (r.limits ? '<details class="ad-lim"><summary>📋 ' + esc(T('Grenzen-Vorschau')) + '</summary><pre class="ad-body">' + esc(r.limits) + '</pre></details>' : '')
                 + '<div class="nc-row"><button type="button" class="btn btn-sm btn-gold" data-l18="accept" data-rid="' + r.id + '">💞 ' + esc(T('Annehmen')) + '</button><button type="button" class="btn btn-sm" data-l18="decline" data-rid="' + r.id + '">' + esc(T('Ablehnen')) + '</button></div></div>').join('') : '<p class="small muted">' + esc(T('Keine offenen Anfragen.')) + '</p>')
             + card('💞 ' + esc(T('Verbindungen')) + ' (' + d.connections.length + ')', d.connections.length ? d.connections.map(c => {
                 const ss = sessFor(c.vrc_id), open = ss.find(s => s.status === 'proposed' && !s.proposed_by_me), mine = ss.find(s => s.status === 'proposed' && s.proposed_by_me), ready = ss.find(s => s.status === 'ready');
@@ -353,7 +353,7 @@
         const a = t.dataset.l18, rid = t.dataset.rid, vrc = t.dataset.vrc, sid = t.dataset.sid;
         const done = d => { if (d && d.msg) toast(d.msg); if (sub === 'profile' && prof) loadProfile(prof.vrc_id); else loadLinks18(); };
         const err = x => toast(x.message, true);
-        if (a === 'send') { const m = prompt(T('Kurze Nachricht zur Anfrage (optional):'), ''); if (m === null) return; return api('comm_req_send', { id: vrc, message: m }).then(done).catch(err); }
+        if (a === 'send') { const m = prompt(T('Kurze Nachricht zur Anfrage (optional):'), ''); if (m === null) return; const wl = confirm(T('Dein Grenzen-Profil als Vorschau mitschicken? (OK = ja, Abbrechen = nein)')); return api('comm_req_send', { id: vrc, message: m, with_limits: wl ? '1' : '' }).then(done).catch(err); }
         if (a === 'open') return go('links18');
         if (a === 'accept' || a === 'decline') return api('comm_req_answer', { id: rid, accept: a === 'accept' ? '1' : '' }).then(done).catch(err);
         if (a === 'withdraw') return api('comm_req_withdraw', { id: rid }).then(done).catch(err);
