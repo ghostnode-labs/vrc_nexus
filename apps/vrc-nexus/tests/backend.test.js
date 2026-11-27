@@ -4597,12 +4597,13 @@ test('7.3.4: Leistungsmessung – alle Prozesse zusammen, VR-FPS, VRChat-Verglei
             execFile: async (cmd, args) => { calls.push([cmd, ...args]); return '"VRChat.exe","4242","Console","1","3.145.728 K"\r\n'; } } } };
     const p = new PerfMon(app);
     try {
-        const s = p.sample(1000);
+        const s = p.sample(Date.now());
         assert.strictEqual(s.mem, 460, 'alle Prozesse zusammen (MB)');
         assert.strictEqual(s.cpu, 4.2);
         assert.deepStrictEqual(s.procs.helper, { mem: 30, cpu: 0.2, n: 2 }, 'Helfer zusammengefasst');
         assert.deepStrictEqual([s.fps, s.fps_min], [89.6, 71.2]);
         if (process.platform === 'win32') assert.ok(calls.length); else assert.strictEqual(calls.length, 0, 'tasklist nur unter Windows');
+        if (process.platform === 'win32') { await new Promise(r2 => setTimeout(r2, 20)); assert.strictEqual(p.vrc.mem, 3072, 'tasklist-Ausgabe (3.145.728 K) gelesen'); }
         p.vrc = { mem: 3072, at: Date.now() };
         assert.strictEqual(p.sample(Date.now()).vrc_mem, 3072);
         // Aufnahme: 3 Minuten mit wachsendem Speicher und kurzen Hängern
