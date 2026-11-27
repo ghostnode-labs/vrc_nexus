@@ -1377,18 +1377,18 @@
         const pct = inst ? 100 : p.pct;
         return '<div class="upd-prog' + (inst ? ' inst' : '') + '" role="progressbar" aria-valuemin="0" aria-valuemax="100"' + (pct !== null ? ' aria-valuenow="' + Math.round(pct) + '"' : '') + '>'
             + '<div class="upd-bar-track"><i style="width:' + (pct === null ? 100 : pct) + '%"' + (pct === null ? ' class="indet"' : '') + '></i></div>'
-            + '<div class="upd-prog-txt"><b>' + (inst ? (MOBILE ? '📲 Installation wird geöffnet …' : '⚙ Wird installiert – VRC Nexus startet gleich neu …') : '⬇ Lade VRC Nexus ' + esc(d.version) + ' …') + '</b>'
+            + '<div class="upd-prog-txt"><b>' + (inst ? (MOBILE ? '📲 Installation wird geöffnet …' : '⚙ Wird installiert – VRC Nexus startet gleich neu …') : '⬇ Lade VRC Nexus ' + esc(UI.ver(d.version)) + ' …') + '</b>'
             + (inst ? '' : '<span>' + (pct !== null ? Math.floor(pct) + ' % · ' : '') + mb(p.got) + (p.total ? ' von ' + mb(p.total) : '') + (p.speed ? ' · ' + mb(p.speed) + '/s' : '') + (p.eta !== null && p.eta !== undefined ? ' · noch ' + secs(p.eta) : '') + '</span>') + '</div></div>';
     }
     function updateHtml(d, full) {
         const plat = d.platform === 'android' ? 'Android' : 'Windows';
         const box = $('#updBox');
         if (box && box.classList.contains('ab-upd'))   // kompakt im Kopf von „Über“: nur Update-Hinweis + Knopf
-            return (d.available ? '<div class="upd-new"><b>⬆ Version ' + esc(d.version) + ' ist verfügbar</b>' + (d.published ? ' <span class="vx-small">vom ' + esc(UI.isoDT(d.published)) + '</span>' : '') + progHtml(d)
+            return (d.available ? '<div class="upd-new"><b>⬆ Version ' + esc(UI.ver(d.version)) + ' ist verfügbar</b>' + (d.published ? ' <span class="vx-small">vom ' + esc(UI.isoDT(d.published)) + '</span>' : '') + progHtml(d)
                 + '<div class="nx-row"><button type="button" class="btn btn-gold" data-upd="install"' + (d.busy ? ' disabled' : '') + '>' + (d.busy ? '⏳ läuft …' : d.platform === 'android' ? '⬇ Update laden & installieren' : '⬆ Jetzt aktualisieren') + '</button></div></div>' : '')
                 + '<button type="button" class="btn btn-sm" data-upd="check"' + (d.busy ? ' disabled' : '') + '>🔎 Nach Updates suchen</button>';
-        return '<div class="set-row"><div><b>Installiert</b><div class="nx-hint">' + plat + (d.checked ? ' · zuletzt geprüft ' + UI.ago(d.checked) : '') + '</div></div><div>VRC Nexus <b>' + esc(d.current) + '</b></div></div>'
-            + (d.available ? '<div class="upd-new"><b>⬆ Version ' + esc(d.version) + ' ist verfügbar</b>' + (d.published ? ' <span class="vx-small">vom ' + esc(UI.isoDT(d.published)) + '</span>' : '')
+        return '<div class="set-row"><div><b>Installiert</b><div class="nx-hint">' + plat + (d.checked ? ' · zuletzt geprüft ' + UI.ago(d.checked) : '') + '</div></div><div>VRC Nexus <b>' + esc(UI.ver(d.current)) + '</b></div></div>'
+            + (d.available ? '<div class="upd-new"><b>⬆ Version ' + esc(UI.ver(d.version)) + ' ist verfügbar</b>' + (d.published ? ' <span class="vx-small">vom ' + esc(UI.isoDT(d.published)) + '</span>' : '')
                 + (full && d.notes ? '<details><summary class="vx-small">Was ist neu?</summary><div class="vx-small upd-notes">' + md(d.notes) + '</div></details>' : '')
                 + progHtml(d)
                 + '<div class="nx-row"><button type="button" class="btn btn-gold" data-upd="install"' + (d.busy ? ' disabled' : '') + '>' + (d.busy ? '⏳ läuft …' : d.platform === 'android' ? '⬇ Update laden & installieren' : '⬆ Jetzt aktualisieren') + '</button>'
@@ -1431,7 +1431,7 @@
         if (!d || (!d.available && !d.busy) || (UI.store.get('updLater', '') === d.version && !running)) { if (bar) bar.parentNode.removeChild(bar); return; }
         if (!bar) { bar = document.createElement('div'); bar.id = 'updBar'; bar.className = 'upd-bar'; const t = $('#tabs'); t.parentNode.insertBefore(bar, t.nextSibling); }
         bar.classList.toggle('running', !!d.busy);
-        bar.innerHTML = '<div class="upd-bar-row">⬆ <b>VRC Nexus ' + esc(d.version) + '</b>' + (d.busy ? ' wird aktualisiert' : ' ist verfügbar (du hast ' + esc(d.current) + ').')
+        bar.innerHTML = '<div class="upd-bar-row">⬆ <b>VRC Nexus ' + esc(d.version) + '</b>' + (d.busy ? ' wird aktualisiert' : ' ist verfügbar (du hast ' + esc(UI.ver(d.current)) + ').')
             + (d.busy ? '' : '<button type="button" class="btn btn-sm btn-gold" data-upd="install">' + (MOBILE ? '⬇ Laden & installieren' : 'Jetzt aktualisieren') + '</button>'
                 + '<button type="button" class="btn btn-sm" onclick="NexusUI.tab(\'settings\')">Was ist neu?</button><button type="button" class="btn btn-sm" data-upd="later" data-v="' + esc(d.version) + '">Später</button>') + '</div>'
             + progHtml(d);

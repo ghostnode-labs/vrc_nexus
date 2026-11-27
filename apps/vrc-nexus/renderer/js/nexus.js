@@ -54,6 +54,8 @@
     const dur = ts => ts ? hm(now() - ts) : '';
     const clock = ts => new Date(ts * 1000).toLocaleString(nxLoc(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     const isoDate = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString(nxLoc()); };
+    /** Versions-Anzeige: alt unverändert, ab „10“ Datums-Version 2026.1127.1 → v20261127.1 */
+    const ver = v => { const m = /^(20\d\d)\.([1-9]\d{2,3})\.([1-9]\d?)$/.exec(String(v || '')); return m ? 'v' + m[1] + String(Math.floor(m[2] / 100)).padStart(2, '0') + String(m[2] % 100).padStart(2, '0') + '.' + m[3] : String(v || ''); };
     const isoDT = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleString(nxLoc(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
     const num = n => Number(n || 0).toLocaleString(nxLoc());
     const launch = loc => 'vrchat://launch?ref=vrc-nexus&id=' + encodeURIComponent(loc);
@@ -2415,7 +2417,7 @@
     // Start
     load(false).then(() => load(true)).finally(schedule);
     window.addEventListener('nexus-colors', () => { try { renderFriends(); } catch (e) { /* noch nicht geladen */ } });
-    window.NexusUI = { copy: copyText, tcol, idColor, subnav: () => syncSubNav(), statusDot, store, pic, popMenu, renderUser, feedRow, tab, api, toast, esc, img, ago, hm, dur, clock, num, launch, openUser, openWorld, openAvatar, openInstance, openGroup, openModal, closeModal, load, readClipboard,
+    window.NexusUI = { copy: copyText, ver, tcol, idColor, subnav: () => syncSubNav(), statusDot, store, pic, popMenu, renderUser, feedRow, tab, api, toast, esc, img, ago, hm, dur, clock, num, launch, openUser, openWorld, openAvatar, openInstance, openGroup, openModal, closeModal, load, readClipboard,
         state: () => state, statusDot, isoDT, renderFriends, store };
     { const st = (window.VRCX.ui || {})['ui.start_tab']; if (st && st !== 'last') tab(st); else tab(store.get('tab', 'home'), store.get('tabSub', '')); }
     setInterval(() => { if (state && !$('[data-pane=friends]').hidden) renderFriends(); }, 60000);

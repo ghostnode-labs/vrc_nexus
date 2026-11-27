@@ -889,9 +889,18 @@ test('1.9: Sprachausgabe (Windows, Piper, Google, Azure, ElevenLabs, OpenAI) + n
     for (const k of ['NEXUS_GTTS_BASE', 'NEXUS_AZURE_BASE', 'NEXUS_EL_BASE', 'NEXUS_OPENAI_BASE', 'NEXUS_FAKE_SAPI', 'NEXUS_PIPER_BIN']) delete process.env[k];
 });
 
-test('Versionsschema: Major.Minor.Patch (je Stelle 0–99, ohne führende Null) und überall gleich', () => {
-    const v = require('../backend/vrchat').VERSION;
-    assert.match(v, /^(0|[1-9]\d?)\.(0|[1-9]\d?)\.(0|[1-9]\d?)$/, 'Version ' + v + ' – Major.Minor.Patch, z. B. 5.10.0 (Android-versionCode erlaubt höchstens 99 je Stelle)');
+test('Versionsschema: bis 9.x Major.Minor.Patch (je Stelle 0–99), ab „10“ Datum (v20261127.1 = intern 2026.1127.1) – überall gleich', () => {
+    const v = require('../backend/vrchat').VERSION, V = require('../backend/version');
+    assert.ok(V.valid(v), 'Version ' + v + ' – bis 9.x wie 5.10.0, danach nur noch Datums-Versionen (release.py date)');
+    // Datums-Schema: Anzeige, Vergleich mit alten Nummern, Android-versionCode wächst immer, Windows-Grenze 65535 je Teil
+    assert.strictEqual(V.display('2026.1127.1'), 'v20261127.1'); assert.strictEqual(V.display('2027.105.12'), 'v20270105.12'); assert.strictEqual(V.display('8.0.1'), '8.0.1');
+    assert.strictEqual(V.norm('v20261127.1'), '2026.1127.1'); assert.ok(!V.valid('10.0.0'), 'statt 10.0.0 kommt das Datum');
+    assert.ok(!V.valid('2026.230.1') && !V.valid('2026.0105.1'), 'kein 30. Februar, keine führende Null');
+    assert.ok(V.newer('2026.1127.1', '9.99.99') && V.newer('2027.101.1', '2026.1231.99') && V.newer('2026.1127.2', 'v20261127.1'));
+    const codes = ['8.0.1', '9.99.99', '2026.1127.1', '2026.1127.2', '2026.1231.99', '2027.101.1'].map(V.code);
+    assert.deepStrictEqual(codes.slice().sort((a, b) => a - b), codes, 'versionCode steigt immer'); assert.ok(Math.max(...codes) < 2100000000);
+    assert.ok('2099.1231.99'.split('.').every(n => +n <= 65535), 'Windows-Datei-Version: jeder Teil ≤ 65535');
+    assert.deepStrictEqual([V.nextDate('9.5.0', new Date(2026, 10, 27)), V.nextDate('2026.1127.1', new Date(2026, 10, 27)), V.nextDate('2026.1127.4', new Date(2026, 10, 28))], ['2026.1127.1', '2026.1127.2', '2026.1128.1']);
     const pk = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8')).version;
     const lock = JSON.parse(fs.readFileSync(path.join(__dirname, '../package-lock.json'), 'utf8'));
     assert.strictEqual(pk, v, 'package.json'); assert.strictEqual(lock.version, v, 'package-lock.json'); assert.strictEqual(lock.packages[''].version, v, 'package-lock.json (packages)');

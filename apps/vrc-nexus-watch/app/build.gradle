@@ -11,7 +11,7 @@ android {
         applicationId 'dev.ghostnode.nexuswatch'
         minSdk 30          // Wear OS 3+ (Galaxy Watch 4 und neuer)
         targetSdk 34
-        versionCode va * 10000 + vb * 100 + vc
+        versionCode va >= 2000 ? (va - 2000) * 1000000 + vb * 100 + vc : va * 10000 + vb * 100 + vc   // ab „10“: Datums-Version 2026.1127.1
         versionName pkg.version
     }
     signingConfigs {

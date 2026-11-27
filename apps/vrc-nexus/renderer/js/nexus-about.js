@@ -31,11 +31,11 @@
         if (!box) return;
         const up = d.update;
         box.innerHTML = '<div class="ab-head"><img src="icon.png" alt="" class="ab-logo"><div><h2>VRC Nexus</h2>'
-            + '<p class="ab-ver">Version <b>' + esc(d.version) + '</b> · ' + esc(d.platform) + (d.runtime.electron ? ' · Electron ' + esc(d.runtime.electron) + ' · Chromium ' + esc(d.runtime.chrome.split('.')[0]) : '') + '</p>'
-            + '<p class="small">' + (up ? (up.available ? '⬆ Version <b>' + esc(up.version) + '</b> ist verfügbar' : '✔ Du hast die neueste Version.') + (up.checked ? ' <span class="muted">· zuletzt geprüft ' + esc(UI.ago(up.checked)) + '</span>' : '') : '') + '</p></div>'
+            + '<p class="ab-ver">Version <b>' + esc(UI.ver(d.version)) + '</b> · ' + esc(d.platform) + (d.runtime.electron ? ' · Electron ' + esc(d.runtime.electron) + ' · Chromium ' + esc(d.runtime.chrome.split('.')[0]) : '') + '</p>'
+            + '<p class="small">' + (up ? (up.available ? '⬆ Version <b>' + esc(UI.ver(up.version)) + '</b> ist verfügbar' : '✔ Du hast die neueste Version.') + (up.checked ? ' <span class="muted">· zuletzt geprüft ' + esc(UI.ago(up.checked)) + '</span>' : '') : '') + '</p></div>'
             + '<div class="ab-upd" id="updBox"></div></div>'
             + '<div class="nc-grid ab-grid">'
-            + '<div class="nc-card ab-log"><h4>📝 Was ist neu</h4>' + d.changelog.map((c, i) => '<section class="ab-v"><h3><span class="ab-tag' + (i === 0 ? ' now' : '') + '">' + esc(c.version) + (c.version === d.version ? ' · installiert' : '') + '</span> ' + esc(c.title) + '</h3><div class="ab-body fmt" data-no-i18n>' + md(c.body) + '</div></section>').join('')
+            + '<div class="nc-card ab-log"><h4>📝 Was ist neu</h4>' + d.changelog.map((c, i) => '<section class="ab-v"><h3><span class="ab-tag' + (i === 0 ? ' now' : '') + '">' + esc(c.label || c.version) + (c.version === d.version ? ' · installiert' : '') + '</span> ' + esc(c.title) + '</h3><div class="ab-body fmt" data-no-i18n>' + md(c.body) + '</div></section>').join('')
             + (d.total > d.changelog.length ? '<button type="button" class="btn btn-sm" data-ab="more">Ältere Versionen anzeigen (' + (d.total - d.changelog.length) + ')</button>' : '')
             + ' <a class="nc-link" href="' + esc(d.repo) + '" target="_blank" rel="noopener">Alle Releases auf GitHub ↗</a>'
             + (d.patreon ? '<div class="ab-patreon"><a href="' + esc(d.patreon) + '" target="_blank" rel="noopener"><img src="img/patreon-banner.jpg" alt="VRC Nexus on Patreon"></a><div class="ab-pt-row"><span class="small">VRC Nexus ist kostenlos. Wenn dir die App gefällt, unterstütze die Entwicklung auf Patreon.</span><a class="btn ab-pt" href="' + esc(d.patreon) + '" target="_blank" rel="noopener">❤ Auf Patreon unterstützen</a></div>'

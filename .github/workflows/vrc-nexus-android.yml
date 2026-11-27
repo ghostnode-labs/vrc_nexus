@@ -51,7 +51,7 @@ jobs:
           sh native/install.sh
           VER=$(node -p "require('./package.json').version")
           sed -i "s/versionName \"1.0\"/versionName \"$VER\"/" android/app/build.gradle
-          CODE=$(node -p "const [a,b,c]=require('./package.json').version.split('.').map(Number); a*10000+b*100+c")
+          CODE=$(node -p "require('../vrc-nexus/backend/version').code(require('./package.json').version)")   # alt a*10000+b*100+c, ab „10“ Datum
           sed -i "s/versionCode 1$/versionCode $CODE/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
           npx cap sync android

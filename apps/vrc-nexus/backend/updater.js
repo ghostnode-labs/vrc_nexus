@@ -12,12 +12,8 @@ const { VERSION } = require('./vrchat');
 const REPO = 'ghostnode-labs/vrc_nexus';
 const TAG_PREFIX = 'vrc-nexus-v';
 
-/** „1.2.10“ > „1.2.9“ */
-function newer(a, b) {
-    const pa = str(a).split('.').map(n => parseInt(n, 10) || 0), pb = str(b).split('.').map(n => parseInt(n, 10) || 0);
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) { if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0); }
-    return false;
-}
+/** „1.2.10“ > „1.2.9“; Datums-Versionen (ab „10“) sind immer neuer – siehe backend/version.js */
+const { newer } = require('./version');
 
 class Updater {
     constructor(app) { this.app = app; this.last = null; this.busy = false; this.timer = null; this.progress = ''; }
