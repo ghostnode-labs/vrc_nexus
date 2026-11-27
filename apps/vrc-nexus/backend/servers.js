@@ -37,4 +37,29 @@ async function check(fetchFn = globalThis.fetch) {
     return { nexus: nexus(), hyperate: hyperate() };
 }
 
-module.exports = { LISTS, url, nexus, hyperate, check, _active: active };
+/**
+ * 8.0.18: Antwort einer GhostNode-Schnittstelle als JSON lesen. Ist sie keins (Plesk-Fehlerseite, leere 500er, Firewall,
+ * Standardseite), gibt es eine verständliche Meldung mit Server und HTTP-Status statt nur „kein JSON“ – und die
+ * Server-Wahl wird neu geprüft (vielleicht antwortet eine andere Adresse richtig).
+ */
+let recheckAt = 0;
+async function readJson(r, file, fetchFn) {
+    let text = '';
+    if (typeof r.text === 'function') text = await r.text().catch(() => '');
+    else if (typeof r.json === 'function') { try { const d = await r.json(); if (d && typeof d === 'object') return d; } catch (e) { /* unten */ } }
+    try { const d = JSON.parse(text); if (d && typeof d === 'object') return d; } catch (e) { /* unten */ }
+    // PHP-Hinweis (display_errors) vor dem JSON: das JSON dahinter nehmen
+    const i = text.search(/\{"[a-z_]+":/);
+    if (i > 0) { try { const d = JSON.parse(text.slice(i)); if (d && typeof d === 'object') return d; } catch (e) { /* unten */ } }
+    let host = ''; try { host = new URL(r.url).host; } catch (e) { /* egal */ }
+    const st = r.status, at = host ? ' (' + host + ', HTTP ' + st + ')' : ' (HTTP ' + st + ')';
+    if ((fetchFn || !process.env.NEXUS_NO_SERVER_CHECK) && Date.now() - recheckAt > 60000) { recheckAt = Date.now(); check(fetchFn).catch(() => {}); }
+    let error;
+    if (st >= 500 || (!text.trim() && st >= 400)) error = 'Serverfehler auf der Webseite' + at + ' – bitte gleich noch einmal versuchen.';
+    else if (st === 404) error = file + ' fehlt auf der Webseite' + at + '.';
+    else if (st === 403 || st === 429 || st === 406) error = 'Die Webseite hat die Anfrage blockiert' + at + ' – Schutz/Firewall des Hosters? Bitte kurz warten.';
+    else error = 'Antwort kein JSON' + at + ' – liegt ' + file + ' auf der Webseite?';
+    return { error, _nonjson: true, _status: st };
+}
+
+module.exports = { LISTS, url, nexus, hyperate, check, readJson, _active: active };

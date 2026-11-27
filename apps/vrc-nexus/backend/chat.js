@@ -57,7 +57,7 @@ class Chat {
         let r;
         try { r = await fetch(BASE() + '/nexuschat.php?a=' + a, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ token: o.token }, body || {})), signal: AbortSignal.timeout(20000) }); }
         catch (e) { throw new UserError('GhostNode-Webseite nicht erreichbar.'); }
-        const d = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt nexuschat.php auf der Webseite?' }));
+        const d = await require('./servers').readJson(r, 'nexuschat.php');
         if (r.status === 401 && this.app.account && this.app.account.expired) this.app.account.expired();   // 3.7.1 Zugang abgelaufen → abmelden
         if (!r.ok || d.error) throw new UserError(str(d.error) || 'Fehler ' + r.status + '.');
         return d;

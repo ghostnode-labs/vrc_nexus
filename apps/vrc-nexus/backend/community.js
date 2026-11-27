@@ -36,7 +36,7 @@ class Community {
     }
     async call(a, body) {
         const r = await this.raw(a, body);
-        const d = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt nexuscomm.php auf der Webseite?' }));
+        const d = await require('./servers').readJson(r, 'nexuscomm.php');
         if (!r.ok || d.error) throw new UserError(str(d.error) || 'Fehler ' + r.status + '.');
         return d;
     }
@@ -73,7 +73,7 @@ class Community {
         try { r = await fetch(BASE() + '/' + file + '?a=' + a, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, d, this.auth())), signal: AbortSignal.timeout(20000) }); }
         catch (e) { if (e instanceof UserError) throw e; throw new UserError('GhostNode-Webseite nicht erreichbar.'); }
         if (r.status === 401) { if (this.app.account.expired) this.app.account.expired(); else this.app.account.refresh(true).catch(() => {}); }
-        const out = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt ' + file + ' auf der Webseite?' }));
+        const out = await require('./servers').readJson(r, file);
         if (!r.ok || out.error) throw new UserError(str(out.error) || 'Fehler ' + r.status + '.');
         out._site = BASE();
         return out;

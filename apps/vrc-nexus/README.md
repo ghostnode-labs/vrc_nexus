@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.18 – Clearer website errors
+- 🛠 **Fixed: "Antwort kein JSON" when connecting the Nexus account.** If the GhostNode website answers with an error page instead of data (server error, host firewall, a page that is being updated), the app now says what happened – with server name and HTTP status – instead of a bare "no JSON". Short hiccups (for example right after a website update) are retried once automatically, and the app re-checks which server address answers correctly. A PHP notice in front of the answer no longer breaks the connection. Applies to account, chat, community, warning list, licence and remote control.
+- 🖥 **HypeRate relay for game panels:** the relay now also reads `SERVER_PORT` and an optional `HOST` (e.g. `127.0.0.1` behind a reverse proxy); a ready-made panel egg is included in `apps/hyperate-relay`.
+
 ### New in 8.0.17 – Local scene companion
 - 🫶 **A local companion for sessions:** short, friendly hints at the right moments (start, regular check-ins, breathing hint at a high heart rate, breaks, end) in three styles. Runs entirely on your PC – no cloud, no AI service, no data leaves your computer.
 - 🔞 ***

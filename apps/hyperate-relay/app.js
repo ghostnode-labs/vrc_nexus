@@ -17,7 +17,8 @@ const http = require('http');
 
 const KEY = String(process.env.HYPERATE_API_KEY || '').trim();
 const UP = String(process.env.HYPERATE_WS || 'wss://app.hyperate.io').replace(/\/+$/, '');
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT || process.env.SERVER_PORT) || 3000;   // SERVER_PORT = Pterodactyl
+const HOST = process.env.HOST || undefined;   // z. B. 127.0.0.1 hinter einem Reverse-Proxy (ghostnode-root.sh); leer = alle Adressen (Plesk/Passenger)
 const LIM = { perIp: Number(process.env.RELAY_PER_IP) || 4, channels: Number(process.env.RELAY_MAX_CHANNELS) || 300 };
 const ID = /^[A-Za-z0-9_-]{2,40}$/;
 const GRACE = 30000;          // Kanal nach dem letzten Zuhörer noch so lange offen halten (App-Neustart, Wechsel)
@@ -144,6 +145,7 @@ server.keepAliveTimeout = 65000;
 // Plesk/Passenger lädt app.js über einen eigenen Lader (require.main ist dann nicht dieses Modul) – darum immer starten, außer im Test
 if (process.env.RELAY_NO_AUTOSTART !== '1') {
     if (typeof WebSocket === 'undefined') { console.error('Node ≥ 22 nötig (eingebauter WebSocket).'); process.exit(1); }
-    server.listen(PORT, () => log('HypeRate-Weiterleitung auf Port', PORT, KEY ? '' : '– ⚠ HYPERATE_API_KEY fehlt'));
+    const onUp = () => log('HypeRate-Weiterleitung auf', (HOST || '*') + ':' + PORT, KEY ? '' : '– ⚠ HYPERATE_API_KEY fehlt');
+    if (HOST) server.listen(PORT, HOST, onUp); else server.listen(PORT, onUp);   // ohne HOST genau wie bisher (Passenger)
 }
 module.exports = { server, chans, state: () => state };

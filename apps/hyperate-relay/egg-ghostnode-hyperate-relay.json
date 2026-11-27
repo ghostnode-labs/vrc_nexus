@@ -1,0 +1,82 @@
+{
+    "_comment": "GhostNode HypeRate-Weiterleitung – Pterodactyl-Egg (Admin → Nests → Import Egg). Node.js 22, keine npm-Pakete.",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-11-27T14:00:00+01:00",
+    "name": "GhostNode HypeRate-Weiterleitung",
+    "author": "noreply@ghostnode-labs.dev",
+    "description": "Leitet HypeRate-Puls an VRC Nexus weiter (Server-Sent Events), der API-Key bleibt auf dem Server. Node.js 22, eine Datei, keine npm-Pakete. Zuweisung am besten auf 127.0.0.1 – nginx macht HTTPS (hr.<domain>).",
+    "features": null,
+    "docker_images": {
+        "Node.js 22": "ghcr.io/parkervcp/yolks:nodejs_22"
+    },
+    "file_denylist": [],
+    "startup": "if [ \"{{AUTO_UPDATE}}\" = \"1\" ] && [ -d .src/.git ]; then git -C .src pull --ff-only -q && cp .src/apps/hyperate-relay/app.js .src/apps/hyperate-relay/package.json . || echo 'Update fehlgeschlagen – starte die vorhandene Version'; fi; node app.js",
+    "config": {
+        "files": "{}",
+        "startup": "{\"done\": \"HypeRate-Weiterleitung auf\"}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n# GhostNode HypeRate-Weiterleitung – Installation (Installer-Container, Ziel /mnt/server)\n# Holt nur apps/hyperate-relay aus dem VRC-Nexus-Repository (sparse checkout in .src/).\nset -e\ncommand -v git >/dev/null || { apt-get update -qq && apt-get install -y -qq git ca-certificates >/dev/null; }\ncd /mnt/server\nREPO=\"${GIT_REPO:-https://github.com/ghostnode-labs/vrc_nexus.git}\"\nif [ -d .src/.git ]; then\n    git -C .src pull --ff-only\nelse\n    rm -rf .src\n    git clone --depth 1 --filter=blob:none --sparse \"$REPO\" .src\n    git -C .src sparse-checkout set apps/hyperate-relay\nfi\ncp .src/apps/hyperate-relay/app.js .src/apps/hyperate-relay/package.json /mnt/server/\necho \"HypeRate-Weiterleitung installiert: $(git -C .src log -1 --format='%h %s')\"\n",
+            "container": "ghcr.io/parkervcp/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "HypeRate-API-Key",
+            "description": "Dein HypeRate-API-Key. Bleibt auf dem Server, geht nie an die App. Geheim halten.",
+            "env_variable": "HYPERATE_API_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:200",
+            "field_type": "text"
+        },
+        {
+            "name": "Streams je IP",
+            "description": "Gleichzeitige Puls-Streams pro IP-Adresse.",
+            "env_variable": "RELAY_PER_IP",
+            "default_value": "4",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:1,50",
+            "field_type": "text"
+        },
+        {
+            "name": "Geräte-IDs gesamt",
+            "description": "Höchstzahl gleichzeitig abonnierter HypeRate-Geräte-IDs.",
+            "env_variable": "RELAY_MAX_CHANNELS",
+            "default_value": "300",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|between:10,5000",
+            "field_type": "text"
+        },
+        {
+            "name": "Automatisch aktualisieren",
+            "description": "1 = bei jedem Start die neueste Version von GitHub holen. 0 = Version bleibt.",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|in:0,1",
+            "field_type": "text"
+        },
+        {
+            "name": "Git-Repository",
+            "description": "Quelle für Installation und Updates.",
+            "env_variable": "GIT_REPO",
+            "default_value": "https://github.com/ghostnode-labs/vrc_nexus.git",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:200",
+            "field_type": "text"
+        }
+    ]
+}

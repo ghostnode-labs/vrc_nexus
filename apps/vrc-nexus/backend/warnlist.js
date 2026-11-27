@@ -32,7 +32,7 @@ class WarnList {
         let r;
         try { r = await fetch(BASE() + '/nexuswarn.php?a=' + encodeURIComponent(a), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ token }, body || {})), signal: AbortSignal.timeout(12000) }); }
         catch (e) { throw new UserError('GhostNode-Webseite nicht erreichbar.'); }
-        const d = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt nexuswarn.php auf der Webseite?' }));
+        const d = await require('./servers').readJson(r, 'nexuswarn.php');
         if (!r.ok || d.error) throw new UserError(str(d.error) || 'Fehler ' + r.status + '.');
         return d;
     }

@@ -156,7 +156,7 @@ class ToyRemote {
         if (this.webBusy) return; this.webBusy = true;
         try {
             const r = await fetch(url + '/toyrelay.php?a=poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: relayBody(this.app, url, { to: uidHash(this.myId()), key: this.inboxKey() }), signal: AbortSignal.timeout(8000) });
-            const d = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt toyrelay.php auf der Webseite?' }));
+            const d = await require('./servers').readJson(r, 'toyrelay.php');
             if (d.error) throw new Error(d.error);
             if (host) this.st.web = { ok: true, err: '', at: Date.now() };
             for (const m of arr(d.msgs)) { try { await this.dispatch(JSON.parse(m), 'web'); } catch (e) { /* ungültig */ } }
@@ -306,7 +306,7 @@ class ToyRemote {
         }
         if (via === 'web') {
             const r = await fetch((c.t_url || RELAY()) + '/toyrelay.php?a=send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: relayBody(this.app, c.t_url || RELAY(), { to: uidHash(c.t_uid), msg: JSON.stringify(m) }), signal: AbortSignal.timeout(8000) }).catch(e => { throw new UserError('Webseite nicht erreichbar' + (e.message === 'fetch failed' ? '' : ': ' + e.message) + '.'); });
-            const d = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt toyrelay.php auf der Webseite?' }));
+            const d = await require('./servers').readJson(r, 'toyrelay.php');
             if (d.error) throw new UserError(d.error);
             this.pollWeb();
             return { sent: true, msg: 'gesendet (Internet) – Antwort kommt gleich' };

@@ -29,7 +29,7 @@ class License {
         let r;
         try { r = await fetch(BASE() + '/nexuslic.php?a=' + a, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}), signal: AbortSignal.timeout(15000) }); }
         catch (e) { throw new UserError('GhostNode-Webseite nicht erreichbar.'); }
-        let d = {}; try { d = await r.json(); } catch (e) { d = { error: 'Antwort kein JSON – liegt nexuslic.php auf der Webseite?' }; }
+        const d = await require('./servers').readJson(r, 'nexuslic.php');
         if (!r.ok || d.error) throw new UserError(str(d.error) || 'Fehler ' + r.status + '.');
         return d;
     }

@@ -5278,3 +5278,29 @@ test('8.0.5: Eigene Themes (nur Hex-Farben, Kontrast, Teilen per Code) · Themes
     await assert.rejects(v.action('vcmd_run', { id: 'rm -rf' }), /Unbekannt/);
     assert.deepStrictEqual(did, ['break']);
 });
+
+test('8.0.18: Antwort der Webseite kein JSON – verständliche Meldung mit Server/HTTP-Status, PHP-Hinweis davor wird übergangen, Konto wiederholt kurze Aussetzer', async () => {
+    const servers = require('../backend/servers');
+    const mk = (status, body) => ({ status, url: 'https://ghostnode-labs.dev/nexusacct.php?a=me', ok: status < 400, text: async () => body });
+    const off = async () => { throw new Error('offline'); };
+    assert.deepStrictEqual(await servers.readJson(mk(200, '{"ok":true}'), 'nexusacct.php', off), { ok: true });
+    assert.deepStrictEqual(await servers.readJson(mk(200, '<br />\n<b>Deprecated</b>: x in y on line 1<br />\n{"account":{"name":"A"}}'), 'nexusacct.php', off), { account: { name: 'A' } }, 'PHP-Hinweis vor dem JSON');
+    assert.match((await servers.readJson(mk(500, ''), 'nexusacct.php', off)).error, /Serverfehler auf der Webseite \(ghostnode-labs\.dev, HTTP 500\)/);
+    assert.match((await servers.readJson(mk(403, '<html>Blocked</html>'), 'nexusacct.php', off)).error, /blockiert.*HTTP 403/);
+    assert.match((await servers.readJson(mk(404, '<html>Plesk</html>'), 'nexusacct.php', off)).error, /nexusacct\.php fehlt auf der Webseite/);
+    assert.match((await servers.readJson(mk(200, '<html>Standardseite</html>'), 'nexusacct.php', off)).error, /kein JSON \(ghostnode-labs\.dev, HTTP 200\)/);
+    assert.deepStrictEqual(await servers.readJson({ status: 200, json: async () => ({ a: 1 }) }, 'x', off), { a: 1 }, 'ältere Antwort-Objekte ohne text()');
+    // Konto: erst leere 500er (Webseite wird gerade aktualisiert), dann JSON → klappt ohne Fehlermeldung
+    const Account = require('../backend/account');
+    const acc = new (Account.Account || Account)({ db: { setting: () => '', setSetting() {} }, vrc: { account: () => null } }, { decrypt: () => '{}', encrypt: s => s });
+    const realFetch = global.fetch; let n = 0;
+    global.fetch = async () => (++n === 1 ? mk(500, '') : mk(200, '{"token":"t","account":{"vrc_id":"usr_x"}}'));
+    try {
+        const d = await acc.call('register', { vrc_id: 'usr_x' });
+        assert.strictEqual(d.token, 't'); assert.strictEqual(n, 2, 'genau einmal wiederholt');
+        n = 0; global.fetch = async () => { n++; return mk(500, ''); };
+        await assert.rejects(acc.call('register', {}), /Serverfehler auf der Webseite/); assert.strictEqual(n, 2, 'nicht endlos');
+        n = 0; global.fetch = async () => { n++; return mk(400, '{"error":"Ungültige VRChat-User-ID."}'); };
+        await assert.rejects(acc.call('register', {}), /Ungültige VRChat-User-ID/); assert.strictEqual(n, 1, 'echte Fehler nicht wiederholen');
+    } finally { global.fetch = realFetch; }
+});

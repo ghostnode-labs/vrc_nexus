@@ -11,6 +11,7 @@ The key lives only in the server's environment variable `HYPERATE_API_KEY` – n
 - No dependencies, Node.js ≥ 22 (built-in WebSocket client), single file `app.js`
 - One upstream WebSocket, one Phoenix channel per device ID shared by all listeners; channels are left 30 s after the last listener
 - Limits: `RELAY_PER_IP` (default 4) concurrent streams per IP, `RELAY_MAX_CHANNELS` (default 300) device IDs
+- `HOST` (optional): bind address, e.g. `127.0.0.1` behind a reverse proxy (`server/ghostnode-root.sh` sets this); default is all interfaces
 - `GET /health` → `{ ok, upstream, channels, clients }` (never shows the key)
 
 ## Deploy on Plesk

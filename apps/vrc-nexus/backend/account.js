@@ -37,11 +37,13 @@ class Account {
         return { connected: !!a, verified, nsfw_on: verified && !!a.nsfw_on, age_until: a ? int(a.age_until) : 0, age_status: a ? str(a.age_status) : '', name: a ? str(a.name) : '' };
     }
 
-    async call(a, body, token) {
+    async call(a, body, token, retry = 1) {
         let r;
         try { r = await fetch(BASE() + '/nexusacct.php?a=' + a, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign(token ? { token } : {}, body || {})), signal: AbortSignal.timeout(15000) }); }
         catch (e) { throw new UserError('GhostNode-Webseite nicht erreichbar.'); }
-        const d = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt nexusacct.php auf der Webseite?' }));
+        const d = await require('./servers').readJson(r, 'nexusacct.php');
+        // 8.0.18: kurzer Aussetzer der Webseite (z. B. gerade aktualisiert) → einmal nach 1,5 s wiederholen
+        if (d._nonjson && retry > 0 && (r.status >= 500 || r.status === 0 || r.status === 200)) { await new Promise(res => setTimeout(res, 1500)); return this.call(a, body, token, retry - 1); }
         if (r.status === 401 && token) this.expired();
         if (!r.ok || d.error) throw new UserError(str(d.error) || 'Fehler ' + r.status + '.');
         return d;
