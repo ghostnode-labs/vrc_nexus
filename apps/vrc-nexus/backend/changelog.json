@@ -1,5 +1,10 @@
 [
  {
+  "version": "7.3.1",
+  "title": "Android: no more freezing from a large database",
+  "body": "- 🩹 **Android: app froze at start after months of use** – on the phone the whole local database lives in memory and is copied completely on every save; once it had grown large (friend history, chart values, profile cache) the app froze at start and every few seconds. Clearing the app data helped, but lost your settings. Now the app cleans up by itself: if the database is larger than 8 MB, or after a start that did not finish, older entries are shortened for the phone (friend history 30 days, chart values 60 days, finished notifications 60 days, profile cache 7 days, recently seen 90 days) and the file is compacted – your settings, favorites and open notifications stay\n- 🧹 **Old update files are removed:** every in-app update left a ~6 MB APK in the app cache; they are now deleted after the start\n- 🛟 The safe-start report now also contains the database size, so a freeze can be traced faster"
+ },
+ {
   "version": "7.3.0",
   "title": "",
   "body": "- 🔞 *** (details in the app under “About” when NSFW is unlocked)\n- ⌚ Watch notifications can now carry their own answer buttons (used for check-ins)"

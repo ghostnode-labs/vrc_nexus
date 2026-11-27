@@ -41,15 +41,17 @@ if (native) {
 // Jeder Startschritt wird sofort gemerkt. Kommt ein Start nicht bis „ok“ (z. B. eingefroren und von Android beendet),
 // startet die App beim nächsten Mal sicher: auf der Startseite statt im zuletzt geöffneten Bereich, mit Hinweis und Bericht.
 const BOOT_KEY = 'nexus-boot';
+const { trimForPhone, BIG } = require('../../vrc-nexus/backend/dbtrim');
 const APP_VER = require('../package.json').version;
 const bootPrev = (() => { try { return JSON.parse(localStorage.getItem(BOOT_KEY) || 'null'); } catch (e) { return null; } })();
 const bootFails = bootPrev && bootPrev.step !== 'ok' ? (bootPrev.fails || 0) + 1 : 0;
 const bootSafe = bootFails > 0;
-const bootStep = (step, extra) => { try { localStorage.setItem(BOOT_KEY, JSON.stringify(Object.assign({ step, at: Date.now(), v: APP_VER, fails: step === 'ok' ? 0 : bootFails, safe: bootSafe }, extra || {}))); } catch (e) { /* egal */ } };
+const bootExtra = {};   // 7.3.1: Angaben (z. B. Datenbank-Größe) über alle Schritte mitnehmen
+const bootStep = (step, extra) => { Object.assign(bootExtra, extra || {}); try { localStorage.setItem(BOOT_KEY, JSON.stringify(Object.assign({ step, at: Date.now(), v: APP_VER, fails: step === 'ok' ? 0 : bootFails, safe: bootSafe }, bootExtra))); } catch (e) { /* egal */ } };
 if (bootSafe) {
     try {
         const lastTab = JSON.parse(localStorage.getItem('vrcx-tab') || '"home"');
-        localStorage.setItem('nexus-boot-hang', JSON.stringify({ step: bootPrev.step, tab: lastTab, v: bootPrev.v, at: bootPrev.at, fails: bootFails, ua: navigator.userAgent }));
+        localStorage.setItem('nexus-boot-hang', JSON.stringify({ step: bootPrev.step, tab: lastTab, v: bootPrev.v, at: bootPrev.at, fails: bootFails, db: bootPrev.db || null, ua: navigator.userAgent }));
         localStorage.setItem('vrcx-tab', '"home"'); localStorage.setItem('vrcx-tabSub', '""');
     } catch (e) { /* egal */ }
 }
@@ -66,6 +68,15 @@ bootStep('start');
     const prof = require('../../vrc-nexus/backend/profiles');
     const db = new Database(SQL, prof.currentFile('/data').file);
     prof.applySeed('/data', db);
+    // 7.3.1: große Datenbank am Handy (ganz im Speicher, wird ganz gesichert) → Verläufe kürzen und Datei verkleinern
+    const dbFile = prof.currentFile('/data').file, dbSize = () => { const f = fs.__files.get(dbFile); return f ? f.length : 0; };
+    const mb0 = dbSize();
+    let trimmed = null;
+    if (mb0 > BIG || bootSafe) {
+        status('Räume die Datenbank auf …');
+        try { trimmed = trimForPhone(db, { force: mb0 > BIG }); db.save(); } catch (e) { console.error('Aufräumen:', e); }
+    }
+    const dbInfo = { mb: Math.round(mb0 / 104857.6) / 10, mb_after: Math.round(dbSize() / 104857.6) / 10, files: fs.__files.size, trimmed: trimmed ? trimmed.total : 0 };
     // Android-Sandbox: nur diese App kann ihren Speicher lesen
     const crypt = { encrypt: s => 'plain:' + Buffer.from(s).toString('base64'), decrypt: s => (s.startsWith('plain:') ? Buffer.from(s.slice(6), 'base64').toString() : '{}') };
     const host = {
@@ -87,7 +98,7 @@ bootStep('start');
         restart: async () => { try { db.save(); await fs.__flush(); } catch (e) { /* egal */ } window.location.reload(); },   // 3.4: Konto-Wechsel
         speak: t => { if (window.speechSynthesis) speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(t), { lang: 'de-DE' })); },
     };
-    bootStep('app');
+    bootStep('app', { db: dbInfo });
     const app = new NexusApp({ db, crypt, host, notify, mobile: true, licenseTimer: true });
     app.game.stop();
     app.game.osc.stopListen();
@@ -181,9 +192,19 @@ bootStep('start');
     bootStep('ui');
     // erst wenn die Oberfläche 12 s lang flüssig lief, gilt der Start als gelungen (ein eingefrorener Start kommt nie hierhin)
     setTimeout(() => bootStep('ok'), 12000);
+    setTimeout(cleanApks, 20000);   // 7.3.1: heruntergeladene Update-APKs nicht liegen lassen
     if (bootSafe) setTimeout(safeNotice, 1500);
     runPending();   // Start über ein Widget
 })().catch(e => { status('⚠ Start fehlgeschlagen: ' + e.message); console.error(e); });
+
+// 7.3.1: alte Update-APKs aus dem App-Cache entfernen (jedes Update lud ~6 MB nach, gelöscht wurde nie)
+async function cleanApks() {
+    if (!native) return;
+    try {
+        const r = await Filesystem.readdir({ path: '', directory: Directory.Cache });
+        for (const f of r.files || []) { const n = typeof f === 'string' ? f : f.name; if (/\.apk$/i.test(n)) await Filesystem.deleteFile({ path: n, directory: Directory.Cache }).catch(() => {}); }
+    } catch (e) { /* egal */ }
+}
 
 // 7.2.1: Hinweis nach einem hängengebliebenen Start (mit Bericht zum Kopieren)
 function safeNotice() {

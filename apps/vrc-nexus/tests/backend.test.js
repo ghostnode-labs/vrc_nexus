@@ -4541,3 +4541,28 @@ test('7.3: Vertrauen & Fürsorge – Vertrauensliste mit Rechten, Check-in-Timer
     unlocked = false; assert.strictEqual(c.allowed(A, 'remote'), false); await assert.rejects(c.action('nsfwc_state', {}), /Gesperrt/);
     c.stop();
 });
+
+test('7.3.1: Handy-Datenbank klein halten – alte Verläufe weg, Aktuelles und offene Benachrichtigungen bleiben, Datei wird kleiner', async () => {
+    const os = require('os'), path = require('path'), fs = require('fs');
+    const { openDatabase } = require('../backend/db');
+    const { trimForPhone } = require('../backend/dbtrim');
+    const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'nx-trim-')), 'nexus.sqlite');
+    const db = await openDatabase(file);
+    const now = Math.floor(Date.now() / 1000), old = now - 200 * 86400, big = 'x'.repeat(2000);
+    db.exec('BEGIN');
+    const f = db.prepare("INSERT INTO feed (user_id, ts, type, vrc_id) VALUES (1, ?, 'online', ?)");
+    for (let i = 0; i < 3000; i++) f.run(i < 2900 ? old : now - 60, 'usr_' + i);
+    const c = db.prepare('INSERT INTO user_cache (vrc_id, data, fetched) VALUES (?, ?, ?)');
+    for (let i = 0; i < 500; i++) c.run('usr_c' + i, big, i < 490 ? old : now);
+    db.exec('COMMIT');
+    let cols = []; try { cols = db.prepare('PRAGMA table_info(notif_log)').all().map(r => r.name); } catch (e) { /* egal */ }
+    db.save(); const before = fs.statSync(file).size;
+    const r = trimForPhone(db, { now });
+    db.save(); const after = fs.statSync(file).size;
+    assert.strictEqual(r.removed.feed, 2900); assert.strictEqual(r.removed.cache, 490);
+    assert.strictEqual(db.prepare('SELECT COUNT(*) AS n FROM feed').get().n, 100, 'letzte 30 Tage bleiben');
+    assert.ok(after < before / 2, 'Datei verkleinert (' + before + ' → ' + after + ')');
+    assert.ok(cols.includes('active'), 'notif_log hat „active“ (offene bleiben immer)');
+    assert.strictEqual(trimForPhone(db, { now }).total, 0, 'zweiter Lauf: nichts mehr zu tun');
+    db.close();
+});
