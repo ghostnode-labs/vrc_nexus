@@ -4657,6 +4657,35 @@ test('8.2: Sicherheits-Center – Check, Sperrliste (verschlüsselt, stiller Hin
     unlocked = false; await assert.rejects(sf.action('safety_state', {}), /18\+/);
 });
 
+test('8.2: Wearables (bHaptics, Mock) – folgen der Spielzeug-Stärke, Fläche/Welle, nur lokale Adresse, Stopp ohne eigene Nachricht, nur mit Freigabe', async () => {
+    const { Wearables } = require('../backend/wearables');
+    const store = {}, msgs = [];
+    let unlocked = true;
+    class FakeWS { constructor(url) { this.url = url; this.readyState = 1; FakeWS.last = this; setImmediate(() => this.onopen && this.onopen()); } send(m) { msgs.push(JSON.parse(m)); } close() { this.readyState = 3; if (this.onclose) this.onclose(); } }
+    const cur = new Map([[0, 0.8], [1, 0.2]]);
+    const app = { db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } }, nsfw: { access: () => ({ unlocked, features: unlocked ? ['toys'] : [] }) }, toys: { cur, status: () => ({ ok: 1 }) } };
+    const w = new Wearables(app); w.WebSocket = FakeWS;
+    assert.throws(() => w.saveCfg({ url: 'ws://evil.example:15881/v2/feedbacks' }), /diesem PC/);
+    await w.action('wear_cfg', { on: '1', parts: 'vest,arms,nope', gain: '50' });
+    clearInterval(w.timer); w.timer = null;   // Takt im Test selbst auslösen
+    assert.deepStrictEqual(w.cfg().parts, ['vest', 'arms']);
+    await new Promise(r => setImmediate(r));
+    assert.ok(/15881\/v2\/feedbacks\?app_id=vrc-nexus/.test(FakeWS.last.url) && w.state === 'verbunden');
+    w.tick();
+    const m = msgs.pop();
+    assert.deepStrictEqual(m.Submit.map(x => x.Frame.Position), ['VestFront', 'VestBack', 'ForearmL', 'ForearmR']);
+    assert.ok(m.Submit[0].Frame.DotPoints.length === 20 && m.Submit[0].Frame.DotPoints.every(d => d.Intensity === 40), 'stärkstes Gerät × 50 %');
+    await w.action('wear_cfg', { device: '1', style: 'wave' }); clearInterval(w.timer); w.timer = null;
+    w.tick(); const m2 = msgs.pop();
+    assert.ok(Math.max(...m2.Submit[0].Frame.DotPoints.map(d => d.Intensity)) === 10, 'folgt Gerät 1 (20 % × 50 %)');
+    assert.ok(new Set(m2.Submit[0].Frame.DotPoints.map(d => d.Intensity)).size > 1, 'Welle = unterschiedliche Stärken');
+    cur.set(1, 0); const n = msgs.length; w.tick(); assert.strictEqual(msgs.length, n, 'Stärke 0 → keine Nachricht, Rahmen laufen aus');
+    await w.action('wear_test', {}); assert.ok(msgs.pop().Submit[0].Frame.DurationMillis === 600);
+    unlocked = false; cur.set(1, 1); const n2 = msgs.length; w.tick(); assert.strictEqual(msgs.length, n2, 'ohne Freigabe nichts');
+    await assert.rejects(w.action('wear_cfg', { on: '0' }), /Freigabe/);
+    unlocked = true; await w.action('wear_cfg', { on: '0' }); assert.ok(w.state === 'aus' && !w.timer && !w.ws);
+});
+
 test('7.3.1: Handy-Datenbank klein halten – alte Verläufe weg, Aktuelles und offene Benachrichtigungen bleiben, Datei wird kleiner', async () => {
     const os = require('os'), path = require('path'), fs = require('fs');
     const { openDatabase } = require('../backend/db');

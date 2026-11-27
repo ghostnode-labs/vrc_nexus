@@ -2,6 +2,10 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.16 – Wearables and more haptics (experimental)
+
+- 🦺 **bHaptics wearables** (🔞 → 🔥 Lust & PCS → *🦺 Wearables*): vest, arm bands, mask, gloves and feet follow the **current toy strength** – of all toys or one chosen toy, as an even **area** or a running **wave**, with their own strength (5–100 %). Connection only to the bHaptics Player app on this PC (`ws://127.0.0.1:15881`, other addresses are refused), own implementation without SDK. Because the wearables only mirror the toy output, **panic, safeword, red light and breaks stop them too**; frames run out by themselves after 160 ms, so nothing keeps buzzing. 👋 *Test* sends a short pulse. Experimental – feedback welcome.
+
 ### New in 8.0.15 – Safety center: emergency contacts and shared block lists
 
 - 🛡 **Safety center** (🔞 → *🛡 Safety*):

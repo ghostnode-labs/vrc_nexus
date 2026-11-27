@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.16 – Wearables (experimental)
+- 🦺 **bHaptics wearables** (vest, arm bands, mask, gloves, feet) can now be connected through the bHaptics Player app on your PC – no extra software from us, local connection only. Experimental: feedback welcome.
+- 🔞 ***
+
 ### New in 8.0.15 – Safety center
 - 🛡 **Safety center with a personal block list:** a checklist shows what helps in an emergency (emergency contacts, safeword, panic, breaks, stop on watch or phone). People on your block list can never control anything of yours remotely, and you get a silent notice (never in the chatbox) when they join your instance. The list stays encrypted on your device and can be shared end-to-end encrypted with trusted people.
 - 🔞 ***

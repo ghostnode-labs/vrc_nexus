@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.16",
+  "title": "Wearables and more haptics (experimental)",
+  "body": "- 🦺 **bHaptics wearables** (🔞 → 🔥 Lust & PCS → *🦺 Wearables*): vest, arm bands, mask, gloves and feet follow the **current toy strength** – of all toys or one chosen toy, as an even **area** or a running **wave**, with their own strength (5–100 %). Connection only to the bHaptics Player app on this PC (`ws://127.0.0.1:15881`, other addresses are refused), own implementation without SDK. Because the wearables only mirror the toy output, **panic, safeword, red light and breaks stop them too**; frames run out by themselves after 160 ms, so nothing keeps buzzing. 👋 *Test* sends a short pulse. Experimental – feedback welcome."
+ },
+ {
   "version": "8.0.15",
   "title": "Safety center: emergency contacts and shared block lists",
   "body": "- 🛡 **Safety center** (🔞 → *🛡 Safety*):\n  - **Safety check** with 8 points – emergency contacts (trust list with the check-in right), safeword, what panic does, automatic breaks, stop on watch/phone, shake gesture, group safeword and block list – each with a hint and a button that leads to the right place.\n  - **Block list:** VRChat ID, name and note, stored only locally and encrypted. Blocked people are **always refused for remote control** (even if they are still on the allow list), and you get a **silent notice** when they join your instance (desktop/XSOverlay, never chatbox, nothing in private mode).\n  - **Shared block list:** send your own entries end-to-end encrypted via the Nexus chat to someone on your **trust list** (notes only if you tick it); imported entries are marked \"from …\", are not passed on further, and duplicates are skipped. A code `NXB1.…` can also be created without the chat."

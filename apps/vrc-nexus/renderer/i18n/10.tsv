@@ -2897,3 +2897,15 @@ Sperrlisten-Code	Block list code	Code de liste de blocage	ブロックリスト�
 von wem?	from whom?	de qui ?	誰から？
 Code ohne Chat erstellen	Create code without chat	Créer un code sans chat	チャットなしでコード作成
 Von der Sperrliste nehmen?	Remove from the block list?	Retirer de la liste de blocage ?	ブロックリストから外しますか？
+Wearables (bHaptics)	Wearables (bHaptics)	Wearables (bHaptics)	ウェアラブル（bHaptics）
+experimentell	experimental	expérimental	実験的
+Weste & Co. folgen der Spielzeug-Stärke	Vest & co. follow the toy strength	Gilet & co. suivent l'intensité des jouets	ベストなどがおもちゃの強さに連動
+getrennt	disconnected	déconnecté	切断
+Weste	Vest	Gilet	ベスト
+Armbänder	Arm bands	Bracelets	アームバンド
+Maske	Mask	Masque	マスク
+Handschuhe	Gloves	Gants	グローブ
+Füße	Feet	Pieds	足
+Fläche	Area	Surface	面
+Braucht die bHaptics-Player-App auf diesem PC. Panik, Safeword, Ampel Rot und Pausen stoppen die Wearables mit.	Needs the bHaptics Player app on this PC. Panic, safeword, red light and breaks stop the wearables too.	Nécessite l'app bHaptics Player sur ce PC. Panique, safeword, feu rouge et pauses arrêtent aussi les wearables.	このPCにbHaptics Playerアプリが必要です。パニック・セーフワード・赤信号・休憩でウェアラブルも停止します。
+bHaptics Player nicht erreichbar – läuft die App?	bHaptics Player not reachable – is the app running?	bHaptics Player injoignable – l'app est-elle lancée ?	bHaptics Playerに接続できません – アプリは起動していますか？

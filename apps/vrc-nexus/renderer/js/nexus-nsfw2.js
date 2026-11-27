@@ -152,6 +152,17 @@
         // N3 Lust-Meter
         h += sec('⏱ ' + T('Gleichzeitig spüren'), '<div class="nc-row small">' + esc(T('Eigene Geräte zusätzlich verzögern um')) + ' ' + num('sync_extra', c.sync_extra || 0, 0, 3000, 50, 70) + ' ms</div>'
             + '<p class="muted small">' + esc(T('Für Fern-Szenen: die Befehle zum Partner brauchen über das Internet etwas länger. Mit dem passenden Versatz spürt ihr beide es gleichzeitig. Je Gerät lässt sich unter ⚙ die Reaktionszeit einstellen. Stopp wirkt immer sofort.')) + '</p>');   // 8.2
+        if (t.wear) {   // 8.2: Wearables (bHaptics)
+            const w = t.wear, wc = w.cfg, wst = { verbunden: '🟢 ' + T('verbunden'), verbindet: '🟡 ' + T('verbindet …'), getrennt: '🔴 ' + T('getrennt'), fehler: '🔴 ' + T('Fehler'), aus: '⚪ ' + T('aus') }[w.state] || w.state;
+            h += sec('🦺 ' + T('Wearables (bHaptics)') + ' <span class="small muted">' + esc(T('experimentell')) + '</span>', '<label class="check small"><input type="checkbox" data-wr="on"' + (wc.on ? ' checked' : '') + '> ' + esc(T('Weste & Co. folgen der Spielzeug-Stärke')) + '</label> <span class="small">' + esc(wst) + '</span>'
+                + (w.error ? '<p class="small bad">⚠ ' + esc(T(w.error)) + '</p>' : '')
+                + '<div class="nc-row small">' + Object.entries(w.parts).map(([k, n]) => '<label class="check small"><input type="checkbox" data-wrp="' + k + '"' + (wc.parts.includes(k) ? ' checked' : '') + '> ' + esc(T(n)) + '</label>').join('') + '</div>'
+                + '<div class="nc-row small">' + esc(T('folgt')) + ' <select data-wr="device"><option value="all">' + esc(T('alle Geräte')) + '</option>' + (t.devices || []).map(d => '<option value="' + d.index + '"' + (String(wc.device) === String(d.index) ? ' selected' : '') + '>' + esc(d.label) + '</option>').join('') + '</select>'
+                + ' <select data-wr="style"><option value="flat"' + (wc.style !== 'wave' ? ' selected' : '') + '>▦ ' + esc(T('Fläche')) + '</option><option value="wave"' + (wc.style === 'wave' ? ' selected' : '') + '>〰 ' + esc(T('Welle')) + '</option></select>'
+                + ' ' + esc(T('Stärke')) + ' <input type="number" data-wr="gain" value="' + wc.gain + '" min="5" max="100" step="5" style="width:64px"> %</div>'
+                + '<div class="nc-row"><button type="button" class="btn btn-sm" data-n2a="wearconn">🔌 ' + esc(T('Verbinden')) + '</button><button type="button" class="btn btn-sm" data-n2a="weartest">👋 ' + esc(T('Testen')) + '</button></div>'
+                + '<p class="muted small">' + esc(T('Braucht die bHaptics-Player-App auf diesem PC. Panik, Safeword, Ampel Rot und Pausen stoppen die Wearables mit.')) + '</p>');
+        }
         h += sec('💗 ' + T('Lust-Meter'), '<div class="n2-lust"><b>' + L.v + ' %</b>' + bar(L.v, 'lust') + (L.edging ? '<span class="vx-pill bad">🎯 ' + esc(T('Edging-Bremse')) + '</span>' : '') + '</div>' + spark(L.hist)
             + '<p class="muted small">' + esc(L.ext ? T('Quelle: PCS (pcs/satisfaction/lust).') : T('Quelle: eigene Berechnung aus der Spielzeug-Stärke – steigt mit der Zeit, sinkt in Pausen.')) + ' · 💥 ' + L.climaxes + '×</p>'
             + '<div class="nc-row small">' + esc(T('Quelle')) + ' <select data-n2="lust.source">' + [['auto', 'automatisch'], ['pcs', 'nur PCS'], ['own', 'eigene Berechnung']].map(([k, l]) => '<option value="' + k + '"' + (c.lust.source === k ? ' selected' : '') + '>' + esc(T(l)) + '</option>').join('') + '</select>'
@@ -264,6 +275,8 @@
             if (i >= 0) list[i] = item; else list.push(item);
             patEd = null; setCfg({ custom: JSON.stringify(list) }, toysDo); return true;
         }
+        if (a === 'wearconn') { toysDo('wear_connect'); return true; }   // 8.2
+        if (a === 'weartest') { toysDo('wear_test'); return true; }
         if (a === 'patshare') {   // 8.2: nur Ende-zu-Ende verschlüsselt
             const pass = prompt(T('Passwort für dieses Muster (mind. 6 Zeichen) – gib es auf anderem Weg weiter:')); if (!pass) return true;
             const to = (prompt(T('Optional: direkt an eine VRChat-ID (usr_…) über den verschlüsselten Chat schicken – leer lassen für nur den Code:')) || '').trim();
@@ -283,6 +296,8 @@
     const devData = el => { const box = el.closest('[data-devname]'); return box ? box.dataset.devname : null; };
     function onChange(e, toysDo) {
         const af = e.target.closest('[data-after]'); if (af) { after[af.dataset.after] = af.checked; return true; }
+        const wr = e.target.closest('[data-wr]'); if (wr) { toysDo('wear_cfg', { [wr.dataset.wr]: wr.type === 'checkbox' ? (wr.checked ? '1' : '0') : wr.value }); return true; }   // 8.2
+        const wp = e.target.closest('[data-wrp]'); if (wp) { toysDo('wear_cfg', { parts: [...document.querySelectorAll('[data-wrp]')].filter(x => x.checked).map(x => x.dataset.wrp).join(',') }); return true; }
         if (builderChange(e)) return true;
         const dv = e.target.closest('[data-dv]'), dt = e.target.closest('[data-dt]');
         if (dv || dt) {

@@ -207,6 +207,7 @@ class Toys {
             heart: this.app.heart && this.app.heart.active ? this.app.heart.bpm : 0, voice: Math.round(this.voiceLv * 100), consent: this.consent,
             scene: this.scene ? { built: this.scenes ? this.scenes.state() : null, name: this.scene.name, left: Math.max(0, Math.round((this.scene.until - Date.now()) / 1000)), total: Math.round((this.scene.until - this.scene.start) / 1000) } : null,
             session: { running: !!this.session.start, secs: this.session.start ? Math.round((Date.now() - this.session.start) / 1000) : 0, aftercare_due: this.session.due },
+            wear: this.app.wear ? this.app.wear.status() : null,   // 8.2
             paused: this.paused && Date.now() < this.paused.until ? { left: Math.round((this.paused.until - Date.now()) / 1000), why: this.paused.why, msg: this.pauseMsg || '' } : null,
             devices: [...this.devices.values()].map(d => this.norm(d)).map(d => { const dc = this.devCfg(d.name); return { index: d.index, name: d.name, alias: dc.alias, label: dc.alias || d.name, on: dc.on, motors: d.motors.length,
                 level: Math.round((this.level.get(d.index) || 0) * 100), out: Math.round((this.cur.get(d.index) || 0) * 100),
