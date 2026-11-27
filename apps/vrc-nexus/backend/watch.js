@@ -14,7 +14,7 @@ const crypto = require('crypto');
 const os = require('os');
 const { str, int, cut, UserError } = require('./util');
 
-const DEF = { on: false, port: 17874, devices: [], theme: 'cyber', theme_at: 0, bg: 'none', bg_dim: 55, bg_rev: '', shake: 'off' };
+const DEF = { on: false, port: 17874, devices: [], theme: 'cyber', theme_at: 0, bg: 'none', bg_dim: 55, bg_rev: '', shake: 'off', quick: null };
 const SHAKE = ['off', 'stop', 'safeword'];   // 8.2: Schüttel-Geste an der Uhr
 /** 5.2.3: Themen der Uhr (Farben als #RRGGBB: Hintergrund, Akzent, Highlight, Gefahr, Text gedämpft) */
 const THEMES = {
@@ -36,9 +36,18 @@ const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', '
     'comfort_get', 'comfort_sleep', 'preset_list', 'preset_apply', 'client_macros', 'client_macro_run', 'client_osc', 'hr_get']);
 /** 8.2: Sicherheits-Aktionen gehen immer – auch wenn 18+ auf dem Gerät ausgeblendet ist */
 const SAFETY_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'toys_stop']);
-const NSFW_WATCH = new Set(['allclear', 'private', 'consent']);   // Uhr-Aktionen, die 🔞 sind (Panik, Safeword, Stopp gehören nicht dazu)
+const NSFW_WATCH = new Set(['allclear', 'private', 'consent', 'toy_level', 'toy_pattern', 'toy_pattern_stop', 'toy_surprise']);   // Uhr-Aktionen, die 🔞 sind (Panik, Safeword, Stopp gehören nicht dazu)
+/** 8.2: Chatbox-Schnelltexte für die Uhr (am PC änderbar, höchstens 8) */
+const QUICK = ['👋 Hallo!', 'BRB – bin gleich zurück', 'AFK', '🔇 Mikro aus', 'Danke! 💙', '😴 Gute Nacht'];
+const QUICK_MAX = 8, QUICK_LEN = 80;
 const DISC_PORT = 17873, MAX_DEV = 5, MAX_BODY = 4096;
 const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
+/** 8.2: Schnelltexte prüfen – Liste oder Text (eine Zeile je Eintrag); leer → null (= Standardliste) */
+function cleanQuick(v) {
+    const list = (Array.isArray(v) ? v : str(v).split(/\r?\n/)).map(x => cut(str(x).replace(/[\r\n\t]/g, ' ').trim(), QUICK_LEN)).filter(Boolean);
+    if (list.length > QUICK_MAX) throw new UserError('Höchstens ' + QUICK_MAX + ' Schnelltexte.');
+    return list.length ? list : null;
+}
 const newPin = () => String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 
 class Watch {
@@ -60,6 +69,7 @@ class Watch {
         if (c.bg_dim !== undefined) { n.bg_dim = Math.max(0, Math.min(85, int(c.bg_dim))); n.theme_at = Date.now(); }
         if (c.bg_rev !== undefined) n.bg_rev = str(c.bg_rev);
         if (c.face !== undefined) { if (!FACES[str(c.face)]) throw new UserError('Unbekanntes Zifferblatt.'); n.face = str(c.face); n.theme_at = Date.now(); }
+        if (c.quick !== undefined) n.quick = cleanQuick(c.quick);   // 8.2: Schnelltexte (leer = Standard)
         this.app.db.setSetting('watch_cfg', JSON.stringify(n));
         this.apply();
         return n;
@@ -90,11 +100,13 @@ class Watch {
         const c = this.cfg();
         return { cfg: { on: c.on, port: c.port, shake: c.shake || 'off' }, look: this.look(), faces: FACES, themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v])), has_bg: !!this.bgFile(),
             heart: this.app.heart ? { bpm: this.app.heart.active ? this.app.heart.bpm : 0, from: this.app.heart.from || '', source: this.app.heart.cfg().source } : null, running: !!this.server, error: this.error, pin: c.on ? this.pin : '', addresses: this.addresses(),
-            devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '', battery: this.batt[d.id] === undefined ? null : this.batt[d.id], nsfw: d.nsfw !== false })) };
+            devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '', battery: this.batt[d.id] === undefined ? null : this.batt[d.id], nsfw: d.nsfw !== false,
+                adult: (d.kind || 'watch') === 'watch' ? !!d.adult : null, adult_off: (d.kind || 'watch') === 'watch' && !d.adult ? str(d.adult_off) : '' })), quick: this.quick(), quick_default: QUICK };
     }
 
     // ---------- Server ----------
     apply() {
+        this.hookPanic();
         const c = this.cfg();
         if (!c.on) return this.stop();
         if (this.server && this.port === c.port) return;
@@ -183,26 +195,82 @@ class Watch {
         const token = crypto.randomBytes(32).toString('hex'), id = 'w' + crypto.randomBytes(4).toString('hex');
         const kind = b.kind === 'phone' ? 'phone' : b.kind === 'pc' ? 'pc' : 'watch';   // 8.0.4: „pc“ = anderer PC/Laptop, darf nur den Heimnetz-Abgleich
         const name = cut(str(b.name).replace(/[\r\n]/g, ' ').trim(), 40) || (kind === 'phone' ? 'Handy' : kind === 'pc' ? 'Laptop' : 'Uhr');
-        c.devices.push({ id, name, kind, hash: sha(token), added: t, ip: cut(str(ip), 60) });
+        // 8.2: Uhren übernehmen beim Koppeln die 18+-Freigabe des PCs (nur wenn der PC selbst freigegeben ist) – an diese Kopplung gebunden
+        let adult = 0;
+        if (kind === 'watch') { try { adult = this.app.nsfw && this.app.nsfw.access().unlocked ? t : 0; } catch (e) { adult = 0; } }
+        c.devices.push(Object.assign({ id, name, kind, hash: sha(token), added: t, ip: cut(str(ip), 60) }, kind === 'watch' ? { adult, adult_off: adult ? '' : 'pair' } : {}));
         this.pin = newPin();
         this.saveCfg({ devices: c.devices });
         const h = this.app.heart;
         if (kind === 'watch' && h && h.cfg().source !== 'watch' && !h.active) h.save({ source: 'watch' });   // Uhr übernimmt, wenn die bisherige Quelle gerade nichts liefert
         if (this.app.tools && this.app.tools.alert) this.app.tools.alert(kind === 'phone' ? '📱 Handy gekoppelt' : kind === 'pc' ? '🏠 PC gekoppelt (Abgleich)' : '⌚ Uhr gekoppelt', name);
-        return { ok: true, token, id, name: cut(str((this.app.vrc.account() || {}).display_name) || os.hostname(), 40) };
+        return { ok: true, token, id, name: cut(str((this.app.vrc.account() || {}).display_name) || os.hostname(), 40), adult: !!adult };
     }
     remove(id) { const c = this.cfg(); this.saveCfg({ devices: c.devices.filter(d => d.id !== str(id)) }); return this.status(); }
 
+    // ---------- 8.2: 18+-Freigabe der Uhren (beim Koppeln vom PC übernommen) ----------
+    /** jede Panik am PC (Knopf, Uhr, Handy, anderer PC) entzieht allen Uhren die Freigabe – einmalig in nsfw.panic eingehängt */
+    hookPanic() {
+        const n = this.app.nsfw;
+        if (!n || typeof n.panic !== 'function' || n.panic.nxWatch) return;
+        const orig = n.panic, self = this;
+        const wrapped = function (...args) { try { self.revokeAdult('panic'); } catch (e) { /* Panik nie aufhalten */ } return orig.apply(this, args); };
+        wrapped.nxWatch = true;
+        n.panic = wrapped;
+    }
+    /** Freigabe aller (oder einer) Uhr entziehen; why: panic | pc (PC nicht mehr freigegeben) | manual */
+    revokeAdult(why, id) {
+        const c = this.cfg();
+        let n = 0;
+        for (const d of c.devices) if ((d.kind || 'watch') === 'watch' && d.adult && (!id || d.id === id)) { d.adult = 0; d.adult_off = why; n++; }
+        if (n) this.saveCfg({ devices: c.devices });
+        return n;
+    }
+    /** 🔞-Sicht für ein Gerät: { unlocked, reason } – Uhren brauchen zusätzlich ihre Kopplungs-Freigabe */
+    adultAccess(dev) {
+        const n = this.app.nsfw;
+        if (dev && dev.nsfw === false) return { unlocked: false, reason: '🔞 ist auf diesem Gerät ausgeblendet (PC: Werkzeuge → Geräte).' };
+        let acc;
+        try { acc = n ? n.access() : { unlocked: false, reason: '' }; } catch (e) { acc = { unlocked: false, reason: '' }; }
+        if (!dev || (dev.kind || 'watch') !== 'watch') return acc;
+        // PC ausdrücklich nicht (mehr) freigegeben (NSFW aus, Panik, Altersprüfung abgelaufen) → Freigabe der Uhr erlischt.
+        // Nur „nicht bei VRChat angemeldet“ (z. B. kurz nach dem Start) zählt nicht.
+        if (!acc.unlocked) { if (acc.connected !== undefined && dev.adult) this.revokeAdult('pc', dev.id); return acc; }
+        if (dev.adult === undefined) {   // vor 8.2 gekoppelt: einmalig übernehmen, solange der PC freigegeben ist
+            const c = this.cfg(), d = c.devices.find(x => x.id === dev.id);
+            if (d) { d.adult = Date.now(); d.adult_off = ''; this.saveCfg({ devices: c.devices }); }
+            dev.adult = Date.now();
+        }
+        if (!dev.adult) return { unlocked: false, reason: dev.adult_off === 'panic' ? '🔞-Freigabe nach Panik entzogen – am PC unter Werkzeuge → Geräte „🔞 Freigabe übertragen“.' : '🔞-Freigabe fehlt – am PC unter Werkzeuge → Geräte „🔞 Freigabe übertragen“ oder neu koppeln.' };
+        return acc;
+    }
+    quick() { const q = this.cfg().quick; return Array.isArray(q) && q.length ? q.slice(0, QUICK_MAX) : QUICK.slice(); }
+    /** Spielzeug-Daten für die Uhr (nur mit 18+): Stärke, laufendes Muster, Musterliste, Ampel */
+    toyInfo() {
+        const t = this.app.toys;
+        if (!t) return null;
+        const pct = m => { let x = 0; try { for (const v of m.values()) x = Math.max(x, typeof v === 'number' ? v : Number(v && v.lv) || 0); } catch (e) { x = 0; } return Math.round(Math.max(0, Math.min(1, x)) * 100); };
+        let patterns = [];
+        try { patterns = t.allPatterns().slice(0, 24).map(p => ({ id: p.id, name: cut(str(p.name), 30) })); } catch (e) { patterns = []; }
+        const p = t.pat, pn = p ? (p.surprise ? '🎁 Überraschung' : (patterns.find(x => x.id === p.id) || { name: '?' }).name) : '';
+        return { connected: t.state === 'verbunden' || !!t.ws, devices: t.devices ? t.devices.size : 0, consent: t.consent || 'green',
+            level: t.manual ? pct(t.manual) : 0, out: t.cur ? pct(t.cur) : 0,
+            pattern: p ? { id: p.id, name: pn, left: p.until ? Math.max(0, Math.round((p.until - Date.now()) / 1000)) : 0 } : null,
+            paused: !!(t.paused && Date.now() < t.paused.until), patterns };
+    }
+
     // ---------- Daten ----------
     state(dev) {
+        this.hookPanic();
         const a = this.app, g = a.game, st = g.state || {}, h = a.heart, n = a.nsfw;
-        const acc = dev && dev.nsfw === false ? { unlocked: false, reason: '🔞 ist auf diesem Gerät ausgeblendet (PC: Werkzeuge → Geräte).' } : n ? n.access() : { unlocked: false, reason: '' };   // 8.2
+        const acc = this.adultAccess(dev);   // 8.2: Geräte-Schalter + Kopplungs-Freigabe der Uhr
         // 5.2.2: 🔞-Knöpfe auch im Privat-Modus (Panik muss immer erreichbar sein) – nur Inhalte (Welt) werden im Privat-Modus ausgeblendet
         const nsfw = !!acc.unlocked, t = a.toys;
-        const ts = nsfw && t ? { connected: t.state === 'verbunden' || !!t.ws, devices: t.devices ? t.devices.size : 0, consent: t.consent || 'green' } : null;
+        const ts = nsfw && t ? this.toyInfo() : null;
         return { ok: true, t: Date.now(), world: n && n.private ? '' : cut(str(st.worldName), 60), players: st.players ? st.players.size : 0, running: !!st.running,
             bpm: h && h.active ? h.bpm : 0, hr_src: h ? h.cfg().source : 'off', private: !!(n && n.private), nsfw, nsfw_reason: nsfw ? '' : cut(str(acc.reason), 160), toys: ts,
             sleeping: !!(a.comfort && a.comfort.sleep), look: this.look(), shake: SHAKE.includes(this.cfg().shake) ? this.cfg().shake : 'off',
+            adult: dev && (dev.kind || 'watch') === 'watch' ? !!dev.adult : undefined, quick: this.quick(),   // 8.2
             health: a.health ? (() => { try { return a.health.today(); } catch (e) { return null; } })() : null,   // 8.0.5: für das Zifferblatt „Gesundheit“
             coach_next: a.coach && a.coach.next ? Math.max(0, Math.round((a.coach.next.brk - Date.now()) / 60000)) : null,
             // 6.5: Zifferblatt-Daten und Benachrichtigungen (im Privat-Modus keine)
@@ -248,9 +316,15 @@ class Watch {
     async action(a, b, dev) {
         const post = (act, x) => this.app.post(Object.assign({ act }, x || {}), {});
         let r;
-        if (dev && dev.nsfw === false && NSFW_WATCH.has(a)) throw new UserError('🔞 ist auf diesem Gerät ausgeblendet – nur Panik, Safeword und Stopp.');   // 8.2
+        if (dev && dev.nsfw === false && NSFW_WATCH.has(a) && !(a === 'consent' && str(b.light) === 'red')) throw new UserError('🔞 ist auf diesem Gerät ausgeblendet – nur Panik, Safeword und Stopp.');   // 8.2
+        if (dev && (dev.kind || 'watch') === 'watch' && NSFW_WATCH.has(a) && !(a === 'consent' && str(b.light) === 'red')) {   // 8.2: 🔞 nur mit Freigabe dieser Uhr (Ampel Rot = Stopp geht immer)
+            const acc = this.adultAccess(dev);
+            if (!acc.unlocked) throw new UserError('Nicht freigeschaltet.' + (acc.reason ? ' ' + acc.reason : ''));
+        }
         switch (a) {
+            case 'unpair': this.remove(dev.id); return { ok: true, msg: 'Entkoppelt.' };   // 8.2: Uhr meldet sich selbst ab
             case 'panic': {
+                this.revokeAdult('panic');   // 8.2: Freigabe aller Uhren weg (zusätzlich zum Haken in nsfw.panic)
                 // 5.2.2: Panik nicht von langsamen Teilen (VRChat-Avatar, Wallpaper Engine, OBS) aufhalten lassen – nach 2,5 s antworten, der Rest läuft weiter
                 const run = post('nsfw_panic_full');   // 5.3: wie der Panik-Knopf im Client – NSFW danach ganz aus
                 run.catch(e => { this.lastError = e.message; });
@@ -261,6 +335,29 @@ class Watch {
             case 'private': r = await post('nsfw_private', { on: b.on === false || b.on === '0' ? '0' : '1' }); break;
             case 'consent': if (!['green', 'yellow', 'red'].includes(str(b.light))) throw new UserError('Ampel: green, yellow oder red.'); r = await post('toys_consent', { light: str(b.light) }); break;
             case 'toys_stop': r = await post('toys_stop', { device: 'all' }); break;
+            // 8.2: Spielzeug von der Uhr (Drehkrone/Wischen, Muster, Überraschung) – prüft zusätzlich die Freigabe im Spielzeug-Modul
+            case 'toy_level': { const lv = Math.max(0, Math.min(100, int(b.level))); await post('toys_set', { device: 'all', level: lv / 100 }); r = { msg: '〰 ' + lv + ' %' }; break; }
+            case 'toy_pattern': { const x = await post('toys_pattern', { id: str(b.id), strength: Math.max(5, Math.min(100, int(b.strength) || 60)), seconds: 0 }); r = { msg: str(x && x.msg) || '〰 Muster läuft' }; break; }
+            case 'toy_pattern_stop': await post('toys_pattern_stop'); r = { msg: 'Muster aus.' }; break;
+            case 'toy_surprise': { const x = await post('toys_surprise'); r = { msg: str(x && x.msg) || '🎁' }; break; }
+            // 8.2: Chatbox-Schnelltexte, Makros & Avatar-Presets vom Handgelenk
+            case 'chat': {
+                const q = this.quick(), i = int(b.i);
+                if (!(i >= 0 && i < q.length)) throw new UserError('Unbekannter Schnelltext.');
+                await post('client_osc', { kind: 'chatbox', text: q[i] }); r = { msg: '💬 Gesendet' }; break;
+            }
+            case 'shortcuts': {
+                let macros = [], presets = [], avatar = '';
+                try { macros = (this.app.macros ? this.app.macros.list() : []).slice(0, 12).map(m => ({ id: str(m.id), name: cut(str(m.name), 30) })); } catch (e) { macros = []; }
+                try { const pl = await post('preset_list'); avatar = cut(str(pl && pl.avatar && pl.avatar.name), 40); presets = ((pl && pl.presets) || []).slice(0, 12).map(p => ({ id: str(p.id), name: cut(str(p.name), 30) })); } catch (e) { presets = []; }
+                return { ok: true, macros, presets, avatar, state: this.state(dev) };
+            }
+            case 'macro': {
+                const m = (this.app.macros ? this.app.macros.list() : []).find(x => str(x.id) === str(b.id));
+                if (!m) throw new UserError('Makro nicht gefunden.');
+                const x = await post('client_macro_run', { id: m.id }); r = { msg: '⚡ ' + cut(str(m.name), 30) + (x && x.msg ? ' – ' + x.msg : '') }; break;
+            }
+            case 'preset': { const x = await post('preset_apply', { id: str(b.id) }); r = { msg: str(x && x.msg) || '🎭 Preset gesetzt' }; break; }
             case 'note_reply': r = await this.noteReply(b.id, str(b.reply)); break;   // 6.5
             case 'safeword': r = await post('nsfwx_safeword', { source: 'Uhr' }); break;   // 6.7
             case 'theme': this.saveCfg({ theme: str(b.theme) }); r = { msg: '🎨 ' + THEMES[str(b.theme)].name }; break;
@@ -298,6 +395,19 @@ class Watch {
                 this.saveCfg({ devices: c.devices });
                 return Object.assign(this.status(), { msg: d.nsfw ? '🔞 auf „' + d.name + '“ sichtbar.' : '🙈 🔞 auf „' + d.name + '“ ausgeblendet (Panik & Safeword gehen weiter).' });
             }
+            case 'watch_dev_adult': {   // 8.2: 18+-Freigabe an eine gekoppelte Uhr übertragen oder entziehen
+                const c = this.cfg(), d = c.devices.find(x => x.id === str(input.id));
+                if (!d) throw new UserError('Gerät nicht gefunden.');
+                if ((d.kind || 'watch') !== 'watch') throw new UserError('Nur für Uhren.');
+                const on = !(input.on === false || input.on === '0' || input.on === 0);
+                if (on) {
+                    let acc; try { acc = this.app.nsfw ? this.app.nsfw.access() : { unlocked: false }; } catch (e) { acc = { unlocked: false }; }
+                    if (!acc.unlocked) throw new UserError('Erst am PC 18+ freischalten – die Uhr übernimmt nur eine gültige Freigabe.' + (acc.reason ? ' (' + acc.reason + ')' : ''));
+                    d.adult = Date.now(); d.adult_off = '';
+                } else { d.adult = 0; d.adult_off = 'manual'; }
+                this.saveCfg({ devices: c.devices });
+                return Object.assign(this.status(), { msg: on ? '🔞 Freigabe auf „' + d.name + '“ übertragen.' : '🔒 Freigabe auf „' + d.name + '“ entzogen.' });
+            }
             case 'watch_remove': return Object.assign(this.remove(input.id), { msg: 'Uhr entfernt.' });
             case 'watch_bg': this.setBg(input.data); return Object.assign(this.status(), { msg: '🖼 Hintergrund gespeichert – die Uhr holt ihn gleich.' });
             case 'watch_bg_get': { const b = this.bgFile(); return { data: b ? 'data:image/jpeg;base64,' + b.toString('base64') : '' }; }
@@ -312,4 +422,4 @@ class Watch {
     }
 }
 
-module.exports = { Watch, DISC_PORT, THEMES, FACES, PHONE_ACTS };
+module.exports = { Watch, DISC_PORT, THEMES, FACES, PHONE_ACTS, QUICK, cleanQuick };

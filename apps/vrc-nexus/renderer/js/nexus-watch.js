@@ -17,7 +17,7 @@
     }
     function render() {
         if (!box || !d) return;
-        if (box.contains(document.activeElement) && document.activeElement.matches('input[type=number], input[type=text]')) return;
+        if (box.contains(document.activeElement) && document.activeElement.matches('input[type=number], input[type=text], textarea')) return;
         const c = d.cfg, L = d.look, on = c.on;
         let h = '<div class="nc-grid">';
         // 8.2: Geräte-Hub – alles auf einen Blick, mit Akkustand
@@ -35,10 +35,12 @@
             + '</div>';
         // Uhren
         h += '<div class="nc-card"><h4>⌚ ' + esc(T('Gekoppelte Geräte')) + '</h4>'
-            + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : x.kind === 'pc' ? '🖥 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('zuletzt')) + ' ' + esc(ago(x.last))) + (x.ver ? ' · v' + esc(x.ver) : '') + '</small></div>'
-                + (x.kind !== 'watch' && x.kind ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + '<button type="button" class="btn btn-sm" data-nwa="nsfw" data-id="' + esc(x.id) + '" data-on="' + (x.nsfw === false ? '1' : '0') + '" title="' + esc(x.nsfw === false ? T('🔞 auf diesem Gerät zeigen') : T('🔞 auf diesem Gerät ausblenden (Panik & Safeword bleiben)')) + '">' + (x.nsfw === false ? '🙈' : '🔞') + '</button><button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
+            + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : x.kind === 'pc' ? '🖥 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('zuletzt')) + ' ' + esc(ago(x.last))) + (x.ver ? ' · v' + esc(x.ver) : '') + (x.adult === true ? ' · 🔞 ' + esc(T('Freigabe übertragen')) : x.adult === false ? ' · ' + esc(x.adult_off === 'panic' ? T('18+ nach Panik entzogen') : T('ohne 18+-Freigabe')) : '') + '</small></div>'
+                + (x.kind !== 'watch' && x.kind ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + (x.adult === null || x.adult === undefined ? '' : '<button type="button" class="btn btn-sm" data-nwa="adult" data-id="' + esc(x.id) + '" data-on="' + (x.adult ? '0' : '1') + '" title="' + esc(x.adult ? T('18+-Freigabe dieser Uhr entziehen') : T('18+-Freigabe des PCs auf diese Uhr übertragen (nur wenn 18+ am PC freigeschaltet ist)')) + '">' + (x.adult ? '🔓' : '🔐') + '</button>') + '<button type="button" class="btn btn-sm" data-nwa="nsfw" data-id="' + esc(x.id) + '" data-on="' + (x.nsfw === false ? '1' : '0') + '" title="' + esc(x.nsfw === false ? T('🔞 auf diesem Gerät zeigen') : T('🔞 auf diesem Gerät ausblenden (Panik & Safeword bleiben)')) + '">' + (x.nsfw === false ? '🙈' : '🔞') + '</button><button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
                 : '<p class="small muted">' + esc(T('Noch kein Gerät gekoppelt.')) + '</p>') + '<p class="small muted">📱 ' + esc(T('Handy: in der VRC-Nexus-App unter 🎮 PC-Fernbedienung Adresse und Code eingeben. Laptop: Einstellungen → System → Heimnetz-Abgleich.')) + '</p>'
             + '<div class="nc-row small" title="' + esc(T('Kräftig schütteln (3× in gut einer Sekunde) – nur solange die Uhr-App offen ist.')) + '">🤚 ' + esc(T('Uhr schütteln')) + ' <select data-nwshake>' + [['off', T('nichts')], ['stop', T('Spielzeug stoppen')], ['safeword', T('Safeword')]].map(([k, l]) => '<option value="' + k + '"' + ((c.shake || 'off') === k ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></div>'   // 8.2
+            + (d.quick ? '<details class="small" style="margin-top:8px"><summary>💬 ' + esc(T('Chatbox-Schnelltexte für die Uhr')) + '</summary><p class="muted">' + esc(T('Eine Zeile je Text, höchstens 8. Leer = Standardliste.')) + '</p>'
+                + '<textarea data-nwquick rows="5" style="width:100%">' + esc(d.quick.join('\n')) + '</textarea><button type="button" class="btn btn-sm" data-nwa="quick">💾 ' + esc(T('Speichern')) + '</button></details>' : '')   // 8.2
             + (d.heart ? '<div class="nw-hr"><span>💓</span><b>' + (d.heart.bpm || '–') + '</b><small>bpm' + (d.heart.from === 'watch' ? ' · ⌚' : d.heart.bpm ? ' · ' + esc(d.heart.from) : '') + '</small>'
                 + (d.heart.source !== 'watch' ? '<button type="button" class="btn btn-sm" data-nwa="usewatch">' + esc(T('Uhr als Puls-Quelle')) + '</button>' : '<span class="small ok">✔ ' + esc(T('Puls-Quelle')) + '</span>') + '</div>' : '')
             + '</div>';
@@ -72,7 +74,8 @@
             + '<div class="nc-row">' + inp('conn', '192.168.1.50:41234', 170) + '<button type="button" class="btn btn-sm" data-nwa="adbconn"' + busy + '>📡 ' + esc(T('Verbinden')) + '</button></div>';
         h += ai.devices.length ? '<ul class="nw-devs">' + ai.devices.map(x => '<li><span class="nw-dot' + (x.state === 'device' ? ' on' : '') + '"></span><div><b>⌚ ' + esc(x.model || x.serial) + '</b><small>' + esc(x.serial)
                 + (x.state === 'unauthorized' ? ' · ' + esc(T('auf der Uhr „Zulassen“ tippen')) : x.state !== 'device' ? ' · ' + esc(x.state) : '') + '</small></div>'
-                + (x.state === 'device' ? '<button type="button" class="btn btn-sm btn-primary" data-nwa="adbinst" data-serial="' + esc(x.serial) + '"' + busy + '>⬆ ' + esc(T('Neueste Version installieren')) + '</button>' : '') + '</li>').join('') + '</ul>'
+                + (x.state === 'device' ? '<button type="button" class="btn btn-sm btn-primary" data-nwa="adbinst" data-serial="' + esc(x.serial) + '"' + busy + '>⬆ ' + esc(T('Neueste Version installieren')) + '</button>'
+                    + '<button type="button" class="btn btn-sm" data-nwa="adbtiles" data-serial="' + esc(x.serial) + '" title="' + esc(T('Kacheln „Nexus“ und „Schnellaktionen“ auf der Uhr hinzufügen (die 🔞-Kachel fügst du auf der Uhr selbst hinzu)')) + '"' + busy + '>🧩 ' + esc(T('Kacheln')) + '</button>' : '') + '</li>').join('') + '</ul>'
             : '<p class="small muted">' + esc(T('Noch keine Uhr über ADB verbunden.')) + '</p>';
         return h + (ai.busy ? '<p class="small">⏳ ' + esc(T(ai.busy)) + ' …</p>' : '') + adbLog() + '</div>';
     }
@@ -106,6 +109,9 @@
             if (k === 'newpin') return run('watch_newpin');
             if (k === 'find') return run('watch_find', { id: a.dataset.id });
             if (k === 'nsfw') return run('watch_dev_nsfw', { id: a.dataset.id, on: a.dataset.on });   // 8.2
+            if (k === 'adult') { if (a.dataset.on === '1' || confirm(T('18+-Freigabe dieser Uhr entziehen?'))) run('watch_dev_adult', { id: a.dataset.id, on: a.dataset.on }); return; }   // 8.2
+            if (k === 'quick') { const ta = box.querySelector('[data-nwquick]'); return run('watch_cfg', { quick: ta ? ta.value : '' }); }
+            if (k === 'adbtiles') return adbRun('watch_adb_tiles', { serial: a.dataset.serial });
             if (k === 'remove') { if (confirm(T('Diese Uhr entfernen? Sie muss danach neu gekoppelt werden.'))) run('watch_remove', { id: a.dataset.id }); return; }
             if (k === 'bgclear') return run('watch_bg_clear');
             if (k === 'adbget') return adbRun('watch_adb_get');

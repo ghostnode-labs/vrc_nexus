@@ -1,0 +1,11 @@
+Freigabe übertragen	clearance transferred	autorisation transférée	許可を転送済み
+18+ nach Panik entzogen	18+ revoked after panic	18+ retiré après la panique	パニック後に18+を取り消し
+ohne 18+-Freigabe	without 18+ clearance	sans autorisation 18+	18+許可なし
+18+-Freigabe dieser Uhr entziehen	Revoke this watch's 18+ clearance	Retirer l'autorisation 18+ de cette montre	このウォッチの18+許可を取り消す
+18+-Freigabe dieser Uhr entziehen?	Revoke this watch's 18+ clearance?	Retirer l'autorisation 18+ de cette montre ?	このウォッチの18+許可を取り消しますか？
+18+-Freigabe des PCs auf diese Uhr übertragen (nur wenn 18+ am PC freigeschaltet ist)	Transfer the PC's 18+ clearance to this watch (only if 18+ is unlocked on the PC)	Transférer l'autorisation 18+ du PC vers cette montre (uniquement si le 18+ est débloqué sur le PC)	PCの18+許可をこのウォッチに転送（PCで18+が解除されている場合のみ）
+Chatbox-Schnelltexte für die Uhr	Chatbox quick texts for the watch	Textes rapides de chatbox pour la montre	ウォッチ用チャットボックス定型文
+Eine Zeile je Text, höchstens 8. Leer = Standardliste.	One line per text, up to 8. Empty = default list.	Une ligne par texte, 8 maximum. Vide = liste par défaut.	1行に1つ、最大8件。空欄＝標準リスト。
+Kacheln „Nexus“ und „Schnellaktionen“ auf der Uhr hinzufügen (die 🔞-Kachel fügst du auf der Uhr selbst hinzu)	Add the “Nexus” and “Quick actions” tiles to the watch (add the 🔞 tile on the watch yourself)	Ajouter les tuiles « Nexus » et « Actions rapides » à la montre (ajoutez vous-même la tuile 🔞 sur la montre)	「Nexus」と「クイック操作」のタイルをウォッチに追加（🔞タイルはウォッチ上でご自身で追加）
+🧩 # Kachel(n) hinzugefügt.	🧩 # tile(s) added.	🧩 # tuile(s) ajoutée(s).	🧩 #件のタイルを追加しました。
+Erst am PC 18+ freischalten – die Uhr übernimmt nur eine gültige Freigabe.	Unlock 18+ on the PC first – the watch only takes over a valid clearance.	Débloquez d'abord le 18+ sur le PC – la montre ne reprend qu'une autorisation valide.	先にPCで18+を解除してください。ウォッチは有効な許可のみ引き継ぎます。

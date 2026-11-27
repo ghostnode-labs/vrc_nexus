@@ -19,6 +19,9 @@ const REPO = 'ghostnode-labs/vrc_nexus';
 const APK = /^VRC-Nexus-Watch-(\d+)\.(\d+)\.(\d+)-wearos\.apk$/;
 const FACE = /^VRC-Nexus-WatchFace-(\d+)\.(\d+)\.(\d+)-wearos\.apk$/;   // 8.1.1: Zifferblatt (Watch Face Format)
 const FACE_PKG = 'dev.ghostnode.nexuswatch.face';
+/** 8.2: Kacheln der Uhr-App (Wear OS Tiles) – per ADB in den Kachel-Karussell legen (Entwickler-Befehl „add-tile“) */
+const TILES = { status: 'StatusTile', quick: 'QuickTile', toys: 'ToyTile' };
+const TILE_PKG = 'dev.ghostnode.nexuswatch';
 const RELEASE_DL = 'https://github.com/' + REPO + '/releases/download/';
 const PT_URL = { win32: 'windows', darwin: 'darwin', linux: 'linux' };
 const ADB_FILES = /^platform-tools\/(adb(\.exe)?|AdbWinApi\.dll|AdbWinUsbApi\.dll|libwinpthread-1\.dll)$/;
@@ -166,6 +169,23 @@ class WatchInstall {
         } catch (e) { this.say('ℹ Zifferblatt nicht installiert: ' + (e.message || e)); }
         return l.version;
     }
+    /** 8.2: Kacheln hinzufügen (nur bekannte Kacheln der eigenen App, nur Uhren) – 🔞-Kachel nur, wenn ausdrücklich gewählt */
+    async addTiles(serial, which) {
+        serial = String(serial || '');
+        if (!SERIAL.test(serial)) throw new UserError('Gerät wählen.');
+        const keys = String(which || 'status,quick').split(',').map(x => x.trim()).filter(Boolean);
+        if (!keys.length || keys.some(k => !TILES[k])) throw new UserError('Unbekannte Kachel.');
+        const ch = await this.adb(['-s', serial, 'shell', 'getprop', 'ro.build.characteristics'], 15000);
+        if (ch.code !== 0) throw new UserError('Gerät antwortet nicht – ist es verbunden und das Debugging erlaubt?');
+        if (!/watch/i.test(ch.out)) throw new UserError('Das ist keine Wear-OS-Uhr.');
+        let ok = 0;
+        for (const k of keys) {
+            const r = await this.adb(['-s', serial, 'shell', 'am', 'broadcast', '-a', 'com.google.android.wearable.app.DEBUG_SURFACE', '--es', 'operation', 'add-tile', '--ecn', 'component', TILE_PKG + '/' + TILE_PKG + '.' + TILES[k]], 20000);
+            if (r.code === 0 && !/error|exception|unknown/i.test(r.out)) ok++;
+        }
+        this.say(ok === keys.length ? '✔ ' + ok + ' Kachel(n) hinzugefügt – auf dem Zifferblatt nach links/rechts wischen.' : 'ℹ ' + ok + ' von ' + keys.length + ' Kacheln hinzugefügt – sonst auf der Uhr lange auf eine Kachel drücken und „+“ wählen.');
+        return ok;
+    }
     /** eine APK aus dem Release laden, prüfen und per adb installieren */
     async push(serial, l, file, what) {
         if (!l.url.startsWith(RELEASE_DL) && !(process.env.NEXUS_UPDATE_API && /^http:\/\/127\.0\.0\.1:/.test(l.url))) throw new UserError('Unerwartete Download-Adresse.');
@@ -203,9 +223,10 @@ class WatchInstall {
         if (act === 'watch_adb_get') { await this.run('ADB laden', () => this.getAdb()); return Object.assign(await this.status(), { msg: '✔ adb ist bereit.' }); }
         if (act === 'watch_adb_pair') { await this.run('Koppeln', () => this.pair(input.addr, input.code)); return Object.assign(await this.status(), { msg: '✔ Uhr gekoppelt – jetzt verbinden.' }); }
         if (act === 'watch_adb_connect') { await this.run('Verbinden', () => this.connect(input.addr)); return Object.assign(await this.status(), { msg: '✔ Uhr verbunden.' }); }
+        if (act === 'watch_adb_tiles') { const n = await this.run('Kacheln', () => this.addTiles(input.serial, input.tiles)); return Object.assign(await this.status(), { msg: '🧩 ' + n + ' Kachel(n) hinzugefügt.' }); }   // 8.2
         if (act === 'watch_adb_install') { const v = await this.run('Installieren', () => this.install(input.serial)); return Object.assign(await this.status(), { msg: '✔ Nexus Watch ' + v + ' ist auf der Uhr.' }); }
         throw new UserError('Unbekannte Aktion.');
     }
 }
 
-module.exports = { WatchInstall, APK, HOSTPORT };
+module.exports = { WatchInstall, APK, HOSTPORT, TILES };

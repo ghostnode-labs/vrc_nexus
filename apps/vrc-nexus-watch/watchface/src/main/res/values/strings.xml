@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="face_name">VRC Nexus</string>
+    <!-- 8.2: Auswahl im Zifferblatt-Editor -->
+    <string name="cfg_bg">Hintergrund</string>
+    <string name="bg_none">Schwarz (AMOLED)</string>
+    <string name="bg_nexus">Nexus-Waben</string>
+    <string name="bg_grid">Cyber-Gitter</string>
+    <string name="bg_neon">Neon</string>
+    <string name="bg_ocean">Ozean</string>
+    <string name="bg_aurora">Polarlicht</string>
+    <string name="bg_stars">Sternennacht</string>
+    <string name="cfg_theme">Farbthema</string>
+    <string name="theme_cyber">Cyber</string>
+    <string name="theme_neon">Neon</string>
+    <string name="theme_ocean">Ozean</string>
+    <string name="theme_forest">Wald</string>
+    <string name="theme_sunset">Sonnenuntergang</string>
+    <string name="theme_white">Weiß</string>
+    <string name="cfg_seconds">Sekunden anzeigen</string>
+    <string name="slot_left">Links</string>
+    <string name="slot_right">Rechts</string>
 </resources>
