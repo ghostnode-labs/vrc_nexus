@@ -155,13 +155,16 @@ class Plugins {
         return Object.keys(s).map(id => {
             const m = this.manifest(id), r = this.run[id] || {};
             if (!m) return null;
-            return Object.assign({}, m, { enabled: !!s[id].enabled, perms: (s[id].perms || []).map(p => ({ id: p, icon: (PERMS[p] || ['?'])[0], label: (PERMS[p] || ['', p])[1] + (p === 'vrchat' ? ': ' + (s[id].groups || []).join(', ') : '') })),
+            const use = r.use || {}, granted = s[id].perms || [];
+            return Object.assign({}, m, { enabled: !!s[id].enabled, perms: granted.map(p => ({ id: p, icon: (PERMS[p] || ['?'])[0], label: (PERMS[p] || ['', p])[1] + (p === 'vrchat' ? ': ' + (s[id].groups || []).join(', ') : '') })),
+                // 8.0.2: alle angefragten Rechte mit an/aus und Nutzung seit dem Start
+                rights: (m.permissions || []).map(p => ({ id: p, icon: (PERMS[p] || ['?'])[0], label: (PERMS[p] || ['', p])[1] + (p === 'vrchat' ? ': ' + (s[id].groups || []).join(', ') : ''), on: granted.includes(p), n: use[p] ? use[p].n : 0, last: use[p] ? use[p].last : 0 })),
                 status: r.child && r.ready ? 'running' : r.child ? 'starting' : r.error ? 'error' : 'stopped', error: r.error || '', ui: r.ui || [] });
         }).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
     }
 
     // ---------------- Starten / Stoppen ----------------
-    start() { for (const [id, s] of Object.entries(this.state())) if (s.enabled) this.startOne(id).catch(() => {}); this.hookOsc(); }
+    start() { if (this.app.db.setting('plugins_paused', '') === '1') { this.hookOsc(); return; } for (const [id, s] of Object.entries(this.state())) if (s.enabled) this.startOne(id).catch(() => {}); this.hookOsc(); }   // 8.0.2: alle pausiert → nichts starten
     stop() { for (const id of Object.keys(this.run)) this.stopOne(id); }
     hookOsc() {
         const osc = this.app.game && this.app.game.osc;
@@ -221,7 +224,7 @@ class Plugins {
                     r.error = 'Plugin beendet (Code ' + code_ + ')' + (err ? ': ' + err.trim().split('\n').slice(-2).join(' ') : '');
                     this.addLog(id, 'error', r.error);
                     const now = Date.now(); r.restarts = (r.restarts || []).filter(t => now - t < 300000);
-                    if (settled && r.restarts.length < RESTARTS && (this.state()[id] || {}).enabled) { r.restarts.push(now); setTimeout(() => this.startOne(id).catch(() => {}), 2000); }
+                    if (settled && r.restarts.length < RESTARTS && (this.state()[id] || {}).enabled && this.app.db.setting('plugins_paused', '') !== '1') { r.restarts.push(now); setTimeout(() => this.startOne(id).catch(() => {}), 2000); }
                 }
                 done(false);
             });
@@ -262,7 +265,12 @@ class Plugins {
         try { value = await this.api(id, r, str(msg.api), Array.isArray(msg.args) ? msg.args : []); } catch (e) { error = e.message || String(e); }
         try { child.send({ t: 'res', id: msg.id, value, error }); } catch (e) { /* Plugin schon weg */ }
     }
-    need(id, perm) { if (!this.has(id, perm)) throw new Error('Recht „' + perm + '“ fehlt (in plugin.json unter „permissions“ eintragen).'); }
+    need(id, perm) {
+        if (!this.has(id, perm)) throw new Error('Recht „' + perm + '“ fehlt oder ist gerade ausgeschaltet.');
+        const r = this.run[id]; if (!r) return;   // 8.0.2: Nutzung je Recht zählen (Laufzeit-Kontrolle)
+        const u = (r.use = r.use || {})[perm] = (r.use || {})[perm] || { n: 0, last: 0 };
+        u.n++; u.last = Date.now();
+    }
     throttle(r, key, ms) { const now = Date.now(); r.t = r.t || {}; if (now - (r.t[key] || 0) < ms) throw new Error('Zu schnell – bitte etwas warten.'); r.t[key] = now; }
     async api(id, r, name, a) {
         const g = this.app.game;
@@ -356,7 +364,7 @@ class Plugins {
                 if (host && host.openPath) host.openPath(dir);
                 return { ok: true, path: dir };
             }
-            case 'plug_list': return { items: this.list(), perms: PERMS, example: fs.existsSync(this.example()), dir: this.base };
+            case 'plug_list': return { items: this.list(), perms: PERMS, example: fs.existsSync(this.example()), dir: this.base, paused: this.app.db.setting('plugins_paused', '') === '1' };
             case 'plug_inspect': {
                 let buf = files && files.file && files.file.buffer;
                 if (input.example === '1') buf = fs.readFileSync(this.example());
@@ -374,6 +382,23 @@ class Plugins {
                 s[id].enabled = input.on === '1'; this.saveState(s);
                 if (s[id].enabled) { if (this.run[id]) this.run[id].restarts = []; await this.startOne(id); } else await this.stopOne(id);
                 return { items: this.list() };
+            }
+            // 8.0.2: einzelnes Recht an/aus (nur angefragte Rechte; Neustart, damit auch der Plugin-Prozess es sieht)
+            case 'plug_perm': {
+                const id = str(input.id), perm = str(input.perm), s = this.state(), m = this.manifest(id);
+                if (!s[id] || !m) throw new UserError('Plugin nicht gefunden.');
+                if (!(m.permissions || []).includes(perm)) throw new UserError('Dieses Recht hat das Plugin nicht angefragt.');
+                const set = new Set(s[id].perms || []);
+                if (input.on === '1') set.add(perm); else set.delete(perm);
+                s[id].perms = (m.permissions || []).filter(p => set.has(p)); this.saveState(s);
+                if (this.run[id] && this.run[id].child) { await this.stopOne(id); this.run[id].restarts = []; if (s[id].enabled && this.app.db.setting('plugins_paused', '') !== '1') await this.startOne(id); }
+                return { items: this.list(), paused: this.app.db.setting('plugins_paused', '') === '1', msg: (PERMS[perm] || ['', perm])[1] + (input.on === '1' ? ' erlaubt.' : ' entzogen.') };
+            }
+            case 'plug_pause_all': {
+                const on = input.on === '1';
+                this.app.db.setSetting('plugins_paused', on ? '1' : '');
+                if (on) await Promise.all(Object.keys(this.run).map(k => this.stopOne(k))); else for (const [id, st] of Object.entries(this.state())) if (st.enabled) await this.startOne(id).catch(() => {});
+                return { items: this.list(), paused: on, msg: on ? '⏸ Alle Plugins pausiert.' : '▶ Plugins laufen wieder.' };
             }
             case 'plug_restart': { const id = str(input.id); await this.stopOne(id); if (this.run[id]) this.run[id].restarts = []; await this.startOne(id); return { items: this.list() }; }
             case 'plug_remove': await this.remove(str(input.id)); return { items: this.list(), msg: 'Plugin entfernt.' };

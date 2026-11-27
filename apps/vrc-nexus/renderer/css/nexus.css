@@ -832,3 +832,6 @@ button.ip-head:hover, .rep-row:hover { background: rgba(var(--accent-rgb), 0.05)
 /* 8.0.1 Energie-Modus: Animationen sparen */
 body.nx-eco *, body.nx-eco *::before, body.nx-eco *::after { animation: none !important; transition: none !important; }
 .sh-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,.3); }
+
+/* 8.0.2 Plugin-Rechte */
+.pl-right { cursor: pointer; } .pl-right input { margin: 0 3px 0 0; vertical-align: middle; } .pl-right.off { opacity: .55; text-decoration: line-through; }

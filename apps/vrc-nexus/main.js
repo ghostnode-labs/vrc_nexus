@@ -5,7 +5,7 @@
  * Läuft im Infobereich weiter (Verlauf, Statistik, Spiel-Log & OSC zeichnen dann weiter auf).
  */
 const TITLEBAR_H = 34;   // Höhe der eigenen Titelleiste (Windows)
-const { app, BrowserWindow, Menu, Tray, Notification, protocol, shell, safeStorage, nativeImage, dialog, globalShortcut, session, desktopCapturer, clipboard, powerMonitor } = require('electron');
+const { app, BrowserWindow, Menu, Tray, Notification, protocol, shell, safeStorage, nativeImage, dialog, globalShortcut, session, desktopCapturer, clipboard, powerMonitor, screen } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { spawn, execFile } = require('child_process');
@@ -32,6 +32,11 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=u
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }]);
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.setAppUserModelId('de.ghostnode.vrcnexus');
+// 8.0.2: Portable vom Stick – liegt neben der portablen .exe ein Ordner „VRC-Nexus-Daten“, landen ALLE Daten dort (nichts auf dem PC)
+const PORT_DIR = process.env.PORTABLE_EXECUTABLE_DIR || '';
+const STICK_DIR = PORT_DIR ? path.join(PORT_DIR, 'VRC-Nexus-Daten') : '';
+const ON_STICK = !!(STICK_DIR && fs.existsSync(STICK_DIR));
+if (ON_STICK) { app.setPath('userData', STICK_DIR); app.setPath('sessionData', path.join(STICK_DIR, 'Sitzung')); }
 
 // Einstellungen, die vor dem Start gelten müssen (Spiegel der Datenbank-Einstellungen)
 const PREFS_FILE = path.join(app.getPath('userData'), 'prefs.json');
@@ -68,6 +73,16 @@ const host = {
     // 7.3.4: Leistungsmessung – alle Prozesse von VRC Nexus; VRChat zum Vergleich (tasklist, ohne Konsolenfenster)
     appMetrics: () => app.getAppMetrics(),
     onBattery: () => { try { return powerMonitor.isOnBatteryPower(); } catch (e) { return false; } },   // 8.0.1 Energie-Modus
+    // 8.0.2: Portable vom Stick
+    portable: () => ({ portable: !!PORT_DIR, on_stick: ON_STICK, dir: STICK_DIR }),
+    portableMove: async () => {
+        if (!PORT_DIR) throw new Error('Nur in der portablen Version (VRC-Nexus-…-portable.exe).');
+        if (ON_STICK) return { msg: 'Die Daten liegen schon auf dem Stick.' };
+        try { if (nexus && nexus.db) nexus.db.save(); } catch (e) { /* weiter */ }
+        fs.cpSync(app.getPath('userData'), STICK_DIR, { recursive: true, filter: s => !/[\\/](Cache|Code Cache|GPUCache|Crashpad|DawnCache|DawnGraphiteCache|DawnWebGPUCache)([\\/]|$)/.test(s) });
+        setTimeout(() => { quitting = true; app.relaunch(); app.exit(0); }, 1500);
+        return { msg: '📦 Daten kopiert – VRC Nexus startet gleich neu und nutzt ab jetzt nur noch den Stick. Die alte Kopie auf diesem PC kannst du danach selbst löschen.' };
+    },
     execFile: (cmd, args, ms) => new Promise((res, rej) => execFile(cmd, args, { timeout: ms || 3000, windowsHide: true }, (e, out) => (e ? rej(e) : res(out)))),
     setLoginItem: on => { if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: on, args: ['--minimized'] }); },
     spawn: (exe, args) => spawn(exe, args, { detached: true, stdio: 'ignore', cwd: path.dirname(exe) }).unref(),
@@ -178,21 +193,41 @@ const host = {
     applySettings: (changed, s) => {
         if (changed.includes('*') || changed.some(k => k.startsWith('keys.'))) host.applyKeys(nexus && nexus.ctools ? nexus.ctools.hotkeys() : []);
         if (vr && (changed.includes('*') || changed.some(k => /^vr\.(overlay|space|fly|turn|walk)/.test(k)))) vr.apply(s);   // inkl. vr.overlay_hud* und 3.3 VR-Bewegung
-        prefs = { mini_bounds: prefs.mini_bounds, 'sys.hw_accel': s['sys.hw_accel'], 'sys.close_to_tray': s['sys.close_to_tray'], 'sys.start_minimized': s['sys.start_minimized'], 'adv.devtools': s['adv.devtools'] };
+        prefs = { mini_bounds: prefs.mini_bounds, win_layouts: prefs.win_layouts, 'sys.hw_accel': s['sys.hw_accel'], 'sys.close_to_tray': s['sys.close_to_tray'], 'sys.start_minimized': s['sys.start_minimized'], 'adv.devtools': s['adv.devtools'] };
         try { fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs)); } catch (e) { /* egal */ }
         if (tray && changed.includes('sys.autostart')) tray.setContextMenu(trayMenu());
     },
 };
 
+/** 8.0.2: Fensterposition je Monitor-Anordnung merken (Laptop allein ≠ Laptop + zwei Monitore) */
+function layoutKey() { try { return screen.getAllDisplays().map(d => d.id + ':' + d.bounds.x + ',' + d.bounds.y + ',' + d.bounds.width + 'x' + d.bounds.height).sort().join('|'); } catch (e) { return 'x'; } }
+function savedBounds() {
+    const b = (prefs.win_layouts || {})[layoutKey()];
+    if (!b || !b.width) return null;
+    try { const d = screen.getDisplayMatching(b); const w = d.workArea; if (b.x + 80 > w.x + w.width || b.y + 40 > w.y + w.height || b.x + b.width < w.x + 80 || b.y < w.y - 20) return null; } catch (e) { return null; }
+    return b;
+}
+function rememberBounds() {
+    if (!win || win.isDestroyed() || win.isMinimized() || win.isFullScreen()) return;
+    const l = prefs.win_layouts = prefs.win_layouts || {};
+    l[layoutKey()] = Object.assign(win.isMaximized() ? (l[layoutKey()] || win.getNormalBounds()) : win.getBounds(), { max: win.isMaximized() });
+    const keys = Object.keys(l); if (keys.length > 8) delete l[keys[0]];
+    try { fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs)); } catch (e) { /* egal */ }
+}
 function createWindow() {
+    const wb = savedBounds();
     win = new BrowserWindow({
-        width: 1380, height: 900, minWidth: 900, minHeight: 600, backgroundColor: '#040609', title: 'VRC Nexus', icon: path.join(RENDERER, 'icon.png'),
+        ...(wb ? { x: wb.x, y: wb.y } : {}), width: wb ? wb.width : 1380, height: wb ? wb.height : 900, minWidth: 900, minHeight: 600, backgroundColor: '#040609', title: 'VRC Nexus', icon: path.join(RENDERER, 'icon.png'),
         autoHideMenuBar: true, show: !(process.argv.includes('--minimized') && prefs['sys.start_minimized'] !== false),
         // 3.1.3: Titelleiste im App-Design – Windows zeichnet nur noch die Fensterknöpfe (in den Theme-Farben), den Rest macht die Oberfläche
         ...(process.platform === 'win32' ? { titleBarStyle: 'hidden', titleBarOverlay: { color: '#040609', symbolColor: '#cbd5e1', height: TITLEBAR_H } } : {}),
         webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false, spellcheck: false },
     });
     win.loadURL('app://nexus/');
+    if (wb && wb.max) win.maximize();
+    let bt = null; const keepB = () => { clearTimeout(bt); bt = setTimeout(rememberBounds, 800); };
+    win.on('move', keepB); win.on('resize', keepB); win.on('maximize', keepB); win.on('unmaximize', keepB);
+    try { screen.on('display-removed', () => { const b = savedBounds(); if (!b && win && !win.isDestroyed()) win.center(); }); } catch (e) { /* egal */ }
     // Fremde Links im Browser bzw. VRChat öffnen, nie in der App
     win.webContents.setWindowOpenHandler(({ url }) => { if (/^(https?|vrchat):/i.test(url)) shell.openExternal(url); return { action: 'deny' }; });
     win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://nexus/')) { e.preventDefault(); if (/^(https?|vrchat):/i.test(url)) shell.openExternal(url); } });

@@ -4778,3 +4778,75 @@ test('8.0.1: Energie-Modus drosselt nur bei Akku/an (jeder N-te Takt) · Smart-H
         assert.match(r.msg, /Fehler/); assert.ok(r.log.some(l => /HTTP 500/.test(l.m)));
     } finally { globalThis.fetch = old; }
 });
+
+test('8.0.2: Einstellungs-Abgleich (3-Wege, verschlüsselt, Konflikt 409, falsches Passwort) · Plugin-Rechte 2.0 (einzeln aus, Nutzung, alle pausieren)', async () => {
+    const { SettingSync } = require('../backend/settingsync');
+    // Server wie client.php sync_get/sync_put
+    const srv = { rev: 0, device: '', data: '' };
+    let race = 0;
+    const link = { base: () => 'https://x.test', token: () => 't', req: async (m, a, b) => {
+        if (a === 'sync_get') return { ok: true, rev: srv.rev, device: srv.device, data: srv.data };
+        if (race) { race--; srv.rev++; }   // jemand anderes war schneller
+        if (b.base !== srv.rev) throw new Error('Dashboard antwortet mit HTTP 409.');
+        Object.assign(srv, { rev: srv.rev + 1, device: b.device, data: b.data }); return { ok: true, rev: srv.rev };
+    } };
+    const dev = (s, pass) => {
+        const store = {}, set = Object.assign({}, s);
+        const app = { db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } }, link, backup: { pass: () => pass },
+            ctools: { exportSettings: () => ({ settings: Object.assign({}, set) }), importSettings: d => Object.assign(set, d.settings) } };
+        return { app, set, store, sync: new SettingSync(app, null) };
+    };
+    const A = dev({ 'ui.theme': 'dark', 'ui.lang': 'de' }, 'pw1'), B = dev({ 'ui.theme': 'light', 'ui.lang': 'de' }, 'pw1');
+    A.store.comfort_cfg = JSON.stringify({ sleep: true });
+    let r = await A.sync.sync(); assert.ok(r.pushed && srv.rev === 1);
+    assert.ok(!Buffer.from(srv.data, 'base64').toString('latin1').includes('dark'), 'Server sieht nur Verschlüsseltes');
+    r = await B.sync.sync(); assert.ok(!r.pushed && r.pulled === 2, 'erstes Mal: der vorhandene Stand gewinnt');
+    assert.strictEqual(B.set['ui.theme'], 'dark'); assert.deepStrictEqual(JSON.parse(B.store.comfort_cfg), { sleep: true });
+    B.set['ui.lang'] = 'en'; A.set['ui.theme'] = 'blue';
+    await A.sync.sync(); assert.strictEqual(srv.rev, 2);
+    r = await B.sync.sync(); assert.ok(r.pushed);
+    assert.deepStrictEqual([B.set['ui.theme'], B.set['ui.lang']], ['blue', 'en'], 'beide Änderungen bleiben');
+    r = await A.sync.sync(); assert.ok(!r.pushed && A.set['ui.lang'] === 'en' && A.set['ui.theme'] === 'blue');
+    // Konflikt: zwischen Holen und Hochladen ändert jemand → neu holen, dann klappt es
+    A.set['ui.lang'] = 'fr';
+    let once = true; const orig = link.req;
+    link.req = async (m, a, b) => { if (a === 'sync_put' && once) { once = false; throw new Error('Dashboard antwortet mit HTTP 409.'); } return orig(m, a, b); };
+    r = await A.sync.sync(); assert.ok(r.pushed && !once); link.req = orig;
+    race = 1; A.set['ui.lang'] = 'ja'; r = await A.sync.sync(); assert.ok(r.pushed && race === 0, 'nach 409 neu geholt und hochgeladen');
+    // falsches Passwort
+    const C = dev({ 'ui.theme': 'x' }, 'anders');
+    await assert.rejects(C.sync.sync()); assert.ok(C.sync.state().err, 'Fehler wird gemerkt');
+    await assert.rejects(dev({}, '').sync.sync(), /Sicherungs-Passwort/);
+    const st = await A.sync.action('sync_status', {}); assert.ok(st.has_pass && st.linked && st.rev === srv.rev);
+    // Plugin-Rechte 2.0
+    const { Plugins } = require('../backend/plugins');
+    const settings = {}, sent = [];
+    const ud = fs.mkdtempSync(path.join(os.tmpdir(), 'nx-plug802-'));
+    const app = { db: { setting: (k, d) => (k in settings ? settings[k] : d), setSetting: (k, v) => { settings[k] = v; } }, tools: { userData: ud, host: {} },
+        game: { oscSend: async (k, p) => { sent.push([k, p]); }, osc: { params: {} }, state: {}, isPrivate: () => false } };
+    const P = new Plugins(app);
+    const wait = ms => new Promise(res => setTimeout(res, ms));
+    try {
+        const ins = await P.action('plug_inspect', { example: '1' }, {});
+        await P.action('plug_install', { token: ins.token }, {});
+        await wait(400);
+        const id = 'text-plugin';
+        await P.action('plug_ui', { id, type: 'click', el: 'send', values: JSON.stringify({ text: 'eins' }) }, {}); await wait(200);
+        let it = P.list().find(x => x.id === id);
+        assert.deepStrictEqual(it.rights.map(x => [x.id, x.on, x.n]), [['chatbox', true, 1]], 'Nutzung wird gezählt');
+        await assert.rejects(P.action('plug_perm', { id, perm: 'vrchat', on: '1' }), /nicht angefragt/, 'nur angefragte Rechte');
+        r = await P.action('plug_perm', { id, perm: 'chatbox', on: '0' }); await wait(400);
+        it = r.items.find(x => x.id === id); assert.ok(!it.rights[0].on);
+        sent.length = 0;
+        await P.action('plug_ui', { id, type: 'click', el: 'send', values: JSON.stringify({ text: 'zwei' }) }, {}).catch(() => {}); await wait(200);
+        assert.strictEqual(sent.length, 0, 'entzogenes Recht greift sofort');
+        await P.action('plug_perm', { id, perm: 'chatbox', on: '1' }); await wait(400);
+        r = await P.action('plug_pause_all', { on: '1' }); await wait(200);
+        assert.ok(r.paused && settings.plugins_paused === '1');
+        assert.notStrictEqual(P.list().find(x => x.id === id).status, 'running', 'pausiert');
+        P.start(); await wait(300); assert.notStrictEqual(P.list().find(x => x.id === id).status, 'running', 'bleibt nach Neustart pausiert');
+        assert.strictEqual((await P.action('plug_list', {})).paused, true);
+        r = await P.action('plug_pause_all', { on: '0' }); await wait(400);
+        assert.strictEqual(P.list().find(x => x.id === id).status, 'running');
+    } finally { P.stop(); await wait(300); }
+});

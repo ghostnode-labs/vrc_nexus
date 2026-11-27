@@ -86,6 +86,8 @@ class NexusApp {
         this.energy = new (require('./energy').Energy)(this);   // 8.0.1 Energie-Modus
         this.smarthome = new (require('./smarthome').SmartHome)(this, opts.crypt);   // 8.0.1 Smart-Home
         if (!opts.noTimers && !opts.mobile) this.smarthome.start();
+        this.settingsync = new (require('./settingsync').SettingSync)(this, opts.crypt);   // 8.0.2 Einstellungs-Abgleich
+        if (!opts.noTimers) this.settingsync.start();
         if (!opts.noTimers) { this.diary.start(); this.coach.start(); }
         this.buttons = new (require('./buttons').Buttons)(this);
         this.deco = new (require('./deco').Deco)(this);                    // 3.1: Profil-Dekorationen
@@ -307,6 +309,9 @@ class NexusApp {
             if (act.startsWith('diag_')) return await this.diag.action(act, input);   // 8.0
             if (act.startsWith('energy_')) return await this.energy.action(act, input);   // 8.0.1
             if (act.startsWith('shome_')) return await this.smarthome.action(act, input);   // 8.0.1 Smart-Home
+            if (act.startsWith('sync_')) return await this.settingsync.action(act, input);   // 8.0.2 Abgleich
+            if (act === 'portable_state') { const h = this.tools && this.tools.host; return h && h.portable ? h.portable() : { portable: false }; }   // 8.0.2
+            if (act === 'portable_move') { const h = this.tools && this.tools.host; if (!h || !h.portableMove) throw new UserError('Nur in der portablen Windows-Version.'); return await h.portableMove(); }
             if (act.startsWith('mod_')) return await this.mod.action(act, input);
             if (act.startsWith('coll_')) return await this.coll.action(act, input);
             if (act === 'about') return this.about(input);

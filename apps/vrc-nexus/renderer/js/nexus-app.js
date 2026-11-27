@@ -685,6 +685,31 @@
         }
     }
     /** 5.6: Lizenz-Übersicht (eigener Freischalt-Schlüssel) */
+    /** 8.0.2: verschlüsselter Einstellungs-Abgleich zwischen Geräten */
+    function syncCard(r) {
+        const box = $('#syncBox'); if (!box) return;
+        if (!r) return api('sync_status').then(syncCard).catch(() => { box.innerHTML = ''; });
+        const ready = r.has_pass && r.linked;
+        box.innerHTML = '<p class="nx-hint">' + esc(T('Gleicht deine Einstellungen zwischen PC, Laptop und Handy ab – Ende-zu-Ende-verschlüsselt mit deinem Sicherungs-Passwort über deine Dashboard-Verbindung. Geheimnisse, Tokens und gerätespezifische Adressen bleiben auf jedem Gerät; der Energie-Modus auch.')) + '</p>'
+            + (!r.linked ? '<p class="nx-hint">⚠ ' + esc(T('Erst die Dashboard-Verbindung einrichten (Einstellungen → Verbindung).')) + '</p>' : '')
+            + (!r.has_pass ? '<p class="nx-hint">⚠ ' + esc(T('Erst ein Sicherungs-Passwort festlegen (Cloud-Sicherung) – auf allen Geräten das gleiche.')) + '</p>' : '')
+            + '<div class="nx-row"><label class="check"><input type="checkbox" id="syncOn"' + (r.on ? ' checked' : '') + (ready ? '' : ' disabled') + '> ' + esc(T('Automatisch abgleichen (alle 10 Minuten)')) + '</label>'
+            + '<button type="button" class="btn btn-sm" id="syncNow"' + (ready ? '' : ' disabled') + '>🔄 ' + esc(T('Jetzt abgleichen')) + '</button></div>'
+            + '<p class="vx-small">' + esc(T('Dieses Gerät')) + ': <b>' + esc(r.device) + '</b>' + (r.last ? ' · ' + esc(T('zuletzt')) + ' ' + esc(UI.ago(r.last)) : '') + (r.rev ? ' · ' + esc(T('Stand')) + ' #' + r.rev : '') + (r.applied ? ' · ⬇ ' + r.applied : '') + (r.pushed ? ' · ⬆ ' + r.pushed : '') + (r.err ? ' · ⚠ ' + esc(r.err) : '') + '</p>';
+        $('#syncOn').onchange = e => api('sync_on', { on: e.target.checked ? '1' : '0' }).then(x => { if (x.msg) toast(x.msg); syncCard(x); }).catch(x => toast(x.message, true));
+        $('#syncNow').onclick = () => api('sync_now').then(x => { toast(x.msg); syncCard(x); }).catch(x => toast(x.message, true));
+    }
+    /** 8.0.2: Portable – Daten neben die .exe (Stick) legen */
+    function portCard() {
+        const sec = $('#portSec'), box = $('#portBox'); if (!box) return;
+        api('portable_state').then(p => {
+            if (!p.portable) { sec.hidden = true; return; }
+            sec.hidden = false;
+            box.innerHTML = p.on_stick ? '<p>✅ ' + esc(T('Alle Daten liegen auf dem Stick')) + ': <code>' + esc(p.dir) + '</code></p>'
+                : '<p class="nx-hint">' + esc(T('Du nutzt die portable Version. Auf Wunsch liegen alle Daten (Konto, Einstellungen, Datenbank) neben der .exe – dann nimmst du VRC Nexus komplett auf dem Stick mit.')) + '</p><button type="button" class="btn btn-sm btn-gold" id="portMove">📦 ' + esc(T('Daten auf den Stick verschieben')) + '</button>';
+            const b = $('#portMove'); if (b) b.onclick = () => confirm(T('Daten jetzt neben die portable Datei kopieren und neu starten?')) && api('portable_move').then(x => toast(x.msg)).catch(x => toast(x.message, true));
+        }).catch(() => { sec.hidden = true; });
+    }
     /** 6.3: Leistungs-Anzeige (Speicher, CPU, Ereignis-Schleife, Datenbank) – aktualisiert alle 3 s, solange sichtbar */
     let perfT = null;
     function perfCard() {
@@ -810,7 +835,8 @@
         const fields = d.schema.fields.filter(f => f.tab === setTab && visible(f));
         const secs = [...new Set(fields.map(f => f.section))];
         const extra = {
-            system: '<div class="set-sec"><h3>Aktionen</h3><div class="nx-row"><button type="button" class="btn btn-sm" data-act="backup">💾 Datenbank jetzt sichern</button><button type="button" class="btn btn-sm" data-act="f:backups">📂 Sicherungen</button>'
+            system: '<div class="set-sec"><h3>🔄 ' + esc(T('Einstellungs-Abgleich')) + '</h3><div id="syncBox"></div></div><div class="set-sec" id="portSec" hidden><h3>📦 ' + esc(T('Portable vom Stick')) + '</h3><div id="portBox"></div></div>'
+                + '<div class="set-sec"><h3>Aktionen</h3><div class="nx-row"><button type="button" class="btn btn-sm" data-act="backup">💾 Datenbank jetzt sichern</button><button type="button" class="btn btn-sm" data-act="f:backups">📂 Sicherungen</button>'
                 + '<button type="button" class="btn btn-sm" data-act="f:nexus">📂 Datenordner</button></div></div>',
             link: '<div class="set-sec"><h3>Geräte-Token</h3><div id="linkBox"><div class="vx-loading">Lade …</div></div></div>',
             notify: '<div class="set-sec"><h3>Test</h3><button type="button" class="btn btn-sm" data-act="test">🔔 Test-Benachrichtigung (alle eingeschalteten Wege)</button></div>',
@@ -836,6 +862,7 @@
         if (setTab === 'system') { dbPanel(); const sc = $('#setConn'); if (sc) sc.appendChild(connWrap()); }
         if (setTab === 'adv' && window.NexusAccount && $('#acctBox')) window.NexusAccount.render($('#acctBox'));
         if (setTab === 'adv') { licCard(); perfCard(); }
+        if (setTab === 'system') { syncCard(); portCard(); }   // 8.0.2
         if (setTab === 'about' && window.NexusAbout) window.NexusAbout.open();
         if (setTab === 'vr' && !MOBILE && window.NexusClient && window.NexusClient.cfgInto) window.NexusClient.cfgInto($('#setGameCfg'));
         if (UI.subnav) UI.subnav();     // 3.1.1: Menü links → Reiter der Einstellungen oben in der Leiste

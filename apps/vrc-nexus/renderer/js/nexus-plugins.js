@@ -32,7 +32,7 @@
             + '<div class="pl-top"><span class="pl-ic">' + esc(p.icon || '🧩') + '</span><div class="pl-meta"><b>' + esc(p.name) + '</b> <small class="muted">' + esc(p.version) + (p.author ? ' · ' + esc(p.author) : '') + '</small>'
             + '<div class="small">' + st[0] + ' ' + esc(T(st[1])) + (p.error ? ' – <span class="bad">' + esc(p.error) + '</span>' : '') + '</div>'
             + (p.description ? '<div class="small muted">' + esc(p.description) + '</div>' : '')
-            + '<div class="pl-perms">' + (p.perms.length ? p.perms.map(x => '<span class="vx-pill" title="' + esc(T(x.label)) + '">' + x.icon + ' ' + esc(T(x.label)) + '</span>').join('') : '<span class="small muted">' + esc(T('keine besonderen Rechte')) + '</span>') + '</div></div>'
+            + '<div class="pl-perms">' + ((p.rights || []).length ? p.rights.map(x => '<label class="vx-pill pl-right' + (x.on ? '' : ' off') + '" title="' + esc(T(x.label)) + (x.n ? ' · ' + x.n + '× ' + esc(T('genutzt')) + (x.last ? ', ' + esc(UI.ago(x.last)) : '') : '') + '"><input type="checkbox" data-plperm="' + esc(x.id) + '"' + (x.on ? ' checked' : '') + '> ' + x.icon + ' ' + esc(T(x.label)) + (x.n ? ' <small>' + x.n + '×</small>' : '') + '</label>').join('') : '<span class="small muted">' + esc(T('keine besonderen Rechte')) + '</span>') + '</div></div>'
             + '<div class="pl-ctl"><label class="switch" title="' + esc(T('an/aus')) + '"><input type="checkbox" data-pltoggle="1"' + (p.enabled ? ' checked' : '') + '><i></i></label>'
             + '<button type="button" class="btn btn-sm" data-plact="restart" title="' + esc(T('Neu starten')) + '">⟳</button>'
             + '<button type="button" class="btn btn-sm" data-plact="log">📜 ' + esc(T('Protokoll')) + '</button>'
@@ -49,6 +49,7 @@
             + '<div class="nc-row"><label class="btn btn-gold">📦 ' + esc(T('Plugin installieren (.nxp)')) + '<input type="file" accept=".nxp" data-plfile="1" hidden></label>'
             + (d.example ? '<button type="button" class="btn" data-plexample="1">📝 ' + esc(T('Beispiel: Text-Plugin')) + '</button>' : '')
             + '<button type="button" class="btn" data-plopen="1" title="' + esc(d.dir || '') + '">📂 ' + esc(T('Plugin-Ordner öffnen')) + '</button>'
+            + '<label class="check small" title="' + esc(T('Stoppt alle Plugins sofort – bleibt auch nach einem Neustart so, bis du es wieder ausschaltest.')) + '"><input type="checkbox" data-plpause="1"' + (d.paused ? ' checked' : '') + '> ⏸ ' + esc(T('Alle Plugins pausieren')) + '</label>'
             + '<button type="button" class="btn' + (mkOpen ? ' btn-gold' : '') + '" data-plmk="1">🛒 ' + esc(T('Marktplatz')) + (mk && mk.updates ? ' <span class="vx-pill">' + mk.updates + ' ' + esc(T('Updates')) + '</span>' : '') + '</button></div>'
             + (d.dir ? '<p class="small muted">📁 <code>' + esc(d.dir) + '</code></p>' : '') + '</div>'
             + (check ? '<div class="panel pl-check"><h3>' + esc(check.manifest.icon) + ' ' + esc(check.manifest.name) + ' <small class="muted">' + esc(check.manifest.version) + '</small></h3>'
@@ -91,6 +92,8 @@
             const t = e.target, c = t.closest('[data-plid]');
             if (t.matches('[data-plfile]') && t.files && t.files[0]) { const fd = new FormData(); fd.append('act', 'plug_inspect'); fd.append('file', t.files[0]); t.value = ''; return inspect(fd); }
             if (t.matches('[data-plmkq]')) { mkQ = t.value; return render(); }
+            if (t.matches('[data-plperm]') && c) return api('plug_perm', { id: c.dataset.plid, perm: t.dataset.plperm, on: t.checked ? '1' : '0' }).then(upd).catch(x => { t.checked = !t.checked; toast(x.message, true); });   // 8.0.2
+            if (t.matches('[data-plpause]')) return api('plug_pause_all', { on: t.checked ? '1' : '0' }).then(r => { d.paused = r.paused; upd(r); }).catch(x => toast(x.message, true));
             if (t.matches('[data-pltoggle]') && c) return api('plug_toggle', { id: c.dataset.plid, on: t.checked ? '1' : '0' }).then(upd).catch(x => toast(x.message, true));
             if (t.matches('[data-plsel]') && c) return api('plug_ui', { id: c.dataset.plid, type: 'change', el: t.dataset.plsel, values: JSON.stringify(values(c)) }).then(upd).catch(x => toast(x.message, true));
             if (t.matches('[data-pltg]') && c) return api('plug_ui', { id: c.dataset.plid, type: 'change', el: t.dataset.pltg, values: JSON.stringify(values(c)) }).then(upd).catch(x => toast(x.message, true));
