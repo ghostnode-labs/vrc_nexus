@@ -144,7 +144,18 @@ const host = {
     restart: () => { quitting = true; app.relaunch(); app.quit(); },
     overlayToggle: async on => { if (!vr) throw new Error('Overlay nicht verfügbar.'); return vr.toggle(on); },
     spaceCmd: op => { if (!vr) throw new Error('SteamVR-Helfer nicht verfügbar.'); return vr.spaceCmd(op); },
+    /** 6.3: freie globale Tastenkürzel */
+    applyKeys: list => {
+        for (const a of host.keyList || []) { try { globalShortcut.unregister(a); } catch (e) { /* egal */ } }
+        host.keyList = [];
+        for (const h of list || []) {
+            try { if (globalShortcut.register(h.accel, () => { nexus.ctools.hotkey(h.key).then(r => { if (r && r.msg) notify('VRC Nexus', r.msg); }).catch(e => notify('VRC Nexus', e.message)); })) host.keyList.push(h.accel); else notify('VRC Nexus', 'Tastenkürzel „' + h.accel + '“ ist schon belegt.'); }
+            catch (e) { notify('VRC Nexus', 'Tastenkürzel „' + h.accel + '“ ungültig.'); }
+        }
+    },
+    show: () => { if (win) { win.show(); win.focus(); } },
     applySettings: (changed, s) => {
+        if (changed.includes('*') || changed.some(k => k.startsWith('keys.'))) host.applyKeys(nexus && nexus.ctools ? nexus.ctools.hotkeys() : []);
         if (vr && (changed.includes('*') || changed.some(k => /^vr\.(overlay|space|fly|turn|walk)/.test(k)))) vr.apply(s);   // inkl. vr.overlay_hud* und 3.3 VR-Bewegung
         prefs = { 'sys.hw_accel': s['sys.hw_accel'], 'sys.close_to_tray': s['sys.close_to_tray'], 'sys.start_minimized': s['sys.start_minimized'], 'adv.devtools': s['adv.devtools'] };
         try { fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs)); } catch (e) { /* egal */ }

@@ -2219,9 +2219,16 @@
         ['🟦', 'Status: Komm vorbei', () => quickStatus('join me')], ['🟩', 'Status: Online', () => quickStatus('active')],
         ['🟧', 'Status: Frag mich', () => quickStatus('ask me')], ['🟥', 'Status: Beschäftigt', () => quickStatus('busy')],
         ['📋', 'Zwischenablage prüfen', () => readClipboard(false)],
+        // 6.3: Schnellaktionen
+        ['💤', 'Schlafmodus an/aus', () => palAct('sleep')], ['🔄', 'Chatbox-Rotator an/aus', () => palAct('rotator')], ['🔇', 'Stummschalten (VRChat)', () => palAct('mute')],
+        ['🧹', 'Chatbox leeren', () => palAct('chatbox_clear')], ['⚙', 'Einstellungen öffnen', () => tab('settings')],
         ...TABS.map(t => ['➡', 'Reiter: ' + $('[data-tab=' + t + ']').textContent.trim(), () => tab(t)]),
     ];
+    function palAct(k) { api('ctools_hotkey', { key: 'keys.' + k }).then(r => toast((r && r.msg) || '✓')).catch(e => toast(e.message, true)); }
+    let palSet = null;   // 6.3: Einstellungen durchsuchen
+    const palSettings = () => palSet || (palSet = api('tools_settings').then(d => d.schema.fields.filter(f => f.type !== 'secret').map(f => ({ key: f.key, tab: f.tab, label: f.label, section: f.section, tabName: d.schema.tabs[f.tab] }))).catch(() => { palSet = null; return []; }));
     function openPalette(q) {
+        palSettings().then(() => { if (!pal.hidden) renderPalette(); });
         pal.hidden = false;
         document.body.style.overflow = 'hidden';
         const i = $('#palInput');
@@ -2239,6 +2246,12 @@
             (state ? state.friends : []).filter(f => f.name.toLowerCase().includes(ql)).slice(0, 6)
                 .forEach(f => palItems.push({ ic: f.state === 'online' ? '🟢' : f.state === 'active' ? '💻' : '⚫', label: f.name, sub: f.state === 'online' && f.loc ? (f.loc.world_name || f.loc.label) : 'Freund', run: () => openUser(f.id) }));
             ACTIONS.filter(a => a[1].toLowerCase().includes(ql)).slice(0, 5).forEach(a => palItems.push({ ic: a[0], label: a[1], run: a[2] }));
+            if (palSet && palSet.then && q.length >= 2) palSet.then(l => { const hit = l.filter(f => (f.label + ' ' + f.section).toLowerCase().includes(ql)).slice(0, 6);
+                if (!hit.length || pal.hidden || $('#palInput').value.trim().toLowerCase() !== ql || $('#palList').dataset.setq === ql) return;
+                $('#palList').dataset.setq = ql;
+                hit.forEach(f => palItems.push({ ic: '⚙', label: f.label, sub: f.tabName + ' › ' + f.section, run: () => openSetting(f) }));
+                $('#palList').insertAdjacentHTML('beforeend', hit.map((f, j) => '<button type="button" class="vx-pal-item" data-i="' + (palItems.length - hit.length + j) + '" role="option"><span>⚙</span><b>' + esc(f.label) + '</b><small>' + esc(f.tabName + ' › ' + f.section) + '</small></button>').join(''));
+                const em = $('#palList .vx-empty'); if (em) em.remove(); });
             if (q.length >= 2) {
                 palItems.push({ ic: '🔍', label: 'Benutzer suchen: „' + q + '“', run: () => { tab('search'); setSearch('users', q); } });
                 palItems.push({ ic: '🌐', label: 'Welten suchen: „' + q + '“', run: () => { tab('search'); setSearch('worlds', q); } });
@@ -2250,8 +2263,9 @@
         $('#palList').innerHTML = palItems.map((it, i) => '<button type="button" class="vx-pal-item' + (i ? '' : ' on') + '" data-i="' + i + '" role="option"><span>' + it.ic + '</span><b>' + esc(it.label) + '</b>' + (it.sub ? '<small>' + esc(it.sub) + '</small>' : '') + '</button>').join('')
             || '<div class="vx-empty">Nichts gefunden.</div>';
     }
+    function openSetting(f) { tab('settings'); setTimeout(() => { if (window.NexusSettings && NexusSettings.open) NexusSettings.open(f.tab, f.key); }, 60); }
     function runPal(i) { const it = palItems[i]; if (!it) return; closePalette(); it.run(); }
-    $('#palInput').addEventListener('input', renderPalette);
+    $('#palInput').addEventListener('input', () => { delete $('#palList').dataset.setq; renderPalette(); });
     $('#palInput').addEventListener('keydown', e => {
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault();

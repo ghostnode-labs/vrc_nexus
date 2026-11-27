@@ -65,6 +65,7 @@ class NexusApp {
         this.comfort = new (require('./comfort').Comfort)(this);   // 5.0: Schlafmodus, Pausen, Puls-Warnungen
         this.obs = opts.mobile ? null : new (require('./obs').Obs)(this, opts.crypt);   // 5.0: OBS-Anbindung
         this.auto = new Automation(this);
+        this.ctools = new (require('./clienttools').ClientTools)(this);   // 6.3: App-Schlüssel, Tastenkürzel, Sicherung, Leistung
         this.home = new Home(this);
         this.speech = opts.mobile ? null : new Speech(this, opts.crypt);
         this.insights = new Insights(this);
@@ -255,6 +256,7 @@ class NexusApp {
             if (act === 'media_status') return this.media ? this.media.status() : { available: false };
             if (act === 'media_ctl') { if (!this.media) throw new UserError('Nur in der Windows-App.'); return this.media.control(str(input.cmd), str(input.id)); }
             if (act.startsWith('auto_')) return await this.auto.action(act, input);
+            if (act.startsWith('ctools_')) return await this.ctools.action(act, input);
             if (act === 'hud_state') return this.hudState();
             if (act.startsWith('lic_')) return await this.license.action(act, input);
             if (act.startsWith('nsfw_')) return await this.nsfw.action(act, input);
@@ -420,7 +422,8 @@ class NexusApp {
         if (kind === 'discord') return download(t.csv('discord', t.discordNames()), 'text/csv; charset=utf-8', 'vrchat-discord-namen_' + day + '.csv');
         if (kind === 'memos') return download(t.csv('memos', t.memos()), 'text/csv; charset=utf-8', 'vrc-nexus-memos_' + day + '.csv');
         if (kind === 'avatars') return download(t.csv('avatars', await t.ownAvatars()), 'text/csv; charset=utf-8', 'meine-avatare_' + day + '.csv');
-        if (kind === 'settings') return download(JSON.stringify(Object.assign({}, this.settings.all(), { 'int.api_token': undefined }), null, 2), 'application/json', 'vrc-nexus-einstellungen.json');
+        if (kind === 'settings') return download(JSON.stringify(this.ctools.exportSettings(), null, 2), 'application/json', 'vrc-nexus-einstellungen_' + day + '.json');   // 6.3: ohne Schlüssel, Adressen, Webhooks
+        if (kind === 'automation') return download(JSON.stringify(await this.auto.action('auto_export', {}), null, 2), 'application/json', 'vrc-nexus-automatik_' + day + '.json');
         throw new UserError('Unbekannter Export.');
     }
 

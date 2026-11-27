@@ -20,6 +20,8 @@ const FIELDS = [
     ['sys.close_to_tray', 'system', 'Start', 'bool', true, 'Fenster schließen = im Infobereich weiterlaufen', 'Aus: Schließen beendet die App.'],
     ['sys.tray_count', 'system', 'Start', 'bool', true, 'Freunde online im Infobereich-Tooltip zeigen', ''],
     ['sys.hw_accel', 'system', 'Leistung', 'bool', true, 'Hardwarebeschleunigung', 'Wirkt nach einem Neustart der App.'],
+    // 6.3: freie Tastenkürzel (global)
+    ...require('./clienttools').HOTKEYS.map(([k, label]) => [k, 'system', 'Tastenkürzel (global)', 'text', '', label, 'z. B. Ctrl+Alt+P · leer = aus · wirkt auch, wenn VRChat im Vordergrund ist']),
     ['sys.log_poll_ms', 'system', 'Leistung', 'select', '1000', 'VRChat-Log prüfen alle', '', [['500', '0,5 s'], ['1000', '1 s'], ['2000', '2 s'], ['5000', '5 s']]],
     ['sys.global_sample', 'system', 'Leistung', 'bool', true, 'Weltweite Spielerzahl alle 15 min messen', 'Für das Diagramm „VRChat weltweit“.'],
     ['upd.check', 'system', 'Updates', 'bool', true, 'Automatisch nach Updates suchen', 'Beim Start und alle 6 Stunden (GitHub-Releases).'],
@@ -99,6 +101,8 @@ const FIELDS = [
     ['notify.silent', 'notify', 'Allgemein', 'bool', false, 'Ohne Ton', ''],
     ['notify.quiet_from', 'notify', 'Allgemein', 'time', '', 'Nicht stören von', 'leer = aus'],
     ['notify.quiet_to', 'notify', 'Allgemein', 'time', '', 'Nicht stören bis', ''],
+    ['notify.vip', 'notify', 'Regeln', 'text', '', 'Immer melden (auch in der Nicht-stören-Zeit)', 'Namen, mit Komma getrennt – z. B. deine engsten Freunde.'],
+    ['notify.mute', 'notify', 'Regeln', 'text', '', 'Nie melden', 'Namen oder Wörter, mit Komma getrennt – Meldungen, die sie enthalten, werden still verworfen.'],
     ['notify.tts', 'notify', 'Allgemein', 'bool', false, 'Benachrichtigungen vorlesen', 'Sprachausgabe von Windows.'],
     ['notify.watch', 'notify', 'Freunde', 'bool', true, 'Beobachtete Freunde kommen online', ''],
     ['notify.player_join', 'notify', 'Instanz', 'select', 'friends', 'Jemand betritt deine Instanz', '', [['off', 'aus'], ['favorites', 'nur ⭐ Favoriten'], ['friends', 'Freunde'], ['all', 'alle']]],
@@ -274,6 +278,7 @@ class Settings {
             if (k === 'ui.bg_image' && v && !/^(https:\/\/\S+|nexus\.php\?img=file_[0-9a-f-]{36}&v=\d+|local:\d+|builtin:[a-z-]{2,30})$/i.test(v)) throw new UserError('Bildadresse ungültig (nur https, Galerie oder eigene Datei).');
             if (k === 'adv.api_base' && v && !/^https?:\/\/[\w.-]+(:\d+)?(\/[\w./-]*)?$/.test(v)) throw new UserError('API-Adresse ungültig.');
             if (k === 'int.webhook' && v && !/^https:\/\/(discord(app)?\.com|ptb\.discord\.com|canary\.discord\.com)\/api\/webhooks\/\d+\/[\w-]+$/.test(v)) throw new UserError('Das ist keine Discord-Webhook-URL.');
+            if (k.startsWith('keys.') && v && !require('./clienttools').ACCEL.test(v)) throw new UserError('Tastenkürzel „' + v + '“ ungültig – Beispiel: Ctrl+Alt+P (mind. eine Taste Ctrl/Alt/Shift + Buchstabe, Ziffer oder F1–F24).');
             if (k === 'int.rpc_client' && v && !/^\d{15,22}$/.test(v)) throw new UserError('Die Discord Client-ID besteht nur aus Ziffern.');
             if (cur[k] !== v) { cur[k] = v; changed.push(k); }
         }

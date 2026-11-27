@@ -196,7 +196,8 @@
                 <div class="muted small" id="ncAInfo"></div>
                 <div class="nc-grid">
                     <div class="nc-card"><h4>🤖 Regeln</h4><div id="ncAList"></div>
-                        <h4 style="margin-top:12px">✨ Vorlagen (Chat-Widgets)</h4><div class="nc-presets" id="ncATpl"></div></div>
+                        <h4 style="margin-top:12px">✨ Vorlagen (Chat-Widgets)</h4><div class="nc-presets" id="ncATpl"></div>
+                        <div class="nc-row" style="margin-top:10px"><a class="btn btn-sm" href="nexus.php?tools_export=automation">⬇ Regeln teilen (Datei)</a><label class="btn btn-sm">⬆ Regeln importieren<input type="file" accept=".json" id="ncAImp" hidden></label></div></div>
                     <form class="nc-card" id="ncAForm"><h4>✏️ Regel</h4>
                         <input type="hidden" name="id">
                         <div class="nc-row"><input type="text" name="name" maxlength="50" placeholder="Name" style="flex:1"></div>
@@ -639,6 +640,7 @@
                 api('client_auto', { sub: 'auto_save', id: f.id.value, name: f.name.value, trigger: f.trigger.value, arg: f.arg.value, script: f.script.value, cooldown: f.cooldown.value, only_game: f.only_game.checked, window: f.window.value })
                     .then(d => { aData.rules = d.rules; renderAuto(); toast(d.msg); }).catch(fail);
             });
+            $('#ncAImp').addEventListener('change', e => { const fl = e.target.files[0]; if (!fl) return; fl.text().then(t => api('client_auto', { sub: 'auto_import', data: t })).then(d => { aData.rules = d.rules; renderAuto(); toast(d.msg); }).catch(fail); e.target.value = ''; });   // 6.3
             $('#ncANew').addEventListener('click', () => { f.reset(); f.id.value = ''; f.trigger.dispatchEvent(new Event('change')); });
             $('#ncATpl').addEventListener('click', e => {
                 const b = e.target.closest('[data-tpl]');

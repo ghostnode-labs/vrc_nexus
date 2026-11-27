@@ -211,6 +211,20 @@ class Automation {
             case 'auto_save': return { rules: this.save(input), msg: 'Regel gespeichert.' };
             case 'auto_delete': return { rules: this.remove(input.id) };
             case 'auto_toggle': { const r = this.find(input.id); return { rules: this.toggle(r ? r.id : input.id) }; }
+            case 'auto_export': {   // 6.3: Regeln teilen (Datei)
+                const ids = str(input.ids).split(',').filter(Boolean), l = this.rules().filter(r => !ids.length || ids.includes(r.id));
+                return { app: 'VRC Nexus', kind: 'automation', version: require('./vrchat').VERSION, rules: l.map(({ id, ...r }) => r) };
+            }
+            case 'auto_import': {
+                let d = input.data;
+                if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { throw new UserError('Keine gültige Regel-Datei (JSON).'); } }
+                const list = Array.isArray(d) ? d : d && Array.isArray(d.rules) ? d.rules : null;
+                if (!list || !list.length) throw new UserError('In der Datei sind keine Regeln.');
+                if (str(input.mode) === 'replace') this.write([]);
+                let ok = 0; const bad = [];
+                for (const r of list.slice(0, 100)) { try { this.save(Object.assign({}, r, { id: '', on: false })); ok++; } catch (e) { bad.push(str(r && r.name) + ': ' + e.message); } }   // importierte Regeln starten AUS
+                return { rules: this.rules(), msg: ok + ' Regel(n) importiert – zur Sicherheit ausgeschaltet, bitte prüfen und einschalten.' + (bad.length ? ' Übersprungen: ' + bad.slice(0, 3).join('; ') : '') };
+            }
             case 'auto_run': return Object.assign({ rules: this.rules() }, await this.runRule(input.id || input.name));
             case 'auto_test': {
                 const r = this.rules().find(x => x.id === str(input.id));

@@ -56,9 +56,12 @@ function parse(conn) {
 class WsApi {
     constructor(tools) { this.tools = tools; this.conns = new Set(); this.timer = null; this.last = {}; }
     get app() { return this.tools.app; }
-    tokenOk(t) {
+    tokenOk(t) { return !!this.who(t); }
+    /** 6.3: Hauptschlüssel = alles, App-Schlüssel (nxa_…) = eigene Rechte-Stufe */
+    who(t) {
+        if (this.app && this.app.ctools) return this.app.ctools.resolve(t);
         const want = Buffer.from(str(this.tools.settings.get('int.api_token'))), got = Buffer.from(str(t));
-        return want.length > 0 && got.length === want.length && crypto.timingSafeEqual(got, want);
+        return want.length > 0 && got.length === want.length && crypto.timingSafeEqual(got, want) ? { scope: 'all', app: 'Hauptschlüssel' } : null;
     }
     /** an den HTTP-Server der lokalen API hängen */
     attach(server) { server.on('upgrade', (req, sock) => this.upgrade(req, sock)); }
@@ -74,7 +77,8 @@ class WsApi {
         if (this.conns.size >= MAX_CLIENTS) return no(503, 'Busy');
         const accept = crypto.createHash('sha1').update(key + GUID).digest('base64');
         sock.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + accept + '\r\n\r\n');
-        const conn = { sock, buf: Buffer.alloc(0), authed: this.tokenOk(url.searchParams.get('token')), topics: new Set(), rate: [], frag: null };
+        const w0 = this.who(url.searchParams.get('token'));
+        const conn = { sock, buf: Buffer.alloc(0), authed: !!w0, scope: w0 ? w0.scope : '', topics: new Set(), rate: [], frag: null };
         this.conns.add(conn);
         sock.setNoDelay(true);
         sock.on('data', d => {
@@ -112,11 +116,12 @@ class WsApi {
         try {
             if (op === 'hello') return reply(true, this.hello(conn));
             if (op === 'ping') return reply(true, { pong: now });
-            if (op === 'auth') { conn.authed = this.tokenOk(m.token); if (!conn.authed) { reply(false, 'Falscher Zugangsschlüssel.'); return this.close(conn, 4001); } return reply(true, { authed: true }); }
+            if (op === 'auth') { const w = this.who(m.token); conn.authed = !!w; conn.scope = w ? w.scope : ''; if (!conn.authed) { reply(false, 'Falscher Zugangsschlüssel.'); return this.close(conn, 4001); } return reply(true, { authed: true, scope: conn.scope, app: w.app }); }
             if (!conn.authed) return reply(false, 'Erst anmelden: {"op":"auth","token":"…"}');
             if (op === 'state') return reply(true, this.tools.apiState());
             if (op === 'action') {   // Felder der Aktion in „params“ (empfohlen – „id“ ist sonst die Nummer der Anfrage) oder direkt in der Nachricht
                 const d = m.params && typeof m.params === 'object' && !Array.isArray(m.params) ? m.params : m;
+                if (this.app && this.app.ctools && conn.scope !== 'all') this.app.ctools.check(conn.scope, str(m.action));   // 6.3: Rechte je App
                 return reply(true, await this.tools.apiAction(str(m.action), d));
             }
             if (op === 'subscribe' || op === 'unsubscribe') {

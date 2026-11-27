@@ -26,6 +26,15 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 6.3.0 – Client tools
+- 🔑 **App keys with permissions** (Tools → Stream Deck): every script, bot or overlay gets its own key – 📖 read only, 💬 chatbox & status, 🎚 avatar & OSC or 🔓 everything. Only a checksum is stored, each key can be revoked on its own; works for the HTTP API and the WebSocket client API
+- ⌨ **Free global keyboard shortcuts** (Settings → System): panic, chatbox rotator, sleep mode, mute, clear chatbox, VR overlay, bring VRC Nexus to front – also while VRChat is in front
+- 🔍 **Command palette 2.0** (Ctrl+K): finds every setting and jumps right to it, plus quick actions (sleep, rotator, mute, clear chatbox)
+- 💾 **Safer settings backup:** export/import never contains keys, server addresses or webhooks – a foreign backup file can't redirect your data
+- 🤖 **Share automation rules** as a file and import them (imported rules start switched off)
+- 🔔 **Notification rules:** names that always get through (even in quiet hours) and words/names that are never shown
+- 📈 **Performance view** (Settings → Advanced): memory, CPU, lag, database size, API connections, uptime
+
 ### New in 6.2.1
 - 📱 Fix: the updater in the Android app downloaded the **Wear OS watch APK** instead of the phone app – it now always picks `VRC-Nexus-x.y.z-android.apk` and waits until the phone APK is uploaded
 

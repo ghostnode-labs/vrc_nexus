@@ -46,9 +46,8 @@ class LocalApi {
         if (origin && !(obs && /^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin))) return this.send(res, 403, { error: 'Nicht erlaubt.' });
         if (obs && !this.tools.settings.get('int.api') && !this.tools.settings.get('int.obs')) return this.send(res, 403, { error: 'Aus.' });
         const token = str(req.headers['x-nexus-token'] || url.searchParams.get('token'));
-        const want = Buffer.from(str(this.tools.settings.get('int.api_token')));
-        const got = Buffer.from(token);
-        if (!want.length || got.length !== want.length || !crypto.timingSafeEqual(got, want)) return this.send(res, 401, { error: 'Falscher Zugangsschlüssel.' });
+        const who = this.tools.app && this.tools.app.ctools ? this.tools.app.ctools.resolve(token) : (() => { const want = Buffer.from(str(this.tools.settings.get('int.api_token'))), got = Buffer.from(token); return want.length && got.length === want.length && crypto.timingSafeEqual(got, want) ? { scope: 'all' } : null; })();
+        if (!who) return this.send(res, 401, { error: 'Falscher Zugangsschlüssel.' });   // 6.3: Hauptschlüssel oder App-Schlüssel mit Rechte-Stufe
         if (url.pathname.startsWith('/api/') && !this.tools.settings.get('int.api')) return this.send(res, 403, { error: 'Die Stream-Deck-Schnittstelle ist aus (Einstellungen → Integrationen).' });
         if (req.method === 'GET' && url.pathname === '/api/state') return this.send(res, 200, this.tools.apiState());
         if (req.method === 'GET' && url.pathname === '/api/world_image') return this.send(res, 200, await this.tools.worldImage(url.searchParams.get('id')));
@@ -73,6 +72,7 @@ class LocalApi {
             for await (const c of req) { body += c; if (body.length > 20000) throw new UserError('Zu groß.'); }
             let data = {};
             try { data = JSON.parse(body || '{}'); } catch (e) { throw new UserError('Ungültiges JSON.'); }
+            if (who.scope !== 'all') this.tools.app.ctools.check(who.scope, str(data.action));
             return this.send(res, 200, await this.tools.apiAction(str(data.action), data));
         }
         return this.send(res, 404, { error: 'Unbekannt.' });

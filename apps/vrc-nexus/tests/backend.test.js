@@ -4134,3 +4134,71 @@ test('6.2: Szenen-Baukasten – prüfen, speichern, Ablauf mit Runden & Steigeru
     sc.stop(); clearTimeout(sc.timer);
     assert.strictEqual((await sc.action('toys_scenes_delete', { id })).scenes.length, 0);
 });
+
+test('6.3: Client-Werkzeuge – App-Schlüssel mit Rechten (HTTP + WebSocket), Tastenkürzel, sichere Sicherung, Regeln teilen, Benachrichtigungs-Regeln, Leistung', async () => {
+    const { NexusApp } = require('../backend/app');
+    const db = await openDatabase(null);
+    const notes = [];
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: os.tmpdir(), notify: (t, b) => notes.push(t + '|' + b) } });
+    app.game.osc.stopListen();
+    const ct = app.ctools;
+    // App-Schlüssel
+    assert.throws(() => ct.createApp('', 'read'), /Namen/);
+    assert.throws(() => ct.createApp('x', 'gott'), /Rechte-Stufe/);
+    const r = ct.createApp('Overlay', 'read'), key = r.key;
+    assert.match(key, /^nxa_[0-9a-f]{40}$/);
+    assert.ok(!JSON.stringify(db.setting('api_apps', '')).includes(key), 'nur die Prüfsumme wird gespeichert');
+    assert.ok(!('hash' in r.apps[0]), 'Prüfsumme geht nicht an die Oberfläche');
+    assert.deepStrictEqual(ct.resolve(key), { scope: 'read', app: 'Overlay' });
+    assert.strictEqual(ct.resolve('nxa_' + '0'.repeat(40)), null);
+    assert.strictEqual(ct.resolve(app.settings.get('int.api_token')).scope, 'all');
+    assert.ok(!ct.allowed('read', 'chatbox') && ct.allowed('chatbox', 'chatbox') && !ct.allowed('chatbox', 'param') && ct.allowed('avatar', 'param') && !ct.allowed('avatar', 'macro') && ct.allowed('all', 'macro'));
+    // über HTTP
+    app.settings.save({ 'int.api': true, 'int.api_port': 17994 }); app.tools.api.apply(); await U.sleep(100);
+    const post = (k, body) => fetch('http://127.0.0.1:17994/api/action', { method: 'POST', headers: { 'x-nexus-token': k, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(async x => ({ status: x.status, d: await x.json() }));
+    assert.strictEqual((await fetch('http://127.0.0.1:17994/api/state', { headers: { 'x-nexus-token': key } })).status, 200, 'lesen erlaubt');
+    const den = await post(key, { action: 'chatbox', text: 'hi' });
+    assert.ok(den.status >= 400 && /darf „chatbox“ nicht/.test(den.d.error), 'Chatbox mit Lese-Schlüssel verboten: ' + JSON.stringify(den));
+    ct.setScope(r.apps[0].id, 'chatbox');
+    assert.notStrictEqual((await post(key, { action: 'macro', id: 'x' })).d.error, undefined, 'Makro bleibt verboten');
+    assert.match((await post(key, { action: 'macro', id: 'x' })).d.error, /darf „macro“ nicht/);
+    // über WebSocket
+    const ws = new WebSocket('ws://127.0.0.1:17994/ws'); const msgs = [];
+    await new Promise(ok => { ws.onopen = ok; ws.onmessage = e => msgs.push(JSON.parse(e.data)); });
+    const wait = async id => { for (let i = 0; i < 60; i++) { const m = msgs.find(x => x.id === id); if (m) return m; await U.sleep(50); } throw new Error('keine Antwort'); };
+    ws.send(JSON.stringify({ id: 1, op: 'auth', token: key }));
+    assert.strictEqual((await wait(1)).result.scope, 'chatbox');
+    ws.send(JSON.stringify({ id: 2, op: 'action', action: 'param', params: { name: 'X', value: 1 } }));
+    assert.match((await wait(2)).error, /darf „param“ nicht/);
+    ct.revokeApp(r.apps[0].id);
+    assert.strictEqual(ct.resolve(key), null, 'gesperrt');
+    ws.close(); app.settings.save({ 'int.api': false }); app.tools.api.apply();
+    // Tastenkürzel
+    assert.throws(() => app.settings.save({ 'keys.panic': 'P' }), /ungültig/);
+    app.settings.save({ 'keys.sleep': 'Ctrl+Alt+S', 'keys.rotator': '' });
+    assert.deepStrictEqual(ct.hotkeys().map(h => [h.key, h.accel]), [['keys.sleep', 'Ctrl+Alt+S']]);
+    const hk = await ct.hotkey('keys.sleep'); assert.ok(hk.value === true && app.comfort.sleep, 'Tastenkürzel schaltet Schlafmodus');
+    await ct.hotkey('keys.sleep');
+    // Sicherung: keine Schlüssel, Adressen, Webhooks – weder raus noch rein
+    const ex = ct.exportSettings();
+    assert.ok(ex.settings['keys.sleep'] === 'Ctrl+Alt+S' && !('int.api_token' in ex.settings) && !('adv.api_base' in ex.settings) && !('int.webhook' in ex.settings));
+    const im = ct.importSettings(JSON.stringify({ settings: { 'keys.sleep': 'Ctrl+Alt+Q', 'adv.api_base': 'https://boese.example', 'int.webhook': 'https://discord.com/api/webhooks/1/x', 'int.api_token': 'x', 'gibtsnicht': 1 } }));
+    assert.strictEqual(im.imported, 1); assert.strictEqual(im.skipped, 4);
+    assert.ok(app.settings.get('keys.sleep') === 'Ctrl+Alt+Q' && app.settings.get('adv.api_base') !== 'https://boese.example');
+    assert.throws(() => ct.importSettings('kaputt'), /gültige/);
+    // Regeln teilen
+    app.auto.save({ name: 'Hallo', trigger: 'world_join', script: 'chatbox hi' });
+    const exp = await app.auto.action('auto_export', {});
+    assert.strictEqual(exp.rules.length, 1); assert.ok(!('id' in exp.rules[0]));
+    const imp = await app.auto.action('auto_import', { data: JSON.stringify(exp) });
+    assert.strictEqual(app.auto.rules().length, 2); assert.strictEqual(app.auto.rules()[1].on, false, 'importierte Regeln starten aus'); assert.match(imp.msg, /1 Regel/);
+    await assert.rejects(app.auto.action('auto_import', { data: '{}' }), /keine Regeln/);
+    // Benachrichtigungs-Regeln
+    app.settings.save({ 'notify.desktop': true, 'notify.quiet_from': '00:00', 'notify.quiet_to': '23:59', 'notify.vip': 'Mira', 'notify.mute': 'Spam' });
+    app.tools.alert('Kai ist online', ''); app.tools.alert('Mira ist online', ''); app.settings.save({ 'notify.quiet_from': '' }); app.tools.alert('Spam-Bot', 'hi');
+    assert.deepStrictEqual(notes.filter(n => /online|Spam/.test(n)), ['Mira ist online|'], 'Nicht-stören: nur VIP; stumm: nie');
+    // Leistung
+    ct.perf(); const p = ct.perf();
+    assert.ok(p.mem_mb > 0 && p.uptime_s >= 0 && 'cpu' in p && 'lag_ms' in p);
+    ct.stop(); app.tools.stop();
+});

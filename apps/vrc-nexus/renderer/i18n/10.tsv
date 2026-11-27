@@ -1962,3 +1962,43 @@ Höchstens 30 Schritte.	At most 30 steps.	30 étapes maximum.	最大30ステッ�
 Schritt	Step	Étape	ステップ
 Nächster Schritt	Next step	Étape suivante	次のステップ
 Szenen-Baukasten	Scene builder	Créateur de scènes	シーンビルダー
+App-Schlüssel mit Rechten	App keys with permissions	Clés d'application avec droits	権限付きアプリキー
+Für Skripte, Bots und Overlays: jede App bekommt einen eigenen Schlüssel mit genau den Rechten, die sie braucht – jederzeit einzeln sperrbar. Der Hauptschlüssel oben darf alles.	For scripts, bots and overlays: each app gets its own key with exactly the permissions it needs – revocable one by one at any time. The main key above can do everything.	Pour scripts, bots et overlays : chaque app reçoit sa propre clé avec exactement les droits nécessaires – révocable à tout moment. La clé principale ci-dessus peut tout faire.	スクリプト・ボット・オーバーレイ用：アプリごとに必要な権限だけを持つキーを発行し、いつでも個別に無効化できます。上のメインキーはすべて可能です。
+Nur jetzt sichtbar – gespeichert wird nur eine Prüfsumme.	Only visible now – only a checksum is stored.	Visible uniquement maintenant – seule une empreinte est enregistrée.	今だけ表示されます – 保存されるのはチェックサムのみです。
+noch nie benutzt	never used	jamais utilisée	未使用
+Noch keine App-Schlüssel.	No app keys yet.	Pas encore de clés d'application.	アプリキーはまだありません。
+Name der App, z. B. Mein Overlay	App name, e.g. My overlay	Nom de l'app, p. ex. Mon overlay	アプリ名（例：マイオーバーレイ）
+Was darf welche Stufe?	What can each level do?	Que peut faire chaque niveau ?	各レベルでできること
+Kopiert.	Copied.	Copié.	コピーしました。
+App-Schlüssel sperren? Die App verliert sofort den Zugriff.	Revoke app key? The app loses access immediately.	Révoquer la clé ? L'app perd l'accès immédiatement.	アプリキーを無効化しますか？アプリは即座にアクセスを失います。
+📖 Nur lesen	📖 Read only	📖 Lecture seule	📖 読み取りのみ
+💬 Chatbox & Status	💬 Chatbox & status	💬 Chatbox & statut	💬 チャットボックスとステータス
+🎚 Avatar & OSC	🎚 Avatar & OSC	🎚 Avatar & OSC	🎚 アバターとOSC
+🔓 Alles	🔓 Everything	🔓 Tout	🔓 すべて
+Zustand abfragen und Ereignisse empfangen – keine Befehle.	Read state and receive events – no commands.	Lire l'état et recevoir les événements – aucune commande.	状態の取得とイベント受信のみ – コマンドなし。
+Zusätzlich Chatbox, Tippen, Status, Rotator, Vorlesen.	Plus chatbox, typing, status, rotator, text-to-speech.	En plus : chatbox, saisie, statut, rotateur, lecture vocale.	さらにチャットボックス、入力中表示、ステータス、ローテーター、読み上げ。
+Zusätzlich Parameter, Eingaben, Presets, Kamera, Avatar wechseln.	Plus parameters, inputs, presets, camera, avatar switching.	En plus : paramètres, entrées, préréglages, caméra, changement d'avatar.	さらにパラメーター、入力、プリセット、カメラ、アバター変更。
+Alle Aktionen wie der Hauptschlüssel (z. B. Makros, Automatik, Instanzen).	All actions like the main key (e.g. macros, automation, instances).	Toutes les actions comme la clé principale (macros, automatisation, instances …).	メインキーと同じ全アクション（マクロ、オートメーション、インスタンスなど）。
+Arbeitsspeicher	Memory	Mémoire	メモリ
+CPU (Hintergrund)	CPU (background)	CPU (arrière-plan)	CPU（バックグラウンド）
+Verzögerung	Lag	Latence	遅延
+API-Verbindungen	API connections	Connexions API	API接続
+Tastenkürzel (global)	Keyboard shortcuts (global)	Raccourcis clavier (globaux)	キーボードショートカット（グローバル）
+🚨 Panik (NSFW ganz aus)	🚨 Panic (NSFW fully off)	🚨 Panique (NSFW totalement coupé)	🚨 パニック（NSFWを完全オフ）
+🔄 Chatbox-Rotator an/aus	🔄 Chatbox rotator on/off	🔄 Rotateur de chatbox on/off	🔄 チャットボックスローテーターON/OFF
+💤 Schlafmodus an/aus	💤 Sleep mode on/off	💤 Mode sommeil on/off	💤 スリープモードON/OFF
+🔇 Stummschalten (VRChat)	🔇 Mute (VRChat)	🔇 Couper le micro (VRChat)	🔇 ミュート（VRChat）
+🧹 Chatbox leeren	🧹 Clear chatbox	🧹 Vider la chatbox	🧹 チャットボックスを消去
+🥽 VR-Overlay ein/aus	🥽 VR overlay on/off	🥽 Overlay VR on/off	🥽 VRオーバーレイON/OFF
+🪟 VRC Nexus nach vorne holen	🪟 Bring VRC Nexus to front	🪟 Mettre VRC Nexus au premier plan	🪟 VRC Nexusを前面に
+z. B. Ctrl+Alt+P · leer = aus · wirkt auch, wenn VRChat im Vordergrund ist	e.g. Ctrl+Alt+P · empty = off · also works while VRChat is in front	p. ex. Ctrl+Alt+P · vide = désactivé · fonctionne aussi quand VRChat est au premier plan	例：Ctrl+Alt+P · 空欄＝オフ · VRChatが前面でも有効
+Immer melden (auch in der Nicht-stören-Zeit)	Always notify (even during quiet hours)	Toujours notifier (même en mode ne pas déranger)	常に通知（おやすみ時間中も）
+Namen, mit Komma getrennt – z. B. deine engsten Freunde.	Names, comma-separated – e.g. your closest friends.	Noms séparés par des virgules – p. ex. tes ami·e·s les plus proches.	名前をカンマ区切りで – 例：親しいフレンド。
+Nie melden	Never notify	Ne jamais notifier	通知しない
+Namen oder Wörter, mit Komma getrennt – Meldungen, die sie enthalten, werden still verworfen.	Names or words, comma-separated – notifications containing them are silently dropped.	Noms ou mots séparés par des virgules – les notifications qui les contiennent sont ignorées.	名前や単語をカンマ区切りで – これらを含む通知は表示されません。
+Schlafmodus an/aus	Sleep mode on/off	Mode sommeil on/off	スリープモードON/OFF
+Chatbox-Rotator an/aus	Chatbox rotator on/off	Rotateur de chatbox on/off	チャットボックスローテーターON/OFF
+Stummschalten (VRChat)	Mute (VRChat)	Couper le micro (VRChat)	ミュート（VRChat）
+Einstellungen öffnen	Open settings	Ouvrir les paramètres	設定を開く
+⬇ Regeln teilen (Datei)	⬇ Share rules (file)	⬇ Partager les règles (fichier)	⬇ ルールを共有（ファイル）
+⬆ Regeln importieren	⬆ Import rules	⬆ Importer des règles	⬆ ルールを読み込む

@@ -249,8 +249,10 @@ class Tools {
         const s = this.settings.all();
         this.log.unshift({ ts: now(), title, body });
         this.log = this.log.slice(0, 50);
+        const text = (str(title) + ' ' + str(body)).toLowerCase(), list = k => str(s[k]).split(',').map(x => x.trim().toLowerCase()).filter(x => x.length >= 2);
+        if (list('notify.mute').some(w => text.includes(w))) return;   // 6.3: nie melden
         if (webhookKind && s['int.webhook'] && s['int.webhook_' + webhookKind]) this.webhook(title + (body ? '\n' + body : ''));
-        if (this.quiet()) return;
+        if (this.quiet() && !list('notify.vip').some(w => text.includes(w))) return;   // 6.3: VIPs auch in der Nicht-stören-Zeit
         if (s['notify.desktop'] && this.host.notify) this.host.notify(title, body, s['notify.silent']);
         if (s['notify.tts'] && this.host.speak) this.host.speak(title + '. ' + body);
         const inGame = this.app.game.state.running;

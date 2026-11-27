@@ -638,6 +638,7 @@
                 + '<div class="set-row"><div><b>Zugangsschlüssel</b><div class="nx-hint">Nicht weitergeben – damit kann man deinen Status ändern und Chatbox-Nachrichten senden.</div></div><div class="nx-row" style="margin:0"><input type="text" readonly value="' + esc(s['int.api_token']) + '" id="sdTok" style="flex:1">'
                 + '<button type="button" class="btn btn-sm" id="sdCopy">📋</button><button type="button" class="btn btn-sm" id="sdNew" title="Neuen Schlüssel erzeugen">♻</button></div></div>'
                 + '<div class="set-row"><div><b>' + esc(T('Client-API (WebSocket)')) + '</b><div class="nx-hint">' + esc(T('Für eigene Skripte, Bots und Overlays: Befehle senden und Live-Ereignisse (Welt, Puls, Freunde …) empfangen. Nur vom eigenen PC erreichbar.')) + '</div></div><div class="nx-row" style="margin:0"><code style="flex:1">ws://127.0.0.1:' + esc(s['int.api_port']) + '/ws</code><button type="button" class="btn btn-sm" id="sdDocs">' + esc(T('Doku')) + ' ↗</button></div></div>'
+                + '<h3 style="margin-top:16px">🔑 ' + esc(T('App-Schlüssel mit Rechten')) + '</h3><p class="nx-hint">' + esc(T('Für Skripte, Bots und Overlays: jede App bekommt einen eigenen Schlüssel mit genau den Rechten, die sie braucht – jederzeit einzeln sperrbar. Der Hauptschlüssel oben darf alles.')) + '</p><div id="sdApps"></div>'
                 + '<h3 style="margin-top:16px">Aktionen im Plugin</h3><ul class="vx-small sd-list" style="line-height:1.7">'
                 + [['🟢', 'Status setzen', 'Join Me / Online / Ask Me / Beschäftigt, mit Text – leuchtet, wenn aktiv'], ['💬', 'Chatbox-Nachricht', 'eigener Text oder gespeicherte OSC-Vorlage'],
                     ['⚡', 'Schnelltext', 'gespeicherten Schnelltext senden – oder die letzte Nachricht erneut'], ['🎚', 'Avatar-Parameter', 'umschalten, halten oder setzen (zeigt den Zustand)'],
@@ -657,6 +658,7 @@
             $('#sdOn').onchange = save; $('#sdPort').onchange = save;
             $('#sdCopy').onclick = () => navigator.clipboard.writeText($('#sdTok').value).then(() => toast('Kopiert.'));
             $('#sdNew').onclick = () => { if (confirm('Neuen Schlüssel erzeugen? Das Plugin muss dann neu eingerichtet werden.')) run('tools_token', {}, toolStreamDeck).catch(() => {}); };
+            appKeys();
         }).catch(fail(body));
     }
 
@@ -683,6 +685,35 @@
         }
     }
     /** 5.6: Lizenz-Übersicht (eigener Freischalt-Schlüssel) */
+    /** 6.3: Leistungs-Anzeige (Speicher, CPU, Ereignis-Schleife, Datenbank) – aktualisiert alle 3 s, solange sichtbar */
+    let perfT = null;
+    function perfCard() {
+        clearTimeout(perfT);
+        const box = $('#perfCard'); if (!box) return;
+        api('ctools_perf').then(p => {
+            const tile = (i, l, v, warn) => '<div class="perf-tile' + (warn ? ' warn' : '') + '"><span>' + i + '</span><b>' + esc(String(v)) + '</b><small>' + esc(T(l)) + '</small></div>';
+            const up = p.uptime_s > 3600 ? Math.floor(p.uptime_s / 3600) + ' h ' + Math.floor(p.uptime_s % 3600 / 60) + ' min' : Math.floor(p.uptime_s / 60) + ' min';
+            box.innerHTML = tile('🧠', 'Arbeitsspeicher', p.mem_mb + ' MB', p.mem_mb > 900) + tile('⚙', 'CPU (Hintergrund)', p.cpu === null ? '…' : p.cpu + ' %', p.cpu > 25)
+                + tile('⏱', 'Verzögerung', p.lag_ms + ' ms', p.lag_ms > 200) + tile('🗄', 'Datenbank', p.db_kb > 1024 ? (p.db_kb / 1024).toFixed(1) + ' MB' : p.db_kb + ' KB') + tile('🔌', 'API-Verbindungen', p.conns) + tile('🕒', 'Läuft seit', up);
+            if (box.isConnected) perfT = setTimeout(perfCard, 3000);
+        }).catch(() => { box.innerHTML = ''; });
+    }
+    /** 6.3: App-Schlüssel (nur lesen / Chatbox / Avatar / alles) */
+    function appKeys(fresh) {
+        const box = $('#sdApps'); if (!box) return;
+        api('ctools_apps').then(d => {
+            const opt = cur => Object.entries(d.scopes).map(([k, v]) => '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + esc(T(v[0])) + '</option>').join('');
+            box.innerHTML = (fresh ? '<div class="nx-row lic-new"><code style="flex:1;word-break:break-all">' + esc(fresh) + '</code><button type="button" class="btn btn-sm" data-ak="copy" data-k="' + esc(fresh) + '">📋</button></div><p class="nx-hint">⚠ ' + esc(T('Nur jetzt sichtbar – gespeichert wird nur eine Prüfsumme.')) + '</p>' : '')
+                + (d.apps.length ? d.apps.map(a => '<div class="nx-row"><b style="flex:1">' + esc(a.name) + '</b><select data-ak="scope" data-id="' + esc(a.id) + '">' + opt(a.scope) + '</select><span class="vx-small">' + (a.last ? esc(T('zuletzt')) + ' ' + new Date(a.last).toLocaleString(nxLoc()) : esc(T('noch nie benutzt'))) + '</span><button type="button" class="btn btn-sm btn-danger" data-ak="revoke" data-id="' + esc(a.id) + '">' + esc(T('Sperren')) + '</button></div>').join('') : '<p class="vx-small">' + esc(T('Noch keine App-Schlüssel.')) + '</p>')
+                + '<form class="nx-row" id="sdAppNew"><input type="text" name="name" maxlength="40" placeholder="' + esc(T('Name der App, z. B. Mein Overlay')) + '" style="flex:1"><select name="scope">' + opt('read') + '</select><button class="btn btn-sm btn-gold">＋ ' + esc(T('Schlüssel erzeugen')) + '</button></form>'
+                + '<details class="vx-small"><summary>' + esc(T('Was darf welche Stufe?')) + '</summary><ul>' + Object.values(d.scopes).map(v => '<li><b>' + esc(T(v[0])) + '</b> – ' + esc(T(v[1])) + '</li>').join('') + '</ul></details>';
+            $('#sdAppNew').onsubmit = e => { e.preventDefault(); const f = e.target; api('ctools_app_create', { name: f.name.value, scope: f.scope.value }).then(r => { toast(r.msg); appKeys(r.key); }).catch(x => toast(x.message, true)); };
+            box.onclick = e => { const b = e.target.closest('[data-ak]'); if (!b) return;
+                if (b.dataset.ak === 'copy') navigator.clipboard.writeText(b.dataset.k).then(() => toast(T('Kopiert.')));
+                if (b.dataset.ak === 'revoke' && confirm(T('App-Schlüssel sperren? Die App verliert sofort den Zugriff.'))) api('ctools_app_revoke', { id: b.dataset.id }).then(r => { toast(r.msg); appKeys(); }).catch(x => toast(x.message, true)); };
+            box.onchange = e => { const s = e.target.closest('[data-ak=scope]'); if (s) api('ctools_app_scope', { id: s.dataset.id, scope: s.value }).then(r => toast(r.msg)).catch(x => toast(x.message, true)); };
+        }).catch(() => { box.innerHTML = ''; });
+    }
     function licCard(d) {
         const box = $('#licCard');
         if (!box) return;
@@ -761,6 +792,12 @@
         return w;
     }
     function connPark() { const w = connWrap(), pane = document.querySelector('[data-pane="account"]'); if (pane && w.parentNode !== pane) pane.appendChild(w); }
+    /** 6.3: aus der Befehlspalette direkt zu einer Einstellung springen */
+    window.NexusSettings = { open(tabKey, key) {
+        setTab = tabKey; UI.store.set('setTab', setTab);
+        const go = () => { renderSettings(); const el = $('#setBox [data-k="' + key + '"]'); if (el) { const row = el.closest('.set-row') || el; row.scrollIntoView({ block: 'center' }); row.classList.add('set-hit'); setTimeout(() => row.classList.remove('set-hit'), 2500); try { el.focus(); } catch (e) { /* egal */ } } };
+        if (setData) go(); else api('tools_settings').then(d => { setData = d; go(); }).catch(() => {});
+    } };
     function renderSettings() {
         if (window.NexusClient && window.NexusClient.cfgPark) window.NexusClient.cfgPark();
         connPark();
@@ -780,6 +817,7 @@
             adv: '<div class="set-sec"><h3>🪪 Nexus-Konto &amp; 🔞 NSFW</h3><div id="acctBox"></div></div>'
                 + '<div class="set-sec"><h3>🔑 Freischalt-Schlüssel (Supporter / Moderator)</h3><p class="nx-hint">Rollen wie 💖 Supporter oder 🛡 Moderator – den Schlüssel bekommst du von der Besitzerin. Er gilt nur für dein VRChat-Konto. NSFW wird darüber nicht freigeschaltet.</p>'
                 + '<form class="nx-row" id="nsUnlock"><input type="password" name="token" placeholder="NXK1.…" autocomplete="off" style="flex:1"><button class="btn btn-sm btn-gold">🔓 Freischalten</button><button type="button" class="btn btn-sm" id="nsLock">Entfernen</button></form><div class="nx-hint" id="nsUnlockMsg"></div><div id="licCard"></div></div>'
+                + '<div class="set-sec"><h3>📈 ' + esc(T('Leistung')) + '</h3><div id="perfCard" class="perf-grid"></div></div>'
                 + '<div class="set-sec"><h3>Daten &amp; Wartung</h3><div class="nx-row"><button type="button" class="btn btn-sm" data-act="cache">🧹 Profil-Zwischenspeicher leeren</button><button type="button" class="btn btn-sm" data-act="vacuum">🗜 Datenbank optimieren</button>'
                 + '<a class="btn btn-sm" href="nexus.php?tools_export=settings">⬇ Einstellungen exportieren</a><label class="btn btn-sm">⬆ Importieren<input type="file" accept=".json" id="setImport" hidden></label>'
                 + '<button type="button" class="btn btn-sm btn-danger" data-act="reset">↺ Alles zurücksetzen</button></div></div>',
@@ -796,7 +834,7 @@
         if (setTab === 'link') { linkPanel(); if (!MOBILE) backupPanel(); }
         if (setTab === 'system') { dbPanel(); const sc = $('#setConn'); if (sc) sc.appendChild(connWrap()); }
         if (setTab === 'adv' && window.NexusAccount && $('#acctBox')) window.NexusAccount.render($('#acctBox'));
-        if (setTab === 'adv') licCard();
+        if (setTab === 'adv') { licCard(); perfCard(); }
         if (setTab === 'about' && window.NexusAbout) window.NexusAbout.open();
         if (setTab === 'vr' && !MOBILE && window.NexusClient && window.NexusClient.cfgInto) window.NexusClient.cfgInto($('#setGameCfg'));
         if (UI.subnav) UI.subnav();     // 3.1.1: Menü links → Reiter der Einstellungen oben in der Leiste
@@ -894,7 +932,7 @@
         }
         if (e.target.id === 'setImport') {
             const f = e.target.files[0];
-            if (f) f.text().then(t => run('tools_settings_save', { data: t }, r => { setData.settings = r.settings; applyUi(r.settings); renderSettings(); })).catch(() => toast('Datei ungültig.', true));
+            if (f) f.text().then(t => run('ctools_import', { data: t }, r => { if (r.settings) { setData.settings = r.settings; applyUi(r.settings); } renderSettings(); })).catch(() => toast('Datei ungültig.', true));   // 6.3: ohne Adressen/Schlüssel
             return;
         }
         const el = e.target.closest('[data-k]');

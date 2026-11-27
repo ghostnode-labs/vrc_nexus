@@ -1446,3 +1446,10 @@ html[data-scheme="light"] body.hi-contrast { --text-muted: #2f3b48; }
 .n2-build { display: flex; flex-direction: column; gap: 6px; }
 .n2-bstep { gap: 8px; flex-wrap: wrap; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--line, rgba(255,255,255,.08)); }
 .n2-bstep:last-of-type { border-bottom: 0; }
+
+/* 6.3: Leistung, Treffer aus der Befehlspalette */
+.perf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.perf-tile { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--line, rgba(255,255,255,.1)); border-radius: var(--r, 10px); }
+.perf-tile span { font-size: 1.1rem; } .perf-tile b { font-size: 1.05rem; } .perf-tile small { opacity: .7; }
+.perf-tile.warn { border-color: rgba(255,170,60,.7); background: rgba(255,170,60,.08); }
+.set-hit { outline: 2px solid var(--accent, #38d5e6); outline-offset: 3px; border-radius: 6px; transition: outline-color .4s; }
