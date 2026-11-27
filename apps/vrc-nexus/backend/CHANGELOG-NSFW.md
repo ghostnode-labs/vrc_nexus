@@ -2,6 +2,10 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.9 – Emergency stop on all devices
+
+- 🚨 **Emergency stop on all paired PCs at once:** a panic on any PC that is paired through home network sync (🧰 Tools → 📡 Devices) now also runs on the others: toys stop, running scenes end, remote control turns off, plus whatever your panic settings include (private mode, chatbox, safe avatar, wallpaper, OBS, lights). Laptop → main PC is immediate; main PC → laptops within 10 s. Together with the watch, phone, voice command, VR hand menu and gamepad (hold Y), one panic now stops everything you own. The message shows "triggered by a paired PC" when it came from another device. Paired PCs can only trigger a stop – never start anything.
+
 ### New in 7.3.2 – 18+ clubs, couple profiles, template library
 
 - 🔞 **Private 18+ clubs:** when creating or editing a club, accounts with Verified 18+ and NSFW on can mark it as 18+. It is then invisible to everyone else – in the directory, the calendar, the club page, iCal, the Discord feed and the “Today in VRChat” widget. 18+ clubs need rules (min. 20 characters), and members **confirm the rules before joining** (the time is stored). Switching 18+ on or off only works while the club has no other members; 18+ clubs and other clubs cannot become partners. The club's own moderation tools (bans, word filter, queue, tickets) apply as usual.

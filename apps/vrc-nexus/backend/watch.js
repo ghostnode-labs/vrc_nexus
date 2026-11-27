@@ -143,6 +143,10 @@ class Watch {
             if (dev.kind !== 'pc' || !this.app.lansync) return this.send(res, 403, { error: 'Nur für gekoppelte PCs.' });
             try { return this.send(res, 200, this.app.lansync.serve(await this.body(req, 800000))); } catch (e) { if (e.status === 409) return this.send(res, 409, { ok: false, conflict: true, rev: e.rev }); throw e; }
         }
+        if (url.pathname === '/watch/panic' && req.method === 'POST') {   // 8.2: Notfall-Stopp über alle gekoppelten PCs (nur abschalten, nie einschalten)
+            if (dev.kind !== 'pc' || !this.app.lansync) return this.send(res, 403, { error: 'Nur für gekoppelte PCs.' });
+            return this.send(res, 200, this.app.lansync.panicServe(await this.body(req, 2000)));
+        }
         if (dev.kind === 'pc') return this.send(res, 403, { error: 'Ein gekoppelter PC darf nur abgleichen.' });
         if (url.pathname === '/watch/state') { const st = this.state(); const bz = this.buzz[dev.id]; if (bz && Date.now() < bz) { st.buzz = bz; delete this.buzz[dev.id]; } return this.send(res, 200, st); }
         if (url.pathname === '/watch/bg' && req.method === 'POST') {   // 5.2.4: Bild aus der Galerie der Uhr

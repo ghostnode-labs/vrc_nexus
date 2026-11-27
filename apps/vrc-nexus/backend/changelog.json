@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.9",
+  "title": "Panic on every paired PC",
+  "body": "- 🚨 **The panic button now reaches every paired PC.** If you have paired a laptop with your main PC (🧰 Tools → 📡 Devices → home network sync), a panic on the laptop stops the main PC right away, and a panic on the main PC reaches all paired PCs within 10 seconds. It works on your home network only, with no server involved. Panic can only switch things off, never on, and older panics are not replayed after pairing.\n- 🔞 ***"
+ },
+ {
   "version": "8.0.8",
   "title": "Phone remote via pairing, \"Devices\"",
   "body": "- 📱 **PC remote on the phone now uses direct pairing** instead of the dashboard link. Enter the PC address and the 6-digit code once; after that the phone talks straight to the PC on your home network, with no dashboard address or device token needed.\n  - Available: chatbox, presets & macros, sleep mode, emergency buttons (18+ only with unlock).\n  - New: simple VRChat inputs (jump, mic, quick menu, run, \"typing …\"). The PC only accepts this fixed list from the phone.\n  - \"Tools → Connect to PC\" on the phone now opens the same page.\n- 📡 **\"Nexus Watch\" is now \"Devices\"** (🧰 Tools → 📡 Devices): one place to pair the watch, phone and laptop. Paired devices show their type (⌚ / 📱 / 🖥). The \"find watch\" button only appears for watches.\n- 🗺 Roadmap: new \"Planned for the future\" list – first entry: an Ubuntu Touch version (Android offshoot)."

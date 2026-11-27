@@ -13,6 +13,7 @@ const { SettingSync } = require('./settingsync');
 
 const DEF_PORT = 17874;
 const MAX = 700000;
+const PANIC_EVERY = 10000;   // 8.2: Panik der anderen PCs spätestens nach 10 s übernehmen
 
 class LanSync {
     constructor(app, crypt) {
@@ -81,8 +82,34 @@ class LanSync {
         const c = this.cfg(), b = this.blob(), w = this.app.watch;
         return Object.assign(this.sync.status(), { role: this.role(), pc: c.pc || '', host: c.host || '', hub: { on: !!(w && w.server), rev: b.rev, device: b.device, updated: b.updated, peers: w ? w.cfg().devices.filter(d => d.kind === 'pc').map(d => ({ id: d.id, name: d.name })) : [] } });
     }
-    start() { this.sync.start(); }
-    stop() { this.sync.stop(); }
+    // ---------- 8.2: Notfall-Stopp auf allen gekoppelten PCs ----------
+    /** Zentrale merkt sich den letzten Panik-Zeitpunkt; gekoppelte PCs fragen alle 10 s nach (nur im Heimnetz, winzige Anfrage). */
+    panicAt() { return int(this.app.db.setting('lansync_panic', '0')); }
+    panicServe(b) {
+        if (str(b.op) === 'fire') { this.markPanic(); if (this.app.nsfw) Promise.resolve(this.app.nsfw.panic({ remote: true })).catch(() => {}); return { ok: true, panic_at: this.panicAt() }; }
+        return { ok: true, panic_at: this.panicAt() };
+    }
+    markPanic() { const t = Date.now(); this.app.db.setSetting('lansync_panic', String(t)); this.seenPanic = t; return t; }
+    /** Nach einer Panik hier: Zentrale bzw. Kopplungs-Partner sofort informieren. */
+    async panicOut() {
+        const role = this.role();
+        if (role === 'hub') { this.markPanic(); return 'hub'; }
+        if (role === 'peer') { const r = await this.http('/watch/panic', { op: 'fire' }); this.seenPanic = int(r.panic_at) || Date.now(); return 'peer'; }
+        return '';
+    }
+    async panicCheck() {
+        if (this.role() !== 'peer') return false;
+        const r = await this.http('/watch/panic', { op: 'check' });
+        const at = int(r.panic_at);
+        if (this.seenPanic === undefined) { this.seenPanic = at; return false; }   // erster Blick: alte Paniken nicht nachholen
+        if (at > this.seenPanic) { this.seenPanic = at; if (this.app.nsfw) await this.app.nsfw.panic({ remote: true }); return true; }
+        return false;
+    }
+    start() {
+        this.sync.start();
+        if (!this.panicTimer) { this.panicTimer = setInterval(() => { this.panicCheck().catch(() => {}); }, PANIC_EVERY); if (this.panicTimer.unref) this.panicTimer.unref(); }
+    }
+    stop() { this.sync.stop(); if (this.panicTimer) { clearInterval(this.panicTimer); this.panicTimer = null; } }
     async action(act, input) {
         switch (act) {
             case 'lsync_status': return this.status();

@@ -204,8 +204,10 @@ class Nsfw {
     }
     async selectAvatar(id) { await this.app.tools.call('PUT', '/avatars/' + encodeURIComponent(id) + '/select'); }
     /** Panik: sicherer Avatar, Chatbox aus, Privat-Modus, Spielzeug stopp */
-    async panic() {
+    async panic(opts = {}) {
         const c = this.cfg(), done = [];
+        if (!opts.remote && this.app.lansync) Promise.resolve().then(() => this.app.lansync.panicOut()).catch(() => {});   // 8.2: andere gekoppelte PCs stoppen mit
+        if (opts.remote) done.push('ausgelöst von einem gekoppelten PC');
         if (this.app.nsfwsafe) this.app.nsfwsafe.log('panik', 'ausgelöst');   // 6.7: lokales Protokoll
         if (this.app.smarthome) Promise.resolve(this.app.smarthome.onPanic()).catch(() => {});   // 8.0.1: Panik-Licht
         if (c.panic_toys && this.app.toys) { await this.app.toys.stopAll().catch(() => {}); done.push('Spielzeug gestoppt'); }

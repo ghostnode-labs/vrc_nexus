@@ -4942,6 +4942,46 @@ test('8.0.4: Heimnetz-Abgleich PC ↔ Laptop (Kopplung per Code als „PC“, nu
     } finally { hub.watch.stop(); }
 });
 
+test('8.2: Notfall-Stopp auf allen gekoppelten PCs (Laptop → Zentrale sofort, Zentrale → Laptop beim nächsten Blick, keine alten Paniken, kein Echo)', async () => {
+    const { NexusApp } = require('../backend/app');
+    const crypt = { encrypt: s => s, decrypt: s => s };
+    const mk = async () => { const a = new NexusApp({ db: await openDatabase(null), crypt, noTimers: true, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-lp-')) } }); a.game.osc.stopListen(); a.tools.alert = () => {}; a.vrc.account = () => ({ vrc_id: 'usr_x', display_name: 'Luna' }); return a; };
+    const hub = await mk(), lap = await mk();
+    const PORT = 18000 + Math.floor(Math.random() * 800);
+    try {
+        await hub.post({ act: 'watch_cfg', on: '1', port: String(PORT) }, {});
+        for (let i = 0; i < 50 && !hub.watch.server.listening; i++) await U.sleep(10);
+        await lap.post({ act: 'lsync_pair', addr: '127.0.0.1:' + PORT, pin: hub.watch.pin }, {});
+        const hubCalls = [], lapCalls = [];
+        const origHub = hub.nsfw.panic.bind(hub.nsfw);
+        hub.nsfw.panic = async (o = {}) => { hubCalls.push(o); return { ok: true }; };
+        // alte Panik auf der Zentrale wird beim ersten Blick nicht nachgeholt
+        hub.lansync.markPanic();
+        assert.strictEqual(await lap.lansync.panicCheck(), false);
+        // Panik am Laptop (echte Funktion) → Zentrale sofort, ohne Echo zurück
+        const origLap = lap.nsfw.panic.bind(lap.nsfw);
+        let r = await origLap();
+        assert.match(r.msg, /Panik/);
+        for (let i = 0; i < 50 && !hubCalls.length; i++) await U.sleep(10);
+        assert.deepStrictEqual(hubCalls, [{ remote: true }], 'Zentrale stoppt mit');
+        lap.nsfw.panic = async (o = {}) => { lapCalls.push(o); return { ok: true }; };
+        assert.strictEqual(await lap.lansync.panicCheck(), false, 'eigene Panik kommt nicht als Echo zurück');
+        // Panik an der Zentrale (echte Funktion) → Laptop beim nächsten Blick
+        await U.sleep(5);
+        r = await origHub();
+        for (let i = 0; i < 50 && hub.lansync.panicAt() <= 0; i++) await U.sleep(10);
+        assert.strictEqual(await lap.lansync.panicCheck(), true);
+        assert.deepStrictEqual(lapCalls, [{ remote: true }]);
+        assert.strictEqual(await lap.lansync.panicCheck(), false, 'nur einmal');
+        // nur gekoppelte PCs dürfen auslösen
+        const st = await fetch('http://127.0.0.1:' + PORT + '/watch/panic', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"op":"fire"}' }).then(x => x.status);
+        assert.strictEqual(st, 401);
+        // ausgelöst von einem anderen PC → Hinweis in der Meldung
+        lap.nsfw.panic = origLap;
+        r = await lap.nsfw.panic({ remote: true }); assert.match(r.msg, /gekoppelten PC/);
+    } finally { hub.watch.stop(); lap.lansync.stop(); hub.lansync.stop(); }
+});
+
 test('8.0.5: Gesundheit (7/30 Tage, Pausen pro Stunde, Schritte, Trend, Hinweise, CSV) · Uhr: Schritte & Zifferblätter', async () => {
     const { NexusApp } = require('../backend/app');
     const { dayOf } = require('../backend/diary');
