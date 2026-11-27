@@ -26,6 +26,15 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.2.0 – Clubs 2.0
+Same in the app and on the GhostNode website (Community → Clubs):
+- 🛡 **Moderation 2.0:** word filter per club (also catches “w.o.r.d”, plus the website's own list) – matching posts wait in a queue for the leaders; **bans with expiry** (1 h, 1 day, 1 week, 30 days or permanent) and a reason; banned people can send **one appeal**, the leaders accept or decline it
+- 🎫 **Tickets:** members and interested people write to the club leaders; replies as a conversation, open/done
+- 🤝 **Partnerships:** request a partnership with another club; once confirmed, partners show on both club pages
+- 🔗 **Invite links:** links with expiry and use limit – they let people join directly, even “invite only” or “by application” clubs
+- 📊 **Club statistics** for leaders: members, new members, posts, upcoming events, average sign-ups, open tickets and applications, member chart for 12 weeks, most active members
+- 🤖 Public event feed per club for the GhostNode Discord bot (no members-only events)
+
 ### New in 7.1.1 – Stream bar on top & Twitch panel extension
 Stream-Bot → 📺 **Bar & Twitch panel**
 - 📺 **Stream bar on top** (OBS browser source `/bar`, 1920 × 260): world, players and session time, a ticker with your latest supporters (subs, gift subs, bits, raids), your own info lines and counters, ❤ heart rate, 🎵 song, 🎯 goal with progress bar and the running poll; `&pos=bottom` puts it at the bottom, `&theme=light` for a light look; private mode shows “🔒 Private” instead of the world

@@ -12,7 +12,9 @@ const ACTS = { comm_me: 'me', comm_feed: 'feed', comm_thread: 'thread', comm_pos
     comm_save: 'save', comm_follow: 'follow', comm_follows: 'follows', comm_trends: 'trends', comm_inbox: 'inbox',   // 5.3
     comm_req_list: 'req_list', comm_req_send: 'req_send', comm_req_answer: 'req_answer', comm_req_withdraw: 'req_withdraw', comm_compat: 'compat',   // 6.0 (18+)
     comm_sess_start: 'sess_start', comm_sess_answer: 'sess_answer', comm_sess_end: 'sess_end' };
-const CLUB_ACTS = ['list', 'view', 'create', 'update', 'join', 'leave', 'manage', 'post', 'post_mod', 'gallery_add', 'gallery_del', 'event_save', 'event_cancel', 'rsvp', 'calendar'];
+const CLUB_ACTS = ['list', 'view', 'create', 'update', 'join', 'leave', 'manage', 'post', 'post_mod', 'gallery_add', 'gallery_del', 'event_save', 'event_cancel', 'rsvp', 'calendar',
+    'ban', 'unban', 'appeal', 'appeal_decide', 'queue', 'queue_decide', 'wordfilter', 'ticket_new', 'tickets', 'ticket_view', 'ticket_reply',   // 7.2
+    'partners', 'partner_request', 'partner_answer', 'invite_new', 'invites', 'invite_delete', 'stats'];
 const MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 class Community {

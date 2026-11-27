@@ -2372,3 +2372,74 @@ Twitch-Panel: wird jede 15 s aktualisiert.	Twitch panel: updated every 15 s.	Pan
 Discord-Link bitte als https://discord.gg/…	Please enter the Discord link as https://discord.gg/…	Lien Discord sous la forme https://discord.gg/…	Discordリンクは https://discord.gg/… の形式で
 Das ist kein Verbindungscode aus dem Twitch-Panel (beginnt mit „gnx_“).	That's not a connection code from the Twitch panel (starts with “gnx_”).	Ce n'est pas un code de connexion du panneau Twitch (commence par « gnx_ »).	Twitchパネルの接続コードではありません（「gnx_」で始まります）。
 Welt, Laufband mit Unterstützern und Infos, Puls, Song, Ziel und Umfrage. Größe 1920 × 260, ganz oben über den Stream legen (&pos=bottom für unten).	World, ticker with supporters and infos, heart rate, song, goal and poll. Size 1920 × 260, place at the very top of the stream (&pos=bottom for the bottom).	Monde, bandeau avec soutiens et infos, pouls, musique, objectif et sondage. Taille 1920 × 260, à placer tout en haut du stream (&pos=bottom pour le bas).	ワールド、サポーターと情報のティッカー、心拍、曲、目標、投票。サイズ1920×260、配信の一番上に配置（下なら &pos=bottom）。
+Tickets	Tickets	Tickets	チケット
+Kontakt	Contact	Contact	お問い合わせ
+Partner	Partners	Partenaires	パートナー
+Statistik	Statistics	Statistiques	統計
+Mit Einladung beitreten	Join with invite	Rejoindre avec l'invitation	招待で参加
+Du bist hier gesperrt	You are banned here	Tu es banni ici	ここではBANされています
+Einspruch begründen …	Explain your appeal …	Justifie ta contestation …	異議の理由を書く …
+Einspruch abgelehnt.	Appeal declined.	Contestation refusée.	異議申し立ては却下されました。
+wird geprüft	being reviewed	en cours d'examen	確認中
+Nachricht an die Club-Leitung	Message to the club leaders	Message à la direction du club	クラブ運営へのメッセージ
+Betreff	Subject	Objet	件名
+Deine Nachricht	Your message	Ton message	メッセージ
+Keine Tickets.	No tickets.	Aucun ticket.	チケットはありません。
+erledigt	done	terminé	完了
+Wieder öffnen	Reopen	Rouvrir	再オープン
+Antwort …	Reply …	Réponse …	返信 …
+Warteschlange (Wortfilter)	Queue (word filter)	File d'attente (filtre de mots)	保留キュー（ワードフィルター）
+dauerhaft	permanent	permanent	無期限
+Einspruch annehmen	Accept appeal	Accepter la contestation	異議を承認
+Niemand gesperrt.	Nobody banned.	Personne n'est banni.	BANされている人はいません。
+Wortfilter	Word filter	Filtre de mots	ワードフィルター
+Beiträge mit diesen Wörtern (auch „w.o.r.t“) warten auf Freigabe. Komma oder eine Zeile je Wort. Die Liste der Webseite gilt zusätzlich.	Posts with these words (also “w.o.r.d”) wait for approval. Comma or one line per word. The website's list applies as well.	Les publications contenant ces mots (aussi « m.o.t ») attendent une validation. Virgule ou une ligne par mot. La liste du site s'applique aussi.	これらの単語（「た.ん.ご」なども）を含む投稿は承認待ちになります。カンマか1行に1語。サイトのリストも適用されます。
+Partnerschaft anfragen	Request partnership	Demander un partenariat	パートナーシップを申請
+Adresse des anderen Clubs, z. B. tanzclub	Address of the other club, e.g. danceclub	Adresse de l'autre club, p. ex. clubdanse	相手クラブのアドレス（例：danceclub）
+Die andere Club-Leitung bestätigt. Partner stehen dann öffentlich auf beiden Club-Seiten.	The other club's leaders confirm. Partners then appear publicly on both club pages.	La direction de l'autre club confirme. Les partenaires apparaissent alors publiquement sur les deux pages.	相手のクラブ運営が承認します。その後、両方のクラブページに公開表示されます。
+fragt an	requests	demande	申請あり
+angefragt	requested	demandé	申請中
+Noch keine Partner.	No partners yet.	Pas encore de partenaires.	まだパートナーはいません。
+Neuer Einladungslink	New invite link	Nouveau lien d'invitation	新しい招待リンク
+gilt 1 Tag	valid 1 day	valable 1 jour	1日有効
+gilt 1 Woche	valid 1 week	valable 1 semaine	1週間有効
+gilt 30 Tage	valid 30 days	valable 30 jours	30日有効
+ohne Ablauf	no expiry	sans expiration	期限なし
+1 Person	1 person	1 personne	1人
+10 Personen	10 people	10 personnes	10人
+beliebig oft	unlimited	illimité	無制限
+Erstellen	Create	Créer	作成
+Mit dem Link kommt man direkt in den Club – auch wenn er „nur mit Einladung“ oder „mit Bewerbung“ ist.	The link lets people join the club directly – even if it's “invite only” or “by application”.	Le lien permet de rejoindre le club directement – même s'il est « sur invitation » ou « sur candidature ».	このリンクで直接クラブに参加できます（招待制・応募制でも）。
+benutzt	used	utilisé	使用済み
+Mitglieder – letzte 12 Wochen	Members – last 12 weeks	Membres – 12 dernières semaines	メンバー – 直近12週間
+Aktivste Mitglieder (30 Tage)	Most active members (30 days)	Membres les plus actifs (30 jours)	最も活発なメンバー（30日）
+neu (30 Tage)	new (30 days)	nouveaux (30 jours)	新規（30日）
+Beiträge (30 Tage)	Posts (30 days)	Publications (30 jours)	投稿（30日）
+kommende Events	upcoming events	événements à venir	今後のイベント
+Ø Zusagen je Event	Ø sign-ups per event	Ø inscriptions par événement	イベントあたり平均参加
+offene Tickets	open tickets	tickets ouverts	未対応チケット
+Dein Beitrag wird von der Club-Leitung geprüft (Wortfilter).	Your post is being reviewed by the club leaders (word filter).	Ta publication est vérifiée par la direction du club (filtre de mots).	投稿はクラブ運営が確認中です（ワードフィルター）。
+Ticket gesendet – die Club-Leitung antwortet hier.	Ticket sent – the club leaders will reply here.	Ticket envoyé – la direction du club répondra ici.	チケットを送信しました – クラブ運営がここで返信します。
+Ticket erledigt.	Ticket done.	Ticket terminé.	チケット完了。
+Einspruch gesendet.	Appeal sent.	Contestation envoyée.	異議申し立てを送信しました。
+Einspruch angenommen – Sperre aufgehoben.	Appeal accepted – ban lifted.	Contestation acceptée – bannissement levé.	異議を承認 – BAN解除。
+Sperre aufgehoben.	Ban lifted.	Bannissement levé.	BANを解除しました。
+Dauerhaft gesperrt.	Banned permanently.	Banni définitivement.	無期限BAN。
+Wortfilter gespeichert.	Word filter saved.	Filtre de mots enregistré.	ワードフィルターを保存しました。
+Einladungslink erstellt.	Invite link created.	Lien d'invitation créé.	招待リンクを作成しました。
+Link gelöscht.	Link deleted.	Lien supprimé.	リンクを削除しました。
+Partnerschaft angenommen.	Partnership accepted.	Partenariat accepté.	パートナーシップを承認しました。
+Partnerschaft beendet.	Partnership ended.	Partenariat terminé.	パートナーシップを終了しました。
+Ihr seid schon Partner.	You're already partners.	Vous êtes déjà partenaires.	すでにパートナーです。
+Der Einladungslink ist ungültig oder abgelaufen.	The invite link is invalid or expired.	Le lien d'invitation est invalide ou expiré.	招待リンクが無効か期限切れです。
+Kein offener Einspruch.	No open appeal.	Aucune contestation en cours.	未処理の異議はありません。
+Du bist in diesem Club nicht gesperrt.	You're not banned in this club.	Tu n'es pas banni de ce club.	このクラブでBANされていません。
+Bitte begründe den Einspruch (mindestens 10 Zeichen).	Please explain your appeal (at least 10 characters).	Justifie ta contestation (au moins 10 caractères).	異議の理由を書いてください（10文字以上）。
+Zu viele Tickets – kurz warten.	Too many tickets – wait a moment.	Trop de tickets – patiente un peu.	チケットが多すぎます – 少し待ってください。
+Betreff und Nachricht ausfüllen.	Fill in subject and message.	Remplis l'objet et le message.	件名とメッセージを入力してください。
+Ticket nicht gefunden.	Ticket not found.	Ticket introuvable.	チケットが見つかりません。
+Nicht dein Ticket.	Not your ticket.	Ce n'est pas ton ticket.	あなたのチケットではありません。
+Das ist dein eigener Club.	That's your own club.	C'est ton propre club.	それはあなた自身のクラブです。
+Die Besitzer:in kann man nicht sperren.	The owner can't be banned.	On ne peut pas bannir le/la propriétaire.	オーナーはBANできません。
+Nur die Besitzer:in kann Moderator:innen sperren.	Only the owner can ban moderators.	Seul·e le/la propriétaire peut bannir des modérateurs.	モデレーターをBANできるのはオーナーだけです。
+Freigegeben.	Approved.	Approuvé.	承認しました。

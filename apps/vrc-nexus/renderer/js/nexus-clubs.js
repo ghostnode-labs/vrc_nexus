@@ -17,6 +17,7 @@
     const ROLE = { owner: '👑 Leitung', mod: '🛡 Moderation', member: 'Mitglied', site_mod: '🛡 Seiten-Moderation', pending: '⏳ Bewerbung offen', banned: '🚫 ausgeschlossen' };
     const fail = e => toast(e.message || String(e), 'error');
     let meta = { topics: {}, langs: {}, join: {} }, view = 'browse', cur = '';
+    let invite = (new URLSearchParams(location.search).get('invite') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 12);   // 7.2: Einladungslink
 
     function shell(inner) {
         box.innerHTML = '<div class="nw-row" style="margin-bottom:12px">'
@@ -120,15 +121,22 @@
             const head = (c.banner ? '<div class="cl-ban cl-ban-big" style="background-image:url(\'' + encodeURI(c.banner) + '\')"></div>' : '')
                 + '<div class="nw-card"' + (c.color ? ' style="border-left:4px solid ' + c.color + '"' : '') + '><div class="nw-row"><h3 style="margin:0">' + esc(c.name) + '</h3><span class="nw-muted">/' + esc(c.slug) + '</span><span class="sp"></span>'
                 + '<span class="nw-muted">' + (ROLE[c.my_role] || '') + '</span>'
-                + (!d.is_member && c.my_role !== 'pending' && c.my_role !== 'banned' && c.join_mode !== 'invite' ? '<button type="button" class="btn btn-sm btn-gold" data-join>' + (c.join_mode === 'apply' ? '📨 Bewerben' : '➕ Beitreten') + '</button>' : '')
+                + (!d.is_member && !d.ban && c.my_role !== 'pending' && c.my_role !== 'banned' && (c.join_mode !== 'invite' || invite) ? '<button type="button" class="btn btn-sm btn-gold" data-join>' + (invite && c.join_mode !== 'open' ? '🔗 Mit Einladung beitreten' : c.join_mode === 'apply' ? '📨 Bewerben' : '➕ Beitreten') + '</button>' : '')
                 + (d.is_member && c.my_role !== 'owner' && c.my_role !== 'site_mod' ? '<button type="button" class="btn btn-sm" data-leave>Verlassen</button>' : '')
                 + (staff ? '<button type="button" class="btn btn-sm" data-edit>⚙</button>' : '')
                 + (c.listed ? '<a class="btn btn-sm" target="_blank" rel="noopener" href="' + site + 'nexusclubs.php?ics=' + encodeURIComponent(c.slug) + '" title="Kalender abonnieren (iCal)">📆 iCal</a>' : '') + '</div>'
                 + '<div class="nw-muted">' + esc(meta.topics[c.topic] || c.topic) + ' · ' + esc(meta.langs[c.lang] || c.lang) + ' · 👥 ' + c.members + ' · ' + esc(meta.join[c.join_mode] || '') + '</div>'
-                + (c.descr ? '<div class="nw-text" style="margin-top:6px">' + esc(c.descr) + '</div>' : '') + '<div data-joinbox></div></div>';
+                + (c.descr ? '<div class="nw-text" style="margin-top:6px">' + esc(c.descr) + '</div>' : '')
+                + (d.partners && d.partners.filter(x => x.status === 'active').length ? '<div class="nw-muted" style="margin-top:6px">🤝 Partner: ' + d.partners.filter(x => x.status === 'active').map(x => '<a href="#" data-goclub="' + esc(x.slug) + '">' + esc(x.name) + '</a>').join(', ') + '</div>' : '')
+                + (d.ban ? '<div class="cl-ban-box">🚫 Du bist hier gesperrt' + (d.ban.until ? ' bis ' + esc(dt(d.ban.until)) : '') + (d.ban.reason ? ' – ' + esc(d.ban.reason) : '') + '.'
+                    + (d.ban.appeal_status === 'open' ? ' <span class="nw-muted">Dein Einspruch wird geprüft.</span>' : d.ban.appeal_status === 'declined' ? ' <span class="nw-muted">Einspruch abgelehnt.</span>'
+                        : '<div class="nw-row" style="margin-top:6px"><input data-appeal maxlength="1000" placeholder="Einspruch begründen …" style="flex:1"><button type="button" class="btn btn-sm" data-appealgo>📨 Einspruch</button></div>') + '</div>' : '')
+                + '<div data-joinbox></div></div>';
             const tabs = [['feed', '📰 Feed'], ['events', '📅 Events'], ['gallery', '🖼 Galerie'], ['rules', '📜 Regeln']];
             if (d.is_member) tabs.push(['members', '👥 Mitglieder'], ['archive', '🗄 Archiv']);
             if (staff) tabs.push(['apps', '📨 Bewerbungen' + (d.applications && d.applications.length ? ' (' + d.applications.length + ')' : '')]);
+            tabs.push(['tickets', '🎫 ' + (staff ? 'Tickets' + (d.tickets_open ? ' (' + d.tickets_open + ')' : '') : 'Kontakt')]);   // 7.2
+            if (staff) tabs.push(['mod', '🛡 Moderation' + (d.queue ? ' (' + d.queue + ')' : '')], ['partner', '🤝 Partner'], ['invites', '🔗 Einladen'], ['stats', '📊 Statistik']);
             body.innerHTML = head + '<div class="nw-row" style="margin:10px 0" data-tabs>' + tabs.map(([k, t]) => '<button type="button" class="btn btn-sm" data-t="' + k + '">' + t + '</button>').join('') + '</div><div data-pane></div>';
             const pane = $('[data-pane]', body);
             const show = t => {
@@ -137,7 +145,7 @@
                 if (t === 'feed') {
                     if (!d.posts) { pane.innerHTML = '<div class="nw-card nw-muted">Der Feed ist nur für Mitglieder sichtbar.</div>'; return; }
                     pane.innerHTML = (d.is_member ? '<div class="nw-card"><textarea maxlength="2000" rows="2" placeholder="Etwas mit dem Club teilen …" data-ptext style="width:100%"></textarea><div class="nw-row"><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-psend>Posten</button></div></div>' : '')
-                        + (d.posts.length ? d.posts.map(p => '<div class="nw-card" data-post="' + p.id + '">' + (p.pinned ? '📌 ' : '') + '<b>' + esc(p.name || p.author) + '</b> <span class="nw-muted">' + dt(p.created) + '</span><div class="nw-text">' + esc(p.text) + '</div>'
+                        + (d.posts.length ? d.posts.map(p => '<div class="nw-card' + (p.held ? ' cl-held' : '') + '" data-post="' + p.id + '">' + (p.held ? '<span class="nw-muted">⏳ wird geprüft · </span>' : '') + (p.pinned ? '📌 ' : '') + '<b>' + esc(p.name || p.author) + '</b> <span class="nw-muted">' + dt(p.created) + '</span><div class="nw-text">' + esc(p.text) + '</div>'
                             + (staff || p.author === (window.NexusWebMe || '') ? '<div class="nw-row"><span class="sp"></span>' + (staff ? '<button type="button" class="btn btn-sm" data-pin>📌</button>' : '') + '<button type="button" class="btn btn-sm" data-pdel>🗑</button></div>' : '') + '</div>').join('')
                             : '<div class="nw-muted">Noch keine Beiträge.</div>');
                     const s = $('[data-psend]', pane); if (s) s.onclick = () => call('post', { club: slug, text: $('[data-ptext]', pane).value }).then(r => { toast(r.msg); reload(); }).catch(fail);
@@ -180,6 +188,78 @@
                         if (['ban', 'transfer', 'kick'].includes(b.dataset.do) && !confirm({ ban: 'Ausschließen?', transfer: 'Leitung wirklich übergeben?', kick: 'Entfernen?' }[b.dataset.do])) return;
                         call('manage', { club: slug, do: b.dataset.do, target: el.dataset.m }).then(r => { toast(r.msg); reload(); }).catch(fail); }));
                 }
+                if (t === 'tickets') {   // 7.2: Kontakt zur Club-Leitung
+                    pane.innerHTML = '<span class="nw-muted">Lädt …</span>';
+                    const list = () => call('tickets', { club: slug }).then(r => {
+                        pane.innerHTML = (r.staff ? '' : '<div class="nw-card"><h3>🎫 Nachricht an die Club-Leitung</h3><input data-ts maxlength="100" placeholder="Betreff" style="width:100%"><textarea data-tt rows="3" maxlength="2000" placeholder="Deine Nachricht" style="width:100%;margin-top:6px"></textarea><div class="nw-row"><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-tnew>Senden</button></div></div>')
+                            + (r.items.length ? r.items.map(x => '<div class="nw-card cl-tk" data-tk="' + x.id + '" style="cursor:pointer"><div class="nw-row"><b>' + (x.status === 'open' ? '🟢 ' : '✅ ') + esc(x.subject) + '</b><span class="sp"></span><span class="nw-muted">' + (r.staff ? esc(x.name || x.author) + ' · ' : '') + esc(dt(x.updated)) + '</span></div></div>').join('') : '<div class="nw-muted">Keine Tickets.</div>');
+                        const nb = $('[data-tnew]', pane); if (nb) nb.onclick = () => call('ticket_new', { club: slug, subject: $('[data-ts]', pane).value, text: $('[data-tt]', pane).value }).then(x => { toast(x.msg); list(); }).catch(fail);
+                        $$('[data-tk]', pane).forEach(el => el.onclick = () => openTicket(+el.dataset.tk, r.staff));
+                    }).catch(e => { pane.innerHTML = '<div class="vx-error">' + esc(e.message) + '</div>'; });
+                    const openTicket = (id, isStaff) => call('ticket_view', { club: slug, id }).then(r => {
+                        pane.innerHTML = '<div class="nw-card"><div class="nw-row"><button type="button" class="btn btn-sm" data-tback>← Tickets</button><b>' + esc(r.ticket.subject) + '</b><span class="sp"></span><span class="nw-muted">' + (r.ticket.status === 'open' ? '🟢 offen' : '✅ erledigt') + '</span></div>'
+                            + r.msgs.map(m => '<div class="cl-msg' + (m.staff ? ' staff' : '') + '"><b>' + (m.staff ? '🛡 ' : '') + esc(m.name) + '</b> <span class="nw-muted">' + esc(dt(m.created)) + '</span><div class="nw-text">' + esc(m.text) + '</div></div>').join('')
+                            + '<textarea data-tr rows="2" maxlength="2000" placeholder="Antwort …" style="width:100%;margin-top:8px"></textarea><div class="nw-row"><span class="sp"></span>'
+                            + (isStaff ? '<button type="button" class="btn btn-sm" data-tst="' + (r.ticket.status === 'open' ? 'closed' : 'open') + '">' + (r.ticket.status === 'open' ? '✅ Erledigt' : '↩ Wieder öffnen') + '</button>' : '') + '<button type="button" class="btn btn-sm btn-gold" data-tsend>Antworten</button></div></div>';
+                        $('[data-tback]', pane).onclick = list;
+                        $('[data-tsend]', pane).onclick = () => call('ticket_reply', { club: slug, id, text: $('[data-tr]', pane).value }).then(() => openTicket(id, isStaff)).catch(fail);
+                        const st = $('[data-tst]', pane); if (st) st.onclick = () => call('ticket_reply', { club: slug, id, text: $('[data-tr]', pane).value, status: st.dataset.tst }).then(x => { toast(x.msg); openTicket(id, isStaff); }).catch(fail);
+                    }).catch(fail);
+                    list();
+                }
+                if (t === 'mod') {   // 7.2: Warteschlange, Sperren, Einsprüche, Wortfilter
+                    pane.innerHTML = '<span class="nw-muted">Lädt …</span>';
+                    call('queue', { club: slug }).then(q => {
+                        pane.innerHTML = '<div class="nw-card"><h3>⏳ Warteschlange (Wortfilter)</h3>' + (q.posts.length ? q.posts.map(x => '<div class="cl-msg" data-q="' + x.id + '"><b>' + esc(x.name || x.author) + '</b> <span class="nw-muted">' + esc(dt(x.created)) + '</span><div class="nw-text">' + esc(x.text) + '</div><div class="nw-row"><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-qok="1">✅ Freigeben</button><button type="button" class="btn btn-sm" data-qok="0">🗑 Löschen</button></div></div>').join('') : '<span class="nw-muted">Nichts zu prüfen.</span>') + '</div>'
+                            + '<div class="nw-card"><h3>🚫 Sperren</h3><div class="nw-row"><input data-bt placeholder="usr_…" style="flex:2;min-width:160px"><select data-bh><option value="1">1 h</option><option value="24">1 Tag</option><option value="168">1 Woche</option><option value="720">30 Tage</option><option value="0">dauerhaft</option></select><input data-br maxlength="300" placeholder="Grund" style="flex:2"><button type="button" class="btn btn-sm" data-bgo>Sperren</button></div>'
+                            + (q.bans.length ? q.bans.map(b => '<div class="cl-msg" data-b="' + esc(b.vrc_id) + '"><div class="nw-row"><b>' + esc(b.name || b.vrc_id) + '</b><span class="nw-muted">' + (b.until ? 'bis ' + esc(dt(b.until)) : 'dauerhaft') + (b.reason ? ' · ' + esc(b.reason) : '') + '</span><span class="sp"></span><button type="button" class="btn btn-sm" data-unban>Aufheben</button></div>'
+                                + (b.appeal_status === 'open' ? '<div class="nw-text">📨 ' + esc(b.appeal) + '</div><div class="nw-row"><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-ap="1">Einspruch annehmen</button><button type="button" class="btn btn-sm" data-ap="0">Ablehnen</button></div>' : '') + '</div>').join('') : '<p class="nw-muted">Niemand gesperrt.</p>') + '</div>'
+                            + '<div class="nw-card"><h3>🔤 Wortfilter</h3><p class="nw-muted">Beiträge mit diesen Wörtern (auch „w.o.r.t“) warten auf Freigabe. Komma oder eine Zeile je Wort. Die Liste der Webseite gilt zusätzlich.</p><textarea data-wf rows="3" style="width:100%">' + esc(q.wordfilter) + '</textarea><div class="nw-row"><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-wfs>Speichern</button></div></div>';
+                        $$('[data-q]', pane).forEach(el => $$('[data-qok]', el).forEach(b => b.onclick = () => call('queue_decide', { club: slug, id: +el.dataset.q, ok: b.dataset.qok === '1' ? 1 : 0 }).then(r => { toast(r.msg); reload(); }).catch(fail)));
+                        $('[data-bgo]', pane).onclick = () => call('ban', { club: slug, target: $('[data-bt]', pane).value.trim(), hours: +$('[data-bh]', pane).value, reason: $('[data-br]', pane).value }).then(r => { toast(r.msg); show('mod'); }).catch(fail);
+                        $$('[data-b]', pane).forEach(el => {
+                            $('[data-unban]', el).onclick = () => call('unban', { club: slug, target: el.dataset.b }).then(r => { toast(r.msg); show('mod'); }).catch(fail);
+                            $$('[data-ap]', el).forEach(b => b.onclick = () => call('appeal_decide', { club: slug, target: el.dataset.b, accept: b.dataset.ap === '1' ? 1 : 0 }).then(r => { toast(r.msg); show('mod'); }).catch(fail));
+                        });
+                        $('[data-wfs]', pane).onclick = () => call('wordfilter', { club: slug, words: $('[data-wf]', pane).value }).then(r => toast(r.msg)).catch(fail);
+                    }).catch(fail);
+                }
+                if (t === 'partner') {   // 7.2: Partnerschaften
+                    pane.innerHTML = '<span class="nw-muted">Lädt …</span>';
+                    call('partners', { club: slug }).then(r => {
+                        pane.innerHTML = '<div class="nw-card"><h3>🤝 Partnerschaft anfragen</h3><div class="nw-row"><input data-po placeholder="Adresse des anderen Clubs, z. B. tanzclub" style="flex:1"><button type="button" class="btn btn-sm btn-gold" data-pgo>Anfragen</button></div><p class="nw-muted">Die andere Club-Leitung bestätigt. Partner stehen dann öffentlich auf beiden Club-Seiten.</p></div>'
+                            + (r.items.length ? r.items.map(x => '<div class="nw-card nw-row" data-ps="' + esc(x.slug) + '"><b>' + esc(x.name) + '</b><span class="nw-muted">' + (x.status === 'active' ? '🤝 Partner' : x.incoming ? '📨 fragt an' : '⏳ angefragt') + '</span><span class="sp"></span>'
+                                + (x.incoming ? '<button type="button" class="btn btn-sm btn-gold" data-pa="1">Annehmen</button>' : '') + '<button type="button" class="btn btn-sm" data-pa="0">' + (x.status === 'active' ? 'Beenden' : 'Ablehnen') + '</button></div>').join('') : '<div class="nw-muted">Noch keine Partner.</div>');
+                        $('[data-pgo]', pane).onclick = () => call('partner_request', { club: slug, other: $('[data-po]', pane).value.trim() }).then(x => { toast(x.msg); show('partner'); }).catch(fail);
+                        $$('[data-ps]', pane).forEach(el => $$('[data-pa]', el).forEach(b => b.onclick = () => call('partner_answer', { club: slug, other: el.dataset.ps, accept: b.dataset.pa === '1' ? 1 : 0 }).then(x => { toast(x.msg); show('partner'); }).catch(fail)));
+                    }).catch(fail);
+                }
+                if (t === 'invites') {   // 7.2: Einladungslinks
+                    const base = (site || (location.origin + location.pathname.replace(/[^/]*$/, ''))) + 'nexus.php?club=' + encodeURIComponent(slug) + '&invite=';
+                    pane.innerHTML = '<span class="nw-muted">Lädt …</span>';
+                    call('invites', { club: slug }).then(r => {
+                        pane.innerHTML = '<div class="nw-card"><h3>🔗 Neuer Einladungslink</h3><div class="nw-row"><select data-ih><option value="24">gilt 1 Tag</option><option value="168" selected>gilt 1 Woche</option><option value="720">gilt 30 Tage</option><option value="0">ohne Ablauf</option></select>'
+                            + '<select data-im><option value="1">1 Person</option><option value="10">10 Personen</option><option value="0" selected>beliebig oft</option></select><span class="sp"></span><button type="button" class="btn btn-sm btn-gold" data-igo>Erstellen</button></div>'
+                            + '<p class="nw-muted">Mit dem Link kommt man direkt in den Club – auch wenn er „nur mit Einladung“ oder „mit Bewerbung“ ist.</p></div>'
+                            + (r.items.length ? r.items.map(x => '<div class="nw-card' + (x.valid ? '' : ' tg-past') + '" data-ic="' + esc(x.code) + '"><div class="nw-row"><input readonly value="' + esc(base + x.code) + '" style="flex:1;font-family:monospace;font-size:.8rem"><button type="button" class="btn btn-sm" data-icopy>📋</button><button type="button" class="btn btn-sm" data-idel>🗑</button></div>'
+                                + '<div class="nw-muted">' + x.uses + (x.max ? ' / ' + x.max : '') + ' benutzt · ' + (x.expires ? 'bis ' + esc(dt(x.expires)) : 'ohne Ablauf') + (x.valid ? '' : ' · ❌ abgelaufen') + '</div></div>').join('') : '');
+                        $('[data-igo]', pane).onclick = () => call('invite_new', { club: slug, hours: +$('[data-ih]', pane).value, max: +$('[data-im]', pane).value }).then(x => { toast(x.msg); show('invites'); }).catch(fail);
+                        $$('[data-ic]', pane).forEach(el => {
+                            $('[data-icopy]', el).onclick = () => { const i = $('input', el); i.select(); try { navigator.clipboard.writeText(i.value); toast('Kopiert.'); } catch (e) { document.execCommand('copy'); } };
+                            $('[data-idel]', el).onclick = () => call('invite_delete', { club: slug, code: el.dataset.ic }).then(() => show('invites')).catch(fail);
+                        });
+                    }).catch(fail);
+                }
+                if (t === 'stats') {   // 7.2: Statistik
+                    pane.innerHTML = '<span class="nw-muted">Lädt …</span>';
+                    call('stats', { club: slug }).then(st => {
+                        const mx = Math.max(1, ...st.weeks.map(w => w.members));
+                        pane.innerHTML = '<div class="cl-kpis">' + [['👥', st.members, 'Mitglieder'], ['🆕', st.new_30, 'neu (30 Tage)'], ['📰', st.posts_30, 'Beiträge (30 Tage)'], ['📅', st.events_next, 'kommende Events'], ['🙋', st.avg_going, 'Ø Zusagen je Event'], ['🎫', st.tickets_open, 'offene Tickets'], ['📨', st.pending, 'Bewerbungen']]
+                            .map(([i, v, l]) => '<div class="nw-card"><span>' + i + '</span><b>' + esc(String(v)) + '</b><small>' + l + '</small></div>').join('') + '</div>'
+                            + '<div class="nw-card"><h3>Mitglieder – letzte 12 Wochen</h3><div class="cl-spark">' + st.weeks.map(w => '<i title="' + w.members + '" style="height:' + Math.max(4, Math.round(w.members / mx * 100)) + '%"></i>').join('') + '</div></div>'
+                            + (st.top.length ? '<div class="nw-card"><h3>Aktivste Mitglieder (30 Tage)</h3>' + st.top.map((x, i) => '<div class="nw-row"><span>' + (i + 1) + '. ' + esc(x.name) + '</span><span class="sp"></span><b>' + x.n + '</b></div>').join('') + '</div>' : '');
+                    }).catch(fail);
+                }
                 if (t === 'apps') {
                     const a = d.applications || [];
                     pane.innerHTML = a.length ? a.map(x => '<div class="nw-card" data-m="' + esc(x.vrc_id) + '"><div class="nw-row"><b>' + esc(x.name || x.vrc_id) + '</b><span class="nw-muted">' + dt(x.at) + '</span><span class="sp"></span>'
@@ -190,8 +270,11 @@
             };
             $$('[data-t]', body).forEach(b => b.onclick = () => show(b.dataset.t));
             show(tab);
+            const ag = $('[data-appealgo]', body); if (ag) ag.onclick = () => call('appeal', { club: slug, text: $('[data-appeal]', body).value }).then(r => { toast(r.msg); reload(); }).catch(fail);
+            $$('[data-goclub]', body).forEach(a => a.onclick = ev => { ev.preventDefault(); openClub(a.dataset.goclub); });
             const j = $('[data-join]', body);
             if (j) j.onclick = () => {
+                if (invite && c.join_mode !== 'open') return call('join', { club: slug, code: invite }).then(r => { invite = ''; toast(r.msg); reload(); }).catch(fail);
                 if (c.join_mode !== 'apply' || !c.questions.length) return call('join', { club: slug }).then(r => { toast(r.msg); reload(); }).catch(fail);
                 const jb = $('[data-joinbox]', body);
                 jb.innerHTML = '<div class="cl-form" style="margin-top:10px">' + c.questions.map((q, i) => '<label class="cl-wide">' + esc(q) + '<textarea rows="2" maxlength="500" data-ans="' + i + '"></textarea></label>').join('')
