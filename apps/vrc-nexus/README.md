@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.19 – Watch installer
+- 📲 **Install and update Nexus Watch from the PC:** under Tools → 📡 Devices there is a new "Install / update watch app" card. It uses the watch's Wi-Fi debugging (ADB). Pair once with the code shown on the watch, then connect and install the latest version with one click. If the PC has no `adb` yet, the app downloads it from Google's Android Platform Tools on request and unpacks only `adb`. Only Wear OS watches are accepted, and only the watch APK from the official release is installed.
+- ⌚ **The watch no longer installs updates itself.** Wear OS often blocks installations started in the background, which caused the updater error. The watch now only checks for a new version and shows "Update available – install on PC" (once per version as a notification). A GitHub rate limit shows a clear message instead of an error code.
+
 ### New in 8.0.18 – Clearer website errors
 - 🛠 **Fixed: "Antwort kein JSON" when connecting the Nexus account.** If the GhostNode website answers with an error page instead of data (server error, host firewall, a page that is being updated), the app now says what happened – with server name and HTTP status – instead of a bare "no JSON". Short hiccups (for example right after a website update) are retried once automatically, and the app re-checks which server address answers correctly. A PHP notice in front of the answer no longer breaks the connection. Applies to account, chat, community, warning list, licence and remote control.
 - 🖥 **HypeRate relay for game panels:** the relay now also reads `SERVER_PORT` and an optional `HOST` (e.g. `127.0.0.1` behind a reverse proxy); a ready-made panel egg is included in `apps/hyperate-relay`.

@@ -2918,3 +2918,19 @@ Atem-Hinweis ab	Breathing hint from	Rappel respiration dès	呼吸ヒント開�
 auch in die Chatbox (öffentlich! nie Puls, nie im Privat-Modus)	also to the chatbox (public! never heart rate, never in private mode)	aussi dans la chatbox (public ! jamais le pouls, jamais en mode privé)	チャットボックスにも（公開！心拍数は出さず、プライベートモードでは出しません）
 Probe hören	Try it	Essayer	試してみる
 Läuft komplett auf diesem PC – keine Cloud, keine KI, keine Daten nach außen. Nutzt nur Sitzungsdauer, Lust-Meter, Edging, Puls, Pausen und Ampel.	Runs entirely on this PC – no cloud, no AI, no data leaves. Only uses session time, lust meter, edging, heart rate, breaks and the consent light.	Fonctionne entièrement sur ce PC – pas de cloud, pas d'IA, aucune donnée ne sort. Utilise seulement la durée, le lust-mètre, l'edging, le pouls, les pauses et le feu.	完全にこのPC上で動作 – クラウドなし、AIなし、データ送信なし。セッション時間・ラストメーター・エッジング・心拍数・休憩・信号のみ使用。
+Uhr-App installieren / aktualisieren	Install / update watch app	Installer / mettre à jour l'app montre	ウォッチアプリのインストール/更新
+Über das WLAN-Debugging der Uhr (ADB). Die Uhr zeigt nur noch an, dass es ein Update gibt – installiert wird von hier.	Via the watch's Wi-Fi debugging (ADB). The watch only shows that an update is available – installing happens from here.	Via le débogage Wi-Fi de la montre (ADB). La montre indique seulement qu'une mise à jour existe – l'installation se fait d'ici.	ウォッチのワイヤレスデバッグ（ADB）経由。ウォッチは更新があることだけを表示し、インストールはここから行います。
+Dafür braucht der PC das Werkzeug „adb“ aus Googles Android Platform-Tools.	For this the PC needs the "adb" tool from Google's Android Platform Tools.	Pour cela, le PC a besoin de l'outil « adb » des Android Platform Tools de Google.	これにはGoogleのAndroid Platform Toolsの「adb」がPCに必要です。
+ADB laden (Google, ca. 7 MB)	Download ADB (Google, approx. 7 MB)	Télécharger ADB (Google, env. 7 Mo)	ADBをダウンロード（Google、約7 MB）
+Uhr: Einstellungen → System → Info → 7× auf „Build-Nummer“ tippen (Entwickleroptionen).	Watch: Settings → System → About → tap "Build number" 7× (developer options).	Montre : Paramètres → Système → À propos → touchez 7× « Numéro de build » (options développeur).	ウォッチ：設定 → システム → 情報 →「ビルド番号」を7回タップ（開発者向けオプション）。
+Entwickleroptionen: „ADB-Debugging“ und „Kabelloses Debugging“ einschalten (Uhr und PC im selben WLAN).	Developer options: turn on "ADB debugging" and "Wireless debugging" (watch and PC on the same Wi-Fi).	Options développeur : activez « Débogage ADB » et « Débogage sans fil » (montre et PC sur le même Wi-Fi).	開発者向けオプション：「ADBデバッグ」と「ワイヤレスデバッグ」をオン（ウォッチとPCは同じWi-Fi）。
+Nur beim ersten Mal: „Kabelloses Debugging“ → „Mit Kopplungscode koppeln“ – Adresse und Code hier eintragen:	First time only: "Wireless debugging" → "Pair new device" – enter address and code here:	La première fois seulement : « Débogage sans fil » → « Associer avec un code » – saisissez l'adresse et le code ici :	初回のみ：「ワイヤレスデバッグ」→「ペア設定コードでペア設定」– アドレスとコードを入力：
+Danach die Adresse oben in „Kabelloses Debugging“ (IP-Adresse und Port):	Then the address at the top of "Wireless debugging" (IP address and port):	Ensuite l'adresse en haut de « Débogage sans fil » (adresse IP et port) :	次に「ワイヤレスデバッグ」上部のアドレス（IPアドレスとポート）：
+auf der Uhr „Zulassen“ tippen	tap "Allow" on the watch	touchez « Autoriser » sur la montre	ウォッチで「許可」をタップ
+Neueste Version installieren	Install latest version	Installer la dernière version	最新版をインストール
+Noch keine Uhr über ADB verbunden.	No watch connected via ADB yet.	Aucune montre connectée via ADB.	ADBで接続されたウォッチはまだありません。
+Neueste Nexus Watch auf diese Uhr installieren?	Install the latest Nexus Watch on this watch?	Installer la dernière Nexus Watch sur cette montre ?	このウォッチに最新のNexus Watchをインストールしますか？
+✔ adb ist bereit.	✔ adb is ready.	✔ adb est prêt.	✔ adbの準備ができました。
+✔ Uhr gekoppelt – jetzt verbinden.	✔ Watch paired – now connect.	✔ Montre associée – connectez-la maintenant.	✔ ペア設定完了 – 接続してください。
+✔ Uhr verbunden.	✔ Watch connected.	✔ Montre connectée.	✔ ウォッチを接続しました。
+ADB laden	Download ADB	Télécharger ADB	ADBをダウンロード

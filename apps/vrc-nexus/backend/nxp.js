@@ -7,7 +7,8 @@
 const zlib = require('zlib');
 const { UserError } = require('./util');
 
-const LIMITS = { files: 200, total: 8 * 1024 * 1024, file: 3 * 1024 * 1024, packed: 6 * 1024 * 1024 };
+const LIMITS_DEF = { files: 200, total: 8 * 1024 * 1024, file: 3 * 1024 * 1024, packed: 6 * 1024 * 1024 };
+const LIMITS = LIMITS_DEF;
 
 const CRC_T = (() => { const t = new Int32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c; } return t; })();
 function crc32(b) { let c = -1; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; }
@@ -22,10 +23,12 @@ function cleanName(n) {
     return n;
 }
 
-/** ZIP-Puffer → { 'pfad': Buffer } (Ordner-Einträge entfallen) */
-function readZip(buf) {
+/** ZIP-Puffer → { 'pfad': Buffer } (Ordner-Einträge entfallen)
+ *  8.0.19: opts.limits (eigene Grenzen) und opts.only (Filter: nur diese Pfade entpacken, z. B. adb aus den Platform-Tools) */
+function readZip(buf, opts = {}) {
+    const LIMITS = Object.assign({}, LIMITS_DEF, opts.limits || {}), only = opts.only || null;
     if (!Buffer.isBuffer(buf) || buf.length < 22) throw new UserError('Das ist kein gültiges Plugin-Paket (.nxp).');
-    if (buf.length > LIMITS.packed) throw new UserError('Das Plugin-Paket ist zu groß (höchstens 6 MB).');
+    if (buf.length > LIMITS.packed) throw new UserError('Das Paket ist zu groß (höchstens ' + Math.round(LIMITS.packed / 1048576) + ' MB).');
     let eocd = -1;
     for (let i = buf.length - 22; i >= Math.max(0, buf.length - 22 - 65535); i--) if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
     if (eocd < 0) throw new UserError('Das ist kein gültiges Plugin-Paket (.nxp).');
@@ -42,6 +45,7 @@ function readZip(buf) {
         const rawName = buf.subarray(p + 46, p + 46 + nlen).toString('utf8');
         p += 46 + nlen + elen + clen;
         if (rawName.endsWith('/')) continue;                                  // Ordner
+        if (only && !only(rawName)) continue;
         const name = cleanName(rawName);
         if (!name) throw new UserError('Unerlaubter Dateipfad im Plugin: ' + rawName.slice(0, 80));
         if (flags & 1) throw new UserError('Verschlüsselte Plugin-Pakete werden nicht unterstützt.');

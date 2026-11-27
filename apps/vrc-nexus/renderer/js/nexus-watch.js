@@ -3,7 +3,7 @@
     const UI = window.NexusUI;
     if (!UI) return;
     const esc = UI.esc, api = UI.api, toast = (m, b) => UI.toast(m, b), T = s => (window.t ? window.t(s) : s);
-    let box = null, d = null, hub = null, timer = null, prevImg = { rev: '', url: '' };
+    let box = null, d = null, hub = null, ai = null, aiv = { pair: '', code: '', conn: '' }, timer = null, prevImg = { rev: '', url: '' };
     const ago = ms => { if (!ms) return T('noch nie'); const s = Math.round((Date.now() - ms) / 1000); return s < 60 ? T('vor') + ' ' + s + ' s' : s < 3600 ? T('vor') + ' ' + Math.round(s / 60) + ' min' : new Date(ms).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); };
 
     /** kleine runde Vorschau der Uhr mit Thema & Hintergrund */
@@ -51,10 +51,35 @@
             + (L.bg !== 'none' ? '<div class="nc-row"><span class="small">' + esc(T('Abdunkeln')) + '</span><input type="range" min="0" max="85" step="5" value="' + L.bg_dim + '" data-nwdim><span class="small">' + L.bg_dim + ' %</span></div>' : '')
             + '<p class="small muted">' + esc(T('Wird automatisch auf alle gekoppelten Uhren übertragen. Am besten ein quadratisches Bild (z. B. 450 × 450).')) + '</p>'
             + '</div></div></div>';
+        h += adbCard();
         h += '</div>';
         box.innerHTML = h;
     }
-    function load() { api('devhub_list').then(r => { hub = r; }).catch(() => { hub = null; }); return api('watch_get').then(r => { d = r; render(); }).catch(e => { if (box) box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
+    /** 8.0.19: Uhr-App per ADB installieren/aktualisieren (die Uhr installiert nicht mehr selbst) */
+    function adbCard() {
+        if (!ai) return '';
+        const busy = ai.busy ? ' disabled' : '', inp = (k, ph, w) => '<input type="text" data-nwadb="' + k + '" value="' + esc(aiv[k]) + '" placeholder="' + esc(ph) + '" style="width:' + w + 'px"' + busy + '>';
+        let h = '<div class="nc-card" style="grid-column:1/-1"><h4>📲 ' + esc(T('Uhr-App installieren / aktualisieren')) + '</h4>'
+            + '<p class="small muted">' + esc(T('Über das WLAN-Debugging der Uhr (ADB). Die Uhr zeigt nur noch an, dass es ein Update gibt – installiert wird von hier.')) + '</p>';
+        if (!ai.adb) return h + '<p class="small">' + esc(T('Dafür braucht der PC das Werkzeug „adb“ aus Googles Android Platform-Tools.')) + '</p>'
+            + '<button type="button" class="btn btn-sm" data-nwa="adbget"' + busy + '>⬇ ' + esc(T('ADB laden (Google, ca. 7 MB)')) + '</button>' + adbLog() + '</div>';
+        h += '<ol class="small" style="margin:6px 0 10px;padding-left:18px;line-height:1.6">'
+            + '<li>' + esc(T('Uhr: Einstellungen → System → Info → 7× auf „Build-Nummer“ tippen (Entwickleroptionen).')) + '</li>'
+            + '<li>' + esc(T('Entwickleroptionen: „ADB-Debugging“ und „Kabelloses Debugging“ einschalten (Uhr und PC im selben WLAN).')) + '</li>'
+            + '<li>' + esc(T('Nur beim ersten Mal: „Kabelloses Debugging“ → „Mit Kopplungscode koppeln“ – Adresse und Code hier eintragen:')) + '</li></ol>'
+            + '<div class="nc-row">' + inp('pair', '192.168.1.50:37123', 170) + inp('code', '123456', 90) + '<button type="button" class="btn btn-sm" data-nwa="adbpair"' + busy + '>🔗 ' + esc(T('Koppeln')) + '</button></div>'
+            + '<p class="small muted" style="margin:8px 0 4px">' + esc(T('Danach die Adresse oben in „Kabelloses Debugging“ (IP-Adresse und Port):')) + '</p>'
+            + '<div class="nc-row">' + inp('conn', '192.168.1.50:41234', 170) + '<button type="button" class="btn btn-sm" data-nwa="adbconn"' + busy + '>📡 ' + esc(T('Verbinden')) + '</button></div>';
+        h += ai.devices.length ? '<ul class="nw-devs">' + ai.devices.map(x => '<li><span class="nw-dot' + (x.state === 'device' ? ' on' : '') + '"></span><div><b>⌚ ' + esc(x.model || x.serial) + '</b><small>' + esc(x.serial)
+                + (x.state === 'unauthorized' ? ' · ' + esc(T('auf der Uhr „Zulassen“ tippen')) : x.state !== 'device' ? ' · ' + esc(x.state) : '') + '</small></div>'
+                + (x.state === 'device' ? '<button type="button" class="btn btn-sm btn-primary" data-nwa="adbinst" data-serial="' + esc(x.serial) + '"' + busy + '>⬆ ' + esc(T('Neueste Version installieren')) + '</button>' : '') + '</li>').join('') + '</ul>'
+            : '<p class="small muted">' + esc(T('Noch keine Uhr über ADB verbunden.')) + '</p>';
+        return h + (ai.busy ? '<p class="small">⏳ ' + esc(T(ai.busy)) + ' …</p>' : '') + adbLog() + '</div>';
+    }
+    const adbLog = () => ai && ai.log && ai.log.length ? '<pre class="small muted" style="white-space:pre-wrap;margin:8px 0 0">' + esc(ai.log.join('\n')) + '</pre>' : '';
+    const adbRun = (act, data) => { if (ai) { ai.busy = '…'; render(); } return api(act, data || {}).then(r => { ai = r; render(); if (r.msg) toast(T(r.msg)); }).catch(e => { toast('⚠ ' + e.message, true); api('watch_adb_status').then(r => { ai = r; render(); }).catch(() => {}); }); };
+    function load() {
+        if (!ai || !ai.busy) api('watch_adb_status').then(r => { ai = r; render(); }).catch(() => { ai = null; }); api('devhub_list').then(r => { hub = r; }).catch(() => { hub = null; }); return api('watch_get').then(r => { d = r; render(); }).catch(e => { if (box) box.innerHTML = '<div class="vx-error">⚠ ' + esc(e.message) + '</div>'; }); }
     const run = (act, data) => api(act, data || {}).then(r => { d = r; render(); if (r.msg) toast(T(r.msg)); }).catch(e => toast('⚠ ' + e.message, true));
 
     /** Bild verkleinern (max. 600 px, JPEG) – spart Übertragung zur Uhr */
@@ -83,8 +108,13 @@
             if (k === 'nsfw') return run('watch_dev_nsfw', { id: a.dataset.id, on: a.dataset.on });   // 8.2
             if (k === 'remove') { if (confirm(T('Diese Uhr entfernen? Sie muss danach neu gekoppelt werden.'))) run('watch_remove', { id: a.dataset.id }); return; }
             if (k === 'bgclear') return run('watch_bg_clear');
+            if (k === 'adbget') return adbRun('watch_adb_get');
+            if (k === 'adbpair') return adbRun('watch_adb_pair', { addr: aiv.pair, code: aiv.code });
+            if (k === 'adbconn') return adbRun('watch_adb_connect', { addr: aiv.conn });
+            if (k === 'adbinst') { if (confirm(T('Neueste Nexus Watch auf diese Uhr installieren?'))) adbRun('watch_adb_install', { serial: a.dataset.serial }); return; }
             if (k === 'usewatch') return api('hr_save', { source: 'watch' }).then(() => load()).catch(er => toast('⚠ ' + er.message, true));
         });
+        box.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.nwadb; if (k) aiv[k] = e.target.value.trim(); });
         box.addEventListener('change', e => {
             const el = e.target;
             if (el.matches('[data-nw=on]')) return run('watch_cfg', { on: el.checked ? '1' : '0' });

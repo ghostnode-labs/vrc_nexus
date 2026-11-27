@@ -5304,3 +5304,57 @@ test('8.0.18: Antwort der Webseite kein JSON – verständliche Meldung mit Serv
         await assert.rejects(acc.call('register', {}), /Ungültige VRChat-User-ID/); assert.strictEqual(n, 1, 'echte Fehler nicht wiederholen');
     } finally { global.fetch = realFetch; }
 });
+
+test('8.0.19: Uhren-Installer per ADB – adb laden (nur adb entpackt), koppeln/verbinden prüfen Eingaben, nur Uhren, neueste Uhr-APK aus dem Release, Signatur-Fehler verständlich', async () => {
+    const fs = require('fs'), os = require('os'), path = require('path');
+    const { writeZip, readZip } = require('../backend/nxp');
+    const { WatchInstall } = require('../backend/watchinstall');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nx-adb-'));
+    const calls = [];
+    let installOut = 'Performing Streamed Install\nSuccess';
+    const exec = async (file, args) => {
+        calls.push(args.join(' '));
+        if (args[0] === 'devices') return { code: 0, out: 'List of devices attached\n192.168.1.50:41234 device product:x model:Pixel_Watch_2 device:y\nRFAB12 device model:Pixel_8\n' };
+        if (args[0] === 'pair') return { code: 0, out: 'Successfully paired to 192.168.1.50:37123 [guid=adb-x]' };
+        if (args[0] === 'connect') return { code: 0, out: 'connected to ' + args[1] };
+        if (args.includes('getprop')) return { code: 0, out: args[1] === 'RFAB12' ? 'phone\n' : 'nosdcard,watch\n' };
+        if (args.includes('install')) return { code: 0, out: installOut };
+        return { code: 0, out: '' };
+    };
+    const apk = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.alloc(4000)]);
+    const zip = writeZip({ 'platform-tools/adb': Buffer.from('#!adb'), 'platform-tools/fastboot': Buffer.from('fb'), 'platform-tools/NOTICE.txt': Buffer.from('n') });
+    const rel = [{ tag_name: 'vrc-nexus-v8.0.18', assets: [{ name: 'VRC-Nexus-Watch-8.0.18-wearos.apk', browser_download_url: 'https://github.com/ghostnode-labs/vrc_nexus/releases/download/vrc-nexus-v8.0.18/VRC-Nexus-Watch-8.0.18-wearos.apk', size: apk.length }] },
+        { tag_name: 'vrc-nexus-v8.0.9', assets: [{ name: 'VRC-Nexus-Watch-8.0.9-wearos.apk', browser_download_url: 'https://github.com/ghostnode-labs/vrc_nexus/releases/download/x/VRC-Nexus-Watch-8.0.9-wearos.apk', size: 10 }] },
+        { tag_name: 'pre', prerelease: true, assets: [{ name: 'VRC-Nexus-Watch-9.0.0-wearos.apk', browser_download_url: 'https://evil.example/a.apk' }] }];
+    const fetched = [];
+    const fetchFn = async (u) => { fetched.push(u);
+        if (u.includes('dl.google.com')) return { ok: true, status: 200, arrayBuffer: async () => zip };
+        if (u.includes('/releases?')) return { ok: true, status: 200, json: async () => rel };
+        if (u.endsWith('8.0.18-wearos.apk')) return { ok: true, status: 200, arrayBuffer: async () => apk };
+        throw new Error('unerwartet ' + u); };
+    const savedPath = process.env.PATH; process.env.PATH = dir;   // kein System-adb
+    try {
+        const w = new WatchInstall(null, { exec, fetch: fetchFn, dir, platform: 'linux' });
+        let st = await w.action('watch_adb_status');
+        assert.strictEqual(st.adb, '', 'ohne adb'); await assert.rejects(w.action('watch_adb_pair', { addr: '192.168.1.50:37123', code: '123456' }), /adb fehlt/);
+        st = await w.action('watch_adb_get');
+        assert.strictEqual(st.adb, 'eigene'); assert.ok(fs.existsSync(path.join(dir, 'platform-tools', 'adb')));
+        assert.ok(!fs.existsSync(path.join(dir, 'platform-tools', 'fastboot')), 'nur adb entpackt');
+        assert.deepStrictEqual(st.devices.map(d => d.model), ['Pixel Watch 2', 'Pixel 8']);
+        for (const bad of [['192.168.1.50', '123456'], ['192.168.1.50:37123; rm -rf /', '123456'], ['192.168.1.50:37123', '12a456'], ['999.1.1.1:5555', '123456']])
+            await assert.rejects(w.action('watch_adb_pair', { addr: bad[0], code: bad[1] }), /Adresse|Kopplungscode/, bad.join(' '));
+        assert.match((await w.action('watch_adb_pair', { addr: '192.168.1.50:37123', code: '123 456' })).msg, /gekoppelt/);
+        assert.match((await w.action('watch_adb_connect', { addr: '192.168.1.50:41234' })).msg, /verbunden/);
+        await assert.rejects(w.action('watch_adb_install', { serial: 'RFAB12' }), /keine Wear-OS-Uhr/, 'Handy wird nicht angefasst');
+        await assert.rejects(w.action('watch_adb_install', { serial: 'a b' }), /Gerät wählen/);
+        st = await w.action('watch_adb_install', { serial: '192.168.1.50:41234' });
+        assert.match(st.msg, /8\.0\.18/, 'neueste stabile Version, kein Vorab-Release');
+        assert.ok(calls.some(c => /^-s 192\.168\.1\.50:41234 install -r .*nexus-watch\.apk$/.test(c)));
+        assert.ok(!fetched.some(u => u.includes('evil')));
+        installOut = 'Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match]';
+        await assert.rejects(w.action('watch_adb_install', { serial: '192.168.1.50:41234' }), /andere[rn]? Signatur/);
+        // readZip: Filter + eigene Grenzen, Standard bleibt streng
+        assert.deepStrictEqual(Object.keys(readZip(zip, { only: n => n.endsWith('/adb') })), ['platform-tools/adb']);
+        assert.throws(() => readZip(Buffer.concat([zip, Buffer.alloc(7 * 1048576)])), /zu groß/);
+    } finally { process.env.PATH = savedPath; }
+});

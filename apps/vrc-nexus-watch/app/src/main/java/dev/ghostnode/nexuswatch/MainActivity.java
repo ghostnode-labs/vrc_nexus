@@ -54,7 +54,6 @@ public class MainActivity extends Activity {
     private JSONObject state, upd;
     private Shake shake;   // 8.2: Schüttel-Geste
     private String err = "", screen = "main", updMsg = "";
-    private int updPct = -1;
     private long panicArmed = 0;
     private boolean resumed;
     private final Runnable poll = new Runnable() { @Override public void run() { if (resumed && Nexus.paired(MainActivity.this) && !"settings".equals(screen)) refresh(); ui.postDelayed(this, 5000); } };
@@ -257,7 +256,7 @@ public class MainActivity extends Activity {
 
     /** Hauptmenü: Kopf mit Puls & Status, darunter runde Kacheln */
     private void renderHome() {
-        if (upd != null) button(updPct >= 0 ? "⬇ Update " + updPct + " %" : "⬆ Update " + upd.optString("version"), GOLD, v -> startUpdate());
+        if (upd != null) text("⬆ Update " + upd.optString("version") + " – am PC installieren", 11, GOLD, true);   // 8.0.19: Installation nur noch vom PC (ADB)
         String face = faceKey(), now = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).format(new java.util.Date());
         int bpm = curBpm();
         JSONObject hs = state != null ? state.optJSONObject("health") : null;
@@ -382,7 +381,6 @@ public class MainActivity extends Activity {
         toggle("Meldungen vom PC", "notes", true, null);   // 6.5
         toggle("Panik doppelt tippen", "panic_confirm", true, null);
         toggle("Updates automatisch suchen", "auto_update", true, null);
-        toggle("Updates im Hintergrund installieren", "auto_install", true, () -> UpdateJob.schedule(this));
 
         text("PC-Adresse", 11, MUTED, false);
         EditText host = new EditText(this);
@@ -400,8 +398,8 @@ public class MainActivity extends Activity {
 
         text("Version " + Updater.installedName(this), 11, MUTED, false);
         if (!updMsg.isEmpty()) text(updMsg, 11, upd != null ? GOLD : MUTED, false);
-        if (upd != null) button(updPct >= 0 ? "⬇ " + updPct + " %" : "⬆ Update auf " + upd.optString("version"), GOLD, v -> startUpdate());
-        else button("🔄 Nach Updates suchen", CYAN, v -> checkUpdate(true));
+        if (upd != null) text("Installieren: am PC in VRC Nexus → Werkzeuge → 📡 Geräte → „Uhr-App installieren“ (WLAN-Debugging der Uhr).", 10, MUTED, false);
+        button("🔄 Nach Updates suchen", CYAN, v -> checkUpdate(true));
 
         if (Nexus.paired(this)) button("Entkoppeln", RED, v -> {
             stopService(new Intent(this, HeartService.class)); Nexus.unpair(this); state = null; screen = "main"; render();
@@ -602,27 +600,9 @@ public class MainActivity extends Activity {
             try {
                 JSONObject l = Updater.latest();
                 p().edit().putLong("upd_checked", System.currentTimeMillis()).apply();
-                if (l != null && l.getInt("code") > Updater.installedCode(this)) { upd = l; updMsg = "Neue Version " + l.getString("version") + " verfügbar."; }
+                if (l != null && l.getInt("code") > Updater.installedCode(this)) { upd = l; updMsg = "Neue Version " + l.getString("version") + " verfügbar – am PC installieren."; }
                 else { upd = null; updMsg = "✔ Aktuell (" + Updater.installedName(this) + ")"; }
-            } catch (Exception e) { updMsg = "Update-Suche: " + e.getMessage(); }
-            ui.post(this::render);
-        });
-    }
-    private void startUpdate() {
-        if (upd == null || updPct >= 0) return;
-        if (!getPackageManager().canRequestPackageInstalls()) {
-            toast("Bitte „Unbekannte Apps installieren“ für Nexus Watch erlauben.");
-            startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())));
-            return;
-        }
-        updPct = 0; render();
-        JSONObject u = upd;
-        net.execute(() -> {
-            try {
-                Updater.install(this, u, pct -> { updPct = pct; ui.post(this::render); });
-                updMsg = "Installation wird bestätigt …";
-            } catch (Exception e) { updMsg = "Update fehlgeschlagen: " + e.getMessage(); }
-            updPct = -1;
+            } catch (Exception e) { updMsg = manual ? "Update-Suche: " + e.getMessage() : ""; }   // automatische Suche: Fehler still
             ui.post(this::render);
         });
     }

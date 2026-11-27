@@ -349,6 +349,7 @@ class NexusApp {
             if (act.startsWith('preset_')) return await this.presets.action(act, input);
             if (act.startsWith('comfort_')) return await this.comfort.action(act, input);
             if (act.startsWith('pclink_')) { if (!this.pclink) throw new UserError('Nur in der Handy-App.'); return await this.pclink.action(act, input); }
+            if (act.startsWith('watch_adb_')) { if (this.mobile) throw new UserError('Der Uhren-Installer läuft nur am PC.'); if (!this.watchInstall) this.watchInstall = new (require('./watchinstall').WatchInstall)(this); return await this.watchInstall.action(act, input); }   // 8.0.19 Uhr per ADB
             if (act.startsWith('watch_')) { if (!this.watch) throw new UserError('Die Uhr-App verbindet sich nur mit der Windows-App.'); return await this.watch.actionUi(act, input); }
             if (act.startsWith('obs_')) { if (!this.obs) throw new UserError('OBS gibt es nur in der Windows-App.'); return await this.obs.action(act, input); }
             if (act.startsWith('hr_')) { if (!this.heart) throw new UserError('Den Puls gibt es nur in der Windows-App.'); return await this.heart.action(act, input); }

@@ -1,25 +1,21 @@
 package dev.ghostnode.nexuswatch;
 
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageInstaller;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Updater: sucht in den GitHub-Releases von VRC Nexus die neueste „VRC-Nexus-Watch-x.y.z-wearos.apk“,
- * lädt sie herunter und installiert sie über den Paket-Installer (Android fragt auf der Uhr nach Bestätigung).
- * Gleiche Signatur wie die installierte App → normales Update, Kopplung bleibt erhalten.
+ * Update-Prüfung: sucht in den GitHub-Releases von VRC Nexus die neueste „VRC-Nexus-Watch-x.y.z-wearos.apk“.
+ * 8.0.19: Die Uhr installiert nicht mehr selbst (Wear OS blockiert Installationen aus dem Hintergrund oft) –
+ * sie zeigt nur an, dass es ein Update gibt. Installiert wird am PC über ADB (VRC Nexus → Geräte → Uhr-App installieren).
  */
 final class Updater {
     static final String API = "https://api.github.com/repos/ghostnode-labs/vrc_nexus/releases?per_page=15";
@@ -57,43 +53,13 @@ final class Updater {
         h.setConnectTimeout(8000); h.setReadTimeout(15000);
         h.setRequestProperty("Accept", "application/vnd.github+json");
         h.setRequestProperty("User-Agent", "Nexus-Watch");
-        if (h.getResponseCode() != 200) throw new Exception("GitHub antwortet nicht (" + h.getResponseCode() + ")");
+        int rc = h.getResponseCode();
+        if (rc == 403 || rc == 429) throw new Exception("GitHub begrenzt gerade die Abfragen – später noch einmal");
+        if (rc != 200) throw new Exception("GitHub antwortet nicht (" + rc + ")");
         try (InputStream in = h.getInputStream()) {
             ByteArrayOutputStream bo = new ByteArrayOutputStream(); byte[] b = new byte[8192]; int n;
             while ((n = in.read(b)) > 0) { bo.write(b, 0, n); if (bo.size() > max) break; }
             return bo.toString("UTF-8");
         } finally { h.disconnect(); }
-    }
-
-    /** herunterladen und Installation starten (Fortschritt 0–100 über cb) */
-    static void install(Context c, JSONObject u, java.util.function.IntConsumer cb) throws Exception {
-        String url = u.getString("url");
-        if (!url.startsWith("https://github.com/ghostnode-labs/vrc_nexus/releases/download/")) throw new Exception("Unerwartete Download-Adresse.");
-        PackageInstaller pi = c.getPackageManager().getPackageInstaller();
-        PackageInstaller.SessionParams p = new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-        p.setAppPackageName(c.getPackageName());
-        // ab Android 12: Updates der eigenen App ohne Rückfrage (sobald Nexus Watch selbst der Installer ist)
-        if (android.os.Build.VERSION.SDK_INT >= 31) p.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
-        int id = pi.createSession(p);
-        try (PackageInstaller.Session s = pi.openSession(id)) {
-            HttpURLConnection h = (HttpURLConnection) new URL(url).openConnection();
-            h.setInstanceFollowRedirects(true);
-            h.setConnectTimeout(8000); h.setReadTimeout(30000);
-            h.setRequestProperty("User-Agent", "Nexus-Watch");
-            long total = h.getContentLengthLong() > 0 ? h.getContentLengthLong() : u.optLong("size", -1), done = 0;
-            if (total > 60L * 1024 * 1024) throw new Exception("Update zu groß.");
-            try (InputStream in = h.getInputStream(); OutputStream out = s.openWrite("nexus-watch.apk", 0, total)) {
-                byte[] b = new byte[65536]; int n, last = -1;
-                while ((n = in.read(b)) > 0) {
-                    out.write(b, 0, n); done += n;
-                    int pct = total > 0 ? (int) (done * 100 / total) : 0;
-                    if (pct != last) { last = pct; cb.accept(pct); }
-                }
-                s.fsync(out);
-            } finally { h.disconnect(); }
-            Intent i = new Intent(c, InstallReceiver.class);
-            PendingIntent pend = PendingIntent.getBroadcast(c, id, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
-            s.commit(pend.getIntentSender());
-        } catch (Exception e) { pi.abandonSession(id); throw e; }
     }
 }
