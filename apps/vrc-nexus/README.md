@@ -26,6 +26,13 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 7.2.2 – World & avatar profiles, creator profiles, Discord club sync
+- 📚 **Profiles for worlds and avatars (Steckbriefe):** anyone with a GhostNode account can create a profile for a world (`wrld_…`) or avatar (`avtr_…`) with image, description and creator; the community rates it with 1–5 stars plus a short review (one per person, can be changed or deleted) and votes on tags (`#chill`, `#mirror` …); search by name, creator, ID or tag, sort by best, most reviews or newest. Safe-for-work only, no content from third-party avatar databases; reviews that hit the word filter wait for a moderator
+- 🎨 **Creator profiles:** bio, what you make, and shop/profile links (Booth, Gumroad, Jinxxy, Ko-fi, Patreon … – https only, recognised automatically); profiles with your VRChat ID as creator appear on your page with average rating
+- 🌍 **Public pages** `wiki.php` (list, tag search, profile and creator pages) – readable without an account, also in the app and in Nexus Web (📚 Steckbriefe in the Community section)
+- 📅 **„Heute in VRChat“ dashboard widget:** today's public club events, new clubs, new profiles and the latest VRC Nexus release on one card
+- 🤖 **GhostNode Discord bot 2.3.0:** `/club verbinden` links a public club to a channel – new events, a reminder before the start (5 min – 1 day, optional role ping) and cancellations are posted automatically; members-only events stay private
+
 ### New in 7.2.1 – Fix: Android start freeze
 - 🩹 **Android: app could freeze right at start since 7.0** – a style rule added for the club forms (`:has(...)`) can stall older Android WebViews when the app draws its many elements at start; it is replaced by a plain class
 - 🛟 **Safe start (Android):** if a start doesn't finish (frozen and closed by Android), the next start opens on the home page instead of the last section and shows a notice with a 📋 report (last start step, section, WebView version) you can send us

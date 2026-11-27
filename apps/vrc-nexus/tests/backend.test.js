@@ -4326,6 +4326,11 @@ test('7.0: Clubs & Events – App reicht an nexusclubs.php durch (JSON aus „da
         await assert.rejects(c.club('media', { data: '{}' }), /Unbekannte Aktion/);
         for (const a of ['ticket_new', 'queue_decide', 'partner_request', 'invite_new', 'stats', 'appeal']) { await c.club(a, { data: '{"club":"x"}' }); assert.strictEqual(sent.pop().path, '/nexusclubs.php', '7.2: ' + a + ' durchgereicht'); }
         await assert.rejects(c.club('../nexuscomm', { data: '{}' }), /Unbekannte Aktion/);
+        // 7.2.2: Steckbriefe gehen an nexuswiki.php, eigene Aktionsliste
+        await c.wiki('review', { data: JSON.stringify({ kind: 'world', id: 'wrld_x', stars: 4, token: 'fremd' }) });
+        s = sent.pop(); assert.strictEqual(s.path, '/nexuswiki.php'); assert.strictEqual(s.a, 'review'); assert.strictEqual(s.body.token, 'tok'); assert.strictEqual(s.body.stars, 4);
+        await assert.rejects(c.wiki('rsvp', { data: '{}' }), /Unbekannte Aktion/, 'Club-Aktionen nicht über das Wiki');
+        await assert.rejects(c.club('review', { data: '{}' }), /Unbekannte Aktion/, 'Wiki-Aktionen nicht über Clubs');
         globalThis.fetch = async () => ({ ok: false, status: 400, json: async () => ({ error: 'Club nicht gefunden.' }) });
         await assert.rejects(c.club('view', { data: '{"club":"x"}' }), /Club nicht gefunden/);
     } finally { globalThis.fetch = old; }

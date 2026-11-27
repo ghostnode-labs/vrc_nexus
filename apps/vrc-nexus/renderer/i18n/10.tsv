@@ -2446,3 +2446,48 @@ Freigegeben.	Approved.	Approuvé.	承認しました。
 Der letzte Start ist hängen geblieben – die App ist deshalb auf der Startseite gestartet.	The last start got stuck – so the app started on the home page.	Le dernier démarrage s'est bloqué – l'appli a donc démarré sur l'accueil.	前回の起動が止まったため、ホーム画面で起動しました。
 Bericht kopieren	Copy report	Copier le rapport	レポートをコピー
 Sicherer Start …	Safe start …	Démarrage sécurisé …	セーフ起動中 …
+Steckbriefe	Profiles	Fiches	プロフィール
+📚 Steckbriefe	📚 Profiles	📚 Fiches	📚 プロフィール
+Welten & Avatare	Worlds & avatars	Mondes & avatars	ワールドとアバター
+Bild (https, png/jpg/webp)	Image (https, png/jpg/webp)	Image (https, png/jpg/webp)	画像（https、png/jpg/webp）
+Creator (Name)	Creator (name)	Créateur (nom)	クリエイター（名前）
+Creator-ID (usr_…, optional)	Creator ID (usr_…, optional)	ID du créateur (usr_…, facultatif)	クリエイターID（usr_…、任意）
+Deine Steckbriefe (mit dir als Creator-ID) erscheinen automatisch auf deinem Profil.	Your profiles (with you as creator ID) appear on your profile automatically.	Tes fiches (avec toi comme ID de créateur) apparaissent automatiquement sur ton profil.	あなたがクリエイターIDのプロフィールは自動的に表示されます。
+ID (wrld_… oder avtr_…)	ID (wrld_… or avtr_…)	ID (wrld_… ou avtr_…)	ID（wrld_… または avtr_…）
+Nichts gefunden – leg den ersten Steckbrief an!	Nothing found – create the first profile!	Rien trouvé – crée la première fiche !	見つかりません – 最初のプロフィールを作成しましょう！
+Noch keine Bewertungen.	No reviews yet.	Pas encore d'avis.	まだレビューはありません。
+noch keine Bewertung	no reviews yet	pas encore d'avis	レビューなし
+Noch keine Steckbriefe mit diesem Creator.	No profiles with this creator yet.	Pas encore de fiches pour ce créateur.	このクリエイターのプロフィールはまだありません。
+Nur jugendfreie Steckbriefe. Avatare: nur öffentliche oder eigene, keine Inhalte aus fremden Avatar-Datenbanken.	Safe-for-work profiles only. Avatars: public or your own only, no content from third-party avatar databases.	Fiches tout public uniquement. Avatars : publics ou les tiens, aucun contenu de bases d'avatars tierces.	全年齢向けのみ。アバターは公開または自作のみ、外部アバターDBの内容は不可。
+Shop- und Profil-Links (eine pro Zeile, https – Booth, Gumroad, Jinxxy, Ko-fi, Patreon …)	Shop and profile links (one per line, https – Booth, Gumroad, Jinxxy, Ko-fi, Patreon …)	Liens boutique et profil (un par ligne, https – Booth, Gumroad, Jinxxy, Ko-fi, Patreon …)	ショップ・プロフィールのリンク（1行に1つ、https – Booth、Gumroad、Jinxxy、Ko-fi、Patreon …）
+Tippe einen Tag an, um zuzustimmen (oder es zurückzunehmen).	Tap a tag to agree (or to take it back).	Touche un tag pour l'approuver (ou le retirer).	タグをタップして賛成（または取り消し）。
+Was du machst (Komma-getrennt, z. B. Welten, Shader, 3D-Modelle)	What you make (comma-separated, e.g. worlds, shaders, 3D models)	Ce que tu fais (séparé par des virgules, p. ex. mondes, shaders, modèles 3D)	制作物（カンマ区切り、例：ワールド、シェーダー、3Dモデル）
+Über dich	About you	À propos de toi	自己紹介
+✏ Bearbeiten	✏ Edit	✏ Modifier	✏ 編集
+✏ Steckbrief bearbeiten	✏ Edit profile	✏ Modifier la fiche	✏ プロフィールを編集
+➕ Neuer Steckbrief	➕ New profile	➕ Nouvelle fiche	➕ 新しいプロフィール
+⭐ Bewerten	⭐ Rate	⭐ Noter	⭐ 評価する
+⭐ Beste	⭐ Best	⭐ Meilleurs	⭐ 高評価
+＋ Tag	＋ Tag	＋ Tag	＋ タグ
+🆕 Neueste	🆕 Newest	🆕 Plus récents	🆕 新着
+🌐 Welt	🌐 World	🌐 Monde	🌐 ワールド
+🌐 Welten	🌐 Worlds	🌐 Mondes	🌐 ワールド
+🎭 Avatar	🎭 Avatar	🎭 Avatar	🎭 アバター
+🎭 Avatare	🎭 Avatars	🎭 Avatars	🎭 アバター
+🎨 Dein Creator-Profil	🎨 Your creator profile	🎨 Ton profil de créateur	🎨 あなたのクリエイタープロフィール
+🎨 Mein Creator-Profil	🎨 My creator profile	🎨 Mon profil de créateur	🎨 マイクリエイタープロフィール
+🏷 Tags der Community	🏷 Community tags	🏷 Tags de la communauté	🏷 コミュニティのタグ
+💬 Bewertungen	💬 Reviews	💬 Avis	💬 レビュー
+💬 Meiste Bewertungen	💬 Most reviews	💬 Plus d'avis	💬 レビュー数順
+🔗 Öffentliche Seite	🔗 Public page	🔗 Page publique	🔗 公開ページ
+Name, Creator oder wrld_/avtr_-ID	Name, creator or wrld_/avtr_ ID	Nom, créateur ou ID wrld_/avtr_	名前、クリエイター、または wrld_/avtr_ ID
+Was gefällt dir? (optional)	What do you like? (optional)	Qu'est-ce qui te plaît ? (facultatif)	気に入った点は？（任意）
+z. B. chill, spiegel, quest	e.g. chill, mirror, quest	p. ex. chill, miroir, quest	例：chill、ミラー、quest
+📝 Steckbrief gespeichert.	📝 Profile saved.	📝 Fiche enregistrée.	📝 プロフィールを保存しました。
+Bewertung gelöscht.	Review deleted.	Avis supprimé.	レビューを削除しました。
+⏳ Bewertung wird geprüft (Wortfilter).	⏳ Review is being checked (word filter).	⏳ Avis en cours de vérification (filtre).	⏳ レビューを確認中（ワードフィルター）。
+⭐ Danke für deine Bewertung!	⭐ Thanks for your review!	⭐ Merci pour ton avis !	⭐ レビューありがとう！
+🎨 Creator-Profil gespeichert.	🎨 Creator profile saved.	🎨 Profil de créateur enregistré.	🎨 クリエイタープロフィールを保存しました。
+Heute in VRChat	Today in VRChat	Aujourd'hui sur VRChat	今日のVRChat
+📚 Neue Steckbriefe	📚 New profiles	📚 Nouvelles fiches	📚 新しいプロフィール
+🏠 Neue Clubs	🏠 New clubs	🏠 Nouveaux clubs	🏠 新しいクラブ

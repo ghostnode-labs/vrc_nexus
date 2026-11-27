@@ -15,6 +15,7 @@ const ACTS = { comm_me: 'me', comm_feed: 'feed', comm_thread: 'thread', comm_pos
 const CLUB_ACTS = ['list', 'view', 'create', 'update', 'join', 'leave', 'manage', 'post', 'post_mod', 'gallery_add', 'gallery_del', 'event_save', 'event_cancel', 'rsvp', 'calendar',
     'ban', 'unban', 'appeal', 'appeal_decide', 'queue', 'queue_decide', 'wordfilter', 'ticket_new', 'tickets', 'ticket_view', 'ticket_reply',   // 7.2
     'partners', 'partner_request', 'partner_answer', 'invite_new', 'invites', 'invite_delete', 'stats'];
+const WIKI_ACTS = ['list', 'get', 'creator', 'save', 'review', 'tag', 'creator_save', 'queue', 'queue_decide'];   // 7.2
 const MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 class Community {
@@ -59,17 +60,19 @@ class Community {
         return this.call('upload', { data: Buffer.from(f.buffer).toString('base64'), rating: rating === 'nsfw' ? 'nsfw' : 'sfw' });
     }
     /** 7.0 Clubs & Events (nexusclubs.php): die Oberfläche schickt alles als JSON in „data“, der Server prüft Rollen und Rechte */
-    async club(a, input) {
-        if (!CLUB_ACTS.includes(a)) throw new UserError('Unbekannte Aktion.');
+    /** 7.2 Steckbriefe & Creator (nexuswiki.php) – gleiches Muster wie Clubs */
+    async wiki(a, input) { return this.club(a, input, 'nexuswiki.php', WIKI_ACTS); }
+    async club(a, input, file = 'nexusclubs.php', acts = CLUB_ACTS) {
+        if (!acts.includes(a)) throw new UserError('Unbekannte Aktion.');
         let d = {};
         try { d = JSON.parse(str((input || {}).data) || '{}'); } catch (e) { d = {}; }
         if (!d || typeof d !== 'object' || Array.isArray(d)) d = {};
         delete d.token; delete d.key;
         let r;
-        try { r = await fetch(BASE() + '/nexusclubs.php?a=' + a, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, d, this.auth())), signal: AbortSignal.timeout(20000) }); }
+        try { r = await fetch(BASE() + '/' + file + '?a=' + a, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, d, this.auth())), signal: AbortSignal.timeout(20000) }); }
         catch (e) { if (e instanceof UserError) throw e; throw new UserError('GhostNode-Webseite nicht erreichbar.'); }
         if (r.status === 401) { if (this.app.account.expired) this.app.account.expired(); else this.app.account.refresh(true).catch(() => {}); }
-        const out = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt nexusclubs.php auf der Webseite?' }));
+        const out = await r.json().catch(() => ({ error: 'Antwort kein JSON – liegt ' + file + ' auf der Webseite?' }));
         if (!r.ok || out.error) throw new UserError(str(out.error) || 'Fehler ' + r.status + '.');
         out._site = BASE();
         return out;

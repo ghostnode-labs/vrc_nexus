@@ -41,7 +41,7 @@
     const SECTIONS = [
         ['🏠', 'Allgemein', ['home', 'notifs', 'search', 'feed']],
         ['👥', 'Freunde', ['friends', 'locations', 'players', 'network', 'netgraph', 'recap', 'moderation']],
-        ['🫂', 'Community', ['community', 'clubs', 'together', 'groups', 'pulse']],
+        ['🫂', 'Community', ['community', 'clubs', 'together', 'wiki', 'groups', 'pulse']],
         ['🎮', 'Spiel & Steuerung', ['client', 'remote', 'buttons', 'osc', 'stream', 'nsfw']],
         ['🎨', 'Inhalte', ['avatars', 'worlds', 'favs', 'coll', 'global', 'gallery', 'shop']],
         ['🧰', 'Werkzeuge & Auswertung', ['tools', 'warn', 'mod', 'calendar', 'stats', 'activity']],
@@ -120,7 +120,7 @@
     window.addEventListener('popstate', () => open(false));
 
     // aktiven Bereich unten markieren
-    const GROUP = { feed: 'community', clubs: 'community', together: 'community', groups: 'community', netgraph: 'community', moderation: 'community', locations: 'friends', players: 'friends' };
+    const GROUP = { feed: 'community', clubs: 'community', together: 'community', wiki: 'community', groups: 'community', netgraph: 'community', moderation: 'community', locations: 'friends', players: 'friends' };
     const mark = () => {
         const a = menu.querySelector('.vx-tabbtn.active');
         let t = a ? a.dataset.tab : 'home';

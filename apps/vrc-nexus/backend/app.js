@@ -297,6 +297,7 @@ class NexusApp {
             if (act.startsWith('tts_')) { if (!this.tts) throw new UserError('Die Sprachausgabe gibt es nur in der Windows-App.'); return await this.tts.action(act, input); }
             if (act.startsWith('acct_')) return await this.account.action(act, input);
             if (act.startsWith('club_')) return await this.comm.club(act.slice(5), input);   // 7.0 Clubs & Events
+            if (act.startsWith('sb_')) return await this.comm.wiki(act.slice(3), input);   // 7.2 Steckbriefe & Creator
             if (act.startsWith('comm_')) return await this.comm.action(act, input, files);
             if (act.startsWith('btn_')) return await this.buttons.action(act, input);
             if (act.startsWith('deco_')) return await this.deco.action(act, input);
