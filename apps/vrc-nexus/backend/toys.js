@@ -10,6 +10,26 @@
  * Min/Max, Kurve, Glättung, Edging-Bremse und Consent-Ampel ein und sendet unter Beachtung von DeviceMessageTimingGap.
  */
 const { str, int, arr, cut, UserError } = require('./util');
+const crypto = require('crypto');
+/** 8.2: Muster nur verschlüsselt teilen – „NXP1.“ + base64url(Salz 16 | IV 12 | Tag 16 | Daten), Schlüssel aus dem Passwort (scrypt) */
+const PAT_CODE = 'NXP1.';
+function patEncrypt(obj, pass) {
+    const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12), key = crypto.scryptSync(String(pass), salt, 32, { N: 16384, r: 8, p: 1 });
+    const c = crypto.createCipheriv('aes-256-gcm', key, iv); c.setAAD(Buffer.from(PAT_CODE));
+    const ct = Buffer.concat([c.update(JSON.stringify(obj), 'utf8'), c.final()]);
+    return PAT_CODE + Buffer.concat([salt, iv, c.getAuthTag(), ct]).toString('base64url');
+}
+function patDecrypt(code, pass) {
+    code = String(code || '').trim();
+    if (!code.startsWith(PAT_CODE) || code.length > 4000) throw new UserError('Das ist kein Muster-Code (beginnt mit NXP1.).');
+    const b = Buffer.from(code.slice(PAT_CODE.length), 'base64url');
+    if (b.length < 45) throw new UserError('Muster-Code unvollständig.');
+    try {
+        const key = crypto.scryptSync(String(pass), b.subarray(0, 16), 32, { N: 16384, r: 8, p: 1 });
+        const d = crypto.createDecipheriv('aes-256-gcm', key, b.subarray(16, 28)); d.setAAD(Buffer.from(PAT_CODE)); d.setAuthTag(b.subarray(28, 44));
+        return JSON.parse(Buffer.concat([d.update(b.subarray(44)), d.final()]).toString('utf8'));
+    } catch (e) { throw new UserError('Falsches Passwort oder beschädigter Code.'); }
+}
 const H = require('./haptics');
 
 const DEF = { url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idle_stop: 3, ogb: false, ogb_self: false, ogb_device: 'all', ogb_min: 0.05, links: {}, links_on: false,
@@ -816,6 +836,31 @@ class Toys {
             case 'toys_stop_dev': return Object.assign(await this.stopDevice(input.device), { msg: '⏹ Gerät gestoppt.' });
             case 'toys_tap': return await this.tap(input.device);
             case 'toys_sensors': { for (const d of this.devices.values()) await this.readSensors(d).catch(() => {}); return this.status(); }
+            case 'toys_pattern_share': {   // 8.2: nur verschlüsselt teilen
+                const c = this.cfg().custom[int(input.i)];
+                if (!c) throw new UserError('Muster nicht gefunden.');
+                const pass = str(input.pass);
+                if (pass.length < 6) throw new UserError('Passwort: mindestens 6 Zeichen – und auf anderem Weg weitergeben.');
+                const code = patEncrypt({ name: c.name, steps: c.steps, step_ms: c.step_ms }, pass);
+                const to = str(input.to).trim();
+                if (to) {
+                    if (!/^usr_[0-9a-f-]{36}$/.test(to)) throw new UserError('Empfänger: VRChat-ID (usr_…).');
+                    if (!this.app.chat) throw new UserError('Chat nicht verfügbar.');
+                    await this.app.chat.send(to, '〰 Nexus-Muster „' + c.name + '“ (in Nexus unter Eigene Muster → 📥 importieren, Passwort bekommst du extra): ' + code);
+                    return { ok: true, code, msg: '📤 Über den verschlüsselten Chat geschickt.' };
+                }
+                return { ok: true, code, msg: '📤 Code erstellt – Passwort getrennt weitergeben.' };
+            }
+            case 'toys_pattern_import': {
+                const p = patDecrypt(input.code, str(input.pass));
+                const list = this.cfg().custom.slice();
+                if (list.length >= 20) throw new UserError('Höchstens 20 eigene Muster – erst eins löschen.');
+                list.push({ id: 'c' + Date.now().toString(36).slice(-6), name: cut(str(p.name), 30) || 'Geteiltes Muster', steps: arr(p.steps), step_ms: p.step_ms });
+                this.saveCfg({ custom: list });
+                const got = this.cfg().custom[this.cfg().custom.length - 1];
+                if (!got || got.name !== (cut(str(p.name), 30) || 'Geteiltes Muster')) throw new UserError('Muster ungültig.');
+                return Object.assign(this.status(), { msg: '📥 „' + got.name + '“ übernommen.' });
+            }
             case 'toys_pattern_preview': return { previews: Object.fromEntries(this.allPatterns().map(p => [p.id, this.patternPreview(p.id)])) };   // 8.2
             case 'toys_pattern': { const p = this.startPattern(input); return Object.assign(this.status(), { msg: (this.allPatterns().find(x => x.id === p.id) || {}).name + ' läuft' + (p.until ? ' (' + Math.round((p.until - p.start) / 1000) + ' s)' : '') + '.' }); }
             case 'toys_pattern_stop': {

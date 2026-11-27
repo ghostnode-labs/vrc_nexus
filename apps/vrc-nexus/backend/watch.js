@@ -33,6 +33,9 @@ const FACES = { classic: 'Klassisch (Puls + Kacheln)', big: 'Große Uhrzeit', an
 const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'nsfw_allclear', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'nsfw_consent', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise',
     'toys_pattern', 'toys_pattern_stop', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop', 'toys3_get', 'toys3_game', 'toys3_hold', 'toys3_game_stop',
     'comfort_get', 'comfort_sleep', 'preset_list', 'preset_apply', 'client_macros', 'client_macro_run', 'client_osc', 'hr_get']);
+/** 8.2: Sicherheits-Aktionen gehen immer – auch wenn 18+ auf dem Gerät ausgeblendet ist */
+const SAFETY_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'toys_stop']);
+const NSFW_WATCH = new Set(['allclear', 'private', 'consent']);   // Uhr-Aktionen, die 🔞 sind (Panik, Safeword, Stopp gehören nicht dazu)
 const DISC_PORT = 17873, MAX_DEV = 5, MAX_BODY = 4096;
 const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 const newPin = () => String(crypto.randomInt(0, 1000000)).padStart(6, '0');
@@ -85,7 +88,7 @@ class Watch {
         const c = this.cfg();
         return { cfg: { on: c.on, port: c.port }, look: this.look(), faces: FACES, themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v])), has_bg: !!this.bgFile(),
             heart: this.app.heart ? { bpm: this.app.heart.active ? this.app.heart.bpm : 0, from: this.app.heart.from || '', source: this.app.heart.cfg().source } : null, running: !!this.server, error: this.error, pin: c.on ? this.pin : '', addresses: this.addresses(),
-            devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '', battery: this.batt[d.id] === undefined ? null : this.batt[d.id] })) };
+            devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '', battery: this.batt[d.id] === undefined ? null : this.batt[d.id], nsfw: d.nsfw !== false })) };
     }
 
     // ---------- Server ----------
@@ -148,7 +151,7 @@ class Watch {
             return this.send(res, 200, this.app.lansync.panicServe(await this.body(req, 2000)));
         }
         if (dev.kind === 'pc') return this.send(res, 403, { error: 'Ein gekoppelter PC darf nur abgleichen.' });
-        if (url.pathname === '/watch/state') { const st = this.state(); const bz = this.buzz[dev.id]; if (bz && Date.now() < bz) { st.buzz = bz; delete this.buzz[dev.id]; } return this.send(res, 200, st); }
+        if (url.pathname === '/watch/state') { const st = this.state(dev); const bz = this.buzz[dev.id]; if (bz && Date.now() < bz) { st.buzz = bz; delete this.buzz[dev.id]; } return this.send(res, 200, st); }
         if (url.pathname === '/watch/bg' && req.method === 'POST') {   // 5.2.4: Bild aus der Galerie der Uhr
             const b = await this.body(req, Math.ceil(BG_MAX * 1.4) + 200);
             this.setBg(b.data);
@@ -189,8 +192,9 @@ class Watch {
     remove(id) { const c = this.cfg(); this.saveCfg({ devices: c.devices.filter(d => d.id !== str(id)) }); return this.status(); }
 
     // ---------- Daten ----------
-    state() {
-        const a = this.app, g = a.game, st = g.state || {}, h = a.heart, n = a.nsfw, acc = n ? n.access() : { unlocked: false, reason: '' };
+    state(dev) {
+        const a = this.app, g = a.game, st = g.state || {}, h = a.heart, n = a.nsfw;
+        const acc = dev && dev.nsfw === false ? { unlocked: false, reason: '🔞 ist auf diesem Gerät ausgeblendet (PC: Werkzeuge → Geräte).' } : n ? n.access() : { unlocked: false, reason: '' };   // 8.2
         // 5.2.2: 🔞-Knöpfe auch im Privat-Modus (Panik muss immer erreichbar sein) – nur Inhalte (Welt) werden im Privat-Modus ausgeblendet
         const nsfw = !!acc.unlocked, t = a.toys;
         const ts = nsfw && t ? { connected: t.state === 'verbunden' || !!t.ws, devices: t.devices ? t.devices.size : 0, consent: t.consent || 'green' } : null;
@@ -242,6 +246,7 @@ class Watch {
     async action(a, b, dev) {
         const post = (act, x) => this.app.post(Object.assign({ act }, x || {}), {});
         let r;
+        if (dev && dev.nsfw === false && NSFW_WATCH.has(a)) throw new UserError('🔞 ist auf diesem Gerät ausgeblendet – nur Panik, Safeword und Stopp.');   // 8.2
         switch (a) {
             case 'panic': {
                 // 5.2.2: Panik nicht von langsamen Teilen (VRChat-Avatar, Wallpaper Engine, OBS) aufhalten lassen – nach 2,5 s antworten, der Rest läuft weiter
@@ -262,7 +267,7 @@ class Watch {
             case 'sleep': r = await post('comfort_sleep', { on: b.on === false || b.on === '0' ? '0' : '1', wake: int(b.wake) || 0 }); break;
             default: throw new UserError('Unbekannte Aktion.');
         }
-        return Object.assign({ ok: true, msg: str(r && r.msg) || 'Erledigt.' }, { state: this.state(), by: dev.name });
+        return Object.assign({ ok: true, msg: str(r && r.msg) || 'Erledigt.' }, { state: this.state(dev), by: dev.name });
     }
 
     /** 5.2.3: Handy → PC: nur Aktionen aus PHONE_ACTS; Chatbox nur als Text/Tippen */
@@ -270,12 +275,13 @@ class Watch {
         if (dev.kind !== 'phone') throw new UserError('Nur für gekoppelte Handys.');
         const act = str(b.act), input = b.data && typeof b.data === 'object' && !Array.isArray(b.data) ? b.data : {};
         if (!PHONE_ACTS.has(act)) throw new UserError('Diese Aktion ist vom Handy aus nicht erlaubt.');
+        if (dev.nsfw === false && /^(nsfw|nsfwx|toys|toys3)_/.test(act) && !SAFETY_ACTS.has(act)) throw new UserError('🔞 ist auf diesem Gerät ausgeblendet – nur Panik, Safeword und Stopp.');   // 8.2
         if (act === 'client_osc' && !['chatbox', 'typing', 'input'].includes(str(input.kind))) throw new UserError('Vom Handy nur Chatbox-Text und einfache Eingaben.');
         if (act === 'client_osc' && str(input.kind) === 'input' && !PHONE_INPUTS.includes(str(input.name))) throw new UserError('Diese Eingabe ist vom Handy aus nicht erlaubt.');   // 8.0.8
         const clean = {};
         for (const [k, v] of Object.entries(input)) if (/^[a-z_]{1,32}$/.test(k) && ['string', 'number', 'boolean'].includes(typeof v)) clean[k] = typeof v === 'string' ? cut(v, 2000) : v;
         const r = await this.app.post(Object.assign(clean, { act }), {});
-        return { ok: true, result: r, state: this.state() };
+        return { ok: true, result: r, state: this.state(dev) };
     }
 
     async actionUi(act, input) {
@@ -283,6 +289,13 @@ class Watch {
             case 'watch_get': return this.status();
             case 'watch_cfg': this.saveCfg(input); return Object.assign(this.status(), { msg: 'Gespeichert.' });
             case 'watch_newpin': this.pin = newPin(); return this.status();
+            case 'watch_dev_nsfw': {   // 8.2: 🔞 je Gerät ein/aus
+                const c = this.cfg(), d = c.devices.find(x => x.id === str(input.id));
+                if (!d) throw new UserError('Gerät nicht gefunden.');
+                d.nsfw = !(input.on === false || input.on === '0' || input.on === 0);
+                this.saveCfg({ devices: c.devices });
+                return Object.assign(this.status(), { msg: d.nsfw ? '🔞 auf „' + d.name + '“ sichtbar.' : '🙈 🔞 auf „' + d.name + '“ ausgeblendet (Panik & Safeword gehen weiter).' });
+            }
             case 'watch_remove': return Object.assign(this.remove(input.id), { msg: 'Uhr entfernt.' });
             case 'watch_bg': this.setBg(input.data); return Object.assign(this.status(), { msg: '🖼 Hintergrund gespeichert – die Uhr holt ihn gleich.' });
             case 'watch_bg_get': { const b = this.bgFile(); return { data: b ? 'data:image/jpeg;base64,' + b.toString('base64') : '' }; }

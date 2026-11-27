@@ -36,7 +36,7 @@
         // Uhren
         h += '<div class="nc-card"><h4>⌚ ' + esc(T('Gekoppelte Geräte')) + '</h4>'
             + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : x.kind === 'pc' ? '🖥 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('zuletzt')) + ' ' + esc(ago(x.last))) + (x.ver ? ' · v' + esc(x.ver) : '') + '</small></div>'
-                + (x.kind !== 'watch' && x.kind ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + '<button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
+                + (x.kind !== 'watch' && x.kind ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + '<button type="button" class="btn btn-sm" data-nwa="nsfw" data-id="' + esc(x.id) + '" data-on="' + (x.nsfw === false ? '1' : '0') + '" title="' + esc(x.nsfw === false ? T('🔞 auf diesem Gerät zeigen') : T('🔞 auf diesem Gerät ausblenden (Panik & Safeword bleiben)')) + '">' + (x.nsfw === false ? '🙈' : '🔞') + '</button><button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
                 : '<p class="small muted">' + esc(T('Noch kein Gerät gekoppelt.')) + '</p>') + '<p class="small muted">📱 ' + esc(T('Handy: in der VRC-Nexus-App unter 🎮 PC-Fernbedienung Adresse und Code eingeben. Laptop: Einstellungen → System → Heimnetz-Abgleich.')) + '</p>'
             + (d.heart ? '<div class="nw-hr"><span>💓</span><b>' + (d.heart.bpm || '–') + '</b><small>bpm' + (d.heart.from === 'watch' ? ' · ⌚' : d.heart.bpm ? ' · ' + esc(d.heart.from) : '') + '</small>'
                 + (d.heart.source !== 'watch' ? '<button type="button" class="btn btn-sm" data-nwa="usewatch">' + esc(T('Uhr als Puls-Quelle')) + '</button>' : '<span class="small ok">✔ ' + esc(T('Puls-Quelle')) + '</span>') + '</div>' : '')
@@ -79,6 +79,7 @@
             const k = a.dataset.nwa;
             if (k === 'newpin') return run('watch_newpin');
             if (k === 'find') return run('watch_find', { id: a.dataset.id });
+            if (k === 'nsfw') return run('watch_dev_nsfw', { id: a.dataset.id, on: a.dataset.on });   // 8.2
             if (k === 'remove') { if (confirm(T('Diese Uhr entfernen? Sie muss danach neu gekoppelt werden.'))) run('watch_remove', { id: a.dataset.id }); return; }
             if (k === 'bgclear') return run('watch_bg_clear');
             if (k === 'usewatch') return api('hr_save', { source: 'watch' }).then(() => load()).catch(er => toast('⚠ ' + er.message, true));

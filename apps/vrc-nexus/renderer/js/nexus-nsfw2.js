@@ -217,9 +217,11 @@
     function funHtml(t) {
         const cus = (t && t.cfg && t.cfg.custom) || [];
         let h = sec('✏️ ' + T('Eigene Muster'), '<p class="muted small">' + esc(T('Werte 0–100, getrennt mit Komma; dazwischen wird weich übergeblendet.')) + '</p>'
-            + cus.map((c, i) => '<div class="nc-row small"><b>' + esc(c.name) + '</b><span class="muted">' + c.steps.length + ' × ' + c.step_ms + ' ms</span><span class="n2-sp"></span><button type="button" class="btn btn-sm" data-n2a="patedit" data-i="' + i + '">✎</button><button type="button" class="btn btn-sm" data-n2a="patdel" data-i="' + i + '">✕</button></div>').join('')
+            + cus.map((c, i) => '<div class="nc-row small"><b>' + esc(c.name) + '</b><span class="muted">' + c.steps.length + ' × ' + c.step_ms + ' ms</span><span class="n2-sp"></span><button type="button" class="btn btn-sm" data-n2a="patedit" data-i="' + i + '">✎</button><button type="button" class="btn btn-sm" data-n2a="patdel" data-i="' + i + '">✕</button><button type="button" class="btn btn-sm" data-n2a="patshare" data-i="' + i + '" title="' + esc(T('Verschlüsselt teilen')) + '">📤</button></div>').join('')
             + '<div class="n2-ped"><input type="text" id="n2PatName" maxlength="30" placeholder="' + esc(T('Name')) + '" value="' + esc(patEd ? patEd.name : '') + '"><input type="text" id="n2PatSteps" placeholder="0, 20, 60, 100, 60, 20" value="' + esc(patEd ? patEd.steps.join(', ') : '') + '" style="flex:1">'
-            + '<input type="number" id="n2PatMs" min="50" max="5000" step="50" value="' + (patEd ? patEd.step_ms : 400) + '" style="width:80px"> ms<button type="button" class="btn btn-sm btn-gold" data-n2a="patsave">💾</button></div>');
+            + '<input type="number" id="n2PatMs" min="50" max="5000" step="50" value="' + (patEd ? patEd.step_ms : 400) + '" style="width:80px"> ms<button type="button" class="btn btn-sm btn-gold" data-n2a="patsave">💾</button></div>'
+            + '<div class="nc-row small"><input type="text" id="n2PatCode" placeholder="NXP1.…" aria-label="' + esc(T('Muster-Code')) + '" style="flex:1"><button type="button" class="btn btn-sm" data-n2a="patimport">📥 ' + esc(T('Importieren')) + '</button></div>'
+            + '<p class="muted small">🔒 ' + esc(T('Geteilt wird nur verschlüsselt: Code und Passwort getrennt weitergeben – ohne Passwort kann niemand das Muster lesen, auch der Server nicht.')) + '</p>');
         h += sec('🎭 ' + T('Szenen-Ideen'), '<button type="button" class="btn btn-sm" data-n2a="scenegen">🎲 ' + esc(T('Neue Idee')) + '</button>'
             + (scene ? '<p class="ns-card-big">🎭 ' + esc(T(scene.rolle)) + ' – ' + esc(T(scene.ort)) + '<br>✨ ' + esc(T(scene.stimmung)) + '<br>🃏 ' + esc(T(scene.twist)) + '</p><div class="nc-row"><button type="button" class="btn btn-sm btn-gold" data-n2a="scenechat">📨 ' + esc(T('In die Chatbox')) + '</button><button type="button" class="btn btn-sm" data-n2a="scenesend">🎬 ' + esc(T('Als Szene starten')) + '</button></div>' : '<p class="muted small">' + esc(T('Ort, Rollen, Stimmung und ein Twist – nur als Anregung, alles nur mit Zustimmung.')) + '</p>'));
         return h;
@@ -258,6 +260,18 @@
             const i = list.findIndex(x => x.id === id), item = { id, name: name || T('Eigenes Muster'), steps, step_ms: ms };
             if (i >= 0) list[i] = item; else list.push(item);
             patEd = null; setCfg({ custom: JSON.stringify(list) }, toysDo); return true;
+        }
+        if (a === 'patshare') {   // 8.2: nur Ende-zu-Ende verschlüsselt
+            const pass = prompt(T('Passwort für dieses Muster (mind. 6 Zeichen) – gib es auf anderem Weg weiter:')); if (!pass) return true;
+            const to = (prompt(T('Optional: direkt an eine VRChat-ID (usr_…) über den verschlüsselten Chat schicken – leer lassen für nur den Code:')) || '').trim();
+            api('toys_pattern_share', { i: b.dataset.i, pass, to }).then(r => { toast(r.msg); if (!to) prompt(T('Muster-Code (kopieren):'), r.code); }).catch(x => toast(x.message, true));
+            return true;
+        }
+        if (a === 'patimport') {
+            const code = (document.getElementById('n2PatCode') || {}).value || ''; if (!code.trim()) return true;
+            const pass = prompt(T('Passwort für den Muster-Code:')); if (!pass) return true;
+            toysDo('toys_pattern_import', { code, pass });
+            return true;
         }
         if (a === 'patedit') { patEd = Object.assign({}, t.cfg.custom[+b.dataset.i]); render(); return true; }
         if (a === 'patdel') { if (!confirm(T('Muster löschen?'))) return true; const list = t.cfg.custom.filter((_, i) => i !== +b.dataset.i); setCfg({ custom: JSON.stringify(list) }, toysDo); return true; }

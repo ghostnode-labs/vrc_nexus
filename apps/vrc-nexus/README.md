@@ -26,7 +26,12 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.13 – Per-device visibility
+- 🙈 **Hide 18+ content per device** (🧰 Tools → 📡 Devices → 🔞 button next to each paired watch or phone): that device then shows and controls no 18+ content at all. Panic, safeword and "stop" keep working on every device, always.
+- 🔞 ***
+
 ### New in 8.0.12 – Pattern previews
+- 〰 Pattern buttons now show a small preview curve, computed locally.
 - 🔞 ***
 
 ### New in 8.0.11 – Device hub

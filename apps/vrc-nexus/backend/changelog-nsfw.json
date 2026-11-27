@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.13",
+  "title": "Encrypted pattern sharing, visibility per device",
+  "body": "- 📤 **Share your own patterns only end-to-end encrypted** (🔞 → Fun → ✏️ Own patterns → 📤): you get a code `NXP1.…` that is encrypted with a password of your choice (scrypt + AES-256-GCM, the name is not readable either). Pass on the code and the password separately – or send the code straight to a VRChat ID through the encrypted chat (the password never goes along). **📥 Import** takes a code plus password; a wrong password or a modified code is rejected.\n- 🙈 **Visibility per device and person:** each paired watch/phone has its own 🔞 switch (🧰 Tools → 📡 Devices). Switched off, the device shows no 18+ tiles or toy status and cannot trigger consent light, private mode, toys or scenes – **panic, safeword and stop always stay available**. Per person, the trust list (Partner / Trusted / Known with their own rights) already decides who may do what."
+ },
+ {
   "version": "8.0.12",
   "title": "Pattern library with preview",
   "body": "- 〰 **Every pattern button now shows a small preview curve** (🔞 → Fun → 🌊 Patterns) – built-in and your own ✏️ patterns alike, computed locally from the pattern itself (24 s, short spikes stay visible). New custom patterns get their preview automatically."

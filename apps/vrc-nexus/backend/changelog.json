@@ -1,8 +1,13 @@
 [
  {
+  "version": "8.0.13",
+  "title": "Per-device visibility",
+  "body": "- 🙈 **Hide 18+ content per device** (🧰 Tools → 📡 Devices → 🔞 button next to each paired watch or phone): that device then shows and controls no 18+ content at all. Panic, safeword and \"stop\" keep working on every device, always.\n- 🔞 ***"
+ },
+ {
   "version": "8.0.12",
   "title": "Pattern previews",
-  "body": "- 🔞 ***"
+  "body": "- 〰 Pattern buttons now show a small preview curve, computed locally.\n- 🔞 ***"
  },
  {
   "version": "8.0.11",

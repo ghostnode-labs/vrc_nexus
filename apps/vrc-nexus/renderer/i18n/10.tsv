@@ -2851,3 +2851,12 @@ Alle Geräte	All devices	Tous les appareils	すべてのデバイス
 mit wenig Akku	with low battery	batterie faible	バッテリー残量少
 Dieser PC	This PC	Ce PC	このPC
 Zentrale	Hub	Centrale	ハブ
+Verschlüsselt teilen	Share encrypted	Partager chiffré	暗号化して共有
+Muster-Code	Pattern code	Code du motif	パターンコード
+Geteilt wird nur verschlüsselt: Code und Passwort getrennt weitergeben – ohne Passwort kann niemand das Muster lesen, auch der Server nicht.	Sharing is always encrypted: pass on the code and the password separately – without the password nobody can read the pattern, not even the server.	Le partage est toujours chiffré : transmets le code et le mot de passe séparément – sans le mot de passe, personne ne peut lire le motif, pas même le serveur.	共有は常に暗号化されます。コードとパスワードは別々に渡してください。パスワードがなければ、サーバーを含め誰もパターンを読めません。
+Passwort für dieses Muster (mind. 6 Zeichen) – gib es auf anderem Weg weiter:	Password for this pattern (min. 6 characters) – pass it on another way:	Mot de passe pour ce motif (6 caractères min.) – transmets-le par un autre moyen :	このパターンのパスワード（6文字以上）– 別の方法で伝えてください：
+Optional: direkt an eine VRChat-ID (usr_…) über den verschlüsselten Chat schicken – leer lassen für nur den Code:	Optional: send directly to a VRChat ID (usr_…) via the encrypted chat – leave empty for just the code:	Facultatif : envoyer directement à un ID VRChat (usr_…) via le chat chiffré – laisser vide pour le code seul :	任意：暗号化チャットでVRChat ID（usr_…）へ直接送信 – コードのみなら空欄：
+Muster-Code (kopieren):	Pattern code (copy):	Code du motif (copier) :	パターンコード（コピー）：
+Passwort für den Muster-Code:	Password for the pattern code:	Mot de passe du code du motif :	パターンコードのパスワード：
+🔞 auf diesem Gerät zeigen	Show 🔞 on this device	Afficher 🔞 sur cet appareil	このデバイスで🔞を表示
+🔞 auf diesem Gerät ausblenden (Panik & Safeword bleiben)	Hide 🔞 on this device (panic & safeword stay)	Masquer 🔞 sur cet appareil (panique et safeword restent)	このデバイスで🔞を非表示（パニックとセーフワードは残ります）

@@ -3262,6 +3262,22 @@ test('4.1: Buttplug-Funktionen (Aktoren, Rotation, Stroker, Sensoren, Gerät-Ein
     assert.ok(pv.welle.length === 48 && Math.max(...pv.welle) >= 95 && Math.min(...pv.welle) <= 20, JSON.stringify(pv.welle));
     assert.strictEqual(Math.max(...pv.herz), 100, 'kurze Herzschlag-Spitzen bleiben sichtbar');
     assert.ok(t.allPatterns().every(p => Array.isArray(pv[p.id])), 'jedes Muster hat eine Vorschau');
+    // 8.2: Muster nur verschlüsselt teilen (Code + Passwort, optional über den E2E-Chat)
+    await app.post({ act: 'toys_cfg', custom: JSON.stringify([{ id: 'abc', name: 'Wellen-Tanz', steps: [0, 50, 100, 50], step_ms: 300 }]) }, {});
+    await assert.rejects(app.post({ act: 'toys_pattern_share', i: '0', pass: '123' }, {}), /mindestens 6/);
+    let sh = await app.post({ act: 'toys_pattern_share', i: '0', pass: 'geheim-42' }, {});
+    assert.ok(/^NXP1\.[A-Za-z0-9_-]+$/.test(sh.code) && !sh.code.includes('Wellen'), 'Name steht nicht lesbar im Code');
+    await assert.rejects(app.post({ act: 'toys_pattern_import', code: sh.code, pass: 'falsch-99' }, {}), /Falsches Passwort/);
+    await assert.rejects(app.post({ act: 'toys_pattern_import', code: sh.code.slice(0, -4) + 'AAAA', pass: 'geheim-42' }, {}), /Falsches Passwort|beschädigt/);
+    await assert.rejects(app.post({ act: 'toys_pattern_import', code: 'hallo', pass: 'geheim-42' }, {}), /kein Muster-Code/);
+    let im = await app.post({ act: 'toys_pattern_import', code: sh.code, pass: 'geheim-42' }, {});
+    assert.ok(/Wellen-Tanz/.test(im.msg) && t.cfg().custom.length === 2 && t.cfg().custom[1].steps.join() === '0,50,100,50' && t.cfg().custom[1].step_ms === 300);
+    const psent = []; const realChat = app.chat; app.chat = { send: async (id, text) => psent.push([id, text]) };
+    await assert.rejects(app.post({ act: 'toys_pattern_share', i: '0', pass: 'geheim-42', to: 'bob' }, {}), /VRChat-ID/);
+    sh = await app.post({ act: 'toys_pattern_share', i: '0', pass: 'geheim-42', to: 'usr_11111111-2222-3333-4444-555555555555' }, {});
+    assert.ok(psent.length === 1 && psent[0][1].includes(sh.code) && !psent[0][1].includes('geheim-42'), 'Passwort geht nie mit');
+    app.chat = realChat;
+    await app.post({ act: 'toys_cfg', custom: '[]' }, {});
     // Puls & Stimme
     app.heart.push(120, 'test');
     await app.post({ act: 'toys_cfg', heart: JSON.stringify({ lo: 80, hi: 160 }) }, {});
@@ -5028,6 +5044,22 @@ test('8.2: Geräte-Hub (dieser PC, Uhr mit Akkustand aus der Kopfzeile, Puls-Que
         assert.ok(r.devices.some(x => x.kind === 'toy' && x.battery === 80 && !x.low));
         app.toys = realToys;
         await assert.rejects(app.post({ act: 'devhub_nope' }, {}), /Unbekannt/);
+        // 8.2: 🔞 je Gerät ausblenden – Panik, Safeword und Stopp bleiben immer erlaubt
+        grant18(app);
+        const ph = await (await fetch('http://127.0.0.1:' + PORT + '/watch/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: app.watch.pin, name: 'Handy', kind: 'phone' }) })).json();
+        const pid = app.watch.cfg().devices.find(d => d.kind === 'phone').id;
+        const req = (tok, p, body) => fetch('http://127.0.0.1:' + PORT + p, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', 'X-Nexus-Watch': tok }, body: body ? JSON.stringify(body) : undefined }).then(async x => ({ status: x.status, j: await x.json() }));
+        let s1 = await req(ph.token, '/watch/state');
+        assert.strictEqual(s1.j.nsfw, app.nsfw.access().unlocked, 'vorher wie am PC');
+        r = await app.post({ act: 'watch_dev_nsfw', id: pid, on: '0' }, {});
+        assert.ok(/ausgeblendet/.test(r.msg) && r.devices.find(d => d.id === pid).nsfw === false && r.devices.find(d => d.kind === 'watch').nsfw === true);
+        s1 = await req(ph.token, '/watch/state'); assert.ok(s1.j.nsfw === false && s1.j.toys === null && /ausgeblendet/.test(s1.j.nsfw_reason));
+        s1 = await req(ph.token, '/watch/act', { act: 'toys_set', data: { level: '50' } }); assert.ok(s1.status >= 400 && /ausgeblendet/.test(s1.j.error), JSON.stringify(s1));
+        s1 = await req(ph.token, '/watch/act', { act: 'toys_stop', data: { device: 'all' } }); assert.ok(s1.status === 200 || !/ausgeblendet/.test(s1.j.error), 'Stopp geht immer: ' + JSON.stringify(s1));
+        s1 = await req(ph.token, '/watch/action', { a: 'consent', light: 'green' }); assert.ok(s1.status >= 400 && /ausgeblendet/.test(s1.j.error));
+        s1 = await req(w.token, '/watch/state'); assert.strictEqual(s1.j.nsfw, app.nsfw.access().unlocked, 'die Uhr ist nicht betroffen');
+        r = await app.post({ act: 'watch_dev_nsfw', id: pid, on: '1' }, {}); assert.ok(r.devices.find(d => d.id === pid).nsfw);
+        await assert.rejects(app.post({ act: 'watch_dev_nsfw', id: 'nope', on: '0' }, {}), /nicht gefunden/);
     } finally { app.watch.stop(); }
 });
 
