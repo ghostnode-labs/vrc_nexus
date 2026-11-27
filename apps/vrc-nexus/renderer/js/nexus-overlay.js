@@ -26,7 +26,24 @@
     let tab = 'friends', data = null, cfg = { phrases: [] }, text = '';
     const EMOJI = ['👋', '😊', '😂', '❤️', '👍', '🎉', '😴', '🦊', '✨', '🙏', '😭', '🔥'];
 
+    let armed = 0;   // 8.0.5: Panik im Handmenü = zweimal tippen (Laser rutscht leicht ab)
     const V = {
+        // 8.0.5: ✋ Handmenü – große Knöpfe, auch per eigener Controller-Taste (SteamVR → Controller-Belegung → „Handmenü öffnen“)
+        hand: () => {
+            const big = (a, l, cls, extra) => '<button class="btn hm-big ' + (cls || '') + '" data-a="' + a + '"' + (extra || '') + '>' + l + '</button>';
+            const priv = !!data.priv;
+            return '<div class="hm-grid">'
+                + big('hm_panic', Date.now() - armed < 3000 ? '🚨 NOCHMAL = PANIK' : '🚨 Panik', 'danger')
+                + big('hm_vc', priv ? '✅ Privat aus' : '🕶 Privat', '', ' data-v="' + (priv ? 'private_off' : 'private_on') + '"')
+                + big('hm_vc', '🌿 Pause', '', ' data-v="break"')
+                + big('input', '🎙 Mikro', '', ' data-v="Voice"')
+                + big('cam', '📸 Foto', '', ' data-v="Capture"')
+                + big('hm_vc', '💡 Licht aus', '', ' data-v="light_off"')
+                + big('status', '🔴 Beschäftigt', (data.me && data.me.status === 'busy' ? 'on' : ''), ' data-v="busy"')
+                + big('status', '🟢 Online', (data.me && data.me.status === 'active' ? 'on' : ''), ' data-v="active"')
+                + big('hide', '✕ Ausblenden')
+                + '</div>' + ((data.macros || []).length ? '<h3>⚡ Makros</h3><div class="ov-grid">' + data.macros.slice(0, 6).map(m => '<button class="btn gold" data-a="macro" data-id="' + esc(m.id) + '">⚡ ' + esc(m.name) + '</button>').join('') + '</div>' : '');
+        },
         friends: () => (data.friends && data.friends.list || []).length ? '<div class="ov-list">' + data.friends.list.map(f => '<div class="ov-item"><i class="ov-dot ' + esc((f.status || '').replace(' ', '-')) + '"></i><div><b>' + (f.fav ? '⭐ ' : '') + esc(f.name) + '</b><small>' + esc(f.world || '–') + '</small></div>'
             + '<button class="btn sm" data-a="friend" data-id="' + esc(f.id) + '" data-op="join">Beitreten</button><button class="btn sm" data-a="friend" data-id="' + esc(f.id) + '" data-op="invite">Einladen</button></div>').join('') + '</div>'
             : '<div class="ov-empty">Gerade ist kein Freund im Spiel.</div>',
@@ -93,6 +110,8 @@
         const b = e.target.closest('[data-a]');
         if (!b) return;
         const a = b.dataset.a, v = b.dataset.v;
+        if (a === 'hm_panic') { if (Date.now() - armed > 3000) { armed = Date.now(); render(); setTimeout(render, 3100); return; } armed = 0; return run(api('nsfw_panic')); }
+        if (a === 'hm_vc') return run(api('vcmd_run', { id: v }));
         if (a === 'friend') return run(act('friend', { id: b.dataset.id, op: b.dataset.op === 'invite' ? 'invite' : 'join' }));
         if (a === 'send') { if (!text.trim()) return; const t = text; text = ''; render(); return run(act('chatbox', { text: t, sound: '1', translate: cfg.translate ? '1' : '', target: cfg.target || '' }).then(d => Object.assign(d, { msg: '💬 ' + (d.text || t) }))); }
         if (a === 'del') { text = Array.from(text).slice(0, -1).join(''); render(); return; }
@@ -120,6 +139,7 @@
         if (a === 'zoom') return run(act('camera', { cmd: 'step', name: 'Zoom', step: v, base: 45 }));
         if (a === 'campreset') return run(act('camera', { cmd: 'preset', preset: v }));
     });
+    window.NexusOverlay = { tab(t) { if (!V[t]) return; tab = t; $('#ovMain').scrollTop = 0; render(); load(); } };   // 8.0.5: Controller-Taste „Handmenü“
     setInterval(() => { $('#ovClock').textContent = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }, 1000);
     const cfgLoad = () => api('overlay_cfg').then(c => { cfg = c; pos = c.pos; applyTheme(c.theme, c.accent); }).catch(() => {});
     cfgLoad().finally(load);

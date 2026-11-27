@@ -26,6 +26,28 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.5 – Watch app 2.0, health, VR hand menu & themes marketplace
+- ⌚ **Nexus Watch 2.0 – watch faces**: Classic, Big time, Analog (hands plus a heart-rate ring that fills from 40 to 200 bpm), Minimal (time and heart rate only, ☰ opens the menu), Health (VR time today, breaks, minutes to the next break, steps) and Friends & world. Choose on the watch (Settings → ⌚ Watch face) or on the PC (🧰 Tools → Nexus Watch).
+- 🚶 **Steps from the watch** (opt-in, "Physical activity" permission). The daily step count from the watch's step counter (it survives watch restarts) is sent to the PC with the heart rate, at most once a minute and only when it changed.
+- 📈 **Health** (📔 Diary → 📈 Health): activity and break statistics over 7 / 30 / 90 days, built from the break coach, the per-minute heart rate and the watch steps. It shows:
+  - average VR time per play day with a trend versus the previous period;
+  - breaks per hour of VR and the longest stretch without a break;
+  - average steps and the heart-rate range;
+  - a day chart and friendly tips (no diagnosis).
+  - CSV export; everything stays on the device. The day view of the diary shows the steps, too.
+- ✋ **VR overlay 2.0 – hand menu**: a new first tab on the wrist overlay with nine large buttons:
+  - 🚨 panic (tap twice so a slipping laser can't trigger it), private mode on/off, 🌿 log a break;
+  - 🎙 mic, 📸 photo, 💡 lights off;
+  - busy / online, hide.
+  - Your first macros appear below.
+  - A new SteamVR action **"Open hand menu"** (bind it under SteamVR → Controller bindings) shows the overlay and jumps straight to it.
+- 🎨 **Custom themes & themes marketplace** (⚙️ Settings → Appearance):
+  - Build your own theme from the current colors with a live preview: 13 colors, dark/light.
+  - Share it as an `NXT1.…` code or JSON, import codes, or install themes from the new **themes marketplace** on the GhostNode website (`themes.php`).
+  - A theme is **only #rrggbb colors** – no CSS, no code – and is checked identically on the website and in the app, including a minimum text contrast of 4.5 : 1.
+  - The catalog is Ed25519-signed with the same key as the plugin marketplace.
+  - Submissions are reviewed before they are published.
+
 ### New in 8.0.4 – Linux, macOS, Steam Deck & home network sync
 - 🐧 **Linux and macOS builds**: every release now also ships the following, built automatically in CI:
   - Linux AppImage and tar.gz (x64, runs on the Steam Deck in desktop mode);

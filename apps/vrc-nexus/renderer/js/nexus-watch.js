@@ -39,6 +39,7 @@
             + '</div>';
         // Design
         h += '<div class="nc-card nw-design"><h4>🎨 ' + esc(T('Design der Uhr')) + '</h4><div class="nw-design-row">' + preview(L, d.has_bg) + '<div class="nw-opts">'
+            + (d.faces ? '<span class="small">⌚ ' + esc(T('Zifferblatt')) + '</span><div class="nw-themes">' + Object.entries(d.faces).map(([k, v]) => '<button type="button" class="nw-theme' + ((L.face || 'classic') === k ? ' on' : '') + '" data-nwf="' + k + '">' + esc(T(v)) + '</button>').join('') + '</div>' : '')   // 8.0.5
             + '<span class="small">' + esc(T('Thema')) + '</span><div class="nw-themes">' + Object.entries(d.themes).map(([k, v]) => '<button type="button" class="nw-theme' + (L.theme === k ? ' on' : '') + '" data-nwt="' + k + '" title="' + esc(T(v.name)) + '" style="--a:' + v.accent + ';--b:' + v.bg + ';--h:' + v.hi + '"><i></i>' + esc(T(v.name)) + '</button>').join('') + '</div>'
             + '<span class="small">' + esc(T('Hintergrund')) + '</span><div class="chips">' + [['none', 'keiner'], ['gradient', 'Verlauf'], ['image', 'Bild']].map(([k, n]) => '<button type="button" class="chip' + (L.bg === k ? ' on' : '') + '" data-nwbg="' + k + '"' + (k === 'image' && !d.has_bg ? ' disabled' : '') + '>' + esc(T(n)) + '</button>').join('') + '</div>'
             + '<div class="nc-row"><label class="btn btn-sm">🖼 ' + esc(T('Bild hochladen')) + '<input type="file" accept="image/jpeg,image/png,image/webp" data-nwfile hidden></label>' + (d.has_bg ? '<button type="button" class="btn btn-sm" data-nwa="bgclear">✕ ' + esc(T('Bild entfernen')) + '</button>' : '') + '</div>'
@@ -68,6 +69,7 @@
     function bind() {
         box.addEventListener('click', e => {
             const t = e.target.closest('[data-nwt]'); if (t) return run('watch_cfg', { theme: t.dataset.nwt });
+            const fc = e.target.closest('[data-nwf]'); if (fc) return run('watch_cfg', { face: fc.dataset.nwf });   // 8.0.5
             const g = e.target.closest('[data-nwbg]'); if (g && !g.disabled) return run('watch_cfg', { bg: g.dataset.nwbg });
             const a = e.target.closest('[data-nwa]'); if (!a) return;
             const k = a.dataset.nwa;

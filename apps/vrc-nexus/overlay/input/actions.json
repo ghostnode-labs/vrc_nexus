@@ -30,6 +30,11 @@
       "requirement": "optional"
     },
     {
+      "name": "/actions/nexus/in/handmenu",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
       "name": "/actions/nexus/in/fly_left",
       "type": "boolean",
       "requirement": "optional"
@@ -82,7 +87,8 @@
       "/actions/nexus/in/walk_left": "Space Walk (links)",
       "/actions/nexus/in/walk_right": "Space Walk (rechts)",
       "/actions/nexus/in/space_reset": "Spielbereich zurücksetzen",
-      "/actions/nexus/in/gravity": "Gravitation an/aus"
+      "/actions/nexus/in/gravity": "Gravitation an/aus",
+      "/actions/nexus/in/handmenu": "Handmenü öffnen"
     },
     {
       "language_tag": "en_US",
@@ -95,7 +101,8 @@
       "/actions/nexus/in/walk_left": "Space Walk (left)",
       "/actions/nexus/in/walk_right": "Space Walk (right)",
       "/actions/nexus/in/space_reset": "Reset playspace",
-      "/actions/nexus/in/gravity": "Toggle gravity"
+      "/actions/nexus/in/gravity": "Toggle gravity",
+      "/actions/nexus/in/handmenu": "Open hand menu"
     }
   ]
 }

@@ -27,6 +27,7 @@
     // „Automatisch“: hell/dunkel wie Windows bzw. Android – wechselt mit, wenn das System umschaltet
     const LIGHT = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
     if (LIGHT && LIGHT.addEventListener) LIGHT.addEventListener('change', () => { if ((window.VRCX.ui || {})['ui.theme'] === 'auto') applyUi(window.VRCX.ui); });
+    window.NexusApplyUi = s => applyUi(s);   // 8.0.5
     function applyUi(s) {
         const b = document.body;
         b.classList.toggle('no-anim', s['ui.animations'] === false);
@@ -51,6 +52,7 @@
         html.dataset.themeChoice = choice;
         if (window.NexusI18n) setTimeout(() => window.NexusI18n.corner(), 0);   // Markierung im 🎨-Menü
         html.dataset.scheme = THEMES[theme][1];
+        if (window.NexusThemes) setTimeout(() => window.NexusThemes.apply(), 0);   // 8.0.5: eigenes Theme drüberlegen
         const a = /^#[0-9a-f]{6}$/i.test(s['ui.accent'] || '') ? s['ui.accent'] : '#38d5e6';
         const r = html.style;
         // eigene Akzentfarbe nur, wenn vom Standard abweichend – sonst bringt jedes Theme seine eigene mit
@@ -859,6 +861,7 @@
             system: '<div class="set-sec"><h3>🔄 ' + esc(T('Einstellungs-Abgleich')) + '</h3><div id="syncBox"></div></div><div class="set-sec" id="portSec" hidden><h3>📦 ' + esc(T('Portable vom Stick')) + '</h3><div id="portBox"></div></div>' + (MOBILE ? '' : '<div class="set-sec"><h3>🏠 ' + esc(T('Heimnetz-Abgleich (ohne Cloud)')) + '</h3><div id="lanBox"></div></div>')
                 + '<div class="set-sec"><h3>Aktionen</h3><div class="nx-row"><button type="button" class="btn btn-sm" data-act="backup">💾 Datenbank jetzt sichern</button><button type="button" class="btn btn-sm" data-act="f:backups">📂 Sicherungen</button>'
                 + '<button type="button" class="btn btn-sm" data-act="f:nexus">📂 Datenordner</button></div></div>',
+            ui: '<div class="set-sec"><h3>🎨 ' + esc(T('Eigene Themes & Marktplatz')) + '</h3><div id="thBox"></div></div>',   // 8.0.5
             link: '<div class="set-sec"><h3>Geräte-Token</h3><div id="linkBox"><div class="vx-loading">Lade …</div></div></div>',
             notify: '<div class="set-sec"><h3>Test</h3><button type="button" class="btn btn-sm" data-act="test">🔔 Test-Benachrichtigung (alle eingeschalteten Wege)</button></div>',
             int: '<div class="set-sec"><h3>Status</h3><p class="vx-small">Lokale Schnittstelle: ' + esc(d.status.api) + ' · Discord: ' + esc(d.status.rpc) + '</p></div>',
@@ -877,12 +880,13 @@
             + (setTab === 'vr' && !MOBILE ? '<div class="set-sec"><h3>🎮 VRChat-Logs &amp; OSC-Verbindung</h3><div id="setGameCfg"><div class="vx-loading">Lade …</div></div></div>' : '')
             + (setTab === 'about' ? '<div class="set-sec"><div id="aboutBox"><div class="vx-loading">Lade …</div></div></div>' : '')
             + (setTab === 'system' ? '<div class="set-sec"><h3>🔗 Verbindung &amp; Daten</h3><div id="setConn"></div></div><div class="set-sec"><h3>🗄 Datenbank</h3><div id="dbBox"><div class="vx-loading">…</div></div></div>' : '')
-            + (MOBILE ? (['adv', 'link'].includes(setTab) ? extra : '') : extra) + '<p class="vx-small">Änderungen werden sofort gespeichert.</p></div>';
+            + (MOBILE ? (['adv', 'link', 'ui'].includes(setTab) ? extra : '') : extra) + '<p class="vx-small">Änderungen werden sofort gespeichert.</p></div>';
         if (setTab === 'tr' && window.NexusTr) window.NexusTr.panel($('#trPanel'));
         if (setTab === 'link') { linkPanel(); if (!MOBILE) backupPanel(); }
         if (setTab === 'system') { dbPanel(); const sc = $('#setConn'); if (sc) sc.appendChild(connWrap()); }
         if (setTab === 'adv' && window.NexusAccount && $('#acctBox')) window.NexusAccount.render($('#acctBox'));
         if (setTab === 'adv') { licCard(); perfCard(); }
+        if (setTab === 'ui' && window.NexusThemes) window.NexusThemes.card($('#thBox'));   // 8.0.5
         if (setTab === 'system') { syncCard(); portCard(); lanCard(); }   // 8.0.2 / 8.0.4
         if (setTab === 'about' && window.NexusAbout) window.NexusAbout.open();
         if (setTab === 'vr' && !MOBILE && window.NexusClient && window.NexusClient.cfgInto) window.NexusClient.cfgInto($('#setGameCfg'));

@@ -39,6 +39,12 @@ public class MainActivity extends Activity {
     private static final int GREEN = 0xFF3DDC84;
     private static final String[] THEMES = { "cyber", "neon", "ocean", "forest", "sunset", "amoled" };
     private static final String[] THEME_NAMES = { "Cyber", "Neon", "Ozean", "Wald", "Sonnenuntergang", "AMOLED" };
+    // 8.0.5: Zifferblätter (Uhr-App 2.0) – Auswahl hier oder am PC unter Werkzeuge → Nexus Watch
+    private static final String[] FACES = { "classic", "big", "analog", "minimal", "stats", "friends" };
+    private static final String[] FACE_NAMES = { "Klassisch", "Große Uhrzeit", "Analog", "Minimal", "Gesundheit", "Freunde" };
+    private boolean menuOpen = false;
+    private int lastSteps = -1;
+    private long stepsAt = 0;
     private ScrollView sv;
     private long lastBuzz = 0;
     private static final int[] INTERVALS = { 1, 2, 5, 10 };
@@ -84,6 +90,11 @@ public class MainActivity extends Activity {
     @Override protected void onDestroy() { net.shutdownNow(); super.onDestroy(); }
     @Override public void onBackPressed() { if (!"main".equals(screen)) go("main"); else super.onBackPressed(); }
 
+    /** 8.0.5: Schrittzähler braucht ab Android 10 die Erlaubnis „Körperliche Aktivität“ */
+    private void askSteps() {
+        if (p().getBoolean("steps", false) && android.os.Build.VERSION.SDK_INT >= 29 && checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{ Manifest.permission.ACTIVITY_RECOGNITION }, 9);
+    }
     private void applyScreenOn() {
         if (p().getBoolean("screen_on", false)) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -129,6 +140,7 @@ public class MainActivity extends Activity {
             sv.setBackground(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{ base, shade }));
         } else sv.setBackground(base);
     }
+    private String faceKey() { try { return new JSONObject(p().getString("look", "{}")).optString("face", "classic"); } catch (Exception e) { return "classic"; } }
     private String themeKey() { try { return new JSONObject(p().getString("look", "{}")).optString("theme", "cyber"); } catch (Exception e) { return "cyber"; } }
 
     // ---------- kleine Bausteine ----------
@@ -235,10 +247,41 @@ public class MainActivity extends Activity {
     /** Hauptmenü: Kopf mit Puls & Status, darunter runde Kacheln */
     private void renderHome() {
         if (upd != null) button(updPct >= 0 ? "⬇ Update " + updPct + " %" : "⬆ Update " + upd.optString("version"), GOLD, v -> startUpdate());
-        text("◈ NEXUS · " + new java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).format(new java.util.Date()), 11, CYAN, true);
+        String face = faceKey(), now = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.GERMANY).format(new java.util.Date());
         int bpm = curBpm();
-        text(bpm > 0 ? "♥ " + bpm : "♥ –", 30, bpm > 0 ? RED : MUTED, true);
-        status();
+        JSONObject hs = state != null ? state.optJSONObject("health") : null;
+        switch (face) {
+            case "big": text(now, 46, Color.WHITE, true); text(bpm > 0 ? "♥ " + bpm : "♥ –", 20, bpm > 0 ? RED : MUTED, true); status(); break;
+            case "analog": {
+                AnalogFace af = new AnalogFace(this); af.accent = CYAN; af.hi = GOLD; af.red = RED; af.muted = MUTED; af.bpm = bpm;
+                root.addView(af, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                status(); break;
+            }
+            case "minimal":
+                text(now, 40, Color.WHITE, true); text(bpm > 0 ? "♥ " + bpm : "♥ –", 16, bpm > 0 ? RED : MUTED, false);
+                if (!menuOpen) { button("☰", MUTED, v -> { menuOpen = true; render(); }); return; }
+                break;
+            case "stats": {
+                text(now + "  ♥ " + (bpm > 0 ? bpm : "–"), 20, Color.WHITE, true);
+                int vr = hs != null ? hs.optInt("vr") : 0, br = hs != null ? hs.optInt("breaks") : 0;
+                int st = Steps.today >= 0 ? Steps.today : hs != null ? hs.optInt("steps") : 0;
+                text("🥽 " + (vr >= 60 ? vr / 60 + " h " + vr % 60 + " min" : vr + " min") + " VR heute", 12, CYAN, false);
+                text("🌿 " + br + " Pausen" + (state != null && !state.isNull("coach_next") && state.optInt("coach_next", -1) >= 0 ? " · nächste in " + state.optInt("coach_next") + " min" : ""), 12, GREEN, false);
+                text("🚶 " + (st > 0 ? st + " Schritte" : Steps.allowed(this) ? "0 Schritte" : "Schritte: Einstellungen"), 12, GOLD, false);
+                break;
+            }
+            case "friends": {
+                text(now, 26, Color.WHITE, true);
+                text("👥 " + (state != null ? state.optInt("friends") : 0) + " Freunde online", 14, CYAN, true);
+                status();
+                text(bpm > 0 ? "♥ " + bpm : "", 12, RED, false);
+                break;
+            }
+            default:
+                text("◈ NEXUS · " + now, 11, CYAN, true);
+                text(bpm > 0 ? "♥ " + bpm : "♥ –", 30, bpm > 0 ? RED : MUTED, true);
+                status();
+        }
         if (!err.isEmpty()) text("⚠ " + err, 10, GOLD, false);
         JSONObject s = state;
         boolean nsfw = s != null && s.optBoolean("nsfw");
@@ -250,7 +293,8 @@ public class MainActivity extends Activity {
         if (nsfw) tile(r2, "💤", "Komfort", s.optBoolean("sleeping") ? "schläft" : "", CYAN, v -> go("comfort"));
         tile(r2, "⚙", "Einstellungen", "", MUTED, v -> go("settings"));
         if (s != null && !nsfw && !s.optString("nsfw_reason").isEmpty()) text("🔞 gesperrt: " + s.optString("nsfw_reason"), 9, MUTED, false);
-        if (s != null && s.optInt("friends") > 0) text("👥 " + s.optInt("friends") + " Freunde im Spiel", 10, MUTED, false);
+        if (s != null && s.optInt("friends") > 0 && !"friends".equals(face)) text("👥 " + s.optInt("friends") + " Freunde im Spiel", 10, MUTED, false);
+        if (menuOpen && "minimal".equals(face)) button("✕", MUTED, v -> { menuOpen = false; render(); });
         text("⌚ ↔ " + p().getString("pc", "PC"), 9, MUTED, false);
     }
 
@@ -317,6 +361,10 @@ public class MainActivity extends Activity {
         final int next = (ti + 1) % THEMES.length;
         button("🎨 Thema: " + THEME_NAMES[ti % THEMES.length], CYAN, v -> act("theme", "theme", THEMES[next]));
         button("🖼 Hintergrund aus Galerie", CYAN, v -> go("gallery"));
+        String fk = faceKey(); int fi = 0; while (fi < FACES.length && !FACES[fi].equals(fk)) fi++;
+        final int fnext = (fi + 1) % FACES.length;
+        button("⌚ Zifferblatt: " + FACE_NAMES[fi % FACES.length], CYAN, v -> act("face", "face", FACES[fnext]));   // 8.0.5
+        toggle("🚶 Schritte zählen (Gesundheit am PC)", "steps", false, this::askSteps);
         toggle("Puls beim Start senden", "auto_heart", false, null);
         toggle("Bildschirm anlassen", "screen_on", false, this::applyScreenOn);
         toggle("Vibration", "vibrate", true, null);
@@ -390,6 +438,14 @@ public class MainActivity extends Activity {
         });
     }
     private void refresh() {
+        // 8.0.5: Schritte höchstens einmal pro Minute lesen und (nur bei Änderung) an den PC schicken
+        if (Steps.allowed(this) && System.currentTimeMillis() - stepsAt > 60000) {
+            stepsAt = System.currentTimeMillis();
+            Steps.read(this, () -> net.execute(() -> {
+                try { if (Steps.today >= 0 && Steps.today != lastSteps) { JSONObject b = new JSONObject(); b.put("a", "steps"); b.put("steps", Steps.today); Nexus.call(this, "/watch/action", b); lastSteps = Steps.today; } }
+                catch (Exception ignored) { }
+            }));
+        }
         net.execute(() -> {
             try { state = Nexus.call(this, "/watch/state", null); err = ""; Notes.handle(this, state); }
             catch (Exception e) { err = String.valueOf(e.getMessage()); }

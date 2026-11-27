@@ -22,6 +22,7 @@ class Diary {
         this.db.exec(`CREATE TABLE IF NOT EXISTS diary (user_id INTEGER NOT NULL, day TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', mood TEXT NOT NULL DEFAULT '', star INTEGER NOT NULL DEFAULT 0,
             hr_min INTEGER NOT NULL DEFAULT 0, hr_max INTEGER NOT NULL DEFAULT 0, hr_sum INTEGER NOT NULL DEFAULT 0, hr_n INTEGER NOT NULL DEFAULT 0,
             vr_min INTEGER NOT NULL DEFAULT 0, breaks INTEGER NOT NULL DEFAULT 0, longest INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, day))`);
+        try { this.db.exec('ALTER TABLE diary ADD COLUMN steps INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* gibt es schon */ }   // 8.0.5: Schritte von der Uhr
         this.timer = null;
     }
     get db() { return this.app.db; }
@@ -48,6 +49,8 @@ class Diary {
         const day = dayOf(now), r = this.row(day);
         this.db.prepare('UPDATE diary SET breaks = breaks + 1, longest = ?, updated = ? WHERE user_id = ? AND day = ?').run(Math.max(r.longest, int(stretchMin)), now, UID, day);
     }
+    /** 8.0.5: Schritte des Tages von der Uhr (Tagessumme, nur steigend) */
+    setSteps(n, now = Date.now()) { const day = dayOf(now), r = this.row(day), v = Math.max(0, Math.min(200000, int(n))); if (v > int(r.steps)) this.db.prepare('UPDATE diary SET steps = ?, updated = ? WHERE user_id = ? AND day = ?').run(v, now, UID, day); }
     stretch(stretchMin, now = Date.now()) { const day = dayOf(now), r = this.row(day); if (int(stretchMin) > r.longest) this.db.prepare('UPDATE diary SET longest = ? WHERE user_id = ? AND day = ?').run(int(stretchMin), UID, day); }
 
     /** automatische Zusammenfassung eines Tages aus dem Spiel-Log */
@@ -82,7 +85,7 @@ class Diary {
         if (priv) { au.photo_files = []; }   // Privat-Modus: keine Dateipfade anzeigen
         return { day, today: day === dayOf(), auto: au, note: str(r.note), mood: str(r.mood), star: !!r.star,
             hr: r.hr_n ? { min: r.hr_min, max: r.hr_max, avg: Math.round(r.hr_sum / r.hr_n), minutes: r.hr_n } : null,
-            vr: { min: int(r.vr_min), breaks: int(r.breaks), longest: int(r.longest) }, moods: MOODS };
+            vr: { min: int(r.vr_min), breaks: int(r.breaks), longest: int(r.longest) }, steps: int(r.steps), moods: MOODS };
     }
     save(day, input) {
         if (!DAY_RE.test(str(day))) throw new UserError('Ungültiges Datum.');

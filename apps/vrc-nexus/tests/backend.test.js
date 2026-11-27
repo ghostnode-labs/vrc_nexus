@@ -4939,3 +4939,85 @@ test('8.0.4: Heimnetz-Abgleich PC ↔ Laptop (Kopplung per Code als „PC“, nu
         r = await lap.post({ act: 'lsync_unpair' }, {}); assert.strictEqual(r.role, 'off');
     } finally { hub.watch.stop(); }
 });
+
+test('8.0.5: Gesundheit (7/30 Tage, Pausen pro Stunde, Schritte, Trend, Hinweise, CSV) · Uhr: Schritte & Zifferblätter', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { dayOf } = require('../backend/diary');
+    const app = new NexusApp({ db: await openDatabase(null), crypt: { encrypt: s => s, decrypt: s => s }, noTimers: true, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-h-')) } });
+    app.game.osc.stopListen();
+    let r = await app.post({ act: 'health_summary', range: '7' }, {});
+    assert.strictEqual(r.days.length, 7); assert.match(r.tips[0], /Noch keine Daten/);
+    const D = 86400000, now = Date.now();
+    // 3 Spieltage in dieser Woche, wenig Pausen, ein langer Tag; Schritte von der Uhr
+    for (const [ago, vr, br, longest, steps] of [[0, 200, 1, 150, 2500], [1, 400, 1, 200, 1800], [2, 380, 0, 380, 0]]) {
+        const t = now - ago * D; app.diary.addVr(vr, t); for (let i = 0; i < br; i++) app.diary.addBreak(longest, t); app.diary.stretch(longest, t); if (steps) app.diary.setSteps(steps, t);
+    }
+    app.diary.setSteps(100, now); assert.strictEqual(app.diary.day(dayOf(now)).steps, 2500, 'Schritte nur steigend');
+    app.diary.addVr(60, now - 9 * D);   // Woche davor: wenig
+    r = await app.post({ act: 'health_summary', range: '7' }, {});
+    const t = r.totals;
+    assert.deepStrictEqual([t.vr_total, t.play_days, t.breaks, t.longest, t.steps_avg, t.steps_days], [980, 3, 2, 380, 2150, 2]);
+    assert.strictEqual(t.breaks_per_h, 0.1);
+    assert.ok(t.vr_trend > 100, 'Trend gegen die Woche davor');
+    assert.ok(r.tips.some(x => /Pause/.test(x)) && r.tips.some(x => /Schritte/.test(x)) && r.tips.some(x => /6 h/.test(x)), r.tips.join(' | '));
+    assert.strictEqual((await app.post({ act: 'health_summary', range: '30' }, {})).days.length, 30);
+    assert.strictEqual((await app.post({ act: 'health_summary', range: '5' }, {})).range, 7, 'nur 7/30/90');
+    const csv = (await app.post({ act: 'health_csv', range: '7' }, {})).csv.trim().split('\n');
+    assert.strictEqual(csv.length, 8); assert.ok(csv[7].startsWith(dayOf(now) + ';200;1;'));
+    // Uhr: Zifferblatt + Gesundheit im Status
+    await app.post({ act: 'watch_cfg', face: 'analog' }, {});
+    await assert.rejects(app.post({ act: 'watch_cfg', face: 'nope' }, {}), /Zifferblatt/);
+    const st = app.watch.state();
+    assert.strictEqual(st.look.face, 'analog');
+    assert.deepStrictEqual([st.health.vr, st.health.breaks, st.health.steps], [200, 1, 2500]);
+    await app.watch.action('steps', { steps: 4321 }, { kind: 'watch' });
+    assert.strictEqual(app.health.today().steps, 4321, 'Schritte von der Uhr');
+    assert.ok(app.watch.status().faces.stats);
+});
+
+test('8.0.5: Eigene Themes (nur Hex-Farben, Kontrast, Teilen per Code) · Themes-Marktplatz (signiert, gleicher Schlüssel wie Plugins, ungültige übersprungen) · Handmenü-Befehle', async () => {
+    const { Themes, validate } = require('../backend/themes');
+    const crypto = require('crypto');
+    const store = {};
+    const app = { db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } } };
+    const th = new Themes(app);
+    const good = { id: 'Lavender-Dream', name: 'Lavender <b>Dream</b>', scheme: 'dark', colors: { bg: '#0A0710', panel: '#161022', accent: '#ff7ad9', text: '#f3eaff', muted: '#9a8fb3' } };
+    assert.strictEqual(validate(good).id, 'lavender-dream');
+    assert.strictEqual(validate(good).name, 'Lavender bDream/b', 'keine spitzen Klammern');
+    assert.throws(() => validate(Object.assign({}, good, { colors: Object.assign({}, good.colors, { bg: 'red;}body{x' }) })), /#rrggbb/);
+    assert.throws(() => validate(Object.assign({}, good, { colors: Object.assign({}, good.colors, { '--x': '#000000' }) })), /Unbekannter/);
+    assert.throws(() => validate(Object.assign({}, good, { colors: Object.assign({}, good.colors, { text: '#111111' }) })), /Kontrast/);
+    let r = await th.action('theme_save', { theme: JSON.stringify(good), use: '1' });
+    assert.strictEqual(r.active, 'lavender-dream');
+    const code = (await th.action('theme_code', { id: 'lavender-dream' })).code;
+    assert.ok(code.startsWith('NXT1.'));
+    await th.action('theme_del', { id: 'lavender-dream' }); assert.strictEqual(th.activeId(), '', 'gelöschtes aktives Theme → eingebautes');
+    r = await th.action('theme_import', { code }); assert.strictEqual(r.active, 'lavender-dream');
+    await assert.rejects(th.action('theme_import', { code: 'NXT1.kaputt' }), /beschädigt|gültig/);
+    // Marktplatz: signierter Katalog
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+    const raw = publicKey.export({ type: 'spki', format: 'der' }).slice(-32).toString('base64');
+    const mk = themes => { const index = JSON.stringify({ format: 1, kind: 'themes', generated: 1, themes }); return { index, sig: crypto.sign(null, Buffer.from(index), privateKey).toString('base64'), key: raw }; };
+    const pings = [];
+    let body = mk([Object.assign({}, good, { id: 'ocean-night', name: 'Ocean Night', installs: 5 }), { id: 'evil', name: 'Evil', colors: { bg: 'url(x)', panel: '#000000', accent: '#ffffff', text: '#ffffff', muted: '#888888' } }]);
+    th.fetch = async (u) => { if (u.includes('api=got')) { pings.push(u); return { ok: true }; } return { ok: true, json: async () => body }; };
+    r = await th.action('theme_market', { refresh: '1' });
+    assert.deepStrictEqual(r.items.map(x => x.id), ['ocean-night'], 'ungültiges Theme übersprungen');
+    assert.strictEqual(store.market_key, raw, 'Schlüssel gemerkt (gemeinsam mit dem Plugin-Marktplatz)');
+    r = await th.action('theme_install', { id: 'ocean-night' });
+    assert.ok(r.active === 'ocean-night' && th.list()[0].from === 'market');
+    await new Promise(res => setTimeout(res, 10)); assert.ok(pings[0].includes('id=ocean-night'));
+    const other = crypto.generateKeyPairSync('ed25519');
+    body = (() => { const index = JSON.stringify({ format: 1, kind: 'themes', themes: [] }); return { index, sig: crypto.sign(null, Buffer.from(index), other.privateKey).toString('base64'), key: other.publicKey.export({ type: 'spki', format: 'der' }).slice(-32).toString('base64') }; })();
+    await assert.rejects(th.action('theme_market', { refresh: '1' }), /Signaturschlüssel hat sich geändert/);
+    body = Object.assign(mk([]), { sig: Buffer.alloc(64).toString('base64') });
+    await assert.rejects(th.action('theme_market', { refresh: '1' }), /Signatur ungültig/);
+    // Handmenü: nur feste eingebaute Befehle
+    const { VoiceCmd } = require('../backend/voicecmd');
+    const did = [];
+    const v = new VoiceCmd({ db: app.db, coach: { breakTaken: () => did.push('break') }, nsfw: { private: false, panic: async () => did.push('panic') } });
+    assert.strictEqual((await v.action('vcmd_run', { id: 'break' })).id, 'break');
+    await assert.rejects(v.action('vcmd_run', { id: 'open' }), /Unbekannt/);
+    await assert.rejects(v.action('vcmd_run', { id: 'rm -rf' }), /Unbekannt/);
+    assert.deepStrictEqual(did, ['break']);
+});

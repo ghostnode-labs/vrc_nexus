@@ -25,6 +25,8 @@ const THEMES = {
     amoled: { name: 'AMOLED',           bg: '#000000', accent: '#FFFFFF', hi: '#D0D0D0', danger: '#FF5555', muted: '#808080', grad: ['#000000', '#111111'] },
 };
 const BG_KINDS = ['none', 'gradient', 'image'], BG_MAX = 3 * 1024 * 1024;
+/** 8.0.5: Uhr-App 2.0 – Zifferblätter für den Startbildschirm der Uhr */
+const FACES = { classic: 'Klassisch (Puls + Kacheln)', big: 'Große Uhrzeit', analog: 'Analog mit Puls-Ring', minimal: 'Minimal (nur Zeit & Puls)', stats: 'Gesundheit (VR-Zeit, Pausen, Schritte)', friends: 'Freunde & Welt' };
 /** 5.2.3: was ein gekoppeltes Handy am PC auslösen darf (feste Liste, 🔞-Aktionen prüfen ihre Freigabe selbst) */
 const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'nsfw_allclear', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'nsfw_consent', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise',
     'toys_pattern', 'toys_pattern_stop', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop', 'toys3_get', 'toys3_game', 'toys3_hold', 'toys3_game_stop',
@@ -50,6 +52,7 @@ class Watch {
         if (c.bg !== undefined) { if (!BG_KINDS.includes(str(c.bg))) throw new UserError('Unbekannter Hintergrund.'); if (c.bg === 'image' && !this.bgFile()) throw new UserError('Erst ein Bild hochladen.'); n.bg = str(c.bg); n.theme_at = Date.now(); }
         if (c.bg_dim !== undefined) { n.bg_dim = Math.max(0, Math.min(85, int(c.bg_dim))); n.theme_at = Date.now(); }
         if (c.bg_rev !== undefined) n.bg_rev = str(c.bg_rev);
+        if (c.face !== undefined) { if (!FACES[str(c.face)]) throw new UserError('Unbekanntes Zifferblatt.'); n.face = str(c.face); n.theme_at = Date.now(); }
         this.app.db.setSetting('watch_cfg', JSON.stringify(n));
         this.apply();
         return n;
@@ -73,12 +76,12 @@ class Watch {
         return this.saveCfg({ bg: 'image', bg_rev: crypto.createHash('sha256').update(buf).digest('hex').slice(0, 16) });
     }
     clearBg() { try { require('fs').unlinkSync(this.bgPath()); } catch (e) { /* schon weg */ } return this.saveCfg({ bg: 'none', bg_rev: '' }); }
-    look() { const c = this.cfg(); return { theme: c.theme, colors: THEMES[c.theme] || THEMES.cyber, at: c.theme_at, bg: c.bg === 'image' && !c.bg_rev ? 'none' : c.bg, bg_dim: c.bg_dim, bg_rev: c.bg_rev }; }
+    look() { const c = this.cfg(); return { theme: c.theme, face: FACES[c.face] ? c.face : 'classic', colors: THEMES[c.theme] || THEMES.cyber, at: c.theme_at, bg: c.bg === 'image' && !c.bg_rev ? 'none' : c.bg, bg_dim: c.bg_dim, bg_rev: c.bg_rev }; }
     online(id) { return Date.now() - (this.seen[id] || 0) < 20000; }
 
     status() {
         const c = this.cfg();
-        return { cfg: { on: c.on, port: c.port }, look: this.look(), themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v])), has_bg: !!this.bgFile(),
+        return { cfg: { on: c.on, port: c.port }, look: this.look(), faces: FACES, themes: Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v])), has_bg: !!this.bgFile(),
             heart: this.app.heart ? { bpm: this.app.heart.active ? this.app.heart.bpm : 0, from: this.app.heart.from || '', source: this.app.heart.cfg().source } : null, running: !!this.server, error: this.error, pin: c.on ? this.pin : '', addresses: this.addresses(),
             devices: c.devices.map(d => ({ id: d.id, name: d.name, kind: d.kind || 'watch', added: d.added, last: this.seen[d.id] || d.last || 0, online: this.online(d.id), ver: this.ver[d.id] || '' })) };
     }
@@ -188,6 +191,8 @@ class Watch {
         return { ok: true, t: Date.now(), world: n && n.private ? '' : cut(str(st.worldName), 60), players: st.players ? st.players.size : 0, running: !!st.running,
             bpm: h && h.active ? h.bpm : 0, hr_src: h ? h.cfg().source : 'off', private: !!(n && n.private), nsfw, nsfw_reason: nsfw ? '' : cut(str(acc.reason), 160), toys: ts,
             sleeping: !!(a.comfort && a.comfort.sleep), look: this.look(),
+            health: a.health ? (() => { try { return a.health.today(); } catch (e) { return null; } })() : null,   // 8.0.5: für das Zifferblatt „Gesundheit“
+            coach_next: a.coach && a.coach.next ? Math.max(0, Math.round((a.coach.next.brk - Date.now()) / 60000)) : null,
             // 6.5: Zifferblatt-Daten und Benachrichtigungen (im Privat-Modus keine)
             friends: (() => { try { return a.vrc.friendList().filter(f => f.state === 'online').length; } catch (e) { return 0; } })(),
             notes: this.notesSafe() };
@@ -225,6 +230,7 @@ class Watch {
             h.save({ source: 'watch' });
             h.switchedFrom = src;
         }
+        if (b.steps !== undefined && this.app.diary) this.app.diary.setSteps(b.steps);   // 8.0.5: Schritte des Tages
         return { ok: h.push(int(b.bpm), 'watch'), switched: src !== 'watch' ? src : undefined, notes: this.notesSafe() };   // 6.5: Meldungen auch beim Puls-Senden
     }
     async action(a, b, dev) {
@@ -245,6 +251,8 @@ class Watch {
             case 'note_reply': r = await this.noteReply(b.id, str(b.reply)); break;   // 6.5
             case 'safeword': r = await post('nsfwx_safeword', { source: 'Uhr' }); break;   // 6.7
             case 'theme': this.saveCfg({ theme: str(b.theme) }); r = { msg: '🎨 ' + THEMES[str(b.theme)].name }; break;
+            case 'face': this.saveCfg({ face: str(b.face) }); r = { msg: '⌚ ' + FACES[str(b.face)] }; break;   // 8.0.5
+            case 'steps': if (this.app.diary) this.app.diary.setSteps(b.steps); r = { msg: '🚶 ' + int(b.steps) }; break;
             case 'sleep': r = await post('comfort_sleep', { on: b.on === false || b.on === '0' ? '0' : '1', wake: int(b.wake) || 0 }); break;
             default: throw new UserError('Unbekannte Aktion.');
         }
@@ -282,4 +290,4 @@ class Watch {
     }
 }
 
-module.exports = { Watch, DISC_PORT, THEMES, PHONE_ACTS };
+module.exports = { Watch, DISC_PORT, THEMES, FACES, PHONE_ACTS };

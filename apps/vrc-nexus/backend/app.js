@@ -81,6 +81,8 @@ class NexusApp {
         this.together = new (require('./together').Together)(this);   // 7.1 Gemeinsam
         this.perf = new (require('./perfmon').PerfMon)(this);   // 7.3.4 Leistungsmessung
         this.diary = new (require('./diary').Diary)(this);   // 8.0 Tages-Tagebuch
+        this.health = new (require('./health').Health)(this);   // 8.0.5 Gesundheit
+        this.themes = new (require('./themes').Themes)(this);   // 8.0.5 eigene Themes + Marktplatz
         this.coach = new (require('./coach').Coach)(this);   // 8.0 VR-Pausen-Coach
         this.diag = new (require('./diag').Diag)(this);   // 8.0 Diagnose-Bericht
         this.energy = new (require('./energy').Energy)(this);   // 8.0.1 Energie-Modus
@@ -307,6 +309,8 @@ class NexusApp {
             if (act.startsWith('tg_')) return await this.together.action(act, input);   // 7.1
             if (act.startsWith('perf_')) return await this.perf.action(act, input);   // 7.3.4
             if (act.startsWith('diary_')) return await this.diary.action(act, input);   // 8.0
+            if (act.startsWith('health_')) return await this.health.action(act, input);   // 8.0.5
+            if (act.startsWith('theme_')) return await this.themes.action(act, input);   // 8.0.5
             if (act.startsWith('coach_')) return await this.coach.action(act, input);   // 8.0
             if (act.startsWith('diag_')) return await this.diag.action(act, input);   // 8.0
             if (act.startsWith('energy_')) return await this.energy.action(act, input);   // 8.0.1

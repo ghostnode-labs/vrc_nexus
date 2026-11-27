@@ -33,7 +33,7 @@ namespace NexusOverlay
         static float tilt = 60f, offX = 0.02f, offY = 0.03f, offZ = 0.12f, frontY = -0.1f;
         static uint curW = 1024, curH = 640;
         static bool gaze = true, interactive = true;
-        static ulong actSet, actToggle;
+        static ulong actSet, actToggle, actHand;   // 8.0.5: Handmenü
         static long lastGaze, lastFps;
         static readonly Compositor_FrameTiming[] timings = new Compositor_FrameTiming[90];
         static volatile bool running = true;
@@ -110,6 +110,7 @@ namespace NexusOverlay
                 var e1 = OpenVR.Input.SetActionManifestPath(manifest);
                 var e2 = OpenVR.Input.GetActionSetHandle("/actions/nexus", ref actSet);
                 var e3 = OpenVR.Input.GetActionHandle("/actions/nexus/in/toggle", ref actToggle);
+                OpenVR.Input.GetActionHandle("/actions/nexus/in/handmenu", ref actHand);   // optional
                 SetupSpaceInput();
                 Out("{\"ev\":\"input\",\"ok\":" + (e1 == EVRInputError.None && e2 == EVRInputError.None && e3 == EVRInputError.None ? "true" : "false") + ",\"msg\":" + Q(e1 + "/" + e2 + "/" + e3) + "}");
             }
@@ -121,6 +122,16 @@ namespace NexusOverlay
             if (actSet == 0) return;
             sets[0].ulActionSet = actSet;
             if (OpenVR.Input.UpdateActionState(sets, (uint)Marshal.SizeOf(typeof(VRActiveActionSet_t))) != EVRInputError.None) return;
+            if (actHand != 0)
+            {
+                var hm = new InputDigitalActionData_t();
+                if (OpenVR.Input.GetDigitalActionData(actHand, ref hm, (uint)Marshal.SizeOf(typeof(InputDigitalActionData_t)), OpenVR.k_ulInvalidInputValueHandle) == EVRInputError.None && hm.bActive && hm.bChanged && hm.bState)
+                {
+                    if (mode == "off") mode = "wrist";
+                    if (!hudVisible) Command("{\"cmd\":\"show\"}");
+                    Out("{\"ev\":\"handmenu\"}");
+                }
+            }
             if (actToggle == 0) return;
             var d = new InputDigitalActionData_t();
             if (OpenVR.Input.GetDigitalActionData(actToggle, ref d, (uint)Marshal.SizeOf(typeof(InputDigitalActionData_t)), OpenVR.k_ulInvalidInputValueHandle) != EVRInputError.None) return;

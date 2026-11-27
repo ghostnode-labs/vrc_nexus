@@ -35,6 +35,7 @@ class Home {
             stats: safe(() => g.stats().today, null),
             macros: a.macros.list().map(m => ({ id: m.id, name: m.name })),
             music: a.auto.music, media: a.media ? safe(() => a.media.now(), null) : null, media_on: !!(a.media && a.media.proc), media_err: a.media ? a.media.error : '', media_wait: !!(a.media && a.media.proc && !a.media.at), afk: !!a.auto.afkSince,
+            priv: !!(a.nsfw && a.nsfw.private),   // 8.0.5: Handmenü im Overlay
             rotator: safe(() => { const c = g.cfg(); return { on: !!c.rotator_enabled, text: g.rotatorText(g.rotatorNext ? (str(c.rotator_texts).split('\n').filter(x => x.trim())[0] || c.rotator_text) : c.rotator_text) }; }, null),
             osc: { active: g.osc.active, avatar: g.osc.avatarId },
             heart: a.heart ? safe(() => { const h = a.heart.status(); return { on: h.cfg.source !== 'off', source: h.cfg.source, bpm: h.bpm, active: h.active, error: h.error, stats: h.stats, hist: h.hist }; }, null) : null,

@@ -126,6 +126,7 @@ class VoiceCmd {
         switch (act) {
             case 'vcmd_status': return this.status();
             case 'vcmd_cfg': this.saveCfg(input); return Object.assign(this.status(), { msg: 'Gespeichert.' });
+            case 'vcmd_run': { const id = str(input.id); if (!BUILTIN.some(b => b[0] === id) || ['open', 'button', 'obs_scene', 'help'].includes(id)) throw new UserError('Unbekannter Befehl.'); return Object.assign({ id }, await this.run(id, '')); }   // 8.0.5 Handmenü
             case 'vcmd_try': { const r = this.parse(input.text); return { hit: r, msg: r ? (r.id === 'unknown' ? '🤔 kein Befehl: „' + r.arg + '“' : '✔ ' + (BUILTIN.find(b => b[0] === r.id) || ['', '', r.id])[2] + (r.arg ? ': ' + r.arg : '')) : 'Kein Befehl (Weckwort fehlt).' }; }   // nur prüfen, nichts auslösen
         }
         throw new UserError('Unbekannte Aktion.');

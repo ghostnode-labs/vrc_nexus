@@ -74,6 +74,7 @@ public class HeartService extends Service implements SensorEventListener {
         if (bpm <= 0 || System.currentTimeMillis() - bpmAt > 15000) { error = bpm <= 0 ? "Sensor misst noch …" : "Kein frischer Messwert – Uhr enger tragen."; return; }
         try {
             JSONObject b = new JSONObject(); b.put("bpm", bpm);
+            if (Steps.today >= 0) b.put("steps", Steps.today);   // 8.0.5
             JSONObject r = Nexus.call(this, "/watch/heart", b);
             error = r.optBoolean("ignored") ? r.optString("msg") : "";
             Notes.handle(this, r);   // 6.5: Meldungen vom PC auch im Hintergrund

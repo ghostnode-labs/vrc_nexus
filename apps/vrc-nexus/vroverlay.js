@@ -216,6 +216,7 @@ class VrOverlay {
             case 'fps': this.fps = { app: Number(m.app) || 0, min: Number(m.min) || 0, at: Date.now() }; break;
             case 'visible': this.visible = !!m.v; break;
             case 'toggled': this.visible = !!m.v; break;
+            case 'handmenu': this.visible = true; if (wc) wc.executeJavaScript('window.NexusOverlay && NexusOverlay.tab("hand")').catch(() => {}); break;   // 8.0.5
             case 'input': this.inputMsg = m.ok ? '' : String(m.msg || ''); break;
             case 'quit': this.status = 'SteamVR beendet'; break;
             case 'mouse':

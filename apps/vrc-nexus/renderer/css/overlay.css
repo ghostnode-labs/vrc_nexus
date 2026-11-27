@@ -53,3 +53,8 @@ h3 { margin: 12px 2px 8px; color: var(--o-accent); font-size: 17px; text-transfo
 .ov-pv span { flex: 1; font-size: 18px; } .ov-pv b { min-width: 86px; text-align: center; color: var(--o-accent); font-size: 21px; }
 .ov-pv .btn { min-width: 64px; min-height: 52px; padding: 4px 8px; font-size: 22px; }
 .ov-note { color: var(--o-muted); font-size: 17px; margin: 8px 2px; }
+
+/* 8.0.5 Handmenü */
+.hm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.btn.hm-big { min-height: 120px; font-size: 26px; font-weight: 700; border-radius: 14px; }
+.btn.hm-big.danger { background: #5a1020; border-color: #ff5577; color: #fff; }

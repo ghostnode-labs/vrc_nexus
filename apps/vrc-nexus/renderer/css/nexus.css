@@ -838,3 +838,14 @@ body.nx-eco *, body.nx-eco *::before, body.nx-eco *::after { animation: none !im
 
 /* 8.0.3 App-Sprachbefehle */
 .vc-list { width: 100%; border-collapse: collapse; margin: 6px 0; } .vc-list td { padding: 3px 6px; border-top: 1px solid var(--line, rgba(255,255,255,.08)); vertical-align: top; }
+
+/* 8.0.5 Gesundheit */
+.hl-chart { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px; align-items: end; height: 140px; margin: 12px 0 4px; }
+.hl-col { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 1px; }
+.hl-col i { display: block; width: 45%; min-height: 1px; border-radius: 2px 2px 0 0; }
+.hl-vr { background: var(--accent, #38d5e6); } .hl-st { background: #4ade80; opacity: .75; }
+.hl-col b { position: absolute; top: -2px; font-size: 10px; color: #f3c262; }
+.hl-col span { position: absolute; bottom: -16px; font-size: 9px; opacity: .7; white-space: nowrap; }
+.hl-legend { margin-top: 18px; } .hl-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-left: 8px; }
+.hl-tips { margin: 8px 0 0 18px; padding: 0; } .hl-tips li { margin: 3px 0; }
+.perf-tile small.up { color: #f3c262; } .perf-tile small.down { color: #4ade80; } b small.up, b small.down { font-size: 11px; }
