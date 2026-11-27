@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.12",
+  "title": "Pattern library with preview",
+  "body": "- 〰 **Every pattern button now shows a small preview curve** (🔞 → Fun → 🌊 Patterns) – built-in and your own ✏️ patterns alike, computed locally from the pattern itself (24 s, short spikes stay visible). New custom patterns get their preview automatically."
+ },
+ {
   "version": "8.0.11",
   "title": "Device hub with battery levels",
   "body": "- 🧭 **Device hub** (🧰 Tools → 📡 Devices → *All devices*): toys now show up next to the watch, phone, paired PCs and the heart rate source, with **battery level** and current strength. Low batteries (≤ 20 %) are marked 🪫. Toys only appear while 18+ is unlocked and private mode is off."

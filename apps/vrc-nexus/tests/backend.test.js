@@ -3257,6 +3257,11 @@ test('4.1: Buttplug-Funktionen (Aktoren, Rotation, Stroker, Sensoren, Gerät-Ein
     app.heart.bpm = 0; app.heart.at = 0;
     await app.post({ act: 'toys_cfg', autopause: JSON.stringify({ on: '0' }) }, {});
     t.session.start = Date.now() - 600 * 60000; t.cur.set(0, 1); t.tickLust(t.cfg()); assert.ok(!t.paused, 'aus = keine Pause'); t.session.start = 0; t.cur.set(0, 0);
+    // 8.2: Muster-Vorschau (48 Werte, kurze Spitzen sichtbar, alle Muster inkl. eigener)
+    const pv = (await app.post({ act: 'toys_pattern_preview' }, {})).previews;
+    assert.ok(pv.welle.length === 48 && Math.max(...pv.welle) >= 95 && Math.min(...pv.welle) <= 20, JSON.stringify(pv.welle));
+    assert.strictEqual(Math.max(...pv.herz), 100, 'kurze Herzschlag-Spitzen bleiben sichtbar');
+    assert.ok(t.allPatterns().every(p => Array.isArray(pv[p.id])), 'jedes Muster hat eine Vorschau');
     // Puls & Stimme
     app.heart.push(120, 'test');
     await app.post({ act: 'toys_cfg', heart: JSON.stringify({ lo: 80, hi: 160 }) }, {});

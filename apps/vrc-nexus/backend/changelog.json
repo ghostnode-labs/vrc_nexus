@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.12",
+  "title": "Pattern previews",
+  "body": "- 🔞 ***"
+ },
+ {
   "version": "8.0.11",
   "title": "Device hub",
   "body": "- 🧭 **All devices at a glance** (🧰 Tools → 📡 Devices): this PC, paired watches, phones and laptops, and the heart rate source, each with connection status and **battery level**. Devices below 20 % are highlighted. The Nexus Watch now reports its battery to the PC (no extra permission needed).\n- 🔞 ***"

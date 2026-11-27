@@ -26,6 +26,9 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.12 – Pattern previews
+- 🔞 ***
+
 ### New in 8.0.11 – Device hub
 - 🧭 **All devices at a glance** (🧰 Tools → 📡 Devices): this PC, paired watches, phones and laptops, and the heart rate source, each with connection status and **battery level**. Devices below 20 % are highlighted. The Nexus Watch now reports its battery to the PC (no extra permission needed).
 - 🔞 ***

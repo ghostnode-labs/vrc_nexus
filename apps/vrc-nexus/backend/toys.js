@@ -159,6 +159,13 @@ class Toys {
         for (const c of this.cfg().custom) p.push({ id: 'u:' + c.id, name: '✏️ ' + c.name, custom: true });
         return p;
     }
+    /** 8.2: Vorschau eines Musters – 48 Werte (0–100) über 24 s, je Abschnitt der Höchstwert (kurze Spitzen bleiben sichtbar) */
+    patternPreview(id, secs = 24, n = 48) {
+        const f = this.patternFn(id); if (!f) return null;
+        const st = {}, out = [];
+        for (let i = 0; i < n; i++) { let m = 0; for (let k = 0; k < 8; k++) m = Math.max(m, clamp(f((i + k / 8) * secs / n, st))); out.push(Math.round(m * 100)); }
+        return out;
+    }
     patternFn(id) {
         if (PATTERNS[id]) return PATTERNS[id].f;
         const c = id.startsWith('u:') ? this.cfg().custom.find(x => x.id === id.slice(2)) : null;
@@ -809,6 +816,7 @@ class Toys {
             case 'toys_stop_dev': return Object.assign(await this.stopDevice(input.device), { msg: '⏹ Gerät gestoppt.' });
             case 'toys_tap': return await this.tap(input.device);
             case 'toys_sensors': { for (const d of this.devices.values()) await this.readSensors(d).catch(() => {}); return this.status(); }
+            case 'toys_pattern_preview': return { previews: Object.fromEntries(this.allPatterns().map(p => [p.id, this.patternPreview(p.id)])) };   // 8.2
             case 'toys_pattern': { const p = this.startPattern(input); return Object.assign(this.status(), { msg: (this.allPatterns().find(x => x.id === p.id) || {}).name + ' läuft' + (p.until ? ' (' + Math.round((p.until - p.start) / 1000) + ' s)' : '') + '.' }); }
             case 'toys_pattern_stop': {
                 const p = this.pat; this.pat = null;

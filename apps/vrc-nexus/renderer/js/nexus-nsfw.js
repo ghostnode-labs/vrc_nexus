@@ -144,13 +144,22 @@
         box.innerHTML = h + '</div>';
     }
     const fmtDur = s => s >= 3600 ? Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min' : s >= 60 ? Math.floor(s / 60) + ' min ' + (s % 60) + ' s' : s + ' s';
+    // 8.2: Muster-Vorschau als kleine Kurve im Knopf (einmal laden, bei neuen eigenen Mustern nachladen)
+    let patPrev = null, patPrevBusy = false;
+    const spark = id => { const v = patPrev && patPrev[id]; if (!v || !v.length) return ''; return ' <svg class="ns-spark" width="54" height="14" viewBox="0 0 54 14" aria-hidden="true" style="vertical-align:middle;opacity:.8"><polyline fill="none" stroke="currentColor" stroke-width="1.4" points="' + v.map((y, i) => (i * 54 / (v.length - 1)).toFixed(1) + ',' + (13 - y * 12 / 100).toFixed(1)).join(' ') + '"/></svg>'; };
+    function loadPrev(pats) {
+        if (patPrevBusy || (patPrev && pats.every(x => patPrev[x.id]))) return;
+        patPrevBusy = true;
+        api('toys_pattern_preview').then(r => { patPrev = r.previews || {}; document.querySelectorAll('[data-pat]').forEach(b => { if (!b.querySelector('svg')) b.insertAdjacentHTML('beforeend', spark(b.dataset.pat)); }); }).catch(() => {}).finally(() => { patPrevBusy = false; });
+    }
     function funHtml(t, toysOk) {
         let h = '';
         const ready = toysOk && t && t.connected && t.devices.length;
         if (toysOk && t) {
             const p = t.pattern;
+            loadPrev(t.patterns || []);
             h += sec('🌊 Muster', (ready ? '' : '<p class="muted small">Erst unter 🎮 Spielzeug mit Intiface verbinden und ein Gerät finden.</p>')
-                + '<div class="ns-pats">' + (t.patterns || []).map(x => '<button type="button" class="btn btn-sm' + (p && p.id === x.id && !p.name.includes('🎁') ? ' btn-gold' : '') + '" data-pat="' + x.id + '"' + (ready ? '' : ' disabled') + '>' + esc(x.name) + '</button>').join('') + '</div>'
+                + '<div class="ns-pats">' + (t.patterns || []).map(x => '<button type="button" class="btn btn-sm' + (p && p.id === x.id && !p.name.includes('🎁') ? ' btn-gold' : '') + '" data-pat="' + x.id + '"' + (ready ? '' : ' disabled') + '>' + esc(x.name) + spark(x.id) + '</button>').join('') + '</div>'
                 + (p ? '<div class="ns-patrun"><b>' + esc(p.name) + '</b> <span class="small">' + (p.left ? 'noch ' + fmtDur(p.left) : 'endlos') + '</span><div class="ns-bar"><i style="width:' + p.level + '%"></i></div><button type="button" class="btn btn-sm" data-ns="pat_stop">⏸ Muster aus</button></div>' : '')
                 + '<div class="ns-patcfg"><label><span class="small">Tempo <b>' + pc.speed + '×</b></span><input type="range" min="0.25" max="3" step="0.25" value="' + pc.speed + '" data-pc="speed"></label>'
                 + '<label><span class="small">Stärke <b>' + pc.strength + ' %</b></span><input type="range" min="5" max="100" step="5" value="' + pc.strength + '" data-pc="strength"></label>'
