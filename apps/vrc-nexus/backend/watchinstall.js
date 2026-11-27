@@ -17,6 +17,8 @@ const { readZip } = require('./nxp');
 
 const REPO = 'ghostnode-labs/vrc_nexus';
 const APK = /^VRC-Nexus-Watch-(\d+)\.(\d+)\.(\d+)-wearos\.apk$/;
+const FACE = /^VRC-Nexus-WatchFace-(\d+)\.(\d+)\.(\d+)-wearos\.apk$/;   // 8.1.1: Zifferblatt (Watch Face Format)
+const FACE_PKG = 'dev.ghostnode.nexuswatch.face';
 const RELEASE_DL = 'https://github.com/' + REPO + '/releases/download/';
 const PT_URL = { win32: 'windows', darwin: 'darwin', linux: 'linux' };
 const ADB_FILES = /^platform-tools\/(adb(\.exe)?|AdbWinApi\.dll|AdbWinUsbApi\.dll|libwinpthread-1\.dll)$/;
@@ -111,7 +113,7 @@ class WatchInstall {
     }
 
     /** neueste Uhr-APK aus den Releases: { version, code, url, size, name } */
-    async latest() {
+    async latest(rx = APK) {
         let best = null;
         for (let page = 1; page <= 3; page++) {
             let r;
@@ -124,7 +126,7 @@ class WatchInstall {
             for (const rel of list) {
                 if (!rel || rel.draft || rel.prerelease) continue;
                 for (const a of rel.assets || []) {
-                    const m = APK.exec(String(a.name || ''));
+                    const m = rx.exec(String(a.name || ''));
                     if (!m || (a.state && a.state !== 'uploaded')) continue;
                     const code = +m[1] * 10000 + +m[2] * 100 + +m[3];
                     if (!best || code > best.code) best = { version: m[1] + '.' + m[2] + '.' + m[3], code, url: String(a.browser_download_url || ''), size: a.size || 0, name: a.name };
@@ -132,7 +134,7 @@ class WatchInstall {
             }
             if (list.length < 100) break;
         }
-        if (!best) throw new UserError('Im Release ist noch keine Uhr-App (VRC-Nexus-Watch-…-wearos.apk).');
+        if (!best) throw new UserError(rx === FACE ? 'Im Release ist noch kein Zifferblatt.' : 'Im Release ist noch keine Uhr-App (VRC-Nexus-Watch-…-wearos.apk).');
         return best;
     }
     /** installierte Version auf der Uhr (versionCode) oder 0 */
@@ -149,25 +151,40 @@ class WatchInstall {
         if (ch.code !== 0) throw new UserError('Gerät antwortet nicht – ist es verbunden und das Debugging erlaubt?');
         if (!/watch/i.test(ch.out)) throw new UserError('Das ist keine Wear-OS-Uhr.');
         const l = await this.latest();
+        await this.push(serial, l, 'nexus-watch.apk', 'Uhr-App');
+        this.say('✔ Nexus Watch ' + l.version + ' installiert.');
+        // 8.1.1: Zifferblatt mitinstallieren (Wear OS 4+) und als aktives Zifferblatt setzen – beides „wenn möglich“, die Uhr-App ist schon drauf
+        try {
+            const sdk = Number(((await this.adb(['-s', serial, 'shell', 'getprop', 'ro.build.version.sdk'], 15000)).out || '').trim()) || 0;
+            if (sdk && sdk < 33) this.say('ℹ Zifferblatt braucht Wear OS 4 – diese Uhr hat es noch nicht.');
+            else {
+                const fc = await this.latest(FACE);
+                await this.push(serial, fc, 'nexus-face.apk', 'Zifferblatt');
+                const set = await this.adb(['-s', serial, 'shell', 'am', 'broadcast', '-a', 'com.google.android.wearable.app.DEBUG_SURFACE', '--es', 'operation', 'set-watchface', '--es', 'watchFaceId', FACE_PKG], 20000);
+                this.say(/result=0|completed/i.test(set.out) && !/error|unknown/i.test(set.out) ? '✔ Zifferblatt „VRC Nexus“ ist aktiv.' : '✔ Zifferblatt installiert – auf der Uhr lange aufs Zifferblatt drücken und „VRC Nexus“ wählen.');
+            }
+        } catch (e) { this.say('ℹ Zifferblatt nicht installiert: ' + (e.message || e)); }
+        return l.version;
+    }
+    /** eine APK aus dem Release laden, prüfen und per adb installieren */
+    async push(serial, l, file, what) {
         if (!l.url.startsWith(RELEASE_DL) && !(process.env.NEXUS_UPDATE_API && /^http:\/\/127\.0\.0\.1:/.test(l.url))) throw new UserError('Unerwartete Download-Adresse.');
-        if (l.size > 60 * 1048576) throw new UserError('Uhr-App zu groß.');
+        if (l.size > 60 * 1048576) throw new UserError(what + ' zu groß.');
         this.say('Lade ' + l.name + ' …');
         let r;
-        try { r = await this.fetch(l.url, { redirect: 'follow', signal: AbortSignal.timeout(180000) }); } catch (e) { throw new UserError('Download der Uhr-App fehlgeschlagen.'); }
-        if (!r.ok) throw new UserError('Download der Uhr-App: HTTP ' + r.status + '.');
+        try { r = await this.fetch(l.url, { redirect: 'follow', signal: AbortSignal.timeout(180000) }); } catch (e) { throw new UserError('Download (' + what + ') fehlgeschlagen.'); }
+        if (!r.ok) throw new UserError('Download (' + what + '): HTTP ' + r.status + '.');
         const buf = Buffer.from(await r.arrayBuffer());
         if (buf.length > 60 * 1048576 || buf.length < 1000 || buf.readUInt32LE(0) !== 0x04034b50) throw new UserError('Die geladene Datei ist keine APK.');
         fs.mkdirSync(this.dir, { recursive: true });
-        const f = path.join(this.dir, 'nexus-watch.apk');
+        const f = path.join(this.dir, file);
         fs.writeFileSync(f, buf);
         this.say('Installiere auf der Uhr …');
         const res = await this.adb(['-s', serial, 'install', '-r', f], 240000);
         if (/INSTALL_FAILED_UPDATE_INCOMPATIBLE|signatures do not match/i.test(res.out))
             throw new UserError('Auf der Uhr ist eine Nexus Watch mit anderer Signatur. Bitte dort deinstallieren und erneut installieren (die Uhr muss danach neu gekoppelt werden).');
         if (/INSTALL_FAILED_VERSION_DOWNGRADE/i.test(res.out)) throw new UserError('Auf der Uhr ist schon eine neuere Version.');
-        if (!/Success/.test(res.out)) throw new UserError('Installation fehlgeschlagen: ' + (res.out.trim().split(/\r?\n/).pop() || '').slice(0, 160));
-        this.say('✔ Nexus Watch ' + l.version + ' installiert.');
-        return l.version;
+        if (!/Success/.test(res.out)) throw new UserError(what + ': Installation fehlgeschlagen: ' + (res.out.trim().split(/\r?\n/).pop() || '').slice(0, 160));
     }
 
     async status() {

@@ -119,6 +119,7 @@ jobs:
             "| VRC-Nexus-$VER-portable.exe | Windows portable (no install) |" \
             "| VRC-Nexus-$VER-android.apk | Android (without PC features) |" \
             "| VRC-Nexus-Watch-$VER-wearos.apk | Wear OS watch app (heart rate, panic, quick actions) |" \
+            "| VRC-Nexus-WatchFace-$VER-wearos.apk | VRC Nexus watch face (Wear OS 4+, set as default watch face) |" \
             "| Nexus-Pet-$(cat apps/nexus-pet/version.txt).apk | Nexus Pet – virtual pet for Android (separate app) |" \
             "| VRC-Nexus-Twitch-Extension.zip | Twitch panel extension (upload in the Twitch developer console) |" \
             "| VRC-Nexus.streamDeckPlugin | Stream Deck plugin (double-click to install) |" "" \
@@ -155,7 +156,7 @@ jobs:
             echo "::warning::Secret ANDROID_KEYSTORE_B64 fehlt – die Uhr-APK bekommt die Debug-Signatur."
           fi
       - name: Uhr-APK bauen
-        run: gradle -p apps/vrc-nexus-watch assembleRelease --no-daemon
+        run: gradle -p apps/vrc-nexus-watch :app:assembleRelease --no-daemon
       - name: Umbenennen
         run: |
           VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
@@ -172,6 +173,46 @@ jobs:
         run: |
           VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
           gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-Watch-*-wearos.apk
+
+  # 8.1.1: Zifferblatt „VRC Nexus“ (Watch Face Format, nur XML) – eigener Job, damit ein Fehler hier nie die Uhr-App aufhält
+  watchface:
+    runs-on: ubuntu-latest
+    needs: apk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Festen Signierschlüssel bereitstellen
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/nexus.keystore"
+            echo "NEXUS_KEYSTORE=$RUNNER_TEMP/nexus.keystore" >> "$GITHUB_ENV"
+          fi
+      - name: Zifferblatt bauen
+        run: gradle -p apps/vrc-nexus-watch :watchface:assembleRelease --no-daemon
+      - name: Umbenennen
+        run: |
+          VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
+          cp apps/vrc-nexus-watch/watchface/build/outputs/apk/release/watchface-release.apk "VRC-Nexus-WatchFace-$VER-wearos.apk"
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: VRC-Nexus-WatchFace
+          path: VRC-Nexus-WatchFace-*-wearos.apk
+      - name: An das GitHub-Release hängen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          VER=$(node -p "require('./apps/vrc-nexus-android/package.json').version")
+          gh release upload "vrc-nexus-v$VER" -R "$REPO" --clobber VRC-Nexus-WatchFace-*-wearos.apk
 
   # Nexus Pet (virtuelles Haustier, reines Java) – hängt mit am VRC-Nexus-Release, damit es auf der Webseite (Dashboard, Downloads, Changelog) erscheint
   pet:

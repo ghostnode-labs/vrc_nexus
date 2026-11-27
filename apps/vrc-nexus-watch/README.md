@@ -25,3 +25,8 @@ often cannot reach devices on the home network.
 Plain Java, no libraries. `gradle -p apps/vrc-nexus-watch assembleRelease` (Android SDK 34, JDK 17+).
 CI builds it together with the Android app and attaches `VRC-Nexus-Watch-<version>-wearos.apk` to the release.
 Install with `adb install` (watch in developer mode with Wi-Fi debugging) or a sideload tool.
+
+
+## Watch face (`watchface/`)
+
+Since 8.1.2 there is a second, code-free module: the **VRC Nexus watch face** in Watch Face Format 1 (`res/raw/watchface.xml`, Wear OS 4+, minSdk 33). It shows time, seconds (hidden in ambient), date, heart rate, a battery arc and two customizable complication slots (defaults: steps, battery). It is built by its own CI job (`gradle -p apps/vrc-nexus-watch :watchface:assembleRelease`) and attached to the release as `VRC-Nexus-WatchFace-<version>-wearos.apk`. The PC app's watch installer installs it together with the watch app and tries to make it the active watch face (`am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface`).

@@ -5380,6 +5380,8 @@ test('8.0.19: Uhren-Installer per ADB – adb laden (nur adb entpackt), koppeln/
         if (u.includes('/releases?')) return { ok: true, status: 200, json: async () => rel };
         if (u.endsWith('8.0.18-wearos.apk')) return { ok: true, status: 200, arrayBuffer: async () => apk };
         throw new Error('unerwartet ' + u); };
+    // 8.1.1: Zifferblatt im gleichen Release
+    rel[0].assets.push({ name: 'VRC-Nexus-WatchFace-8.0.18-wearos.apk', browser_download_url: 'https://github.com/ghostnode-labs/vrc_nexus/releases/download/vrc-nexus-v8.0.18/VRC-Nexus-WatchFace-8.0.18-wearos.apk', size: apk.length });
     const savedPath = process.env.PATH; process.env.PATH = dir;   // kein System-adb
     // 8.1.1: auch die Android-SDK-Variablen ausblenden – GitHubs Build-Rechner hat adb unter ANDROID_HOME (Test schlug dort fehl, kein Release seit 8.0.19)
     const savedEnv = {}; for (const k of ['ADB', 'ANDROID_HOME', 'ANDROID_SDK_ROOT', 'HOME', 'USERPROFILE']) { savedEnv[k] = process.env[k]; delete process.env[k]; }
@@ -5401,6 +5403,9 @@ test('8.0.19: Uhren-Installer per ADB – adb laden (nur adb entpackt), koppeln/
         st = await w.action('watch_adb_install', { serial: '192.168.1.50:41234' });
         assert.match(st.msg, /8\.0\.18/, 'neueste stabile Version, kein Vorab-Release');
         assert.ok(calls.some(c => /^-s 192\.168\.1\.50:41234 install -r .*nexus-watch\.apk$/.test(c)));
+        assert.ok(calls.some(c => /^-s 192\.168\.1\.50:41234 install -r .*nexus-face\.apk$/.test(c)), 'Zifferblatt mitinstalliert');
+        assert.ok(calls.some(c => c.includes('DEBUG_SURFACE') && c.includes('set-watchface') && c.includes('dev.ghostnode.nexuswatch.face')), 'als aktives Zifferblatt gesetzt');
+        assert.ok(st.log.some(l => /Zifferblatt/.test(l)), 'Hinweis im Protokoll');
         assert.ok(!fetched.some(u => u.includes('evil')));
         installOut = 'Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match]';
         await assert.rejects(w.action('watch_adb_install', { serial: '192.168.1.50:41234' }), /andere[rn]? Signatur/);

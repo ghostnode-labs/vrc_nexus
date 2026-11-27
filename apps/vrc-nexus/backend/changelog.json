@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.1.2",
+  "title": "Watch face",
+  "body": "- ⌚ **VRC Nexus as your watch face:** new watch face \"VRC Nexus\" for Wear OS 4 and newer (Galaxy Watch 4 and later with current updates, Pixel Watch). It is made in Google's new Watch Face Format, the only format Wear OS still supports. Dark Nexus look: big time, seconds (hidden in always-on mode), date, heart rate, a battery ring and two fields you can fill yourself – by default steps and battery. Pick \"App shortcut → Nexus Watch\" there to open the watch app with one tap.\n- 📲 **Installed together with the watch app:** Tools → 📡 Devices → \"Install / update watch app\" now also puts the watch face on the watch and tries to set it as the active watch face right away. If your watch does not allow that, long-press the current watch face and choose \"VRC Nexus\".\n- The watch face is also attached to every release as `VRC-Nexus-WatchFace-…-wearos.apk`."
+ },
+ {
   "version": "8.1.1",
   "title": "Updates arrive again",
   "body": "- 🛠 **Fixed: updates since 8.0.19 never reached Windows, Linux and macOS.** One automatic test only failed on GitHub's build machine (it found the Android tools installed there), so the build stopped before the installer was made. The fixes from 8.0.20, 8.0.21 and 8.1.0 now finally arrive with this version.\n- 🔞 ***"
