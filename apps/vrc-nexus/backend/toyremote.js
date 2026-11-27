@@ -203,6 +203,7 @@ class ToyRemote {
         if (!this.allowed()) throw new UserError('Spielzeug ist hier nicht freigeschaltet.');
         if (!m || m.v !== 1 || !me || str(m.to).toLowerCase() !== me.toLowerCase()) throw new UserError('Falsche Empfänger-ID.');
         const from = str(m.from), self = from.toLowerCase() === me.toLowerCase();
+        if (!self && this.app.safety && this.app.safety.isBlocked(from)) { this.note(from, '⛔ auf deiner Sperrliste'); throw new UserError('Du stehst nicht auf der Freigabeliste.'); }   // 8.2: Sperrliste geht immer vor
         const who = self ? { uid: me, name: 'Du (Selbsttest)' } : c.allow.find(a => a.uid.toLowerCase() === from.toLowerCase());
         if (!who) { this.note(from, '⛔ nicht auf der Freigabeliste'); throw new UserError('Du stehst nicht auf der Freigabeliste.'); }
         const age = Date.now() - Number(m.ts);

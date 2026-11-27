@@ -47,7 +47,7 @@ class NexusApp {
         this.settings = new Settings(opts.db);
         this.vrc = new Vrc(opts.db, opts.crypt);
         this.x = new Extra(this.vrc); this.x.settings = this.settings;
-        this.game = new GameLog(opts.db, { onEvent: e => { if (this.tools) this.tools.onGameEvent(e); if (this.auto) this.auto.onGameEvent(e); if (this.plugins) this.plugins.onGameEvent(e); if (this.warn) this.warn.onGameEvent(e); if (this.obs) this.obs.onGameEvent(e); if (this.nsfwcol) this.nsfwcol.onGameEvent(e).catch(() => {}); if (this.toys && e.kind === 'nexus_toy') this.toys.onWorldEvent(e); if (opts.onGameEvent) opts.onGameEvent(e); } });
+        this.game = new GameLog(opts.db, { onEvent: e => { if (this.tools) this.tools.onGameEvent(e); if (this.auto) this.auto.onGameEvent(e); if (this.plugins) this.plugins.onGameEvent(e); if (this.warn) this.warn.onGameEvent(e); if (this.safety) this.safety.onGameEvent(e); if (this.obs) this.obs.onGameEvent(e); if (this.nsfwcol) this.nsfwcol.onGameEvent(e).catch(() => {}); if (this.toys && e.kind === 'nexus_toy') this.toys.onWorldEvent(e); if (opts.onGameEvent) opts.onGameEvent(e); } });
         this.tr = new Translator(opts.db, opts.crypt, this.settings);
         this.link = new DashLink(this);
         this.updater = new Updater(this);
@@ -76,6 +76,7 @@ class NexusApp {
         this.backup = new CloudBackup(this, opts.crypt);
         this.account = new (require('./account').Account)(this, opts.crypt);
         this.warn = new (require('./warnlist').WarnList)(this);
+        this.safety = new (require('./safety').Safety)(this, opts.crypt);   // 8.2 Sicherheits-Center
         this.pulse = new (require('./pulse').Pulse)(this);   // 3.9 News & Discovery
         this.comm = new (require('./community').Community)(this);
         this.together = new (require('./together').Together)(this);   // 7.1 Gemeinsam
@@ -318,6 +319,7 @@ class NexusApp {
             if (act.startsWith('vcmd_')) return await this.voicecmd.action(act, input);   // 8.0.3
             if (act.startsWith('lsync_')) { if (!this.lansync) throw new UserError('Nur in der PC-App.'); return await this.lansync.action(act, input); }   // 8.0.4
             if (act === 'platform_info') return require('./platform').info();
+            if (act.startsWith('safety_')) return await this.safety.action(act, input);   // 8.2
             if (act.startsWith('devhub_')) { if (!this.devhub) this.devhub = new (require('./devhub').DevHub)(this); return await this.devhub.action(act, input); }   // 8.2 Geräte-Hub
             if (act.startsWith('sync_')) return await this.settingsync.action(act, input);   // 8.0.2 Abgleich
             if (act === 'portable_state') { const h = this.tools && this.tools.host; return h && h.portable ? h.portable() : { portable: false }; }   // 8.0.2

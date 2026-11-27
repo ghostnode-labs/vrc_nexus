@@ -2868,3 +2868,32 @@ Für Fern-Szenen: die Befehle zum Partner brauchen über das Internet etwas län
 Kräftig schütteln (3× in gut einer Sekunde) – nur solange die Uhr-App offen ist.	Shake firmly (3× within about a second) – only while the watch app is open.	Secouer fermement (3× en une seconde environ) – seulement quand l'app montre est ouverte.	強く振る（約1秒で3回）– ウォッチアプリが開いている間のみ。
 Uhr schütteln	Shake watch	Secouer la montre	ウォッチを振る
 nichts	nothing	rien	なし
+Sicherheits-Check	Safety check	Contrôle de sécurité	安全チェック
+# Notfall-Kontakt	# emergency contact	# contact d'urgence	緊急連絡先 #件
+# Notfall-Kontakte	# emergency contacts	# contacts d'urgence	緊急連絡先 #件
+Vertrauensperson mit Recht „Check-in“ eintragen – sie bekommt eine Nachricht, wenn du dich beim Treffen nicht meldest.	Add a trusted person with the "check-in" right – they get a message if you don't check in during a meeting.	Ajoute une personne de confiance avec le droit « check-in » – elle reçoit un message si tu ne te manifestes pas pendant une rencontre.	「チェックイン」権限を持つ信頼できる人を登録 – 会っている間に応答がないとメッセージが届きます。
+Safeword eingerichtet	Safeword set up	Safeword configuré	セーフワード設定済み
+Wort, Geste oder Taste festlegen – ein Ablauf für alle Wege.	Choose a word, gesture or key – one flow for every way.	Choisis un mot, un geste ou une touche – un seul déroulement pour tous les moyens.	言葉・ジェスチャー・キーを決める – すべての方法で同じ流れ。
+Panik-Knopf stoppt Spielzeug / sicherer Avatar	Panic button stops toys / safe avatar	Le bouton panique arrête les jouets / avatar sûr	パニックボタンでおもちゃ停止／安全なアバター
+Unter 🔞 → Einstellungen festlegen, was Panik alles tut.	Set what panic does under 🔞 → Settings.	Définis sous 🔞 → Paramètres ce que fait la panique.	🔞 → 設定でパニック時の動作を決める。
+Nach X Minuten am Stück oder ab einem Puls kurz pausieren.	Take a short break after X minutes in a row or above a heart rate.	Faire une courte pause après X minutes d'affilée ou au-delà d'un pouls.	X分連続または心拍数を超えたら短い休憩。
+Stopp am Handgelenk oder Handy	Stop on your wrist or phone	Stop au poignet ou sur le téléphone	手首やスマホで停止
+Uhr oder Handy koppeln – Panik, Safeword und Stopp gehen dann auch ohne Headset.	Pair a watch or phone – panic, safeword and stop then work without the headset too.	Associe une montre ou un téléphone – panique, safeword et stop fonctionnent aussi sans casque.	ウォッチやスマホをペアリング – ヘッドセットなしでもパニック・セーフワード・停止が使えます。
+Schüttel-Geste an der Uhr	Shake gesture on the watch	Geste de secousse sur la montre	ウォッチのシェイクジェスチャー
+Uhr schütteln = Stopp oder Safeword.	Shake the watch = stop or safeword.	Secouer la montre = stop ou safeword.	ウォッチを振る＝停止またはセーフワード。
+Ein Safeword stoppt auch bei Vertrauenspersonen mit diesem Recht.	A safeword also stops things for trusted people with this right.	Un safeword arrête aussi chez les personnes de confiance ayant ce droit.	セーフワードはこの権限を持つ信頼できる人のところでも停止します。
+# Personen auf der Sperrliste	# people on the block list	# personnes sur la liste de blocage	ブロックリストに#人
+Wer hier steht, kann dich nie fernsteuern; du bekommst einen stillen Hinweis, wenn die Person deine Instanz betritt.	People listed here can never control you remotely; you get a silent notice when they join your instance.	Les personnes listées ne peuvent jamais te contrôler à distance ; tu reçois un avis discret quand elles rejoignent ton instance.	ここにいる人は決してあなたを遠隔操作できません。インスタンスに入ると静かに通知されます。
+Sperrliste	Block list	Liste de blocage	ブロックリスト
+Gesperrte Personen können dich nie fernsteuern. Betreten sie deine Instanz, bekommst du einen stillen Hinweis – nie in der Chatbox. Nur auf diesem Gerät, verschlüsselt.	Blocked people can never control you remotely. If they join your instance you get a silent notice – never in the chatbox. Only on this device, encrypted.	Les personnes bloquées ne peuvent jamais te contrôler à distance. Si elles rejoignent ton instance, tu reçois un avis discret – jamais dans la chatbox. Uniquement sur cet appareil, chiffré.	ブロックした人は決して遠隔操作できません。インスタンスに入ると静かに通知（チャットボックスには出ません）。このデバイスのみ、暗号化。
+Noch niemand gesperrt.	Nobody blocked yet.	Personne n'est encore bloqué.	まだ誰もブロックしていません。
+Zuletzt gesehen	Last seen	Vu récemment	最近見かけた
+Gemeinsame Sperrliste	Shared block list	Liste de blocage partagée	共有ブロックリスト
+Teile deine eigenen Einträge mit Personen auf deiner Vertrauensliste – Ende-zu-Ende verschlüsselt über den Nexus-Chat. Übernommene Einträge werden nicht weitergeteilt.	Share your own entries with people on your trust list – end-to-end encrypted via the Nexus chat. Imported entries are not passed on.	Partage tes propres entrées avec les personnes de ta liste de confiance – chiffré de bout en bout via le chat Nexus. Les entrées importées ne sont pas retransmises.	自分の項目を信頼リストの人とNexusチャットでエンドツーエンド暗号化して共有。取り込んだ項目は再共有されません。
+Empfänger	Recipient	Destinataire	受信者
+mit Notizen	with notes	avec notes	メモ付き
+Erst jemanden auf die Vertrauensliste setzen (💗 Vertrauen & Fürsorge).	First add someone to your trust list (💗 Trust & care).	Ajoute d'abord quelqu'un à ta liste de confiance (💗 Confiance & soin).	まず信頼リストに誰かを追加（💗 信頼とケア）。
+Sperrlisten-Code	Block list code	Code de liste de blocage	ブロックリストコード
+von wem?	from whom?	de qui ?	誰から？
+Code ohne Chat erstellen	Create code without chat	Créer un code sans chat	チャットなしでコード作成
+Von der Sperrliste nehmen?	Remove from the block list?	Retirer de la liste de blocage ?	ブロックリストから外しますか？

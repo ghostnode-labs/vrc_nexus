@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.0.15",
+  "title": "Safety center",
+  "body": "- 🛡 **Safety center with a personal block list:** a checklist shows what helps in an emergency (emergency contacts, safeword, panic, breaks, stop on watch or phone). People on your block list can never control anything of yours remotely, and you get a silent notice (never in the chatbox) when they join your instance. The list stays encrypted on your device and can be shared end-to-end encrypted with trusted people.\n- 🔞 ***"
+ },
+ {
   "version": "8.0.14",
   "title": "Watch gestures, synchronised devices",
   "body": "- 🤚 **Shake the watch** (🧰 Tools → 📡 Devices → *Shake watch*): shaking firmly three times stops everything or triggers your safeword – your choice, off by default. Works while the Nexus Watch app is open, no extra permission.\n- ⏱ **Devices in sync:** each connected device can get its own reaction time, so all of them react at the same moment; an extra offset keeps your own devices in step with a remote partner. Stopping always happens instantly.\n- 🔞 ***"

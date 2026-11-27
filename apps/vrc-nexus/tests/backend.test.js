@@ -4605,6 +4605,58 @@ test('7.3: Vertrauen & Fürsorge – Vertrauensliste mit Rechten, Check-in-Timer
     c.stop();
 });
 
+test('8.2: Sicherheits-Center – Check, Sperrliste (verschlüsselt, stiller Hinweis, Fernsteuerung gesperrt), gemeinsame Sperrliste nur an Vertrauenspersonen', async () => {
+    const { Safety } = require('../backend/safety');
+    const { NsfwCare } = require('../backend/nsfwcare');
+    const { NsfwSafe } = require('../backend/nsfwsafe');
+    const store = {}, sent = [], notes = [];
+    let unlocked = true;
+    const ME = 'usr_00000000-0000-0000-0000-000000000001', BAD = 'usr_bad00000-0000-0000-0000-000000000002', FRIEND = 'usr_f0000000-0000-0000-0000-000000000003';
+    const app = {
+        db: { setting: (k, d) => (k in store ? store[k] : d), setSetting: (k, v) => { store[k] = v; } },
+        nsfw: { private: false, access: () => ({ unlocked }), myId: () => ME, cfg: () => ({ panic_toys: true }) },
+        chat: { async send(id, text) { sent.push([id, text]); } },
+        tools: { host: { notify: (t, b) => notes.push([t, b]) } }, settings: { all: () => ({}) },
+    };
+    const crypt = { encrypt: s => 'enc:' + Buffer.from(s).toString('base64'), decrypt: s => Buffer.from(s.slice(4), 'base64').toString() };
+    app.nsfwsafe = new NsfwSafe(app, crypt); app.nsfwcare = new NsfwCare(app, crypt);
+    const sf = app.safety = new Safety(app, crypt);
+    let r = await sf.action('safety_state', {});
+    assert.ok(r.check.total >= 8 && r.check.items.find(i => i.id === 'panic').ok && !r.check.items.find(i => i.id === 'contacts').ok);
+    await assert.rejects(sf.action('safety_block', { id: 'bob' }), /VRChat-ID/);
+    await assert.rejects(sf.action('safety_block', { id: ME }), /selbst/);
+    r = await sf.action('safety_block', { id: BAD.toUpperCase().replace('USR_', 'usr_'), name: 'Troll', note: 'drängelt' });
+    assert.ok(/gesperrt/.test(r.msg) && sf.isBlocked(BAD) && !store.nsfw_blocks.includes('drängelt'), 'verschlüsselt gespeichert');
+    // Beitritt → stiller Hinweis, nie Chatbox; alter Eintrag oder fremde Person → nichts
+    assert.strictEqual(sf.onGameEvent({ kind: 'player_join', player_id: FRIEND, ts: Math.floor(Date.now() / 1000) }), false);
+    assert.strictEqual(sf.onGameEvent({ kind: 'player_join', player_id: BAD, player_name: 'Troll', ts: Math.floor(Date.now() / 1000) - 600 }), false);
+    assert.strictEqual(sf.onGameEvent({ kind: 'player_join', player_id: BAD, player_name: 'Troll', ts: Math.floor(Date.now() / 1000), world_name: 'Lofi' }), true);
+    assert.ok(notes.length === 1 && /Gesperrt: Troll/.test(notes[0][0]) && /drängelt/.test(notes[0][1]));
+    app.nsfw.private = true; sf.onGameEvent({ kind: 'player_join', player_id: BAD, ts: Math.floor(Date.now() / 1000) }); assert.strictEqual(notes.length, 1, 'Privat-Modus: kein Hinweis'); app.nsfw.private = false;
+    // Fernsteuerung: gesperrt geht vor Freigabeliste
+    const { ToyRemote } = require('../backend/toyremote');
+    const fake = { cfg: () => ({ recv_on: true, web: true, allow: [{ uid: BAD, name: 'Troll' }] }), allowed: () => true, myId: () => ME, app, note() {} };
+    await assert.rejects(ToyRemote.prototype.receive.call(fake, { v: 1, from: BAD, to: ME, ts: Date.now(), n: 'a'.repeat(20) }, 'web'), /nicht auf der Freigabeliste/);
+    // Teilen nur an Vertrauenspersonen, Notizen nur auf Wunsch, übernommene nicht weiter
+    await assert.rejects(sf.action('safety_share', { to: FRIEND }), /Vertrauensliste/);
+    app.nsfwcare.saveTrust({ id: FRIEND, name: 'Mika', level: 'trusted' });
+    r = await sf.action('safety_share', { to: FRIEND });
+    assert.ok(/Mika/.test(r.msg) && sent.length === 1 && sent[0][1].includes('NXB1.'));
+    const code = sent[0][1].match(/NXB1\.\S+/)[0];
+    assert.ok(!Buffer.from(code.slice(5), 'base64url').toString().includes('drängelt'), 'ohne Notiz');
+    r = await sf.action('safety_export', { notes: '1' }); assert.ok(Buffer.from(r.code.slice(5), 'base64url').toString().includes('drängelt'));
+    // zweites Gerät übernimmt
+    const store2 = {}; const app2 = Object.assign({}, app, { db: { setting: (k, d) => (k in store2 ? store2[k] : d), setSetting: (k, v) => { store2[k] = v; } }, nsfw: Object.assign({}, app.nsfw, { myId: () => FRIEND }) });
+    const sf2 = new Safety(app2, crypt);
+    r = await sf2.action('safety_import', { code: 'schau mal: ' + code, from: 'Luna' });
+    assert.ok(/1 Einträge/.test(r.msg) && sf2.isBlocked(BAD) && r.blocks[0].from === 'Luna');
+    assert.ok(/1 Einträge/.test((await sf2.action('safety_import', { code })).msg) === false, 'doppelt wird übersprungen');
+    await assert.rejects(sf2.action('safety_export', {}), /keine eigenen/);
+    await assert.rejects(sf2.action('safety_import', { code: 'NXB1.!!!!' }), /Sperrlisten-Code|beschädigt/);
+    r = await sf.action('safety_unblock', { id: BAD }); assert.ok(!sf.isBlocked(BAD) && r.blocks.length === 0);
+    unlocked = false; await assert.rejects(sf.action('safety_state', {}), /18\+/);
+});
+
 test('7.3.1: Handy-Datenbank klein halten – alte Verläufe weg, Aktuelles und offene Benachrichtigungen bleiben, Datei wird kleiner', async () => {
     const os = require('os'), path = require('path'), fs = require('fs');
     const { openDatabase } = require('../backend/db');

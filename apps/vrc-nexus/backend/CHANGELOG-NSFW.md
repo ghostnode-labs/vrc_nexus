@@ -2,6 +2,13 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.15 – Safety center: emergency contacts and shared block lists
+
+- 🛡 **Safety center** (🔞 → *🛡 Safety*):
+  - **Safety check** with 8 points – emergency contacts (trust list with the check-in right), safeword, what panic does, automatic breaks, stop on watch/phone, shake gesture, group safeword and block list – each with a hint and a button that leads to the right place.
+  - **Block list:** VRChat ID, name and note, stored only locally and encrypted. Blocked people are **always refused for remote control** (even if they are still on the allow list), and you get a **silent notice** when they join your instance (desktop/XSOverlay, never chatbox, nothing in private mode).
+  - **Shared block list:** send your own entries end-to-end encrypted via the Nexus chat to someone on your **trust list** (notes only if you tick it); imported entries are marked "from …", are not passed on further, and duplicates are skipped. A code `NXB1.…` can also be created without the chat.
+
 ### New in 8.0.14 – Latency compensation, gestures on watch and controller
 
 - ⏱ **Latency compensation for synchronous scenes:** under ⚙ per toy you can enter its **reaction time** (0–1000 ms, e.g. slow Bluetooth toys); faster toys then wait for the slowest one, so everything starts together. The new card *⏱ Feel it at the same time* adds an extra delay (0–3000 ms) for your own toys during remote scenes, so you and your partner feel it simultaneously despite the internet delay. **Stops are never delayed**, and a delayed command is dropped if a stop came in between.
