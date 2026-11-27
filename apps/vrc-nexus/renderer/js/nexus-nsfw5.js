@@ -11,7 +11,9 @@
     const PERM = { remote: 'Fernsteuerung', scenes: 'Gemeinsame Szenen', limits: 'Grenzen sehen', checkin: 'Check-in-Kontakt', group_sw: 'Gruppen-Safeword' };
     const AMP = [['green', '🟢', 'Offen für Anfragen'], ['yellow', '🟡', 'Nur nach Absprache'], ['red', '🔴', 'Bitte keine Anfragen'], ['off', '⚪', 'Aus']];
     let x = null, loading = false, tEd = null, reRender = null;
-    const load = () => { if (loading) return; loading = true; api('nsfwc_state').then(d => { x = d; }).catch(() => {}).finally(() => { loading = false; if (reRender) reRender(); }); };
+    let loadErr = '';
+    // 8.0.21: Fehler anzeigen (mit „Erneut versuchen“) statt endlos neu zu laden
+    const load = () => { if (loading || loadErr) return; loading = true; api('nsfwt_state').then(d => { x = d; loadErr = ''; }).catch(e => { loadErr = e.message || 'Fehler'; }).finally(() => { loading = false; if (reRender) reRender(); }); };
     const fail = e => toast(e.message, true);
     const hm = t => new Date(t).toLocaleTimeString(window.nxLoc ? nxLoc() : 'de-DE', { hour: '2-digit', minute: '2-digit' });
     const cb = (grp, k, on, label) => '<label class="check small"><input type="checkbox" data-x5c="' + grp + '" data-k="' + k + '"' + (on ? ' checked' : '') + '> ' + esc(T(label)) + '</label>';
@@ -62,6 +64,7 @@
     }
     function html(sub, render) {
         reRender = render;
+        if (!x && loadErr) return '<div class="nc-card"><p class="bad">⚠ ' + esc(T(loadErr)) + '</p><button type="button" class="btn btn-sm" data-x5="retry">' + esc(T('Erneut versuchen')) + '</button></div>';
         if (!x) { load(); return '<div class="nc-card"><p class="muted">' + esc(T('Lade …')) + '</p></div>'; }
         return trustHtml() + checkinHtml() + careHtml();
     }
@@ -70,27 +73,28 @@
         reRender = render;
         const a = b.dataset.x5, st = d => { x = Object.assign(x, d); if (d.msg) toast(d.msg); if (d.tip) toast(d.mood + ' – ' + d.tip); render(); };
         const val = id => (document.getElementById(id) || {}).value || '';
+        if (a === 'retry') { loadErr = ''; x = null; render(); return true; }
         if (a === 'tnew') { tEd = { id: '', name: '', level: 'trusted', perms: Object.assign({}, x.level_perms.trusted), note: '' }; render(); return true; }
         if (a === 'tedit') { const t = x.trust.find(z => z.id === b.dataset.id); tEd = Object.assign(JSON.parse(JSON.stringify(t)), { old: true }); render(); return true; }
         if (a === 'tcancel') { tEd = null; render(); return true; }
         if (a === 'tlvl') { tEd.level = b.dataset.v; tEd.perms = Object.assign({}, x.level_perms[tEd.level]); render(); return true; }
-        if (a === 'tsave') { api('nsfwc_trust_save', { id: tEd.id, name: tEd.name, level: tEd.level, note: tEd.note, perms: JSON.stringify(tEd.perms) }).then(d => { tEd = null; st(d); }).catch(fail); return true; }
-        if (a === 'tdel') { if (!confirm(T('Von der Vertrauensliste entfernen?'))) return true; api('nsfwc_trust_del', { id: b.dataset.id }).then(st).catch(fail); return true; }
+        if (a === 'tsave') { api('nsfwt_trust_save', { id: tEd.id, name: tEd.name, level: tEd.level, note: tEd.note, perms: JSON.stringify(tEd.perms) }).then(d => { tEd = null; st(d); }).catch(fail); return true; }
+        if (a === 'tdel') { if (!confirm(T('Von der Vertrauensliste entfernen?'))) return true; api('nsfwt_trust_del', { id: b.dataset.id }).then(st).catch(fail); return true; }
         if (a === 'cstart') {
             const contacts = [...document.querySelectorAll('[data-cc]')].filter(c => c.checked).map(c => c.dataset.cc);
-            api('nsfwc_checkin_start', { label: val('nx5Lbl'), minutes: val('nx5Min'), grace: val('nx5Gr'), contacts: JSON.stringify(contacts), share_world: document.getElementById('nx5W').checked ? '1' : '', safeword_on_miss: document.getElementById('nx5Sw').checked ? '1' : '' }).then(st).catch(fail);
+            api('nsfwt_checkin_start', { label: val('nx5Lbl'), minutes: val('nx5Min'), grace: val('nx5Gr'), contacts: JSON.stringify(contacts), share_world: document.getElementById('nx5W').checked ? '1' : '', safeword_on_miss: document.getElementById('nx5Sw').checked ? '1' : '' }).then(st).catch(fail);
             return true;
         }
-        if (a === 'cok') { api('nsfwc_checkin_ok').then(st).catch(fail); return true; }
-        if (a === 'cext') { api('nsfwc_checkin_extend', { minutes: 15 }).then(st).catch(fail); return true; }
-        if (a === 'chelp') { if (!confirm(T('Jetzt deine Check-in-Kontakte um Hilfe bitten?'))) return true; api('nsfwc_checkin_help').then(st).catch(fail); return true; }
-        if (a === 'mood') { api('nsfwc_mood', { mood: b.dataset.v }).then(st).catch(fail); return true; }
-        if (a === 'send') { api('nsfwc_session_end').then(st).catch(fail); return true; }
-        if (a === 'amp') { api('nsfwc_ampel', { state: b.dataset.v, hours: val('nx5Ah') }).then(st).catch(fail); return true; }
+        if (a === 'cok') { api('nsfwt_checkin_ok').then(st).catch(fail); return true; }
+        if (a === 'cext') { api('nsfwt_checkin_extend', { minutes: 15 }).then(st).catch(fail); return true; }
+        if (a === 'chelp') { if (!confirm(T('Jetzt deine Check-in-Kontakte um Hilfe bitten?'))) return true; api('nsfwt_checkin_help').then(st).catch(fail); return true; }
+        if (a === 'mood') { api('nsfwt_mood', { mood: b.dataset.v }).then(st).catch(fail); return true; }
+        if (a === 'send') { api('nsfwt_session_end').then(st).catch(fail); return true; }
+        if (a === 'amp') { api('nsfwt_ampel', { state: b.dataset.v, hours: val('nx5Ah') }).then(st).catch(fail); return true; }
         if (a === 'save') {
             const part = b.dataset.part, data = { part };
             document.querySelectorAll('[data-x5c="' + part + '"]').forEach(el => { data[el.dataset.k] = el.type === 'checkbox' ? (el.checked ? '1' : '') : el.value; });
-            api('nsfwc_cfg', data).then(st).catch(fail); return true;
+            api('nsfwt_cfg', data).then(st).catch(fail); return true;
         }
         return false;
     }

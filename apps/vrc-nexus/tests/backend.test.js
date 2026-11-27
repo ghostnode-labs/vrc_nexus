@@ -4553,15 +4553,15 @@ test('7.3: Vertrauen & Fürsorge – Vertrauensliste mit Rechten, Check-in-Timer
     app.nsfwsafe = new NsfwSafe(app, crypt); const c = app.nsfwcare = new NsfwCare(app, crypt);
     const A = 'usr_aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', B = 'usr_bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', K = 'usr_cccccccc-cccc-cccc-cccc-cccccccccccc';
     // Vertrauensliste
-    await assert.rejects(c.action('nsfwc_trust_save', { id: 'Mira', level: 'partner' }), /VRChat-ID/);
-    await c.action('nsfwc_trust_save', { id: A.toUpperCase(), name: 'Mira', level: 'partner' });
-    await c.action('nsfwc_trust_save', { id: B, name: 'Kai', level: 'trusted', perms: JSON.stringify({ group_sw: false }) });
-    await c.action('nsfwc_trust_save', { id: K, name: 'Neu', level: 'known' });
+    await assert.rejects(c.action('nsfwt_trust_save', { id: 'Mira', level: 'partner' }), /VRChat-ID/);
+    await c.action('nsfwt_trust_save', { id: A.toUpperCase(), name: 'Mira', level: 'partner' });
+    await c.action('nsfwt_trust_save', { id: B, name: 'Kai', level: 'trusted', perms: JSON.stringify({ group_sw: false }) });
+    await c.action('nsfwt_trust_save', { id: K, name: 'Neu', level: 'known' });
     assert.ok(c.allowed(A, 'remote') && !c.allowed(B, 'remote') && c.allowed(B, 'checkin') && !c.allowed(B, 'group_sw') && !c.allowed(K, 'checkin'), 'Stufen + einzelne Rechte');
     assert.deepStrictEqual(c.state().trust.map(t => t.name), ['Mira', 'Kai', 'Neu'], 'sortiert nach Stufe');
     assert.ok(store.nsfw_care.startsWith('enc:') && !store.nsfw_care.includes('Mira'), 'verschlüsselt');
     // Check-in
-    await assert.rejects(c.action('nsfwc_checkin_start', { minutes: 2 }), /5 bis 480/);
+    await assert.rejects(c.action('nsfwt_checkin_start', { minutes: 2 }), /5 bis 480/);
     const t0 = Date.now();
     const ci = c.checkinStart({ label: 'Treffen mit Neu', minutes: 30, grace: 5, contacts: JSON.stringify([A, B, K]), share_world: '1' }, t0);
     assert.deepStrictEqual(ci.contacts, [A, B], 'nur Personen mit Check-in-Recht');
@@ -4572,19 +4572,19 @@ test('7.3: Vertrauen & Fürsorge – Vertrauensliste mit Rechten, Check-in-Timer
     await c.tick(t0 + 46 * 60000); await c.tick(t0 + 52 * 60000);
     assert.strictEqual(sent.length, 2); assert.match(sent[0][1], /^🛟 Mein Check-in ist ausgeblieben.*Treffen mit Neu.*Welt: Lofi Café/);
     app.nsfw.private = true; assert.strictEqual(c.worldText(), '', 'im Privat-Modus keine Welt'); app.nsfw.private = false;
-    assert.match((await c.action('nsfwc_checkin_ok', {})).msg, /Schreib deinen Vertrauenspersonen/);
+    assert.match((await c.action('nsfwt_checkin_ok', {})).msg, /Schreib deinen Vertrauenspersonen/);
     assert.strictEqual(c.load().checkin, null);
     c.checkinStart({ minutes: 60 }, t0); sent.length = 0;
-    assert.match((await c.action('nsfwc_checkin_help', {})).msg, /2 Person/); assert.match(sent[0][1], /^🆘/);
+    assert.match((await c.action('nsfwt_checkin_help', {})).msg, /2 Person/); assert.match(sent[0][1], /^🆘/);
     c.checkinOk();
     // Aftercare
-    await c.action('nsfwc_cfg', { part: 'aftercare', on: '1', delay_min: 10, after_safeword: '1' });
+    await c.action('nsfwt_cfg', { part: 'aftercare', on: '1', delay_min: 10, after_safeword: '1' });
     const af = c.afterSession('session', t0); assert.strictEqual(af.due, t0 + 600000);
     await c.tick(t0 + 600000); const an = notes.pop(); assert.match(an.t, /Aftercare/);
     assert.match((await an.m.onReply('break')).tip, /Zeit/); assert.strictEqual(c.state().moods[0].m, 'break', 'Stimmung lokal gemerkt');
     // Event-Ampel
-    await c.action('nsfwc_cfg', { part: 'ampel', chatbox: '1', param: 'NX/Ampel' });
-    await assert.rejects(c.action('nsfwc_cfg', { part: 'ampel', param: '../x y' }), /ungültig/);
+    await c.action('nsfwt_cfg', { part: 'ampel', chatbox: '1', param: 'NX/Ampel' });
+    await assert.rejects(c.action('nsfwt_cfg', { part: 'ampel', param: '../x y' }), /ungültig/);
     await c.setAmpel('yellow', 2, t0);
     assert.deepStrictEqual(params.pop(), ['NX/Ampel', 2, 'int']); assert.strictEqual(chats.pop(), '🟡 Nur nach Absprache');
     app.nsfw.private = true; await c.setAmpel('green', 1, t0); assert.strictEqual(chats.length, 0, 'Privat-Modus: keine Chatbox'); app.nsfw.private = false;
@@ -4602,7 +4602,7 @@ test('7.3: Vertrauen & Fürsorge – Vertrauensliste mit Rechten, Check-in-Timer
     await new Promise(r => setTimeout(r, 20));
     assert.strictEqual(stopped, before + 1); assert.strictEqual(sent.length, 0, 'keine Schleife');
     // ohne Freigabe: nichts
-    unlocked = false; assert.strictEqual(c.allowed(A, 'remote'), false); await assert.rejects(c.action('nsfwc_state', {}), /Gesperrt/);
+    unlocked = false; assert.strictEqual(c.allowed(A, 'remote'), false); await assert.rejects(c.action('nsfwt_state', {}), /Gesperrt/);
     c.stop();
 });
 
@@ -5405,4 +5405,30 @@ test('8.0.20: Fernsteuerung über den Live-Dienst (WebSocket, Root-Server) – s
         process.env.NEXUS_NO_LIVE = '1';
         for (const k of ['NEXUS_OWNER_HASH', 'NEXUS_TOY_UDP', 'NEXUS_RELAY_BASE']) delete process.env[k];
     }
+});
+
+test('8.0.21: Aktionen landen im richtigen Modul – „Vertrauen & Fürsorge“ (nsfwt_) nicht mehr bei der Sammlung (nsfwc_), kein Präfix doppelt vergeben', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWN = 'usr_' + '9'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWN);
+    const mk = async uid => { const db = await openDatabase(null); const a = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-212-')) } }); a.game.osc.stopListen(); a.vrc.account = () => ({ vrc_id: uid, me: {}, display_name: uid === OWN ? 'Besitzer' : 'Partner' }); return a; };
+    const O = await mk(OWN);
+    try {
+        O.nsfw.makeOwnerKey(); grant18(O);
+        const st = await O.post({ act: 'nsfwt_state' }, {});
+        assert.ok(Array.isArray(st.trust) && st.level_perms, 'Vertrauen & Fürsorge antwortet über den echten App-Weg (vorher: „Unbekannte Aktion“ → endlos „Lade …“)');
+        const col = await O.post({ act: 'nsfwc_list' }, {});
+        assert.ok(col && !col.trust, 'Sammlung bleibt bei nsfwc_');
+        // Einstellungen beider Bereiche getrennt
+        await O.post({ act: 'nsfwt_cfg', part: 'aftercare', on: '1', delay_min: '10' }, {});
+        await assert.rejects(O.post({ act: 'nsfwc_state' }, {}), /Unbekannt/, 'altes Präfix für Fürsorge gibt es nicht mehr');
+    } finally { O.toys && O.toys.stop(); O.tools.stop(); delete process.env.NEXUS_OWNER_HASH; }
+    // statisch: kein Präfix wird an zwei verschiedene Module weitergeleitet
+    const src = fs.readFileSync(path.join(__dirname, '../backend/app.js'), 'utf8'), seen = {};
+    for (const m of src.matchAll(/act\.startsWith\('([a-z0-9_]+)'\)\) return await this\.(\w+)\.action/g)) {
+        assert.ok(!seen[m[1]] || seen[m[1]] === m[2], 'Präfix „' + m[1] + '“ geht an ' + seen[m[1]] + ' und ' + m[2]);
+        seen[m[1]] = m[2];
+    }
+    assert.ok(Object.keys(seen).length > 10, 'Weiterleitungen gefunden');
 });

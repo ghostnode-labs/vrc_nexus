@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.0.21 – Bug fixes
+- 🛠 **Fixed: a tab in the 18+ area could hang on "Lade …" forever.** It now loads normally. If loading ever fails, the tab shows the error with a "Try again" button instead of retrying endlessly in the background.
+- 🔞 ***
+
 ### New in 8.0.20 – Live service
 - ⚡ **Real-time connection to the GhostNode server:** on the new root server, VRC Nexus keeps a live WebSocket connection (`/live/ws`) instead of asking the website for news every second. Messages arrive at once, and both the PC and the server have less to do. The website still checks every connection the same way as before.
 - 🔁 **Automatic fallback:** where the live service is not available (for example older hosting) or the connection drops, the app keeps working the previous way and reconnects on its own.

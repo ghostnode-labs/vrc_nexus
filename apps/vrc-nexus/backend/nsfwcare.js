@@ -171,17 +171,17 @@ class NsfwCare {
         if (this.app.nsfw) this.app.nsfw.need('');
         const st = extra => Object.assign(this.state(), extra || {});
         switch (act) {
-            case 'nsfwc_state': return st();
-            case 'nsfwc_trust_save': return st({ saved: this.saveTrust(input), msg: '🤝 Gespeichert.' });
-            case 'nsfwc_trust_del': this.delTrust(input.id); return st({ msg: 'Entfernt.' });
-            case 'nsfwc_checkin_start': return st({ msg: '🛟 Check-in läuft bis ' + new Date(this.checkinStart(input).due).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '.' });
-            case 'nsfwc_checkin_ok': { const r = this.checkinOk(); return st({ msg: r === 'alerted' ? '💚 Danke! Schreib deinen Vertrauenspersonen kurz, dass alles ok ist.' : '💚 Schön, dass alles ok ist.' }); }
-            case 'nsfwc_checkin_extend': this.checkinExtend(input.minutes); return st({ msg: '⏱ Verlängert.' });
-            case 'nsfwc_checkin_help': { const n = await this.checkinHelp(); return st({ msg: '🆘 ' + n + ' Person(en) benachrichtigt.' }); }
-            case 'nsfwc_session_end': return st({ msg: this.afterSession('session') ? '💗 Aftercare-Check-in kommt in ' + this.load().cfg.aftercare.delay_min + ' min.' : 'Aftercare ist aus.' });
-            case 'nsfwc_mood': return st(this.mood(str(input.mood)));
-            case 'nsfwc_ampel': { const a = await this.setAmpel(str(input.state), input.hours); return st({ msg: a ? AMPEL[a.state][0] + ' ' + AMPEL[a.state][1] : 'Ampel aus.' }); }
-            case 'nsfwc_cfg': {
+            case 'nsfwt_state': return st();
+            case 'nsfwt_trust_save': return st({ saved: this.saveTrust(input), msg: '🤝 Gespeichert.' });
+            case 'nsfwt_trust_del': this.delTrust(input.id); return st({ msg: 'Entfernt.' });
+            case 'nsfwt_checkin_start': return st({ msg: '🛟 Check-in läuft bis ' + new Date(this.checkinStart(input).due).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + '.' });
+            case 'nsfwt_checkin_ok': { const r = this.checkinOk(); return st({ msg: r === 'alerted' ? '💚 Danke! Schreib deinen Vertrauenspersonen kurz, dass alles ok ist.' : '💚 Schön, dass alles ok ist.' }); }
+            case 'nsfwt_checkin_extend': this.checkinExtend(input.minutes); return st({ msg: '⏱ Verlängert.' });
+            case 'nsfwt_checkin_help': { const n = await this.checkinHelp(); return st({ msg: '🆘 ' + n + ' Person(en) benachrichtigt.' }); }
+            case 'nsfwt_session_end': return st({ msg: this.afterSession('session') ? '💗 Aftercare-Check-in kommt in ' + this.load().cfg.aftercare.delay_min + ' min.' : 'Aftercare ist aus.' });
+            case 'nsfwt_mood': return st(this.mood(str(input.mood)));
+            case 'nsfwt_ampel': { const a = await this.setAmpel(str(input.state), input.hours); return st({ msg: a ? AMPEL[a.state][0] + ' ' + AMPEL[a.state][1] : 'Ampel aus.' }); }
+            case 'nsfwt_cfg': {
                 const c = this.load().cfg;
                 if (input.part === 'aftercare') c.aftercare = { on: yes(input.on), delay_min: Math.max(0, Math.min(120, int(input.delay_min))), after_safeword: yes(input.after_safeword) };
                 else if (input.part === 'ampel') { const p = str(input.param).trim(); if (p && !/^[\w./\-]{1,64}$/.test(p)) throw new UserError('Parameter-Name ungültig.'); c.ampel = { chatbox: yes(input.chatbox), param: p }; }

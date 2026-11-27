@@ -284,7 +284,7 @@ class NexusApp {
             if (act.startsWith('nsfw_')) return await this.nsfw.action(act, input);
             if (act.startsWith('nsfwc_')) return await this.nsfwcol.action(act, input);
             if (act.startsWith('nsfwx_')) return await this.nsfwsafe.action(act, input);
-            if (act.startsWith('nsfwc_')) return await this.nsfwcare.action(act, input);   // 7.3
+            if (act.startsWith('nsfwt_')) return await this.nsfwcare.action(act, input);   // 7.3 Vertrauen & Fürsorge (8.0.21: eigenes Präfix – vorher landete alles bei der Sammlung)
             if (act.startsWith('admin_')) return await this.admin.action(act, input);
             if (act.startsWith('toys_') || act.startsWith('toys3_')) { if (!this.toys) throw new UserError('Nur in der Windows-App.'); return await this.toys.action(act, input); }
             if (act.startsWith('tremote_')) { if (!this.toyremote) throw new UserError('Nur in der Windows-App.'); return await this.toyremote.action(act, input); }

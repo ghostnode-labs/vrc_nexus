@@ -2,6 +2,9 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.0.21
+- 🛠 **Fixed: "Trust & care" never loaded** (stuck on "Lade …"): its actions shared the prefix of the collection and were answered by the wrong module, which also swallowed its settings. They now have their own prefix (`nsfwt_`). "Limits & safety", "Fantasies" and "Help" no longer retry endlessly on an error either. A new test makes sure no action prefix is routed to two modules again.
+
 ### New in 8.0.20
 - 🎮 **Toy remote control in real time:** commands and replies between two Nexus apps travel over the live connection of the GhostNode root server and arrive immediately (before: up to one second delay from polling). The same checks apply: Verified 18+ with NSFW on, re-checked every 10 minutes; if access is withdrawn, the connection is closed. Without the live service, the mailbox is used as before.
 

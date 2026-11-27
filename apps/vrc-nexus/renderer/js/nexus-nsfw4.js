@@ -9,7 +9,9 @@
     const sec = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '"><h4>' + t + '</h4>' + html + '</div>';
     const LV = { yes: ['🟢', 'Ja'], maybe: ['🟡', 'Vielleicht'], no: ['🔴', 'Nein'] };
     let x = null, loading = false, edit = null, fEd = null, logItems = null, reRender = null;
-    const load = () => { if (loading) return; loading = true; api('nsfwx_state').then(d => { x = d; edit = null; }).catch(() => {}).finally(() => { loading = false; if (reRender) reRender(); }); };
+    let loadErr = '';
+    // 8.0.21: Fehler anzeigen (mit „Erneut versuchen“) statt endlos neu zu laden
+    const load = () => { if (loading || loadErr) return; loading = true; api('nsfwx_state').then(d => { x = d; edit = null; loadErr = ''; }).catch(e => { loadErr = e.message || 'Fehler'; }).finally(() => { loading = false; if (reRender) reRender(); }); };
     const fail = e => toast(e.message, true);
 
     function limitsHtml() {
@@ -74,6 +76,7 @@
     }
     function html(sub, render) {
         reRender = render;
+        if (!x && loadErr) return '<div class="nc-card"><p class="bad">⚠ ' + esc(T(loadErr)) + '</p><button type="button" class="btn btn-sm" data-x4="retry">' + esc(T('Erneut versuchen')) + '</button></div>';
         if (!x) { load(); return '<div class="nc-card"><p class="muted">' + esc(T('Lade …')) + '</p></div>'; }
         if (sub === 'safe2') return sec('📋 ' + esc(T('Grenzen-Profil')), limitsHtml(), 'ns-wide') + safetyHtml();
         if (sub === 'fantasy') return fantasyHtml();
@@ -81,8 +84,10 @@
         return '';
     }
     function onClick(e, render) {
-        const b = e.target.closest('[data-x4]'); if (!b || !x) return false;
+        const b = e.target.closest('[data-x4]'); if (!b) return false;
         reRender = render;
+        if (b.dataset.x4 === 'retry') { loadErr = ''; x = null; render(); return true; }
+        if (!x) return false;
         const a = b.dataset.x4, i = +b.dataset.i;
         const st = d => { x = Object.assign(x, d); if (d.msg) toast(d.msg); render(); };
         if (a === 'ladd') { edit = (edit || x.limits.slice()).concat([{ cat: b.dataset.c, label: '', level: 'maybe', note: '' }]); render(); return true; }
