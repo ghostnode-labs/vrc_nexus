@@ -1282,7 +1282,7 @@ test('2.2: neue Chatbox-Module (Countdown, Freunde, Laufschrift, Animation, Akku
     app.game.osc.stopListen();
     try {
         const cm = app.chatmods;
-        const soon = new Date(Date.now() + (2 * 86400 + 5 * 3600) * 1000 + 30000);
+        const soon = new Date(Date.now() + (2 * 86400 + 5 * 3600) * 1000 + 10 * 60000)   // +10 min Puffer: Uhrzeit wird auf Minuten gekürzt, Windows-GPU-Abfrage dauert Sekunden;
         const loc = soon.getFullYear() + '-' + String(soon.getMonth() + 1).padStart(2, '0') + '-' + String(soon.getDate()).padStart(2, '0') + 'T' + String(soon.getHours()).padStart(2, '0') + ':' + String(soon.getMinutes()).padStart(2, '0');
         cm.save({ cd_name: 'Stream', cd_at: loc, mq_text: 'Willkommen in meiner Welt, schön dass du da bist', mq_width: 12, an_frames: 'A\nB\nC' });
         assert.throws(() => cm.save({ cd_at: 'morgen irgendwann' }), /ungültig/);
