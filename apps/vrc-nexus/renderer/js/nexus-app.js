@@ -402,6 +402,10 @@
     // ======================= Werkzeuge =======================
     const TOOLS = [
         ['Bilder', [['shots', '📷', 'Screenshot-Manager', 'Screenshots ansehen, Welt & Mitspieler anzeigen und eintragen'], ['inventory', '🎒', 'Inventar', 'Bilder, Emojis, Sticker und Inventar (Galerie)']]],
+        ['Alltag', [['kit:status', '⏰', 'Status-Timer', 'Status für eine Weile setzen, danach automatisch zurück'], ['kit:remind', '🔔', 'Online-Erinnerung', 'Erinnert dich an etwas, sobald ein Freund online kommt'],
+            ['kit:tz', '🕐', 'Ortszeit von Freunden', 'Wie spät ist es gerade bei deinen Freunden?'], ['kit:notes', '📝', 'Notizblock', 'Notizen und Checklisten, nur auf diesem Gerät'],
+            ['kit:calendar', '📆', 'Geburtstags-Kalender', 'Geburtstage und Freundschaftstage als Kalender (ICS)'], ['kit:budget', '⏳', 'Spielzeit-Budget', 'Tages- und Wochenbudget mit freundlichem Hinweis'],
+            ['kit:vrcstatus', '🚦', 'VRChat-Serverstatus', 'Störungen bei VRChat auf einen Blick'], ['kit:care', '💬', 'Kontakt-Pflege', 'Erinnert dich, dich bei wichtigen Menschen zu melden']]],
         ['Verknüpfungen', [['f:photos', '🖼', 'VRChat-Fotos', 'Öffnet deinen VRChat-Fotoordner'], ['f:steam', '🎞', 'Steam-Screenshots', 'Öffnet deinen Steam-Screenshot-Ordner für VRChat'],
             ['f:nexus', '📁', 'VRC-Nexus-Daten', 'Öffnet den Datenordner dieser App'], ['f:vrchat', '📂', 'VRChat-Daten', 'Öffnet den VRChat-Datenordner (LocalLow)'],
             ['f:logs', '📜', 'VRChat-Logs', 'Öffnet den Ordner mit den VRChat-Logdateien'], ['f:crashes', '💥', 'Absturzberichte', 'Öffnet den Ordner mit VRChat-Crash-Dumps']]],
@@ -443,6 +447,7 @@
     function tool(id) {
         if (id === 'back') return renderTools();
         if (id.startsWith('f:')) return run('tools_folder', { which: id.slice(2) }).catch(() => {});
+        if (id.startsWith('kit:')) { const k = TOOLS.flatMap(x => x[1]).find(x => x[0] === id); const b = toolView((k ? k[1] + ' ' + k[2] : '🧰')); if (window.NexusKit) window.NexusKit.render(id.slice(4), b); return; }   // 8.2 Alltag
         if (id === 'x:friends') { dl('nexus.php?export=friends'); return; }
         if (id === 'x:avatars') { toast('Avatare werden abgefragt …'); dl('nexus.php?tools_export=avatars'); return; }
         const jump = { inventory: ['gallery', 'inventory'], calendar: ['calendar'], shop: ['shop'], purchases: ['shop'], news: ['notifs', 'news'], reports: ['notifs', 'reports'] }[id];

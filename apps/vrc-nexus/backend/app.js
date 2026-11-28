@@ -96,6 +96,8 @@ class NexusApp {
         this.settingsync = new (require('./settingsync').SettingSync)(this, opts.crypt);   // 8.0.2 Einstellungs-Abgleich
         if (!opts.noTimers) { this.settingsync.start(); if (this.lansync) this.lansync.start(); if (this.wear && this.wear.cfg().on) this.wear.start(); if (this.companion && this.companion.cfg().on) this.companion.start(); }
         if (!opts.noTimers) { this.diary.start(); this.coach.start(); }
+        this.kit = new (require('./kit').Kit)(this);   // 8.2: 🧰 Alltag (Status-Timer, Erinnerungen, Ortszeit, Notizblock, Kalender, Budget, Serverstatus, Kontakt-Pflege)
+        if (!opts.noTimers) this.kit.start();
         this.buttons = new (require('./buttons').Buttons)(this);
         this.deco = new (require('./deco').Deco)(this);                    // 3.1: Profil-Dekorationen
         this.netgraph = new (require('./netgraph').NetGraph)(this);        // 3.2.3: Gemeinsames Netzwerk
@@ -155,6 +157,7 @@ class NexusApp {
             if (q.has('tools_export')) return await this.toolsExport(q.get('tools_export'));
             if (q.has('osclog_export')) return download(this.osclog.csv(Object.fromEntries(q)), 'text/csv; charset=utf-8', 'osc-log_' + new Date().toISOString().slice(0, 10) + '.csv');
             if (q.has('mod_export')) return download(await this.mod.exportCsv(str(q.get('mod_export'))), 'text/csv; charset=utf-8', 'moderation_' + new Date().toISOString().slice(0, 10) + '.csv');
+            if (q.has('kit_ics')) return download(this.kit.ics(), 'text/calendar; charset=utf-8', 'vrc-nexus-geburtstage.ics');   // 8.2
             if (q.has('ics')) return download(this.vrc.calendarIcs(), 'text/calendar; charset=utf-8', 'vrchat-events.ics');
             return { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, body: this.page() };
         } catch (e) {
@@ -317,6 +320,7 @@ class NexusApp {
             if (act.startsWith('coach_')) return await this.coach.action(act, input);   // 8.0
             if (act.startsWith('diag_')) return await this.diag.action(act, input);   // 8.0
             if (act.startsWith('energy_')) return await this.energy.action(act, input);   // 8.0.1
+            if (act.startsWith('kit_')) return await this.kit.action(act, input);   // 8.2 Alltag
             if (act.startsWith('shome_')) return await this.smarthome.action(act, input);   // 8.0.1 Smart-Home
             if (act.startsWith('vcmd_')) return await this.voicecmd.action(act, input);   // 8.0.3
             if (act.startsWith('lsync_')) { if (!this.lansync) throw new UserError('Nur in der PC-App.'); return await this.lansync.action(act, input); }   // 8.0.4

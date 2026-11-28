@@ -196,4 +196,4 @@ class Insights {
     }
 }
 
-module.exports = { Insights };
+module.exports = { Insights, BDAY };
