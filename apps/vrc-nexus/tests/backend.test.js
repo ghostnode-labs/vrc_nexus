@@ -6392,7 +6392,8 @@ test('🔞 Stream Deck (zweites Plugin, nur Webseite): gleicher Schlüssel, Rech
         // nicht im Release: weder electron-builder noch Workflow noch Android nehmen den Ordner mit
         const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
         assert.ok(!JSON.stringify(pj.build).includes('streamdeck-adult') && !pj.build.files.some(f => /streamdeck/.test(f)), 'electron-builder ohne 🔞-Plugin');
-        for (const f of fs.readdirSync(path.join(__dirname, '..', '..', '..', '.github', 'workflows'))) assert.ok(!/streamdeck-adult|adult\.sdPlugin|Nexus-18/.test(fs.readFileSync(path.join(__dirname, '..', '..', '..', '.github', 'workflows', f), 'utf8')), 'Workflow ' + f + ' ohne 🔞-Plugin');
+        const wfDir = path.join(__dirname, '..', '..', '..', '.github', 'workflows');   // im Windows-Build liegt nur der App-Ordner vor
+        if (fs.existsSync(wfDir)) for (const f of fs.readdirSync(wfDir)) assert.ok(!/streamdeck-adult|adult\.sdPlugin|Nexus-18/.test(fs.readFileSync(path.join(__dirname, '..', '..', '..', '.github', 'workflows', f), 'utf8')), 'Workflow ' + f + ' ohne 🔞-Plugin');
     } finally {
         if (child) child.kill(); if (wss) wss.close();
         app.tools.api.stop(); t.stop(); app.tools.stop(); delete process.env.NEXUS_OWNER_HASH;
