@@ -26,6 +26,9 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.5.4
+- 🎨 **No more empty space above the header:** the top bar (title, status line, panic button, account) now starts right at the top of the window.
+
 ### New in 8.5.3
 - 🛠 **Fixed: VIP board package showed no menu in Unity.** The scripts were wrapped in a `UDONSHARP` compile switch that VRChat Worlds SDK projects do not set, so Unity compiled them as empty files. The switch is gone; *Tools → GhostNode → VIP-Tafel erstellen* now appears (also for the NexusToyBridge world script).
 

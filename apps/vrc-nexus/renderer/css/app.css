@@ -1,6 +1,8 @@
 /* VRC Nexus Desktop – Anpassungen für die App */
 html, body { background: var(--bg-color); }
-.wrapper { padding-top: 18px; }
+.wrapper { padding-top: 0; }
+/* 8.5.4: keine Lücke über der Kopfzeile (hud.css setzt 40px oben) */
+body { padding-top: 10px; }
 .vx-head h1 { font-size: 2.4rem; }
 /* 3.2: schmale, dezente Scrollleisten (kein farbiger Balken) */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
