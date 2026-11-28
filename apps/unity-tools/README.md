@@ -7,6 +7,7 @@ Own implementation; only Unity and the official VRChat SDK are required.
 | --- | --- | --- |
 | `Editor/` | Avatar project (VRChat SDK 3 – Avatars) | **Tools ▸ VRC Nexus ▸ Avatar-Setup** window |
 | `World/` | World project (VRChat SDK 3 – Worlds + UdonSharp) | `NexusToyBridge` behaviour for world triggers |
+| `World/` + `World/Editor/` | World project (Unity 2022.3.22f1, VRChat Worlds SDK via VCC, TextMeshPro) | **GhostNode VIP board** (`NexusVipBoard` + **Tools ▸ GhostNode ▸ VIP-Tafel erstellen**), shipped as `GhostNode-VIP-Board.unitypackage` |
 
 ## Installation
 
@@ -52,3 +53,31 @@ Put it on an object with a trigger collider (enter → pulse, exit → stop) or 
 VRC Nexus only reacts when the player has enabled the world bridge themselves, caps the intensity with their own
 maximum, ignores old log lines, and always honours the consent light and the panic button. Players without VRC Nexus
 are not affected at all.
+
+## VIP board (`World/NexusVipBoard.cs`, `World/Editor/NexusVipBoardBuilder.cs`)
+
+A neon name board for VRChat worlds: loads a list of VIPs / Ko-fi supporters with VRChat String Loading
+(primary URL: GitHub Gist raw – a trusted domain; fallback: the GhostNode website `vip.php?l=<list>`), shows the names
+on any number of TextMeshPro/UI Text fields with automatic paging, separate area for Ko-fi, loading/error state,
+sends `OnLocalPlayerIsVip` to your own scripts and can pass the names to another UdonBehaviour – for example the
+"VIP" role of ValenVRC's Security Keypad. Full guide (requirements, URLs, VRChat limits, keypad setup, security notes):
+[`World/VipBoard-README.md`](World/VipBoard-README.md) – the same file is included in the package as `README.md`.
+
+**Requirements:** Unity 2022.3.22f1, VRChat Worlds SDK from the Creator Companion (UdonSharp included), TextMeshPro.
+
+**Package:** `GhostNode-VIP-Board.unitypackage` is attached to every VRC Nexus release (CI job `unity-package` in
+`.github/workflows/vrc-nexus-app.yml`). Build it locally without Unity:
+
+```bash
+node apps/unity-tools/tools/pack-unitypackage.js          # → apps/unity-tools/dist/GhostNode-VIP-Board.unitypackage
+node apps/unity-tools/tools/test-unitypackage.js apps/unity-tools/dist/GhostNode-VIP-Board.unitypackage
+```
+
+It imports into `Assets/GhostNode/VipBoard/` (fixed GUIDs, so re-importing updates the files). The prefab is not
+shipped as YAML; **Tools ▸ GhostNode ▸ VIP-Tafel erstellen** generates it in your project
+(`Assets/GhostNode/VipBoard/VipBoard.prefab`) and **Tools ▸ GhostNode ▸ VIP-Tafel in Szene einfügen** places it.
+
+**List format:** `GROUP|Display name` per line, `#` comments, empty lines ignored, case and surrounding spaces do not
+matter. Players are matched by display name (Udon has no user IDs; display names can change). Everything runs locally
+on each client – access control is only as strong as the system it feeds.
+

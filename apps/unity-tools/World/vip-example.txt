@@ -1,0 +1,5 @@
+# Example list for the GhostNode VIP board (one entry per line)
+# Format: GROUP|Display name   – lines starting with # are comments, empty lines are ignored
+VIP|Example Name
+VIP|Another VIP
+KOFI|Kind Supporter

@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'apps/vrc-nexus/**'
+      - 'apps/unity-tools/**'
       - '.github/workflows/vrc-nexus-app.yml'
   workflow_dispatch:
 
@@ -192,6 +193,36 @@ jobs:
             RELEASE_URL="https://github.com/$REPO/releases/tag/$TAG" node app/scripts/release-notes.js "$VER" --discord-nsfw > discord-nsfw.json
             if [ -s discord-nsfw.json ]; then curl -sS -f -H "Content-Type: application/json" -d @discord-nsfw.json "$DISCORD_WEBHOOK_NSFW" > /dev/null && echo "Discord NSFW: gepostet" || echo "::warning::NSFW-Webhook fehlgeschlagen"; else echo "Discord NSFW: kein NSFW-Teil in $VER"; fi
           fi
+
+  # VIP-Tafel für VRChat-Welten: GhostNode-VIP-Board.unitypackage ohne Unity bauen (Node-Skript), prüfen und ans Release hängen
+  unity-package:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unity-Paket bauen
+        run: node apps/unity-tools/tools/pack-unitypackage.js
+      - name: Unity-Paket prüfen
+        run: node apps/unity-tools/tools/test-unitypackage.js apps/unity-tools/dist/GhostNode-VIP-Board.unitypackage
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: GhostNode-VIP-Board
+          path: apps/unity-tools/dist/GhostNode-VIP-Board.unitypackage
+      - name: An das GitHub-Release hängen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          VER=$(node -p "require('./apps/vrc-nexus/package.json').version")
+          TAG="vrc-nexus-v$VER"
+          for i in 1 2 3 4 5 6 7 8 9 10; do gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 && break; sleep 60; done
+          gh release view "$TAG" -R "$REPO" > /dev/null 2>&1 || gh release create "$TAG" -R "$REPO" --target "$GITHUB_SHA" --title "VRC Nexus $VER" --notes "VRC Nexus $VER" || true
+          for i in 1 2 3; do gh release upload "$TAG" -R "$REPO" --clobber apps/unity-tools/dist/GhostNode-VIP-Board.unitypackage && break; [ $i = 3 ] && exit 1; sleep 30; done
 
   # 8.0.4: Linux (AppImage + tar.gz, auch Steam Deck) und macOS (dmg + zip, Apple Silicon + Intel) – unsigniert
   build-linux:
