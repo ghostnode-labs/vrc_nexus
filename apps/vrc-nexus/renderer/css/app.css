@@ -796,7 +796,7 @@ body.nav-mini .i18n-fab { flex: none; height: 32px; }
 .acct-ok { color: var(--accent-green, #51e57e) !important; }
 /* 3.0 Community */
 #cmtSub { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.cm-feed { display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
+.cm-feed { display: flex; flex-direction: column; gap: 10px; }
 .cm-post { border: 1px solid var(--border-color); background: var(--panel-bg); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .cm-post.reply { background: rgba(var(--panel-rgb), 0.5); border-left: 2px solid var(--accent-cyan); padding: 8px 10px; }
 .cm-post.st-pending { border-style: dashed; } .cm-post.st-hidden { opacity: 0.55; }
@@ -807,10 +807,10 @@ body.nav-mini .i18n-fab { flex: none; height: 32px; }
 .cm-imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; } .cm-imgs img { width: 100%; max-height: 360px; object-fit: cover; border: 1px solid var(--border-color); }
 .cm-thread { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .cm-comp { display: flex; flex-direction: column; gap: 6px; } .cm-comp textarea { width: 100%; box-sizing: border-box; resize: vertical; } .cm-att { display: flex; flex-wrap: wrap; gap: 4px; }
-.cm-prof { max-width: 760px; display: flex; flex-direction: column; gap: 10px; } .cm-banner { height: 140px; background: center / cover no-repeat; border: 1px solid var(--border-color); }
+.cm-prof { display: flex; flex-direction: column; gap: 10px; } .cm-banner { height: 140px; background: center / cover no-repeat; border: 1px solid var(--border-color); }
 .cm-phead { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .cm-phead h3 { margin: 0; color: var(--accent-gold); }
 .cm-pav { width: 72px; height: 72px; object-fit: cover; border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; }
-.cm-pform { max-width: 760px; } .cm-pform textarea, .cm-pform input[type=text] { width: 100%; box-sizing: border-box; } .cm-pform .nc-row input[type=text] { flex: 1 1 200px; width: auto; }
+.cm-pform textarea, .cm-pform input[type=text] { width: 100%; box-sizing: border-box; } .cm-pform .nc-row input[type=text] { flex: 1 1 200px; width: auto; }
 .cm-q { border-bottom: 1px solid var(--border-color); padding: 8px 0; display: flex; flex-direction: column; gap: 4px; }
 .cm-mq { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .cm-mq figure { margin: 0; } .cm-mq img { width: 100%; height: 150px; object-fit: cover; }
 @media (max-width: 640px) { .cm-imgs { grid-template-columns: 1fr 1fr; } }
@@ -924,7 +924,7 @@ body.nav-side .vx-menu:hover::-webkit-scrollbar-thumb, #fsBody:hover::-webkit-sc
 .md a { color: var(--accent-cyan); word-break: break-all; }
 
 /* 3.2 Feed als Chat-Verlauf */
-.cm-feed.chatlike { max-width: 900px; gap: 8px; }
+.cm-feed.chatlike { gap: 8px; }
 .cm-flow { display: flex; flex-direction: column; gap: 8px; height: calc(100vh - 470px); min-height: 280px; overflow-y: auto; padding: 4px 6px 4px 2px; }
 .cm-flow .cm-older { align-self: center; }
 .cm-flow > .cm-post { max-width: 82%; align-self: flex-start; border-radius: 4px 14px 14px 14px; padding: 8px 12px; gap: 4px; }
@@ -1261,7 +1261,6 @@ a.lc:hover { border-color: var(--accent, #38d5e6); background: rgba(255,255,255,
 .pl-comments { margin-top: 6px; max-height: 320px; overflow-y: auto; border-top: 1px solid var(--line, rgba(255,255,255,.12)); padding-top: 6px; }
 .pl-c { padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,.08); font-size: .86em; }
 .pl-c p { margin: 2px 0 0; white-space: pre-wrap; }
-.pl-optin { max-width: 680px; }
 
 /* 4.0 Startseite: Tabs, modernere Kacheln, neue Widgets */
 .hm-tabs { display: flex; gap: 6px; margin: 4px 0 14px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
