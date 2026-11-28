@@ -26,6 +26,11 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.3.0 – Signal encryption, open source
+- **Private chat now uses the official Signal library (libsignal)** on desktop: new conversations between two desktop devices are set up with PQXDH (post-quantum, Kyber) and the Signal Double Ratchet from `@signalapp/libsignal-client`. Devices announce which protocols they support; phones and older versions keep using the existing Nexus protocol, existing conversations and history stay readable and keep working.
+- **Signal safety number** in the chat (🔐): compare the libsignal fingerprint for each device pair; the all-devices number stays.
+- **VRC Nexus is now free software under the GNU AGPL v3.0** (`AGPL-3.0-only`). *More → About* links to the source code of the installed version and shows the new **Credits** section.
+
 ### New in 8.2.0 – Watch tiles, everyday tools, Web Nexus
 **⌚ Watch**
 - **Tiles:** "Nexus – heart rate & status" (heart-rate ring, world, friends online) and "Nexus – quick actions" (sleep mode, chatbox quick texts, macros). The PC can add them via ADB (Tools → 📡 Devices → 🧩 Tiles).
