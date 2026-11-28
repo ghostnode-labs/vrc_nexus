@@ -26,6 +26,11 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.4.0 – Tags
+- **🏷 Assign tags (Admin, owner only):** pick a person from your friends list (picture + name) or by VRChat ID / profile link, toggle tags as chips, choose a duration (unlimited / 30 / 90 / 365 days) and a note. New cosmetic tags **VIP, Partner, Event team, Artist** join Supporter, Moderator, Creator and Beta tester. The list shows every assigned tag with colour chips, expiry and status, with edit (re-issues and replaces the old key), extend and revoke.
+- **Automatic delivery:** recipients no longer need to paste a key. The owner's app uploads the signed keys on sync, and the recipient's app fetches its own keys via its Nexus account at start, every 6 hours or with “Fetch tags” – signatures are verified exactly as before. Manual entry still works. Moderator keys are still handed over personally.
+- **Tag badges** in “Your licence”, in the community profile and on the web profile. Cosmetic tags are badges only and grant no permissions; “Owner” is not an assignable tag.
+
 ### New in 8.3.3
 - Small fixes and more consistent safety buttons across PC, phone and watch.
 - 🔞 ***
