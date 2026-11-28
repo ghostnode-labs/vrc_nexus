@@ -1296,3 +1296,9 @@ Die Oberfläche spricht weiter „nexus.php“ an – in der App beantwortet das
 `backend/tools.js` enthält Spielerliste, Werkzeuge, Benachrichtigungen und die lokale Schnittstelle (`backend/localapi.js`, nur 127.0.0.1, mit Zugangsschlüssel),
 `backend/settings.js` das Einstellungs-Schema. Das Stream-Deck-Plugin liegt in `streamdeck/` (`npm run streamdeck` packt es, `node tests/streamdeck.test.js <port> <schlüssel>` testet es
 gegen eine nachgebaute Stream-Deck-App).
+
+## License
+
+VRC Nexus (desktop and Android) is licensed under the **GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`) – full text in [`LICENSE`](../../LICENSE) at the repository root.
+The private chat on desktop uses the official Signal library [`@signalapp/libsignal-client`](https://github.com/signalapp/libsignal) (Signal Foundation, AGPL-3.0-only).
+The source code of every release is available at <https://github.com/ghostnode-labs/vrc_nexus> (tag `vrc-nexus-v<version>`); the app links to it under *More → About*.

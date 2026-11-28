@@ -67,3 +67,16 @@ The full changelog is in [`apps/vrc-nexus/README.md`](apps/vrc-nexus/README.md) 
 
 VRC Nexus is not affiliated with VRChat Inc. It uses the unofficial VRChat API sparingly.
 Ideas from the community (VRCX, MagicChatbox, TTS Voice Wizard) – each implemented independently.
+
+## 👥 Credits
+
+- **xXLoonaXx** – idea, design & project lead (GhostNode Labs)
+- **Claude (Anthropic)** – development & programming
+- **Signal Foundation** – [libsignal](https://github.com/signalapp/libsignal) (AGPL-3.0), used for the end-to-end encryption of the private chat on desktop
+
+## 📜 License
+
+VRC Nexus is free software, licensed under the **GNU Affero General Public License v3.0 only** (`AGPL-3.0-only`) – see [LICENSE](LICENSE).
+You may use, share and modify it; modified versions you distribute or offer over a network must be released under the same license, with their source code.
+There is no warranty. The app links to this repository (and to the exact release tag) under *More → About*.
+Third-party components keep their own licenses (listed in the app under *About → Thanks* and in each package's `node_modules/*/LICENSE`).

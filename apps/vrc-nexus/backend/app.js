@@ -1270,6 +1270,8 @@ class NexusApp {
         return { version: VERSION, platform: this.mobile ? 'Android' : process.platform === 'win32' ? 'Windows' : process.platform,
             runtime: { electron: pv.electron || '', chrome: pv.chrome || '', node: pv.node || '' }, data: this.tools && this.tools.userData ? this.tools.userData : '',
             update: up ? { available: !!up.available, version: up.version || '', checked: up.checked || 0, page: up.page || '' } : null,
+            // 8.3 AGPL-3.0-only: Lizenz + Quellcode dieser Version (Pflicht nach AGPL § 13, auch für die Handy-App)
+            license: 'AGPL-3.0-only', source: 'https://github.com/ghostnode-labs/vrc_nexus', sourceTag: 'https://github.com/ghostnode-labs/vrc_nexus/tree/vrc-nexus-v' + VERSION,
             changelog: log.slice(0, n), total: log.length, repo: 'https://github.com/ghostnode-labs/vrc_nexus/releases', discord: discordInvite(), patreon: patreonUrl(), supporters: (() => { try { return require('./supporters.json').slice(0, 300); } catch (e) { return []; } })() };
     }
 }

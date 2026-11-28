@@ -1,0 +1,16 @@
+Signal-Sicherheitsnummer	Signal safety number	Numéro de sécurité Signal	Signalの安全番号
+Dieses Gerät ↔ Gerät	This device ↔ device	Cet appareil ↔ appareil	このデバイス ↔ デバイス
+Signal-Protokoll aktiv	Signal protocol active	Protocole Signal actif	Signalプロトコル有効
+Diese Nummer berechnet die Signal-Bibliothek (libsignal) – die Gegenseite sieht für dieses Gerätepaar dieselbe.	This number is computed by the Signal library (libsignal) – the other side sees the same one for this device pair.	Ce numéro est calculé par la bibliothèque Signal (libsignal) – l’autre personne voit le même pour cette paire d’appareils.	この番号はSignalライブラリ（libsignal）が計算します – 相手側にもこのデバイスの組み合わせで同じ番号が表示されます。
+Signal-Protokoll (libsignal)	Signal protocol (libsignal)	Protocole Signal (libsignal)	Signalプロトコル（libsignal）
+Nexus-Protokoll	Nexus protocol	Protocole Nexus	Nexusプロトコル
+(Signal Foundation, AGPL-3.0) – Ende-zu-Ende-Verschlüsselung des Privat-Chats am PC	(Signal Foundation, AGPL-3.0) – end-to-end encryption of the private chat on PC	(Signal Foundation, AGPL-3.0) – chiffrement de bout en bout du chat privé sur PC	（Signal Foundation、AGPL-3.0）– PCでのプライベートチャットのエンドツーエンド暗号化
+Idee, Design & Projektleitung	Idea, design & project lead	Idée, design & direction du projet	アイデア・デザイン・プロジェクトリーダー
+Entwicklung & Programmierung	Development & programming	Développement & programmation	開発・プログラミング
+libsignal (AGPL-3.0) als verwendete Bibliothek	libsignal (AGPL-3.0) as a library used	libsignal (AGPL-3.0) comme bibliothèque utilisée	使用ライブラリ：libsignal（AGPL-3.0）
+Lizenz & Quellcode	License & source code	Licence & code source	ライセンスとソースコード
+VRC Nexus ist freie Software unter der GNU Affero General Public License, Version 3 (AGPL-3.0-only). Du darfst die App nutzen, weitergeben und verändern – veränderte Fassungen müssen unter derselben Lizenz mit Quellcode weitergegeben werden.	VRC Nexus is free software under the GNU Affero General Public License, version 3 (AGPL-3.0-only). You may use, share and modify the app – modified versions must be shared under the same license with their source code.	VRC Nexus est un logiciel libre sous licence GNU Affero General Public License, version 3 (AGPL-3.0-only). Tu peux utiliser, partager et modifier l’app – les versions modifiées doivent être partagées sous la même licence avec leur code source.	VRC NexusはGNU Affero General Public License バージョン3（AGPL-3.0-only）のフリーソフトウェアです。アプリの利用・共有・改変は自由ですが、改変版は同じライセンスでソースコードと共に公開する必要があります。
+Es gibt keinerlei Gewährleistung – Einzelheiten stehen im Lizenztext.	There is no warranty of any kind – see the license text for details.	Aucune garantie d’aucune sorte – voir le texte de la licence pour les détails.	一切の保証はありません – 詳細はライセンス本文をご覧ください。
+Quellcode auf GitHub	Source code on GitHub	Code source sur GitHub	GitHubのソースコード
+Quellcode dieser Version	Source code of this version	Code source de cette version	このバージョンのソースコード
+Lizenztext (AGPL-3.0)	License text (AGPL-3.0)	Texte de la licence (AGPL-3.0)	ライセンス本文（AGPL-3.0）

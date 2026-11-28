@@ -20,7 +20,8 @@ await build({
     entryPoints: [path.join(here, 'src', 'boot.js')],
     bundle: true, outfile: path.join(W, 'bundle.js'), platform: 'browser', format: 'iife', target: ['chrome100'], minify: true, sourcemap: false, logLevel: 'warning',
     alias: { fs: shim('fs.js'), os: shim('os.js'), crypto: shim('crypto.js'), dgram: shim('dgram.js'), net: shim('stub.js'), http: shim('stub.js'), https: shim('stub.js'),
-        child_process: shim('stub.js'), zlib: shim('stub.js'), path: 'path-browserify' },
+        child_process: shim('stub.js'), zlib: shim('stub.js'), path: 'path-browserify',
+        '@signalapp/libsignal-client': shim('nolibsignal.js') },   // 8.3: natives Modul → auf dem Handy nur nexus-v1
     inject: [shim('globals.js')],
     nodePaths: [path.join(here, 'node_modules')],          // Pakete für ../vrc-nexus/backend aus diesem Ordner nehmen
     define: { __dirname: '"/backend"', __filename: '"/backend/app.js"' },

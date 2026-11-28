@@ -5817,3 +5817,155 @@ test('8.2: 🔞 Spielzeug-Labor – Zeitleiste & Mixer als Muster, Puls-Deckel, 
         await assert.rejects(app.post({ act: 'toys_lab_fade', minutes: '5' }, {}), /Nicht freigeschaltet/);
     } finally { t.stop(); app.tools.stop(); delete process.env.NEXUS_OWNER_HASH; }
 });
+
+test('8.3: Privat-Chat mit libsignal (signal-v1) – PQXDH-Pre-Key-Nachricht, Antwort, Neustart mit gespeicherten Stores, außer der Reihe, Aushandlung mit nexus-v1-Geräten, alte Sitzungen bleiben', async () => {
+    const http = require('http'), crypto = require('crypto'), E = require('../backend/e2ee'), Sg = require('../backend/signal');
+    const { NexusApp } = require('../backend/app');
+    assert.ok(await Sg.load(), 'libsignal lädt auf dem Desktop (Node-API-Prebuild)');
+    // ---- Schein-Briefkasten wie nexuschat.php 8.3 (mit Protokoll-Liste); legacy = Server vor dem Update ----
+    const devs = {}, opks = {}, sopks = {}, kybers = {}, inbox = [], seen = [];
+    let nid = 1, legacy = true;
+    const srv = http.createServer((req, res) => {
+        let body = ''; req.on('data', c => { body += c; }); req.on('end', () => {
+            const a = new URL(req.url, 'http://x').searchParams.get('a'), in_ = JSON.parse(body), me = in_.token.slice(4);
+            seen.push(body);
+            const out = o => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(o)); };
+            const sigOk = d => !legacy && d.protos && d.protos.includes('signal-v1') && d.sig;
+            const counts = id => legacy ? {} : { sig_opks: (sopks[id] || []).length, sig_kybers: (kybers[id] || []).length };
+            const pub = (id, d) => Object.assign({ device: id, ik_dh: d.ik_dh, ik_sig: d.ik_sig, created: d.created }, legacy ? {} : sigOk(d) ? { protos: d.protos, sig_ik: d.sig.ik, sig_bind: d.sig.bind, reg: d.sig.reg } : { protos: ['nexus-v1'] });
+            if (a === 'publish') {
+                const id = E.deviceId(in_.ik_sig); devs[id] = devs[id] || { uid: me, created: 1700000000 };
+                Object.assign(devs[id], { ik_dh: in_.ik_dh, ik_sig: in_.ik_sig, spk: in_.spk }); opks[id] = (opks[id] || []).concat(in_.opks || []);
+                if (!legacy && in_.sig) {
+                    assert.ok(Sg.bindVerify(in_.ik_sig, in_.sig.ik, in_.sig.bind), 'Server prüft die Bindung');
+                    devs[id].protos = in_.protos; devs[id].sig = { reg: in_.sig.reg, ik: in_.sig.ik, bind: in_.sig.bind, spk: in_.sig.spk, kyber: in_.sig.kyber };
+                    sopks[id] = (sopks[id] || []).concat(in_.sig.opks); kybers[id] = (kybers[id] || []).concat(in_.sig.kybers);
+                }
+                return out(Object.assign({ device: id, opks: opks[id].length }, legacy ? {} : { protos: sigOk(devs[id]) ? devs[id].protos : ['nexus-v1'] }, counts(id)));
+            }
+            if (a === 'devices') return out({ devices: Object.entries(devs).filter(([, d]) => d.uid === in_.uid).map(([id, d]) => pub(id, d)) });
+            if (a === 'bundles') return out({ bundles: Object.entries(devs).filter(([id, d]) => d.uid === in_.uid && !(in_.skip || []).includes(id)).map(([id, d]) => {
+                const useSig = in_.sig && sigOk(d);
+                const b = { device: id, ik_dh: d.ik_dh, ik_sig: d.ik_sig, spk: d.spk, opk: useSig ? null : (opks[id] || []).shift() || null };
+                if (!legacy) b.protos = d.protos || ['nexus-v1'];
+                if (useSig) b.sig = Object.assign({}, d.sig, { opk: (sopks[id] || []).shift() || null, kyber: (kybers[id] || []).shift() || d.sig.kyber });
+                return b;
+            }) });
+            if (a === 'send') { for (const m of in_.msgs) inbox.push({ id: nid++, to: m.dev, from: me, from_dev: in_.device, body: m.body, at: Math.floor(Date.now() / 1000) }); return out({ ok: in_.msgs.length }); }
+            if (a === 'fetch') return out(Object.assign({ msgs: inbox.filter(m => m.to === in_.device).map(m => ({ id: m.id, from: m.from, from_dev: m.from_dev, body: m.body, at: m.at })), opks: (opks[in_.device] || []).length }, counts(in_.device)));
+            if (a === 'ack') { for (const id of in_.ids) { const k = inbox.findIndex(m => m.id === id && m.to === in_.device); if (k >= 0) inbox.splice(k, 1); } return out({ ok: true }); }
+            out({ error: 'unbekannt' });
+        });
+    });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    process.env.NEXUS_CHAT_BASE = 'http://127.0.0.1:' + srv.address().port;
+    const U8 = c => 'usr_' + c.repeat(8) + '-1111-2222-3333-444444444444';
+    const A = U8('a'), B = U8('b'), C = U8('c'), D = U8('d');
+    const apps = [];
+    const mk = async (uid, db, noSignal) => {
+        const app = new NexusApp({ db: db || await openDatabase(null), crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-sig-')) } });
+        app.game.osc.stopListen();
+        app.account.current = () => ({ token: 'tok:' + uid, account: { vrc_id: uid } });
+        app.chat.noSignal = !!noSignal;
+        apps.push(app);
+        return app;
+    };
+    const restart = async (app, uid, noSignal) => { app.tools.stop(); app.chat.stop(); return mk(uid, app.db, noSignal); };
+    const lastBody = (from, to) => JSON.parse(inbox.filter(m => m.from === from && devs[m.to].uid === to).pop().body);
+    const texts = r => r.messages.filter(m => !m.sys).map(m => m.text);
+    const sysErr = r => r.messages.filter(m => m.sys).map(m => m.text);
+    try {
+        // ---------- 1) Zwei Desktop-Geräte mit libsignal ----------
+        legacy = false;
+        let a = await mk(A), b = await mk(B);
+        await a.post({ act: 'chat_list' }, {}); await b.post({ act: 'chat_list' }, {});
+        const dA = Object.keys(devs).find(id => devs[id].uid === A);
+        assert.deepStrictEqual(devs[dA].protos, ['nexus-v1', 'signal-v1'], 'Gerät veröffentlicht beide Protokolle');
+        assert.ok(kybers[dA].length >= 10 && devs[dA].sig.kyber.pub.length > 2000, 'Kyber-Pre-Keys (PQXDH) veröffentlicht');
+        await a.post({ act: 'chat_send', uid: B, text: 'Hallo über Signal' }, {});
+        let env = lastBody(A, B);
+        assert.strictEqual(env.p, 'signal-v1'); assert.strictEqual(env.t, 3, 'erste Nachricht = PreKeySignalMessage');
+        const kyBefore = kybers[Object.keys(devs).find(id => devs[id].uid === B)].length;
+        let rb = await b.post({ act: 'chat_open', uid: A }, {});
+        assert.deepStrictEqual(texts(rb), ['Hallo über Signal']); assert.deepStrictEqual(sysErr(rb), []);
+        assert.ok(kyBefore < 10, 'ein Einmal-Kyber-Schlüssel wurde verbraucht');
+        // Sicherheitsnummer (libsignal-Fingerprint) auf beiden Seiten gleich
+        let ra = await a.post({ act: 'chat_open', uid: B }, {});
+        assert.strictEqual(ra.signal.length, 1); assert.match(ra.signal[0].number, /^(\d{5} ){11}\d{5}$/);
+        assert.strictEqual(ra.signal[0].number, rb.signal[0].number, 'Signal-Sicherheitsnummer stimmt überein');
+        assert.strictEqual(ra.devices[0].proto, 'signal-v1');
+        // Antwort (normale SignalMessage)
+        await b.post({ act: 'chat_send', uid: A, text: 'Antwort' }, {});
+        assert.strictEqual(lastBody(B, A).t, 2);
+        ra = await a.post({ act: 'chat_open', uid: B }, {});
+        assert.deepStrictEqual(texts(ra), ['Hallo über Signal', 'Antwort']);
+        // Neustart beider Apps: Stores kommen aus der (verschlüsselten) DB
+        a = await restart(a, A); b = await restart(b, B);
+        await a.post({ act: 'chat_send', uid: B, text: 'nach Neustart' }, {});
+        assert.strictEqual(lastBody(A, B).t, 2, 'bestehende Signal-Sitzung weiterbenutzt');
+        rb = await b.post({ act: 'chat_open', uid: A }, {});
+        assert.ok(texts(rb).includes('nach Neustart'));
+        // außer der Reihe
+        await a.post({ act: 'chat_send', uid: B, text: 'eins' }, {}); await a.post({ act: 'chat_send', uid: B, text: 'zwei' }, {}); await a.post({ act: 'chat_send', uid: B, text: 'drei' }, {});
+        const toB = inbox.filter(m => devs[m.to].uid === B), rest = inbox.filter(m => devs[m.to].uid !== B);
+        inbox.length = 0; inbox.push(...rest, toB[2], toB[0], toB[1]);
+        rb = await b.post({ act: 'chat_open', uid: A }, {});
+        assert.deepStrictEqual(texts(rb).slice(-3).sort(), ['drei', 'eins', 'zwei']); assert.deepStrictEqual(sysErr(rb), []);
+        // Wiederholung derselben Nachricht wird abgelehnt (nicht doppelt angezeigt)
+        inbox.push(Object.assign({}, toB[0], { id: nid++ }));
+        rb = await b.post({ act: 'chat_open', uid: A }, {});
+        assert.strictEqual(texts(rb).filter(x => x === 'eins').length, 1);
+        assert.ok(!seen.some(x => /Hallo über Signal|Antwort|nach Neustart/.test(x)), 'Briefkasten sieht nie Klartext');
+
+        // ---------- 2) Android-artiges Gerät (ohne libsignal) → nexus-v1 ----------
+        const d = await mk(D, null, true);
+        await d.post({ act: 'chat_list' }, {});
+        const dD = Object.keys(devs).find(id => devs[id].uid === D);
+        assert.ok(!devs[dD].protos, 'ohne libsignal nur nexus-v1');
+        await a.post({ act: 'chat_send', uid: D, text: 'an das Handy' }, {});
+        assert.ok(!lastBody(A, D).p && lastBody(A, D).h, 'Rückfall auf nexus-v1');
+        let rd = await d.post({ act: 'chat_open', uid: A }, {});
+        assert.deepStrictEqual(texts(rd), ['an das Handy']);
+        assert.strictEqual(rd.signal.length, 0, 'keine Signal-Nummer ohne libsignal'); assert.ok(rd.safety, 'Nexus-Sicherheitsnummer bleibt');
+        await d.post({ act: 'chat_send', uid: A, text: 'vom Handy' }, {});
+        ra = await a.post({ act: 'chat_open', uid: D }, {});
+        assert.deepStrictEqual(texts(ra), ['an das Handy', 'vom Handy']);
+        assert.strictEqual(ra.devices[0].proto, 'nexus-v1');
+
+        // ---------- 3) Alte nexus-v1-Sitzung (vor dem Update) bleibt lesbar ----------
+        legacy = true;
+        let c = await mk(C, null, true);   // „alte“ Version: kein libsignal, Server ohne Protokoll-Liste
+        await c.post({ act: 'chat_list' }, {});
+        const b2 = await mk(B, null, true); // zweites Gerät von B, ebenfalls alt
+        await b2.post({ act: 'chat_list' }, {});
+        await c.post({ act: 'chat_send', uid: B, text: 'alt 1' }, {});
+        await b2.post({ act: 'chat_open', uid: C }, {});
+        await c.post({ act: 'chat_send', uid: B, text: 'alt 2 (unterwegs)' }, {});   // liegt noch im Briefkasten, während beide aktualisieren
+        // Update: Server + App können jetzt signal-v1
+        legacy = false;
+        c = await restart(c, C, false);
+        const b2n = await restart(b2, B, false);
+        let r2 = await b2n.post({ act: 'chat_open', uid: C }, {});
+        assert.deepStrictEqual(texts(r2), ['alt 1', 'alt 2 (unterwegs)'], 'Verlauf + Nachricht unterwegs lesbar');
+        await c.post({ act: 'chat_list' }, {});
+        const dC = Object.keys(devs).find(id => devs[id].uid === C);
+        assert.deepStrictEqual(devs[dC].protos, ['nexus-v1', 'signal-v1'], 'nach dem Update signal-v1 veröffentlicht');
+        const b3 = await mk(B);   // ganz neues Desktop-Gerät von B (nach dem Update)
+        await b3.post({ act: 'chat_list' }, {});
+        const dB3 = E.deviceId(b3.chat.get(b3.chat.key('chat_dev'), null).idSig.pub), dB1 = E.deviceId(b.chat.get(b.chat.key('chat_dev'), null).idSig.pub);
+        await c.post({ act: 'chat_send', uid: B, text: 'neu nach Update' }, {});
+        const toB2 = inbox.filter(m => m.from === C && devs[m.to] && devs[m.to].uid === B), bodyTo = id => JSON.parse(toB2.filter(m => m.to === id).pop().body);
+        const dB2 = E.deviceId(b2n.chat.get(b2n.chat.key('chat_dev'), null).idSig.pub);
+        assert.ok(!bodyTo(dB2).p && !bodyTo(dB1).p, 'bestehende Sitzungen bleiben nexus-v1');
+        assert.strictEqual(bodyTo(dB3).p, 'signal-v1', 'neue Sitzung (neues Gerät von B) nutzt signal-v1');
+        assert.strictEqual(bodyTo(dB3).t, 3);
+        r2 = await b2n.post({ act: 'chat_open', uid: C }, {});
+        assert.ok(texts(r2).includes('neu nach Update'));
+        for (const x of [b, b3]) { const r = await x.post({ act: 'chat_open', uid: C }, {}); assert.ok(texts(r).includes('neu nach Update')); assert.deepStrictEqual(sysErr(r), []); }
+        rb = await b.post({ act: 'chat_open', uid: C }, {});
+        assert.deepStrictEqual(texts(rb), ['alt 1', 'alt 2 (unterwegs)', 'neu nach Update'], 'altes Gerät: Verlauf vollständig');
+        // Gegenseite mit falscher Bindung wird nicht für signal-v1 akzeptiert
+        assert.strictEqual(Sg.remoteCapable({ protos: ['nexus-v1', 'signal-v1'], ik_sig: devs[dA].ik_sig, sig_ik: devs[dC].sig.ik, sig_bind: devs[dA].sig.bind }), false);
+        void crypto;
+    } finally { for (const x of apps) { try { x.tools.stop(); x.chat.stop(); } catch (e) { /* egal */ } } delete process.env.NEXUS_CHAT_BASE; srv.close(); }
+});

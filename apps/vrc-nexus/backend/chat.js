@@ -5,6 +5,9 @@
  *   - Jede Nachricht geht an alle Geräte der Gegenseite und (zum Abgleich) an die eigenen anderen Geräte.
  *   - Sicherheitsnummer je Kontakt; ändern sich die Geräte-Schlüssel der Gegenseite, wird das deutlich angezeigt.
  *   - Chat ist freiwillig: erst beim ersten Öffnen wird ein Geräte-Schlüssel erzeugt und veröffentlicht.
+ * 8.3: Protokoll-Aushandlung – jedes Gerät veröffentlicht „protos“. Können beide Geräte „signal-v1“ (offizielle Signal-Bibliothek
+ *   libsignal, PQXDH + Double Ratchet, backend/signal.js – nur Desktop), wird jede NEUE Sitzung damit aufgebaut; sonst und für
+ *   bestehende Sitzungen bleibt „nexus-v1“ (e2ee.js). Der Verlauf liegt entschlüsselt (lokal verschlüsselt) vor und bleibt lesbar.
  * Seit 3.5 auch in der Android-App (X25519/Ed25519/AES-GCM über @noble im Krypto-Shim, gleiches Schlüsselformat wie am PC).
  * 3.4: Reaktionen, Antworten, Bearbeiten/Löschen, Gelesen-Häkchen, 💓 Puls teilen, Bilder/GIFs (auf dem Gerät mit AES-256-GCM
  *   verschlüsselt, als Chiffretext auf der Webseite – Schlüssel nur in der E2E-Nachricht), Anheften, Merken, Geräte-Übersicht.
@@ -20,6 +23,8 @@
  */
 const crypto = require('crypto');
 const E = require('./e2ee');
+const { SignalProto, PROTO: SIGNAL, remoteCapable } = require('./signal');
+const NEXUS = 'nexus-v1';
 const { str, int, cut, now, UserError } = require('./util');
 
 const BASE = () => (process.env.NEXUS_CHAT_BASE || process.env.NEXUS_ACCT_BASE || process.env.NEXUS_RELAY_BASE || require('./servers').nexus()).replace(/\/+$/, '');
@@ -46,7 +51,7 @@ const gSign = (privB64, data) => crypto.sign(null, data, crypto.createPrivateKey
 const gVerify = (pubB64, data, sig) => { try { const raw = Buffer.from(str(pubB64), 'base64'); if (raw.length !== 32) return false; return crypto.verify(null, data, crypto.createPublicKey({ key: Buffer.concat([RAW_E, raw]), format: 'der', type: 'spki' }), Buffer.from(str(sig), 'base64')); } catch (e) { return false; } };
 
 class Chat {
-    constructor(app, crypt) { this.app = app; this.crypt = crypt; this.timer = null; this.error = ''; this.busy = null; this.unread = 0; this.imgs = new Map(); }
+    constructor(app, crypt) { this.app = app; this.crypt = crypt; this.timer = null; this.error = ''; this.busy = null; this.unread = 0; this.imgs = new Map(); this.sig = new SignalProto(this); }
     // ---------- verschlüsselter Speicher ----------
     get(k, d) { try { const v = this.app.db.setting(k, ''); return v ? JSON.parse(this.crypt.decrypt(v)) : d; } catch (e) { return d; } }
     put(k, v) { this.app.db.setSetting(k, this.crypt.encrypt(JSON.stringify(v))); }
@@ -67,13 +72,30 @@ class Chat {
     async device() {
         let dev = this.get(this.key('chat_dev'), null);
         if (!dev) { dev = E.newDevice(50); this.put(this.key('chat_dev'), dev); }
-        if (!dev.published || (dev.pendingOpks || []).length) {
-            const d = await this.call('publish', E.bundle(dev));
+        // 8.3 signal-v1 (libsignal) zusätzlich, wenn die Bibliothek auf diesem Gerät läuft – sonst nur nexus-v1
+        const sk = await this.sig.device(dev);
+        let rotated = false;
+        if (Date.now() - (dev.spk.at || 0) > 7 * 86400000) { E.rotateSpk(dev); this.put(this.key('chat_dev'), dev); rotated = true; }
+        const sigWant = !!sk && dev.sigProtos !== 0 && (dev.sigProtos === undefined || this.sig.needsPublish(sk));
+        if (!dev.published || rotated || (dev.pendingOpks || []).length || sigWant) {
+            const body = E.bundle(dev);
+            let part = null;
+            if (sk) { part = this.sig.publishPart(sk); body.protos = [NEXUS, SIGNAL]; body.sig = part; }
+            const d = await this.call('publish', body);
             dev.id = d.device; dev.published = Date.now(); dev.pendingOpks = [];
+            // Server ohne signal-v1-Felder (noch nicht aktualisiert) → nichts als veröffentlicht merken, später erneut versuchen
+            if (sk && Array.isArray(d.protos) && d.protos.includes(SIGNAL)) { this.sig.published(sk, part); this.sig.saveKeys(sk); dev.sigProtos = 1; }
+            else if (sk) { dev.sigProtos = 0; dev.sigRetry = Date.now(); }
             this.put(this.key('chat_dev'), dev);
         }
-        if (Date.now() - (dev.spk.at || 0) > 7 * 86400000) { E.rotateSpk(dev); this.put(this.key('chat_dev'), dev); await this.call('publish', E.bundle(dev)); }
         return dev;
+    }
+    /** Protokoll für ein Gerät der Gegenseite: bestehende Sitzung behalten, neue Sitzung = signal-v1, wenn beide es können */
+    protoFor(target, d, sess) {
+        const name = target + '.' + d.device;
+        if (this.sig.available() && this.sig.hasSession(name)) return SIGNAL;
+        if (sess[target + '|' + d.device]) return NEXUS;
+        return this.sig.available() && this.get(this.key('chat_dev'), {}).sigProtos && remoteCapable(d) ? SIGNAL : NEXUS;
     }
     sessions() { return this.get(this.key('chat_sess'), {}); }
     convs() { return this.get(this.key('chat_msgs'), {}); }
@@ -108,16 +130,29 @@ class Chat {
         for (const target of [uid, mine]) {
             const devs = (await this.call('devices', { uid: target })).devices.filter(d => d.device !== dev.id);
             if (target === uid) { if (!devs.length) throw new UserError('Diese Person hat den Chat noch nicht eingerichtet (muss Nexus-Community → Chat einmal öffnen).'); this.checkKeys(uid, devs); }
-            const need = devs.filter(d => !sess[target + '|' + d.device]).map(d => d.device);
+            const proto = {};
+            for (const d of devs) proto[d.device] = this.protoFor(target, d, sess);
+            const need = devs.filter(d => proto[d.device] === SIGNAL ? !this.sig.hasSession(target + '.' + d.device) : !sess[target + '|' + d.device]).map(d => d.device);
             if (need.length) {
-                const b = await this.call('bundles', { uid: target, skip: devs.map(d => d.device).filter(x => !need.includes(x)) });
-                for (const x of b.bundles) if (need.includes(x.device)) sess[target + '|' + x.device] = E.initiate(dev, x);
+                const b = await this.call('bundles', { uid: target, skip: devs.map(d => d.device).filter(x => !need.includes(x)), sig: this.sig.available() ? 1 : 0 });
+                for (const x of b.bundles) {
+                    if (!need.includes(x.device)) continue;
+                    if (proto[x.device] === SIGNAL && x.sig) {
+                        try { await this.sig.start(target + '.' + x.device, mine + '.' + dev.id, devs.find(d => d.device === x.device), x.sig); continue; }
+                        catch (e) { proto[x.device] = NEXUS; }   // Paket unbrauchbar → auf nexus-v1 zurückfallen
+                    } else proto[x.device] = NEXUS;
+                    sess[target + '|' + x.device] = E.initiate(dev, x);
+                }
             }
             for (const d of devs) {
+                const plain = JSON.stringify(Object.assign({}, msg, target === mine ? { sync: 1 } : {}));
+                if (proto[d.device] === SIGNAL && this.sig.hasSession(target + '.' + d.device)) {
+                    out.push({ to: target, dev: d.device, body: JSON.stringify(await this.sig.encrypt(target + '.' + d.device, mine + '.' + dev.id, plain)) });
+                    continue;
+                }
                 const st = sess[target + '|' + d.device];
                 if (!st) continue;
-                const env = E.encrypt(st, JSON.stringify(Object.assign({}, msg, target === mine ? { sync: 1 } : {})));
-                out.push({ to: target, dev: d.device, body: JSON.stringify(env) });
+                out.push({ to: target, dev: d.device, body: JSON.stringify(E.encrypt(st, plain)) });
             }
         }
         this.put(this.key('chat_sess'), sess);
@@ -182,7 +217,7 @@ class Chat {
         this.busy = (async () => {
             const dev = await this.device(), mine = this.me().account.vrc_id;
             const d = await this.call('fetch', { device: dev.id });
-            const sess = this.sessions(), ids = [];
+            const sess = this.sessions(), ids = [], devCache = {};
             let got = 0, devChanged = false;
             for (const m of d.msgs) {
                 ids.push(m.id);
@@ -194,6 +229,20 @@ class Chat {
                 }
                 const sk = m.from + '|' + m.from_dev;
                 try {
+                    if (env && env.p === SIGNAL) {   // 8.3 signal-v1 (libsignal)
+                        if (!(await this.sig.ready())) throw new Error('Nachricht nutzt signal-v1 – auf diesem Gerät nicht verfügbar.');
+                        const name = m.from + '.' + m.from_dev;
+                        let expect = null;
+                        if (!this.sig.hasSession(name) || env.t === 3) {
+                            const list = devCache[m.from] = devCache[m.from] || (await this.call('devices', { uid: m.from })).devices;
+                            const rd = list.find(x => x.device === m.from_dev);
+                            if (!rd || !remoteCapable(rd)) throw new Error('Signal-Schlüssel des Absender-Geräts nicht bestätigt.');
+                            expect = rd.sig_ik;
+                        }
+                        const text = await this.sig.decrypt(name, mine + '.' + dev.id, env, expect);
+                        if (this.handle(m, JSON.parse(text), mine)) { got++; }
+                        continue;
+                    }
                     let st = sess[sk];
                     // neue Sitzung, wenn die Gegenseite (neu) mit Pre-Key-Kopf beginnt
                     if (env.pre && (!st || st.preEk !== env.pre.ek)) {
@@ -205,26 +254,34 @@ class Chat {
                     if (!st) throw new Error('Keine Sitzung.');
                     const r = E.decrypt(st, env);
                     sess[sk] = r.st;
-                    const p = JSON.parse(r.text);
-                    if (p.t === 'gctl') { this.groupCtl(m.from, p, mine); continue; }   // 3.5 Gruppen-Verwaltung und Sender-Schlüssel (nur über 1:1-E2E)
-                    if (p.t === 'call') { if (this.app.voice) this.app.voice.signal(m.from, p, mine); continue; }   // 3.7 Sprachanruf-Signalisierung
-                    const conv = m.from === mine ? str(p.conv).toLowerCase() : m.from;   // Abgleich von eigenen Geräten
-                    if (!UID.test(conv)) continue;
-                    if (!p.at) p.at = m.at * 1000;
-                    const added = this.apply(conv, p, m.from === mine);
-                    if (added && m.from !== mine && (p.t === 'msg' || p.t === 'hr')) { got++; this.unreadMark(conv); }
+                    if (this.handle(m, JSON.parse(r.text), mine)) got++;
                 } catch (e) { this.store(m.from === mine ? 'system' : m.from, { id: 'err' + m.id, sys: true, text: '⚠ Nachricht konnte nicht entschlüsselt werden (' + e.message + ').', at: m.at * 1000 }); }
             }
             this.put(this.key('chat_sess'), sess);
             if (devChanged) this.put(this.key('chat_dev'), dev);
             got += this.groupRetry(mine);   // Gruppennachrichten, deren Schlüssel erst jetzt angekommen ist
             if (ids.length) await this.call('ack', { device: dev.id, ids });
-            if (d.opks < 15) { E.addOpks(dev, 40); this.put(this.key('chat_dev'), dev); await this.device(); }
+            const sk2 = this.sig.available() ? this.sig.keys() : null;
+            if (sk2 && this.sig.refill(sk2, { opks: d.sig_opks, kybers: d.sig_kybers })) this.sig.saveKeys(sk2);
+            if (d.opks < 15) { E.addOpks(dev, 40); this.put(this.key('chat_dev'), dev); }
+            if (sk2 && dev.sigProtos === 0 && Date.now() - (dev.sigRetry || 0) > 6 * 3600000) { delete dev.sigProtos; this.put(this.key('chat_dev'), dev); }   // Server inzwischen aktualisiert?
+            if (d.opks < 15 || (sk2 && dev.sigProtos !== 0 && this.sig.needsPublish(sk2)) || (sk2 && dev.sigProtos === undefined)) await this.device();
             this.error = '';
             if (got && this.app.tools && this.app.tools.host && this.app.tools.host.notify && !this.focus) this.app.tools.host.notify('💬 Neue Nachricht', got + ' neue verschlüsselte Nachricht' + (got === 1 ? '' : 'en'), false);
             return got;
         })().catch(e => { this.error = e.message; throw e; }).finally(() => { this.busy = null; });
         return this.busy;
+    }
+    /** entschlüsselte 1:1-Nutzlast anwenden (gleich für nexus-v1 und signal-v1) → true = neue Nachricht für den Zähler */
+    handle(m, p, mine) {
+        if (p.t === 'gctl') { this.groupCtl(m.from, p, mine); return false; }   // 3.5 Gruppen-Verwaltung und Sender-Schlüssel (nur über 1:1-E2E)
+        if (p.t === 'call') { if (this.app.voice) this.app.voice.signal(m.from, p, mine); return false; }   // 3.7 Sprachanruf-Signalisierung
+        const conv = m.from === mine ? str(p.conv).toLowerCase() : m.from;   // Abgleich von eigenen Geräten
+        if (!UID.test(conv)) return false;
+        if (!p.at) p.at = m.at * 1000;
+        const added = this.apply(conv, p, m.from === mine);
+        if (added && m.from !== mine && (p.t === 'msg' || p.t === 'hr')) { this.unreadMark(conv); return true; }
+        return false;
     }
     unreadMark(uid) { const u = this.get(this.key('chat_unread'), {}); u[uid] = (u[uid] || 0) + 1; this.put(this.key('chat_unread'), u); }
     start() {
@@ -252,11 +309,16 @@ class Chat {
         const dev = await this.device();
         const u = this.get(this.key('chat_unread'), {}); delete u[uid]; this.put(this.key('chat_unread'), u);
         let safety = '', devices = [], info = null;
+        const signal = [];
         try {
             const theirs = (await this.call('devices', { uid })).devices, mine = (await this.call('devices', { uid: this.me().account.vrc_id })).devices;
             devices = theirs.map(d => ({ device: d.device, created: d.created }));
             info = theirs.length ? this.checkKeys(uid, theirs) : null;
             if (theirs.length) safety = E.safetyNumber(mine.map(d => d.ik_sig).concat(mine.some(d => d.device === dev.id) ? [] : [dev.idSig.pub]), theirs.map(d => d.ik_sig));
+            // 8.3 Signal-Sicherheitsnummer (libsignal-Fingerprint) je Gerätepaar: dieses Gerät ↔ Gerät der Gegenseite
+            const sk = this.sig.available() ? this.sig.keys() : null, myId = this.me().account.vrc_id;
+            if (sk) for (const d of theirs) if (remoteCapable(d)) signal.push({ device: d.device, number: this.sig.safetyNumber(myId, sk.pub, uid, d.sig_ik), active: this.sig.hasSession(uid + '.' + d.device) });
+            for (const d of devices) { const t = theirs.find(x => x.device === d.device); d.proto = this.protoFor(uid, t, this.sessions()); }
         } catch (e) { this.error = e.message; }
         const k = this.known()[uid] || {};
         // Gelesen-Häkchen: einmal je neuem Stand, abschaltbar
@@ -266,7 +328,7 @@ class Chat {
             await this.control(uid, { t: 'read', upto: last.at }).catch(() => {});
         }
         const favs = this.favs().filter(f => f.conv === uid).map(f => f.id);
-        return { uid, messages: this.convs()[uid] || [], pins: cm.pins || [], favs, emoji: EMOJI, prefs: this.prefs(), safety, devices, ready: devices.length > 0, verified: !!k.verified, changed: !!k.changed, error: this.error };
+        return { uid, messages: this.convs()[uid] || [], pins: cm.pins || [], favs, emoji: EMOJI, prefs: this.prefs(), safety, signal, devices, ready: devices.length > 0, verified: !!k.verified, changed: !!k.changed, error: this.error };
     }
     meta() { return this.get(this.key('chat_meta'), {}); }
     favs() { return this.get(this.key('chat_favs'), []); }

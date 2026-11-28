@@ -48,7 +48,18 @@
             + '<h4 style="margin-top:12px">🙏 Danke an</h4><ul class="small ab-credits">'
             + '<li><b>Electron</b>, <b>sql.js</b> – App-Grundlage & Datenbank</li><li><b>whisper.cpp</b> (ggml-org) – Spracherkennung</li><li><b>Piper</b> (rhasspy) – Sprachausgabe offline</li>'
             + '<li><b>Open-Meteo</b> – Wetterdaten</li><li><b>OpenVR</b> (Valve) – SteamVR-Overlay</li><li><b>DeepL</b>, <b>Google</b>, <b>Azure</b>, <b>ElevenLabs</b>, <b>OpenAI</b>, <b>Pulsoid</b>, <b>decapi.me</b> – optionale Dienste</li>'
-            + '<li>Ideen aus der Community: VRCX, MagicChatbox, TTS Voice Wizard – jeweils eigene Umsetzung</li></ul></div>'
+            + '<li><b>libsignal</b> (Signal Foundation, AGPL-3.0) – Ende-zu-Ende-Verschlüsselung des Privat-Chats am PC</li>'
+            + '<li>Ideen aus der Community: VRCX, MagicChatbox, TTS Voice Wizard – jeweils eigene Umsetzung</li></ul>'
+            + '<h4 style="margin-top:12px">👥 Credits</h4><ul class="small ab-credits ab-team">'
+            + '<li><b data-no-i18n>xXLoonaXx</b> – <span>Idee, Design & Projektleitung</span> <span class="muted">(GhostNode Labs)</span></li>'
+            + '<li><b data-no-i18n>Claude (Anthropic)</b> – <span>Entwicklung & Programmierung</span></li>'
+            + '<li><b data-no-i18n>Signal Foundation</b> – <span>libsignal (AGPL-3.0) als verwendete Bibliothek</span></li></ul>'
+            + '<h4 style="margin-top:12px">⚖️ Lizenz & Quellcode</h4>'
+            + '<p class="small">VRC Nexus ist freie Software unter der GNU Affero General Public License, Version 3 (AGPL-3.0-only). Du darfst die App nutzen, weitergeben und verändern – veränderte Fassungen müssen unter derselben Lizenz mit Quellcode weitergegeben werden.</p>'
+            + '<p class="small">Es gibt keinerlei Gewährleistung – Einzelheiten stehen im Lizenztext.</p>'
+            + '<p class="small"><a class="nc-link" href="' + esc(d.source || 'https://github.com/ghostnode-labs/vrc_nexus') + '" target="_blank" rel="noopener">Quellcode auf GitHub ↗</a>'
+            + (d.sourceTag ? ' · <a class="nc-link" href="' + esc(d.sourceTag) + '" target="_blank" rel="noopener">Quellcode dieser Version ↗</a>' : '')
+            + ' · <a class="nc-link" href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">Lizenztext (AGPL-3.0) ↗</a></p></div>'
             + '</div>';
         window.dispatchEvent(new Event('nexus-about'));   // Update-Knopf/-Hinweis rechts im Kopf füllen
         if (d.patreon) liveSup();
