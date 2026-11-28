@@ -4,7 +4,7 @@
     if (!UI) return;
     const esc = UI.esc, api = UI.api, toast = (m, b) => UI.toast(m, b), T = s => (window.t ? window.t(s) : s);
     let box = null, d = null, hub = null, ai = null, aiv = { pair: '', code: '', conn: '' }, timer = null, prevImg = { rev: '', url: '' };
-    const ago = ms => { if (!ms) return T('noch nie'); const s = Math.round((Date.now() - ms) / 1000); return s < 60 ? T('vor') + ' ' + s + ' s' : s < 3600 ? T('vor') + ' ' + Math.round(s / 60) + ' min' : new Date(ms).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); };
+    const ago = ms => { if (!ms) return T('noch nie verbunden'); const s = Math.round((Date.now() - ms) / 1000); return s < 60 ? T('vor') + ' ' + s + ' s' : s < 3600 ? T('vor') + ' ' + Math.round(s / 60) + ' min' : new Date(ms).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); };
 
     /** kleine runde Vorschau der Uhr mit Thema & Hintergrund */
     function preview(look, hasBg) {
@@ -35,7 +35,7 @@
             + '</div>';
         // Uhren
         h += '<div class="nc-card"><h4>⌚ ' + esc(T('Gekoppelte Geräte')) + '</h4>'
-            + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : x.kind === 'pc' ? '🖥 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : esc(T('zuletzt')) + ' ' + esc(ago(x.last))) + (x.ver ? ' · v' + esc(x.ver) : '') + '</small></div>'
+            + (d.devices.length ? '<ul class="nw-devs">' + d.devices.map(x => '<li><span class="nw-dot' + (x.online ? ' on' : '') + '"></span><div><b>' + (x.kind === 'phone' ? '📱 ' : x.kind === 'pc' ? '🖥 ' : '⌚ ') + esc(x.name) + '</b><small>' + (x.online ? esc(T('verbunden')) : x.last ? esc(T('zuletzt')) + ' ' + esc(ago(x.last)) : esc(ago(0))) + (x.ver ? ' · v' + esc(x.ver) : '') + '</small></div>'
                 + (x.kind !== 'watch' && x.kind ? '' : '<button type="button" class="btn btn-sm" data-nwa="find" data-id="' + esc(x.id) + '" title="' + esc(T('Uhr finden')) + '">🔔</button>') + '<button type="button" class="btn btn-sm" data-nwa="nsfw" data-id="' + esc(x.id) + '" data-on="' + (x.nsfw === false ? '1' : '0') + '" title="' + esc(x.nsfw === false ? T('🔞 auf diesem Gerät zeigen') : T('🔞 auf diesem Gerät ausblenden (Panik & Safeword bleiben)')) + '">' + (x.nsfw === false ? '🙈' : '🔞') + '</button><button type="button" class="btn btn-sm" data-nwa="remove" data-id="' + esc(x.id) + '">✕</button></li>').join('') + '</ul>'
                 : '<p class="small muted">' + esc(T('Noch kein Gerät gekoppelt.')) + '</p>') + '<p class="small muted">📱 ' + esc(T('Handy: in der VRC-Nexus-App unter 🎮 PC-Fernbedienung Adresse und Code eingeben. Laptop: Einstellungen → System → Heimnetz-Abgleich.')) + '</p>'
             + '<div class="nc-row small" title="' + esc(T('Kräftig schütteln (3× in gut einer Sekunde) – nur solange die Uhr-App offen ist.')) + '">🤚 ' + esc(T('Uhr schütteln')) + ' <select data-nwshake>' + [['off', T('nichts')], ['stop', T('Spielzeug stoppen')], ['safeword', T('Safeword')]].map(([k, l]) => '<option value="' + k + '"' + ((c.shake || 'off') === k ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></div>'   // 8.2

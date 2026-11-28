@@ -6,8 +6,7 @@ Format: `- [ ] **Bereich** – Beschreibung` (Quelle/Datei, falls bekannt)
 
 ## 🐞 Fehler
 
-- [ ] **Geräte (Tools → 📡 Geräte)** – Die Karten „Verbindung“ und „Gekoppelte Geräte“ nehmen nur die linke Hälfte ein, rechts bleibt eine große leere Fläche. Ziel: Platz nutzen. Entweder dehnen sich die Karten über die ganze Breite, oder die nächste Karte (🎨 Design der Uhr / 📲 Uhr-App installieren) rückt rechts daneben. (`renderer/js/nexus-watch.js`, Raster `.nc-grid` in `renderer/css/nexus.css`)
-- [ ] **Geräte** – Bei nie verbundenen Uhren steht „zuletzt noch nie“. Besser „noch nie verbunden“. (`ago()` in `nexus-watch.js`)
+- _(noch leer)_
 
 ## 💡 Ideen
 
@@ -15,4 +14,7 @@ Format: `- [ ] **Bereich** – Beschreibung` (Quelle/Datei, falls bekannt)
 
 ## ✅ Erledigt
 
-- _(noch leer)_
+### Erledigt (8.2.0)
+
+- [x] **Geräte (Tools → 📡 Geräte)** – Karten „Verbindung“ und „Gekoppelte Geräte“ nutzen jetzt die ganze Breite (zwei gleich breite Spalten, auf schmalen Fenstern eine). Nur CSS (`renderer/css/app.css`, `#toolBody > .nc-grid:has(.nw-design)`).
+- [x] **Geräte** – Nie verbundene Geräte zeigen „noch nie verbunden“ statt „zuletzt noch nie“ (`ago()` in `nexus-watch.js`).

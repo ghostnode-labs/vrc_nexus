@@ -1,0 +1,124 @@
+Freund (Name oder usr_…)	Friend (name or usr_…)	Ami (nom ou usr_…)	フレンド（名前または usr_…）
+Läuft	Running	En cours	実行中
+Danach zurück zu	Then back to	Ensuite retour à	その後に戻す：
+Jetzt zurücksetzen	Reset now	Réinitialiser maintenant	今すぐ戻す
+Timer aus, Status behalten	Timer off, keep status	Minuteur arrêté, garder le statut	タイマー停止（ステータスはそのまま）
+Status-Timer	Status timer	Minuteur de statut	ステータスタイマー
+Setzt Status und Text für eine Weile und stellt danach den vorherigen wieder her – außer du hast ihn inzwischen selbst geändert.	Sets status and text for a while and restores the previous one afterwards – unless you changed it yourself in the meantime.	Définit le statut et le texte pour un moment, puis rétablit l’ancien – sauf si tu l’as modifié toi-même entre-temps.	しばらくの間ステータスとテキストを設定し、その後元に戻します（その間に自分で変更した場合を除く）。
+Text, {zeit} = Endzeit	Text, {zeit} = end time	Texte, {zeit} = heure de fin	テキスト（{zeit} = 終了時刻）
+oder bis	or until	ou jusqu’à	または終了時刻
+ab dem nächsten Online-Gehen	from the next time they come online	à partir de la prochaine connexion	次回オンライン時から
+Keine offenen Erinnerungen.	No open reminders.	Aucun rappel en attente.	未完了のリマインダーはありません。
+Online-Erinnerung	Online reminder	Rappel de connexion	オンライン通知リマインダー
+Einmalig: sobald die Person online kommt, bekommst du einen Hinweis mit deinem Text.	One-time: as soon as the person comes online, you get a notice with your text.	Une seule fois : dès que la personne se connecte, tu reçois une notification avec ton texte.	1回のみ：相手がオンラインになるとすぐに、あなたのテキスト付きで通知します。
+Woran soll ich dich erinnern?	What should I remind you of?	De quoi dois-je te rappeler ?	何をリマインドしますか？
+auch wenn schon online	even if already online	même si déjà en ligne	すでにオンラインでも
+wie hier	same as here	comme ici	ここと同じ
+Noch keine Zeitzonen eingetragen.	No time zones entered yet.	Aucun fuseau horaire saisi pour l’instant.	タイムゾーンはまだ登録されていません。
+Ortszeit von Freunden	Friends’ local time	Heure locale des amis	フレンドの現地時刻
+Trag ein, wo deine Freunde wohnen – dann siehst du, wie spät es dort gerade ist. 🌙 = dort ist Nacht.	Enter where your friends live – then you can see what time it is there. 🌙 = it is night there.	Indique où vivent tes amis – tu verras l’heure qu’il est chez eux. 🌙 = il fait nuit là-bas.	フレンドの住んでいる場所を登録すると、現地の時刻がわかります。🌙 = 現地は夜です。
+Jetzt bei deinen Freunden	Right now at your friends’	En ce moment chez tes amis	今のフレンドの時刻
+Neue Notiz	New note	Nouvelle note	新しいメモ
+Text … Kästchen: eine Zeile mit „- [ ] “ beginnen	Text … checkbox: start a line with "- [ ] "	Texte … case à cocher : commencer une ligne par « - [ ] »	テキスト … チェックボックス：行を「- [ ] 」で始める
+anheften	pin	épingler	ピン留め
+Kästchen	Checkbox	Case à cocher	チェックボックス
+Notizen durchsuchen …	Search notes …	Rechercher dans les notes …	メモを検索 …
+Notizen	Notes	Notes	メモ
+Geburtstage & Freundschaftstage	Birthdays & friendship days	Anniversaires & jours d’amitié	誕生日とフレンド記念日
+Geburtstage kommen aus deinen Notizen zu Freunden („Geburtstag 24.12.“ oder „🎂 24.12.“), Freundschaftstage aus dem Datum, seit dem ihr befreundet seid.	Birthdays come from your notes on friends ("Geburtstag 24.12." or "🎂 24.12."), friendship days from the date you became friends.	Les anniversaires viennent de tes notes sur les amis (« Geburtstag 24.12. » ou « 🎂 24.12. »), les jours d’amitié de la date depuis laquelle vous êtes amis.	誕生日はフレンドのメモ（「Geburtstag 24.12.」または「🎂 24.12.」）から、フレンド記念日はフレンドになった日付から取得します。
+Als Kalender (ICS)	As calendar (ICS)	En calendrier (ICS)	カレンダー（ICS）として
+jährlich wiederkehrend – in Google, Outlook oder Apple Kalender importieren	yearly recurring – import into Google, Outlook or Apple Calendar	récurrent chaque année – à importer dans Google, Outlook ou Apple Calendrier	毎年繰り返し – Google、Outlook、Apple カレンダーに読み込めます
+Freunde seit	Friends since	Amis depuis	フレンドになった年
+aus dem Spiel-Log	from the game log	depuis le journal du jeu	ゲームログから
+aus deinem Online-Verlauf	from your online history	depuis ton historique en ligne	オンライン履歴から
+Spielzeit-Budget	Playtime budget	Budget de temps de jeu	プレイ時間の目安
+Hinweis, wenn das Budget fast oder ganz erreicht ist	Notice when the budget is almost or fully used	Notification quand le budget est presque ou entièrement atteint	目安にほぼ達した／達したときに通知
+pro Tag (min)	per day (min)	par jour (min)	1日あたり（分）
+pro Woche (min)	per week (min)	par semaine (min)	1週間あたり（分）
+Vorwarnung bei	Early warning at	Pré-alerte à	事前通知
+0 = ohne Grenze. Kein Sperren, nur ein freundlicher Hinweis.	0 = no limit. No blocking, just a friendly notice.	0 = sans limite. Aucun blocage, juste un rappel amical.	0 = 制限なし。ブロックはせず、やさしく通知するだけです。
+Heute & diese Woche	Today & this week	Aujourd’hui & cette semaine	今日と今週
+VRChat-Serverstatus	VRChat server status	État des serveurs VRChat	VRChat サーバー状態
+Hinweis bei neuen Störungen	Notify on new outages	Notifier en cas de nouvelle panne	新しい障害を通知
+Dienste	Services	Services	サービス
+Aktuelle Meldungen	Current reports	Signalements actuels	現在のお知らせ
+Keine Störungen gemeldet.	No outages reported.	Aucune panne signalée.	障害は報告されていません。
+fällig	due	à faire	期限
+Kontakt gehabt	Had contact	Contact eu	連絡済み
+Noch niemand in der Kontakt-Pflege.	Nobody in contact care yet.	Personne dans le suivi des contacts pour l’instant.	連絡リストにはまだ誰もいません。
+Kontakt-Pflege	Keep in touch	Garder le contact	連絡を忘れずに
+Für Menschen, die dir wichtig sind: Nexus erinnert dich einmal am Tag, wenn ihr euch länger nicht gesehen habt (Spiel-Log) oder du keinen Kontakt vermerkt hast.	For people who matter to you: Nexus reminds you once a day if you haven’t seen each other for a while (game log) or haven’t noted any contact.	Pour les personnes qui comptent : Nexus te le rappelle une fois par jour si vous ne vous êtes pas vus depuis un moment (journal du jeu) ou si tu n’as noté aucun contact.	大切な人のために：しばらく会っていない（ゲームログ）か連絡を記録していない場合、1日1回お知らせします。
+Notiz löschen?	Delete note?	Supprimer la note ?	メモを削除しますか？
+Zeitleiste	Timeline	Chronologie	タイムライン
+Alles im Labor kann die Stärke nur senken – Not-Aus, Panik, Safeword und Ampel Rot haben immer Vorrang.	Everything in the lab can only lower the intensity – emergency stop, panic, safeword and red light always take priority.	Tout dans le labo ne peut que réduire l’intensité – arrêt d’urgence, panique, safeword et feu rouge ont toujours la priorité.	ラボの機能は強さを下げることしかできません。緊急停止、パニック、セーフワード、赤信号が常に優先されます。
+Puls-Deckel	Heart-rate cap	Plafond cardiaque	心拍キャップ
+Ab einem Puls die Höchststärke sanft senken	Gently lower the maximum intensity above a heart rate	Réduire doucement l’intensité maximale au-delà d’un pouls	一定の心拍数を超えたら最大強度をゆるやかに下げる
+ab	from	à partir de	から
+auf	to	à	まで
+Kein Puls verbunden.	No heart rate connected.	Aucun pouls connecté.	心拍は接続されていません。
+Sanft an & aus	Gentle on & off	Démarrage & arrêt en douceur	ソフトスタート＆フェードアウト
+Sanftanlauf nach einer Ruhepause	Soft start after a rest	Démarrage en douceur après une pause	休止後にソフトスタート
+Anlauf	Ramp-up	Montée	立ち上がり
+Ruhepause ab	Rest after	Pause à partir de	休止とみなす時間
+Ausklingen-Timer	Fade-out timer	Minuteur de fondu	フェードアウトタイマー
+klingt aus	fading out	en fondu	フェードアウト中
+Timer aus	Timer off	Minuteur arrêté	タイマー停止
+Ausklingen	Fade-out	Fondu	フェードアウト
+Jetzt ausklingen	Fade out now	Fondu maintenant	今すぐフェードアウト
+Anteil	Share	Part	割合
+Stärke setzen	Set intensity	Régler l’intensité	強さを設定
+stumm	mute	muet	ミュート
+wieder an	back on	réactiver	再開
+Gruppe stoppen	Stop group	Arrêter le groupe	グループを停止
+Noch keine Gruppen.	No groups yet.	Pas encore de groupes.	グループはまだありません。
+Spielzeug-Gruppen	Toy groups	Groupes de jouets	トイグループ
+Geräte verbinden, um Gruppen anzulegen.	Connect devices to create groups.	Connecte des appareils pour créer des groupes.	グループを作るにはデバイスを接続してください。
+Zeitleisten-Muster	Timeline patterns	Motifs chronologiques	タイムラインパターン
+Neue Zeitleiste	New timeline	Nouvelle chronologie	新しいタイムライン
+In die Fläche tippen fügt einen Punkt hinzu. Format: Zeit:Stärke[:Übergang] – Übergang linear, Stufe oder weich.	Tap the area to add a point. Format: time:intensity[:transition] – transition linear, Stufe (step) or weich (smooth).	Touche la zone pour ajouter un point. Format : temps:intensité[:transition] – transition linear, Stufe (palier) ou weich (doux).	エリアをタップすると点を追加します。形式：時間:強さ[:遷移] – 遷移は linear、Stufe（段階）、weich（なめらか）。
+Abspielen	Play	Lire	再生
+Muster-Mixer	Pattern mixer	Mixeur de motifs	パターンミキサー
+Zwei Muster zu einem neuen verbinden.	Combine two patterns into a new one.	Combiner deux motifs en un nouveau.	2つのパターンを組み合わせて新しいパターンを作ります。
+Mix	Mix	Mix	ミックス
+Private Statistik	Private statistics	Statistiques privées	プライベート統計
+Sitzungen aufzeichnen (nur auf diesem Gerät, verschlüsselt)	Record sessions (only on this device, encrypted)	Enregistrer les sessions (uniquement sur cet appareil, chiffré)	セッションを記録（この端末のみ、暗号化）
+Löschen nach	Delete after	Supprimer après	削除までの期間
+zeichnet auf	recording	enregistrement	記録中
+Sitzungen (30 Tage)	Sessions (30 days)	Sessions (30 jours)	セッション（30日）
+Ø Spitze	Avg. peak	Pic moyen	平均ピーク
+Höhepunkte	Climaxes	Orgasmes	クライマックス
+Statistik löschen	Delete statistics	Supprimer les statistiques	統計を削除
+Mindestens ein Gerät auswählen.	Select at least one device.	Sélectionne au moins un appareil.	デバイスを1つ以上選択してください。
+Zeitleiste löschen?	Delete timeline?	Supprimer la chronologie ?	タイムラインを削除しますか？
+Ganze Statistik löschen?	Delete all statistics?	Supprimer toutes les statistiques ?	統計をすべて削除しますか？
+Alltag	Everyday	Quotidien	日常
+Status für eine Weile setzen, danach automatisch zurück	Set status for a while, then back automatically	Définir un statut pour un moment, puis retour automatique	しばらくステータスを設定し、その後自動で戻す
+Erinnert dich an etwas, sobald ein Freund online kommt	Reminds you of something as soon as a friend comes online	Te rappelle quelque chose dès qu’un ami se connecte	フレンドがオンラインになったらリマインド
+Wie spät ist es gerade bei deinen Freunden?	What time is it at your friends’ right now?	Quelle heure est-il chez tes amis ?	フレンドのところは今何時？
+Notizblock	Notepad	Bloc-notes	メモ帳
+Notizen und Checklisten, nur auf diesem Gerät	Notes and checklists, only on this device	Notes et listes de contrôle, uniquement sur cet appareil	メモとチェックリスト（この端末のみ）
+Geburtstags-Kalender	Birthday calendar	Calendrier des anniversaires	誕生日カレンダー
+Geburtstage und Freundschaftstage als Kalender (ICS)	Birthdays and friendship days as a calendar (ICS)	Anniversaires et jours d’amitié en calendrier (ICS)	誕生日とフレンド記念日をカレンダー（ICS）に
+Tages- und Wochenbudget mit freundlichem Hinweis	Daily and weekly budget with a friendly notice	Budget quotidien et hebdomadaire avec rappel amical	1日・1週間の目安とやさしい通知
+Störungen bei VRChat auf einen Blick	VRChat outages at a glance	Pannes VRChat en un coup d’œil	VRChat の障害をひと目で
+Erinnert dich, dich bei wichtigen Menschen zu melden	Reminds you to get in touch with people who matter	Te rappelle de donner des nouvelles aux personnes importantes	大切な人への連絡をリマインド
+malnehmen	multiply	multiplier	掛け合わせ
+Mittelwert	average	moyenne	平均
+abwechseln	alternate	alterner	交互
+linear	linear	linéaire	リニア
+Stufe	step	palier	段階
+weich	smooth	doux	なめらか
+Essen – zurück um {zeit}	Eating – back at {zeit}	Repas – de retour à {zeit}	食事中 – {zeit}に戻ります
+Kurz weg – bis {zeit}	Away briefly – until {zeit}	Absent un instant – jusqu’à {zeit}	少し離席 – {zeit}まで
+Schlafe bis {zeit}	Sleeping until {zeit}	Je dors jusqu’à {zeit}	{zeit}まで睡眠中
+Film – frei ab {zeit}	Movie – free from {zeit}	Film – libre à partir de {zeit}	映画中 – {zeit}から空いています
+Labor	Lab	Labo	ラボ
+noch nie verbunden	never connected	jamais connecté	未接続
+Status-Timer aus.	Status timer off.	Minuteur de statut arrêté.	ステータスタイマーを停止しました。
+Status zurückgesetzt.	Status reset.	Statut rétabli.	ステータスを戻しました。
+Erinnerung gespeichert.	Reminder saved.	Rappel enregistré.	リマインダーを保存しました。
+Vermerkt.	Noted.	Noté.	記録しました。
+Statistik gelöscht.	Statistics deleted.	Statistiques supprimées.	統計を削除しました。
+Ausklingen-Timer aus.	Fade-out timer off.	Minuteur de fondu arrêté.	フェードアウトタイマーを停止しました。
+Du bekommst einen Hinweis bei Störungen.	You will get a notice on outages.	Tu recevras une notification en cas de panne.	障害時に通知します。
+Keine Hinweise.	No notices.	Aucune notification.	通知しません。

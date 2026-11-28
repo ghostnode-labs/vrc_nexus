@@ -5487,3 +5487,229 @@ test('8.0.21: Aktionen landen im richtigen Modul – „Vertrauen & Fürsorge“
     }
     assert.ok(Object.keys(seen).length > 10, 'Weiterleitungen gefunden');
 });
+
+test('8.2: Alltag – Status-Timer (zurück, außer selbst geändert), Online-Erinnerung (einmalig), Ortszeit, Notizblock mit Kästchen, ICS-Kalender, Spielzeit-Budget, VRChat-Status, Kontakt-Pflege', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { zoneTime, validZone } = require('../backend/kit');
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, noTimers: true, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-kit-')) } });
+    app.game.osc.stopListen();
+    const me = { status: 'active', statusDescription: 'chillen' }, calls = [], alerts = [];
+    app.vrc.account = () => ({ vrc_id: 'usr_' + 'a'.repeat(8) + '-1111-2222-3333-444444444444', me, display_name: 'Ich' });
+    const orig = app.post.bind(app);
+    app.post = async (i, f) => (i.act === 'status' ? (calls.push(i), { msg: 'ok' }) : orig(i, f));
+    app.tools.alert = (t, b) => alerts.push([t, b]);
+    const k = app.kit, F1 = 'usr_' + '1'.repeat(8) + '-1111-2222-3333-444444444444', F2 = 'usr_' + '2'.repeat(8) + '-1111-2222-3333-444444444444';
+    const addF = (id, name, state, since) => { db.prepare('INSERT OR IGNORE INTO friends (user_id, vrc_id, display_name, friend_since) VALUES (1, ?, ?, ?)').run(id, name, since || 0); db.prepare('UPDATE friends SET state = ? WHERE user_id = 1 AND vrc_id = ?').run(state, id); };
+    addF(F1, 'Luna', 'offline', Math.floor(new Date(2023, 4, 17, 12).getTime() / 1000)); addF(F2, 'Kai', 'online');
+    try {
+        // ⏰ Status-Timer
+        let r = await app.post({ act: 'kit_status_start', status: 'busy', desc: 'Essen – zurück um {zeit}', minutes: '30' }, {});
+        assert.ok(/⏰ Bis \d\d:\d\d/.test(r.msg) && r.status.left_min >= 29, JSON.stringify(r));
+        assert.ok(calls[0].status === 'busy' && /zurück um \d\d:\d\d$/.test(calls[0].desc), 'Endzeit eingesetzt');
+        await assert.rejects(app.post({ act: 'kit_status_start', status: 'offline' }, {}), /Ungültiger Status/);
+        const s = JSON.parse(db.setting('kit_status')); s.until = U.now() - 1; db.setSetting('kit_status', JSON.stringify(s));
+        await k.tick();
+        assert.deepStrictEqual([calls[1].status, calls[1].desc], ['active', 'chillen'], 'vorheriger Status zurück');
+        assert.strictEqual((await app.post({ act: 'kit_status' }, {})).status, null);
+        await app.post({ act: 'kit_status_start', status: 'ask me', desc: 'kurz weg', until: '23:59' }, {});
+        Object.assign(me, { status: 'join me', statusDescription: 'selbst geändert' });
+        const s2 = JSON.parse(db.setting('kit_status')); s2.until = U.now() - 1; db.setSetting('kit_status', JSON.stringify(s2));
+        const n = calls.length; await k.tick();
+        assert.strictEqual(calls.length, n, 'selbst geänderter Status wird nicht überschrieben');
+        Object.assign(me, { status: 'active', statusDescription: 'chillen' });
+        // 🔔 Online-Erinnerung
+        await assert.rejects(app.post({ act: 'kit_remind_add', uid: 'quatsch', text: 'x' }, {}), /Freund/);
+        await assert.rejects(app.post({ act: 'kit_remind_add', uid: F1, text: '' }, {}), /Woran/);
+        r = await app.post({ act: 'kit_remind_add', uid: F1, text: 'nach dem Foto fragen' }, {});
+        await app.post({ act: 'kit_remind_add', uid: F2, text: 'Geburtstag gratulieren' }, {});
+        assert.ok(r.reminders[0].name === 'Luna' && !r.reminders[0].wait_offline);
+        assert.ok(k.reminders().find(x => x.uid === F2).wait_offline, 'schon online → erst beim nächsten Mal');
+        assert.strictEqual(k.checkReminders().length, 0);
+        addF(F1, 'Luna', 'online'); addF(F2, 'Kai', 'offline');
+        let fired = k.checkReminders();
+        assert.ok(fired.length === 1 && alerts.some(([t, b]) => /Luna ist online/.test(t) && b === 'nach dem Foto fragen'));
+        addF(F2, 'Kai', 'active'); fired = k.checkReminders();
+        assert.ok(fired.length === 1 && fired[0].uid === F2, 'nach offline → online');
+        r = await app.post({ act: 'kit_remind_list' }, {});
+        assert.ok(r.reminders.length === 0 && r.done.length === 2, 'einmalig, danach erledigt');
+        // 🕐 Ortszeit
+        const tk = zoneTime('Asia/Tokyo', new Date(Date.UTC(2026, 0, 1, 0, 30)));
+        assert.ok(tk.time === '09:30' && tk.offset === 540 && !tk.night, JSON.stringify(tk));
+        assert.ok(zoneTime('America/New_York', new Date(Date.UTC(2026, 6, 1, 6))).night, '2 Uhr nachts in New York');
+        assert.throws(() => validZone('Mars/Olympus'), /Zeitzone/); assert.throws(() => validZone('../etc'), /Zeitzone/);
+        r = await app.post({ act: 'kit_tz_set', uid: F1, tz: 'Asia/Tokyo' }, {});
+        assert.ok(r.list[0].name === 'Luna' && /^\d\d:\d\d$/.test(r.list[0].time) && r.zones.includes('Europe/Berlin'));
+        r = await app.post({ act: 'kit_tz_set', uid: F1, tz: '' }, {}); assert.strictEqual(r.list.length, 0, 'leer = entfernt');
+        // 📝 Notizblock
+        await assert.rejects(app.post({ act: 'kit_note_save', title: '', text: '  ' }, {}), /leer/);
+        r = await app.post({ act: 'kit_note_save', title: 'Event', text: 'Plan\n- [ ] Welt aussuchen\n- [x] Leute einladen', color: 'gold' }, {});
+        const nid = r.note.id;
+        await app.post({ act: 'kit_note_save', title: 'Andere', text: 'Hallo', pin: '1' }, {});
+        r = await app.post({ act: 'kit_notes' }, {});
+        assert.ok(r.notes[0].pin && r.notes[1].todo === 2 && r.notes[1].done === 1, 'angeheftet zuerst, Kästchen gezählt');
+        r = await app.post({ act: 'kit_note_toggle', id: nid, line: '1' }, {});
+        assert.strictEqual(r.notes.find(x => x.id === nid).done, 2);
+        await assert.rejects(app.post({ act: 'kit_note_toggle', id: nid, line: '0' }, {}), /kein Kästchen/);
+        assert.strictEqual((await app.post({ act: 'kit_notes', q: 'welt' }, {})).notes.length, 1, 'Suche');
+        await app.post({ act: 'kit_note_del', id: nid }, {}); assert.strictEqual(k.notes().length, 1);
+        // 📆 Kalender (Geburtstag aus der Notiz, Freundschaftstag)
+        db.prepare("INSERT INTO notes (user_id, vrc_id, note) VALUES (1, ?, 'Geburtstag 24.12.')").run(F2);
+        const ev = (await app.post({ act: 'kit_calendar' }, {})).events;
+        assert.ok(ev.some(e => e.kind === 'birthday' && e.name === 'Kai' && e.day === 24 && e.month === 12) && ev.some(e => e.kind === 'friend' && e.name === 'Luna' && e.year === 2023 && e.month === 5));
+        const ics = k.ics(new Date(Date.UTC(2026, 10, 28)));
+        assert.ok(/^BEGIN:VCALENDAR\r\n/.test(ics) && ics.includes('DTSTART;VALUE=DATE:20261224') && ics.includes('RRULE:FREQ=YEARLY') && ics.includes('DTSTART;VALUE=DATE:20240517'), ics);
+        assert.ok(ics.split('\r\n').every(l => l.length <= 75), 'Zeilen höchstens 75 Zeichen');
+        const dl = await app.handle({ method: 'GET', query: new URLSearchParams('kit_ics=1') });
+        assert.ok(/text\/calendar/.test(dl.headers['Content-Type']) && /geburtstage\.ics/.test(dl.headers['Content-Disposition']));
+        // ⏳ Spielzeit-Budget (ohne Spiel-Log → eigener Online-Verlauf)
+        const t0 = new Date(); t0.setHours(0, 0, 0, 0); const d0 = Math.floor(t0.getTime() / 1000);
+        const nowS = U.now(), start = Math.max(d0 + 60, nowS - 120 * 60);
+        db.prepare("INSERT INTO feed (user_id, ts, type, vrc_id, old, new) VALUES (1, ?, 'self', 'me', 'offline', 'wrld_1:1')").run(start);
+        let b = k.budgetState();
+        assert.ok(b.src === 'feed' && Math.abs(b.today - Math.round((nowS - start) / 60)) <= 1, JSON.stringify(b));
+        await app.post({ act: 'kit_budget_cfg', on: '1', day_min: String(Math.max(15, b.today)), warn_pct: '80' }, {});
+        assert.strictEqual(k.checkBudget(), 'full'); assert.strictEqual(k.checkBudget(), '', 'nur einmal am Tag');
+        assert.ok(alerts.some(([t]) => /Budget erreicht/.test(t)));
+        b = (await app.post({ act: 'kit_budget_cfg', day_min: '99999', warn_pct: '10' }, {})).cfg;
+        assert.ok(b.day_min === 1440 && b.warn_pct === 50, 'Grenzen');
+        // 🚦 VRChat-Status (nur Attrappe, kein echter Abruf)
+        let calls2 = 0;
+        const page = { status: { indicator: 'minor', description: 'Teilweise gestört' }, page: { updated_at: '2026-11-28T10:00:00Z' },
+            components: [{ name: 'API', status: 'degraded_performance' }, { name: 'Gruppe', group: true }], incidents: [{ name: 'Login langsam', status: 'investigating', impact: 'minor', shortlink: 'https://stspg.io/x' }, { name: 'B', shortlink: 'https://evil.example/x' }] };
+        k.fetch = async () => { calls2++; return { ok: true, status: 200, json: async () => page }; };
+        r = await app.post({ act: 'kit_vrcstatus' }, {});
+        assert.ok(r.indicator === 'minor' && r.components.length === 1 && r.incidents[0].link === 'https://stspg.io/x' && r.incidents[1].link === '', 'nur Status-Links');
+        await app.post({ act: 'kit_vrcstatus' }, {}); assert.strictEqual(calls2, 1, 'kurz zwischengespeichert');
+        assert.strictEqual(await k.checkVrcStatus(), '', 'ohne Hinweis-Wunsch nichts');
+        await app.post({ act: 'kit_vrcstatus_cfg', notify: '1' }, {});
+        assert.strictEqual(await k.checkVrcStatus(), 'alert'); assert.strictEqual(await k.checkVrcStatus(), '', 'gleiche Störung nur einmal');
+        page.status.indicator = 'none'; assert.strictEqual(await k.checkVrcStatus(), 'ok');
+        k.fetch = async () => { throw new Error('offline'); };
+        await assert.rejects(app.post({ act: 'kit_vrcstatus', force: '1' }, {}), /nicht erreichbar/);
+        // 💬 Kontakt-Pflege
+        r = await app.post({ act: 'kit_care_set', uid: F1, days: '14' }, {});
+        assert.ok(r.list[0].due && r.list[0].last === 0, 'noch nie → fällig');
+        db.prepare("INSERT INTO game_log (user_id, ts, kind, player_id, player_name, hash) VALUES (1, ?, 'player_join', ?, 'Luna', 'h1')").run(U.now() - 3 * 86400, F1);
+        r = await app.post({ act: 'kit_care' }, {});
+        assert.ok(!r.list[0].due && r.list[0].via === 'game' && r.list[0].due_in === 11, JSON.stringify(r.list[0]));
+        await app.post({ act: 'kit_care_set', uid: F2, days: '7' }, {});
+        const at = new Date(); at.setHours(12, 0, 0, 0); alerts.length = 0;
+        assert.strictEqual(k.checkCare(at), 1); assert.ok(alerts.some(([, x]) => /Kai/.test(x))); assert.strictEqual(k.checkCare(at), 0, 'einmal am Tag');
+        r = await app.post({ act: 'kit_care_done', uid: F2 }, {}); assert.ok(!r.list.find(x => x.uid === F2).due && r.list.find(x => x.uid === F2).via === 'manual');
+        r = await app.post({ act: 'kit_care_set', uid: F2, days: '0' }, {}); assert.strictEqual(r.list.length, 1);
+        const ov = await app.post({ act: 'kit_overview' }, {});
+        assert.ok(ov.notes === 1 && ov.events >= 2 && ov.budget && 'care_due' in ov);
+        await assert.rejects(app.post({ act: 'kit_nope' }, {}), /Unbekannt/);
+    } finally { app.tools.stop(); if (app.toys) app.toys.stop(); }
+});
+
+test('8.2: 🔞 Spielzeug-Labor – Zeitleiste & Mixer als Muster, Puls-Deckel, Sanftanlauf, Ausklingen, Gruppen, verschlüsselte Statistik; Stopp/Panik haben Vorrang, nur mit Freigabe', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const { timelineAt, normTimeline } = require('../backend/toylab');
+    const OWNER = 'usr_' + 'e'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const enc = { encrypt: s => 'ENC:' + Buffer.from(s).toString('base64'), decrypt: s => Buffer.from(String(s).replace(/^ENC:/, ''), 'base64').toString() };
+    const app = new NexusApp({ db, crypt: enc, noTimers: true, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-lab-')) } });
+    app.game.osc.stopListen(); app.tools.alert = () => {};
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    const t = app.toys, L = t.lab, sent = [];
+    try {
+        await assert.rejects(app.post({ act: 'toys_lab_state' }, {}), /Nicht freigeschaltet/, 'hinter der Altersfreigabe');
+        grant18(app);
+        t.ws = { readyState: 1, send() {} }; t.req = async m => { sent.push(m); return {}; };
+        for (const [i, n] of [[0, 'Lush'], [1, 'Hush'], [2, 'Edge']]) t.addDevice({ DeviceIndex: i, DeviceName: n, DeviceMessageTimingGap: 0, DeviceMessages: { ScalarCmd: [{ StepCount: 20, ActuatorType: 'Vibrate' }] } });
+        await U.sleep(50);
+        // 📈 Zeitleiste
+        assert.strictEqual(normTimeline({ points: [[0, 10]] }, 0), null, 'ein Punkt reicht nicht');
+        const tl = normTimeline({ name: 'Rampe', points: [[0, 0], [10, 100, 'step'], [20, 50, 'ease'], [30, 0]] }, 0);
+        assert.strictEqual(Math.round(timelineAt(tl, 5) * 100), 50, 'linear');
+        assert.strictEqual(Math.round(timelineAt(tl, 15) * 100), 100, 'Stufe hält');
+        assert.strictEqual(Math.round(timelineAt(tl, 25) * 100), 25, 'weich (Mitte)');
+        assert.strictEqual(Math.round(timelineAt(tl, 35) * 100), 50, 'wiederholt');
+        await assert.rejects(app.post({ act: 'toys_lab_cfg', timelines: JSON.stringify([{ points: [[5, 5]] }]) }, {}), /mindestens 2 Punkte/);
+        let r = await app.post({ act: 'toys_lab_cfg', timelines: JSON.stringify([Object.assign({}, tl, { id: 'ramp' })]), mixes: JSON.stringify([{ id: 'wp', name: 'Wellenpuls', a: 'welle', b: 'puls', mode: 'mul' }, { id: 'bad', a: 'm:wp', b: 'puls' }, { id: 'tm', name: 'Abwechselnd', a: 't:ramp', b: 'puls', mode: 'alt', alt_s: 4 }]) }, {});
+        assert.ok(r.cfg.mixes.length === 2 && !r.cfg.mixes.some(m => m.id === 'bad'), 'Mixer im Mixer gibt es nicht');
+        assert.ok(t.allPatterns().some(p => p.id === 't:ramp' && /Rampe/.test(p.name)) && t.allPatterns().some(p => p.id === 'm:wp'));
+        assert.strictEqual(Math.round(t.patternFn('m:wp')(0.2, {}) * 100), Math.round(require('../backend/toys').PATTERNS.welle.f(0.2) * 100), 'Welle × Puls (Puls = 1)');
+        assert.strictEqual(Math.round(t.patternFn('m:tm')(5, {}) * 100), Math.round(require('../backend/toys').PATTERNS.puls.f(5) * 100), 'abwechseln: nach 4 s das zweite Muster');
+        const pv = await app.post({ act: 'toys_lab_preview', id: 't:ramp' }, {}); assert.ok(pv.preview.length === 48 && pv.secs === 30);
+        r = await app.post({ act: 'toys_pattern', id: 't:ramp', strength: 100, seconds: 60 }, {});
+        assert.ok(/Rampe läuft/.test(r.msg) && t.pat.id === 't:ramp', 'läuft als normales Muster (auch für Szenen, Uhr, Handy)');
+        await app.post({ act: 'toys_pattern_stop' }, {});
+        // Faktoren nur 0…1, Ausgangslage: alles 100 %
+        const d0 = t.devices.get(0), d1 = t.devices.get(1);
+        t.level.set(0, 1); assert.strictEqual(Math.round(t.shaped(d0) * 100), 100);
+        // ❤ Puls-Deckel
+        await app.post({ act: 'toys_lab_cfg', hrcap: JSON.stringify({ on: '1', soft: 120, hard: 160, floor: 20 }) }, {});
+        app.heart.bpm = 140; app.heart.at = Date.now();
+        assert.strictEqual(Math.round(t.shaped(d0) * 100), 60, 'Mitte zwischen 120 und 160 → 60 %');
+        app.heart.bpm = 190; assert.strictEqual(Math.round(t.shaped(d0) * 100), 20, 'Untergrenze');
+        app.heart.bpm = 100; assert.strictEqual(Math.round(t.shaped(d0) * 100), 100, 'darunter frei');
+        r = await app.post({ act: 'toys_lab_cfg', hrcap: JSON.stringify({ soft: 150, hard: 100 }) }, {}); assert.ok(r.cfg.hrcap.hard > r.cfg.hrcap.soft, 'Höchstpuls über dem Anfang');
+        await app.post({ act: 'toys_lab_cfg', hrcap: JSON.stringify({ on: '0' }) }, {}); app.heart.bpm = 0; app.heart.at = 0;
+        // 🌅 Sanftanlauf
+        await app.post({ act: 'toys_lab_cfg', soft: JSON.stringify({ on: '1', secs: 10, idle_s: 20 }) }, {});
+        const T0 = Date.now() + 60000;
+        assert.ok(L.factor(d1, 1, T0) <= 0.06, 'Start nach Ruhepause: ganz sanft');
+        assert.strictEqual(Math.round(L.factor(d1, 1, T0 + 5000) * 100), 50, 'nach der Hälfte der Anlaufzeit');
+        assert.strictEqual(L.factor(d1, 1, T0 + 11000), 1, 'danach voll');
+        assert.strictEqual(L.factor(d1, 1, T0 + 25000), 1, 'durchgehend an = kein neuer Anlauf');
+        assert.ok(L.factor(d1, 1, T0 + 60000) < 0.1, 'nach Ruhepause wieder sanft');
+        await app.post({ act: 'toys_lab_cfg', soft: JSON.stringify({ on: '0' }) }, {});
+        // ⏲ Ausklingen-Timer
+        r = await app.post({ act: 'toys_lab_fade', minutes: '10', fade_s: '60' }, {});
+        assert.ok(r.fade && r.fade.left > 590 && /klingt dann 60 s/.test(r.msg));
+        const f = L.fade, tt = f.until - 30000;
+        assert.strictEqual(Math.round(L.fadeFactor(tt) * 100), 50, 'halb ausgeklungen');
+        assert.strictEqual(L.fadeFactor(f.until - 120000), 1, 'vorher voll');
+        const stops = sent.filter(m => m.StopAllDevices).length;
+        L.tick(f.until + 1); await U.sleep(10);
+        assert.ok(!L.fade && sent.filter(m => m.StopAllDevices).length === stops + 1, 'am Ende alles aus');
+        await app.post({ act: 'toys_lab_fade', minutes: '30' }, {});
+        await app.post({ act: 'toys_consent', light: 'red' }, {});
+        assert.strictEqual(L.fade, null, 'Ampel Rot beendet den Timer sofort');
+        await app.post({ act: 'toys_consent', light: 'green' }, {});
+        await app.post({ act: 'toys_lab_fade', minutes: '30' }, {});
+        await app.post({ act: 'nsfw_panic' }, {}).catch(() => {});
+        await app.post({ act: 'toys_stop' }, {}); assert.strictEqual(L.fade, null, 'Not-Aus beendet den Timer');
+        // 👥 Gruppen
+        r = await app.post({ act: 'toys_lab_cfg', groups: JSON.stringify([{ id: 'vorne', name: 'Vorne', devices: ['Lush', 'Hush'], level: 50 }, { id: 'leer', devices: [] }]) }, {});
+        assert.ok(r.groups.length === 1 && r.groups[0].present === 2, 'leere Gruppe fällt weg');
+        t.level.set(0, 1); t.level.set(2, 1);
+        assert.strictEqual(Math.round(t.shaped(d0) * 100), 50, 'Gruppen-Anteil');
+        assert.strictEqual(Math.round(t.shaped(t.devices.get(2)) * 100), 100, 'Gerät außerhalb der Gruppe unberührt');
+        await app.post({ act: 'toys_lab_group_mute', group: 'vorne', mute: '1' }, {}); assert.strictEqual(t.shaped(d0), 0, 'stumm');
+        await app.post({ act: 'toys_lab_group_mute', group: 'vorne', mute: '0' }, {});
+        r = await app.post({ act: 'toys_lab_group_set', group: 'vorne', level: '0.8' }, {});
+        assert.ok(/Vorne: 80 %/.test(r.msg) && Math.round(t.level.get(0) * 100) === 80 && Math.round(t.level.get(1) * 100) === 80 && Math.round(t.level.get(2) * 100) === 100);
+        await app.post({ act: 'toys_lab_group_stop', group: 'vorne' }, {});
+        assert.ok(t.level.get(0) === 0 && t.level.get(1) === 0 && t.level.get(2) === 1, 'nur die Gruppe gestoppt');
+        await assert.rejects(app.post({ act: 'toys_lab_group_set', group: 'nope', level: '1' }, {}), /nicht gefunden/);
+        await app.post({ act: 'toys_lab_cfg', groups: '[]' }, {});
+        // 📊 Statistik (aus ab Werk, verschlüsselt, löscht sich selbst)
+        t.cur.set(0, 0.6); L.tick(); assert.strictEqual(L.sess, null, 'aus ab Werk: nichts aufzeichnen');
+        await app.post({ act: 'toys_lab_cfg', stats: JSON.stringify({ on: '1', keep_days: 7 }) }, {});
+        const base = Date.now(); t.lust.climaxes = 0; t.stats.patterns = 3;
+        for (let i = 0; i < 40; i++) { t.cur.set(0, i === 20 ? 0.9 : 0.5); L.tick(base + i * 1000); }
+        t.lust.climaxes = 1; t.stats.patterns = 5;
+        t.cur.set(0, 0); L.tick(base + 40000); assert.ok(L.sess, 'kurze Ruhe beendet die Sitzung nicht');
+        L.tick(base + 40000 + 121000); assert.strictEqual(L.sess, null);
+        const raw = db.setting('toylab_stats');
+        assert.ok(raw.startsWith('ENC:') && !raw.includes('peak'), 'nur verschlüsselt gespeichert');
+        r = await app.post({ act: 'toys_lab_stats' }, {});
+        assert.ok(r.stats.sessions === 1 && r.stats.avg_peak === 90 && r.stats.climaxes === 1 && r.stats.patterns === 2 && r.stats.recent[0].avg >= 50, JSON.stringify(r.stats));
+        const old = JSON.parse(enc.decrypt(raw)); old.push(Object.assign({}, old[0], { start: Math.floor(Date.now() / 1000) - 30 * 86400 })); db.setSetting('toylab_stats', enc.encrypt(JSON.stringify(old)));
+        assert.strictEqual(L.statsSummary(365).sessions, 1, 'älter als die Aufbewahrung zählt nicht');
+        for (let i = 0; i < 40; i++) { t.cur.set(0, 0.5); L.tick(base + 200000 + i * 1000); }
+        L.endSession(base + 400000);
+        assert.strictEqual(L.loadStats().length, 2, 'beim Speichern werden alte Einträge entfernt');
+        r = await app.post({ act: 'toys_lab_stats_clear' }, {}); assert.strictEqual(db.setting('toylab_stats'), '');
+        await assert.rejects(app.post({ act: 'toys_lab_nope' }, {}), /Unbekannt/);
+        // ohne Freigabe kein Zugriff mehr
+        grant18(app, false);
+        await assert.rejects(app.post({ act: 'toys_lab_fade', minutes: '5' }, {}), /Nicht freigeschaltet/);
+    } finally { t.stop(); app.tools.stop(); delete process.env.NEXUS_OWNER_HASH; }
+});
