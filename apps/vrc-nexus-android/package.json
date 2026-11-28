@@ -1,6 +1,6 @@
 {
   "name": "vrc-nexus-android",
-  "version": "8.4.0",
+  "version": "8.5.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "description": "VRC Nexus für Android (ohne PC-Funktionen wie Spiel-Log, OSC, Stream Deck)",

@@ -2,6 +2,10 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.5.0 – Stream Deck 🔞 plugin
+- **Stream Deck 🔞 plugin (website only):** a second Stream Deck plugin “VRC Nexus 🔞” is available in Nexus Web → 18+ / ERP → 🎛 Stream Deck (logged in, Verified 18+ and NSFW on only – never part of the app release). Keys: panic, toy stop, safeword, consent light (cycle or fixed, colour shown on the key), intensity set/±step, Stream Deck + dial for intensity (press = stop), start/stop patterns (incl. custom and Toy Lab patterns), surprise, private mode, “follows my avatar”, start/stop scenes, fade out, live lust meter / current intensity, and a Neo infobar with intensity bar and consent dot. Optional discreet mode with neutral words.
+- Uses the same local API and the same access key as the main plugin. It only works after you consciously allow “🔞 Stream Deck (second plugin)” in Tools → Stream Deck (off by default, only shown with Verified 18+ and NSFW on). The app checks key level, this right and the 18+ unlock on every request; without them the keys show “locked” and no 18+ data leaves the app. Panic, stop, safeword and red light always work.
+
 ### New in 8.3.3
 - 🛠 **Fixed: the 18+ tab stayed hidden after switching NSFW back on.** A panic also turns on private mode (which hides the 18+ area); switching NSFW on again now ends that private mode, so the tab is back right away.
 - 🚨 **Panic means the same everywhere:** every panic button (header, 18+ area, hand menu, controller, phone remote, watch) now runs the full panic – panic actions **and NSFW content and tools off**. Toys stop with it. To only stop the toys, use **Stop**.

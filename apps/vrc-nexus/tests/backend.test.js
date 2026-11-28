@@ -5824,6 +5824,7 @@ test('8.2: Alltag – Status-Timer (zurück, außer selbst geändert), Online-Er
         assert.ok(!r.list[0].due && r.list[0].via === 'game' && r.list[0].due_in === 11, JSON.stringify(r.list[0]));
         await app.post({ act: 'kit_care_set', uid: F2, days: '7' }, {});
         const at = new Date(); at.setHours(12, 0, 0, 0); alerts.length = 0;
+        k.store('care_day', '');   // die Hintergrund-Prüfung (tick) kann heute schon gelaufen sein – sonst hängt der Test von der Uhrzeit ab
         assert.strictEqual(k.checkCare(at), 1); assert.ok(alerts.some(([, x]) => /Kai/.test(x))); assert.strictEqual(k.checkCare(at), 0, 'einmal am Tag');
         r = await app.post({ act: 'kit_care_done', uid: F2 }, {}); assert.ok(!r.list.find(x => x.uid === F2).due && r.list.find(x => x.uid === F2).via === 'manual');
         r = await app.post({ act: 'kit_care_set', uid: F2, days: '0' }, {}); assert.strictEqual(r.list.length, 1);
