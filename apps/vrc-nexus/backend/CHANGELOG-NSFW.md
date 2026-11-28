@@ -2,6 +2,30 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.2.0
+**⌚ Watch**
+- **18+ clearance bound to pairing:** a watch takes over the PC's 18+ clearance when it is paired – only if the PC itself is unlocked. Any panic (PC button, watch, phone, other PC), switching NSFW off / expired age check on the PC, or unpairing removes it. It can be transferred again (or revoked) per watch under Tools → 📡 Devices (🔐/🔓); the per-device "hide 🔞 on this device" switch stays. Watches paired before 8.2 take it over once while the PC is unlocked.
+- **Toy remote on the watch:** strength via rotating crown or swiping, −10/+10, big STOP, fade out (toy lab, 15 s), pattern list, surprise, consent light 🟢🟡🔴, panic on the same page.
+- **🔞 tile "Nexus – remote":** strength ring, − / STOP / +, consent light and panic (double tap). Without clearance it only shows STOP and panic.
+- **🔞 complication "remote (Nexus)":** strength and consent light on any watch face (empty without clearance).
+- **Discreet mode (default on):** tiles, complications and the always-on screen show no 18+ words or symbols; 🔞 pages are left when the app goes to the background, no recents screenshot.
+- Stop, consent red, panic and safeword are always allowed from the watch, with or without clearance.
+
+**🧪 Toy lab (desktop)**
+- **Timeline patterns** with an editor (points with time, intensity and transition: linear/step/smooth, tap to add, preview) – usable everywhere patterns are (buttons, scenes, remote, watch/phone).
+- **Pattern mixer**: combine two patterns (multiply, maximum, average, alternate).
+- **Heart-rate cap**: above a chosen heart rate the maximum intensity is lowered smoothly down to a floor – a brake, not a stop.
+- **Gentle on & off**: soft start after a rest and a fade-out timer, plus "fade out now".
+- **Toy groups**: bundle devices, set a group share, mute, set or stop a whole group at once.
+- **Private statistics**: stored only on this device, encrypted, off by default, auto-deleted after N days.
+- Everything in the lab can only lower the intensity; emergency stop, panic, safeword and red light always end fade timers and soft starts immediately.
+
+**🌐 Web Nexus**
+- Toy control in the browser (Web Nexus → 18+ / ERP → Toys): own toys via VRC Nexus desktop with slider, patterns, surprise and connection test.
+- Partner links: bound to one connection, expiry (5 min – 12 h), intensity cap, allowed patterns, surprise only from 90 %, pause/resume and end by either side (both stop the toy).
+- Consent first: the partner must confirm limits and safeword before the first command; control is blocked as soon as either side loses Verified 18+ / NSFW.
+- Emergency stop always visible (also Esc / Shift+P), never rate-limited; stop on leaving the page. Per-link log only for the two people involved, deleted after 30 days.
+
 ### New in 8.1.1
 - 🛠 **Fixed: the 18+ area could still hang on "Lade …"** (e.g. "Trust & care"). The repair from 8.0.21 never shipped because the build failed – it is in this version. In addition: if a tab does not answer within 15 seconds it now shows an error with a working "Try again" button (that button did nothing in "Trust & care" before); if the area itself cannot load, it says so instead of staying empty; and letting go of a slider outside the window no longer freezes the whole area.
 

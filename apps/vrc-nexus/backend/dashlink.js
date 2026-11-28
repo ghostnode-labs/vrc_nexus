@@ -111,6 +111,17 @@ class DashLink {
     async pushState() {
         const st = this.app.game.state.snapshot();
         Object.assign(st, { osc: this.app.game.osc.active, params: Object.fromEntries(Object.entries(this.app.game.osc.params).slice(0, 64)), avatar_id: this.app.game.osc.avatarId });
+        // 8.2: Puls und Geräte (mit Akku) für „Mein Nexus“ im Web – Spielzeug nur, wenn 🔞 hier sichtbar ist (DevHub filtert)
+        const h = this.app.heart;
+        if (h && h.active && h.bpm >= 25 && h.bpm <= 250) { st.heart = Math.round(h.bpm); st.heart_src = String((h.cfg && h.cfg().source) || '').slice(0, 24); }
+        {
+            const hub = this.app.devhub || (this.app.devhub = new (require('./devhub').DevHub)(this.app));
+            const KINDS = ['watch', 'phone', 'tracker', 'controller', 'headset', 'heart', 'toy'];
+            try {
+                st.devices = hub.list().devices.filter(d => d.kind !== 'pc').slice(0, 24).map(d => ({ kind: KINDS.includes(d.kind) ? d.kind : 'other', name: String(d.name || '').slice(0, 60),
+                    battery: typeof d.battery === 'number' ? d.battery : null, charging: !!d.charging, connected: !!d.online, via: 'PC' }));
+            } catch (e) { /* Geräte sind optional */ }
+        }
         await this.req('POST', 'state', { state: st });
     }
     /** Memos abgleichen: neuere Version gewinnt (nach Änderungszeit) */
