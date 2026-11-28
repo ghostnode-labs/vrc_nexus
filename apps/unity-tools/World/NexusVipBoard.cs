@@ -17,7 +17,6 @@
 //  - Nicht vertrauenswürdige Domains laden nur, wenn der Spieler „Allow Untrusted URLs“ an hat. gist.githubusercontent.com
 //    steht auf der Liste der vertrauenswürdigen Adressen → URL 1 = Gist-Raw-Adresse, URL 2 = GhostNode direkt (Rückfall).
 //  - Alles hier ist LOKAL je Client: jeder Spieler lädt die Liste selbst. Schutz ist so stark wie das Ziel-System.
-#if UDONSHARP   // nur in Welt-Projekten mit UdonSharp
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
@@ -474,4 +473,4 @@ namespace GhostNode.VipBoard
         bool InCsv(string grp, string csv) { return csv.IndexOf("," + grp + ",") >= 0; }
     }
 }
-#endif
+

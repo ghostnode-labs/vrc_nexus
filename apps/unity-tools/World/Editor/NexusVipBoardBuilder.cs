@@ -5,7 +5,7 @@
 // „Tools ▸ GhostNode ▸ VIP-Tafel in Szene einfügen“ setzt das Prefab (oder eine frisch gebaute Tafel) in die Szene.
 // Bewusst ohne mitgeliefertes Prefab-YAML: so hängt nichts an fremden GUIDs (UdonBehaviour, TMP, UdonSharp-Programm),
 // alles wird mit den Bausteinen DEINES Projekts erzeugt. Eigene Umsetzung.
-#if UNITY_EDITOR && UDONSHARP
+#if UNITY_EDITOR
 using System.IO;
 using TMPro;
 using UdonSharp;

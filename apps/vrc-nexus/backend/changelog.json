@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.5.3",
+  "title": "",
+  "body": "- 🛠 **Fixed: VIP board package showed no menu in Unity.** The scripts were wrapped in a `UDONSHARP` compile switch that VRChat Worlds SDK projects do not set, so Unity compiled them as empty files. The switch is gone; *Tools → GhostNode → VIP-Tafel erstellen* now appears (also for the NexusToyBridge world script)."
+ },
+ {
   "version": "8.5.2",
   "title": "VIP board for VRChat worlds",
   "body": "- 🌟 **GhostNode VIP board (Unity package):** `GhostNode-VIP-Board.unitypackage` is now attached to every release. It adds an UdonSharp board that loads VIP / Ko-fi supporter lists from a GitHub Gist (trusted by VRChat) or the GhostNode website, pages through names, highlights players in the instance, fires events for VIPs and can hand the names to a door/keypad system. *Tools → GhostNode → VIP-Tafel erstellen* builds the neon board and saves it as a prefab. Requires Unity 2022.3.22f1 with the VRChat Worlds SDK (VCC).\n- The lists are managed on the GhostNode website (Admin → VIP lists), with an optional Ko-fi webhook and an automatic Gist mirror."

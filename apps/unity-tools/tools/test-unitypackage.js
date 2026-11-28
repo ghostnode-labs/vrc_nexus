@@ -82,7 +82,7 @@ if (!file) t('reproduzierbar: zweimal gebaut = gleiche Bytes', () => assert.ok(b
 const src = fs.readFileSync(path.join(__dirname, '..', 'World', 'NexusVipBoard.cs'), 'utf8');
 const code = src.split('\n').filter((l) => !/^\s*\/\//.test(l)).map((l) => l.replace(/\/\/.*$/, '').replace(/"(?:[^"\\]|\\.)*"/g, '""')).join('\n');
 t('Laufzeit-Skript: nur Udon-taugliche Sprachmittel', () => {
-  assert.ok(src.includes('#if UDONSHARP') && src.trim().endsWith('#endif'));
+  assert.ok(!src.includes('#if UDONSHARP'), 'kein UDONSHARP-Schalter (wird in VRChat-Projekten nicht gesetzt – Skript wäre sonst leer)');
   for (const [re, what] of [[/\bList\s*</, 'List<T>'], [/System\.Linq|\.Select\(|\.Where\(/, 'LINQ'], [/=>/, 'Lambda/=>'], [/\btry\b|\bcatch\b|\bthrow\b/, 'Ausnahmen'],
     [/\byield\b|\basync\b|\bawait\b/, 'yield/async'], [/\w<\w+>\s*\(/, 'generische Aufrufe'], [/\bDictionary\b|\bHashSet\b/, 'Collections'], [/\$"/, 'interpolierte Strings'],
     [/\bstatic\s+\w+\s+\w+\s*;/, 'statische Felder'], [/\bnew\s+VRCUrl\s*\(/, 'VRCUrl zur Laufzeit']]) {
@@ -94,7 +94,7 @@ t('Laufzeit-Skript: nur Udon-taugliche Sprachmittel', () => {
 });
 t('Editor-Skript: nur im Editor, offizielle UdonSharp-API, Prefab-Pfad', () => {
   const ed = fs.readFileSync(path.join(__dirname, '..', 'World', 'Editor', 'NexusVipBoardBuilder.cs'), 'utf8');
-  assert.ok(ed.includes('#if UNITY_EDITOR && UDONSHARP'));
+  assert.ok(ed.includes('#if UNITY_EDITOR') && !ed.includes('UDONSHARP\n'), 'nur UNITY_EDITOR als Schalter');
   assert.ok(ed.includes('UdonSharpUndo.AddComponent<NexusVipBoard>') && ed.includes('PrefabUtility.SaveAsPrefabAsset') && ed.includes('Assets/GhostNode/VipBoard/VipBoard.prefab'));
   assert.ok(ed.includes('[MenuItem("Tools/GhostNode/VIP-Tafel erstellen"') && ed.includes('[MenuItem("Tools/GhostNode/VIP-Tafel in Szene einfügen"'));
 });

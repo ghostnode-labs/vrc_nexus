@@ -6,7 +6,6 @@
 //
 // Verwendung: auf ein Objekt mit Collider (Is Trigger) legen. Betreten → Puls, Verlassen → Stopp. Oder Pulse()/Stop()
 // aus eigenen Udon-Skripten aufrufen (SendCustomEvent oder direkt).
-#if UDONSHARP   // nur in Welt-Projekten mit UdonSharp
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -69,4 +68,4 @@ namespace GhostNode.VrcNexus.World
         static string F(float v) { return (Mathf.Round(v * 100f) / 100f).ToString().Replace(',', '.'); }
     }
 }
-#endif
+
