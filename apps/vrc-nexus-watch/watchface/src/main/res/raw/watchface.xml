@@ -2,39 +2,109 @@
 <!--
   VRC Nexus – Zifferblatt im Watch Face Format 1 (Wear OS 4+), Nexus-Look: dunkel, Cyan/Gold.
   Uhrzeit groß, Sekunden (im Always-On aus), Datum, Puls, Akku-Bogen,
-  zwei frei belegbare Felder (Standard: Schritte und Akku – z. B. „App-Verknüpfung → Nexus Watch“ wählen).
+  zwei frei belegbare Felder (Standard: Schritte und Akku – z. B. „Nexus Watch → Puls (PC)“ oder „App-Verknüpfung → Nexus Watch“ wählen).
+  8.2: im Zifferblatt-Editor wählbar – Hintergrundbild (6 eigene Motive oder Schwarz), Farbthema (6 Paletten), Sekunden ein/aus.
+  Hintergründe erzeugt tools/make_backgrounds.py; im Always-On werden sie ausgeblendet (Akku, Einbrennen).
 -->
 <WatchFace width="450" height="450" clipShape="CIRCLE">
     <Metadata key="CLOCK_TYPE" value="DIGITAL" />
     <Metadata key="PREVIEW_TIME" value="10:08:32" />
+
+    <UserConfigurations>
+        <ListConfiguration id="bg" displayName="cfg_bg" screenReaderText="cfg_bg" icon="bg_nexus_icon" defaultValue="1">
+            <ListOption id="0" displayName="bg_none" screenReaderText="bg_none" icon="bg_none_icon" />
+            <ListOption id="1" displayName="bg_nexus" screenReaderText="bg_nexus" icon="bg_nexus_icon" />
+            <ListOption id="2" displayName="bg_grid" screenReaderText="bg_grid" icon="bg_grid_icon" />
+            <ListOption id="3" displayName="bg_neon" screenReaderText="bg_neon" icon="bg_neon_icon" />
+            <ListOption id="4" displayName="bg_ocean" screenReaderText="bg_ocean" icon="bg_ocean_icon" />
+            <ListOption id="5" displayName="bg_aurora" screenReaderText="bg_aurora" icon="bg_aurora_icon" />
+            <ListOption id="6" displayName="bg_stars" screenReaderText="bg_stars" icon="bg_stars_icon" />
+        </ListConfiguration>
+        <!-- Farbe 0 = Akzent (Kennung, Zierbogen), Farbe 1 = Highlight (Sekunden, Akku-Bogen) -->
+        <ColorConfiguration id="theme" displayName="cfg_theme" screenReaderText="cfg_theme" defaultValue="0">
+            <ColorOption id="0" displayName="theme_cyber" screenReaderText="theme_cyber" colors="#ff38d5e6 #fff3c262" />
+            <ColorOption id="1" displayName="theme_neon" screenReaderText="theme_neon" colors="#ffff3dcb #ffb57bff" />
+            <ColorOption id="2" displayName="theme_ocean" screenReaderText="theme_ocean" colors="#ff3aa0ff #ff5ff2e0" />
+            <ColorOption id="3" displayName="theme_forest" screenReaderText="theme_forest" colors="#ff4ade80 #ffe9d57a" />
+            <ColorOption id="4" displayName="theme_sunset" screenReaderText="theme_sunset" colors="#ffff8a4c #ffffd166" />
+            <ColorOption id="5" displayName="theme_white" screenReaderText="theme_white" colors="#ffffffff #ffd0d0d0" />
+        </ColorConfiguration>
+        <BooleanConfiguration id="seconds" displayName="cfg_seconds" screenReaderText="cfg_seconds" defaultValue="TRUE" />
+    </UserConfigurations>
+
     <Scene backgroundColor="#ff040609">
 
+        <!-- 8.2: Hintergrundbild (Auswahl im Zifferblatt-Editor), Option 0 = reines Schwarz -->
+        <ListConfiguration id="bg">
+            <ListOption id="0">
+                <PartDraw x="0" y="0" width="450" height="450">
+                    <Rectangle x="0" y="0" width="450" height="450">
+                        <Fill color="#ff000000" />
+                    </Rectangle>
+                </PartDraw>
+            </ListOption>
+            <ListOption id="1">
+                <PartImage x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Image resource="bg_nexus" />
+                </PartImage>
+            </ListOption>
+            <ListOption id="2">
+                <PartImage x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Image resource="bg_grid" />
+                </PartImage>
+            </ListOption>
+            <ListOption id="3">
+                <PartImage x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Image resource="bg_neon" />
+                </PartImage>
+            </ListOption>
+            <ListOption id="4">
+                <PartImage x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Image resource="bg_ocean" />
+                </PartImage>
+            </ListOption>
+            <ListOption id="5">
+                <PartImage x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Image resource="bg_aurora" />
+                </PartImage>
+            </ListOption>
+            <ListOption id="6">
+                <PartImage x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Image resource="bg_stars" />
+                </PartImage>
+            </ListOption>
+        </ListConfiguration>
+
         <!-- Außenring -->
-        <PartDraw x="0" y="0" width="450" height="450">
+        <PartDraw x="0" y="0" width="450" height="450" tintColor="[CONFIGURATION.theme.0]">
             <Arc centerX="225" centerY="225" width="424" height="424" startAngle="0" endAngle="360">
-                <Stroke color="#3338d5e6" thickness="5" />
+                <Stroke color="#33ffffff" thickness="5" />
             </Arc>
         </PartDraw>
         <!-- Akku-Bogen rechts (20° … 160°) -->
-        <PartDraw x="0" y="0" width="450" height="450">
+        <PartDraw x="0" y="0" width="450" height="450" tintColor="[CONFIGURATION.theme.1]">
             <Arc centerX="225" centerY="225" width="424" height="424" startAngle="20" endAngle="160">
-                <Stroke color="#ffd6a73e" thickness="5" cap="ROUND" />
+                <Stroke color="#ffffffff" thickness="5" cap="ROUND" />
                 <Transform target="endAngle" value="20 + [BATTERY_PERCENT] * 1.4" />
             </Arc>
         </PartDraw>
         <!-- Zierbogen links -->
-        <PartDraw x="0" y="0" width="450" height="450">
+        <PartDraw x="0" y="0" width="450" height="450" tintColor="[CONFIGURATION.theme.0]">
             <Arc centerX="225" centerY="225" width="424" height="424" startAngle="200" endAngle="340">
-                <Stroke color="#9938d5e6" thickness="5" cap="ROUND" />
+                <Stroke color="#99ffffff" thickness="5" cap="ROUND" />
             </Arc>
         </PartDraw>
 
         <!-- Kennung oben -->
-        <PartText x="100" y="58" width="250" height="34">
+        <PartText x="100" y="58" width="250" height="34" tintColor="[CONFIGURATION.theme.0]">
             <Text align="CENTER">
-                <Font family="SYNC_TO_DEVICE" size="22" weight="BOLD" color="#ff38d5e6" letterSpacing="0.25">
-                    <Template>VRC NEXUS</Template>
-                </Font>
+                <Font family="SYNC_TO_DEVICE" size="22" weight="BOLD" color="#ffffffff">VRC NEXUS</Font>
             </Text>
         </PartText>
 
@@ -53,13 +123,26 @@
                 <Font family="SYNC_TO_DEVICE" size="112" weight="SEMI_BOLD" color="#ffe2e8f0" />
             </TimeText>
         </DigitalClock>
-        <!-- Sekunden (im Always-On ausgeblendet) -->
-        <DigitalClock x="0" y="258" width="450" height="40">
-            <TimeText format="ss" align="CENTER" x="0" y="0" width="450" height="40">
-                <Variant mode="AMBIENT" target="alpha" value="0" />
-                <Font family="SYNC_TO_DEVICE" size="30" weight="MEDIUM" color="#fff3c262" />
-            </TimeText>
-        </DigitalClock>
+        <!-- Sekunden (im Always-On ausgeblendet; 8.2: im Editor abschaltbar, Farbe = Highlight des Themas) -->
+        <BooleanConfiguration id="seconds">
+            <BooleanOption id="TRUE">
+                <Group name="seconds" x="0" y="258" width="450" height="40" tintColor="[CONFIGURATION.theme.1]">
+                    <DigitalClock x="0" y="0" width="450" height="40">
+                        <TimeText format="ss" align="CENTER" x="0" y="0" width="450" height="40">
+                            <Variant mode="AMBIENT" target="alpha" value="0" />
+                            <Font family="SYNC_TO_DEVICE" size="30" weight="MEDIUM" color="#ffffffff" />
+                        </TimeText>
+                    </DigitalClock>
+                </Group>
+            </BooleanOption>
+            <BooleanOption id="FALSE">
+                <PartDraw x="0" y="258" width="450" height="40">
+                    <Rectangle x="0" y="0" width="1" height="1">
+                        <Fill color="#00000000" />
+                    </Rectangle>
+                </PartDraw>
+            </BooleanOption>
+        </BooleanConfiguration>
 
         <!-- Puls -->
         <PartText x="150" y="360" width="150" height="40">
@@ -71,13 +154,37 @@
         </PartText>
 
         <!-- Feld links (Standard: Schritte) -->
-        <ComplicationSlot x="52" y="296" width="96" height="96" slotId="0" displayName="Links" supportedTypes="SHORT_TEXT SMALL_IMAGE MONOCHROMATIC_IMAGE" isCustomizable="TRUE">
+        <ComplicationSlot x="52" y="296" width="96" height="96" slotId="0" displayName="slot_left" supportedTypes="SHORT_TEXT RANGED_VALUE SMALL_IMAGE MONOCHROMATIC_IMAGE" isCustomizable="TRUE">
             <DefaultProviderPolicy defaultSystemProvider="STEP_COUNT" defaultSystemProviderType="SHORT_TEXT" />
             <BoundingOval x="0" y="0" width="96" height="96" />
             <Complication type="SHORT_TEXT">
                 <PartDraw x="0" y="0" width="96" height="96">
                     <Arc centerX="48" centerY="48" width="90" height="90" startAngle="0" endAngle="360">
                         <Stroke color="#5538d5e6" thickness="3" />
+                    </Arc>
+                </PartDraw>
+                <PartImage x="33" y="14" width="30" height="30">
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <PartText x="4" y="46" width="88" height="32">
+                    <Text align="CENTER" ellipsis="TRUE">
+                        <Font family="SYNC_TO_DEVICE" size="24" weight="MEDIUM" color="#ffe2e8f0">
+                            <Template>%s<Parameter expression="[COMPLICATION.TEXT]" /></Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+            <!-- 8.2: Bereichswert als Ring (z. B. Nexus-Puls, Spielzeug-Stärke, Akku) -->
+            <Complication type="RANGED_VALUE">
+                <PartDraw x="0" y="0" width="96" height="96">
+                    <Arc centerX="48" centerY="48" width="88" height="88" startAngle="0" endAngle="360">
+                        <Stroke color="#33ffffff" thickness="4" />
+                    </Arc>
+                </PartDraw>
+                <PartDraw x="0" y="0" width="96" height="96">
+                    <Arc centerX="48" centerY="48" width="88" height="88" startAngle="0" endAngle="360">
+                        <Stroke color="#ff38d5e6" thickness="5" cap="ROUND" />
+                        <Transform target="endAngle" value="clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1) * 360" />
                     </Arc>
                 </PartDraw>
                 <PartImage x="33" y="14" width="30" height="30">
@@ -104,13 +211,37 @@
         </ComplicationSlot>
 
         <!-- Feld rechts (Standard: Akku) -->
-        <ComplicationSlot x="302" y="296" width="96" height="96" slotId="1" displayName="Rechts" supportedTypes="SHORT_TEXT SMALL_IMAGE MONOCHROMATIC_IMAGE" isCustomizable="TRUE">
+        <ComplicationSlot x="302" y="296" width="96" height="96" slotId="1" displayName="slot_right" supportedTypes="SHORT_TEXT RANGED_VALUE SMALL_IMAGE MONOCHROMATIC_IMAGE" isCustomizable="TRUE">
             <DefaultProviderPolicy defaultSystemProvider="WATCH_BATTERY" defaultSystemProviderType="SHORT_TEXT" />
             <BoundingOval x="0" y="0" width="96" height="96" />
             <Complication type="SHORT_TEXT">
                 <PartDraw x="0" y="0" width="96" height="96">
                     <Arc centerX="48" centerY="48" width="90" height="90" startAngle="0" endAngle="360">
                         <Stroke color="#55f3c262" thickness="3" />
+                    </Arc>
+                </PartDraw>
+                <PartImage x="33" y="14" width="30" height="30">
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <PartText x="4" y="46" width="88" height="32">
+                    <Text align="CENTER" ellipsis="TRUE">
+                        <Font family="SYNC_TO_DEVICE" size="24" weight="MEDIUM" color="#ffe2e8f0">
+                            <Template>%s<Parameter expression="[COMPLICATION.TEXT]" /></Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+            <!-- 8.2: Bereichswert als Ring (z. B. Nexus-Puls, Spielzeug-Stärke, Akku) -->
+            <Complication type="RANGED_VALUE">
+                <PartDraw x="0" y="0" width="96" height="96">
+                    <Arc centerX="48" centerY="48" width="88" height="88" startAngle="0" endAngle="360">
+                        <Stroke color="#33ffffff" thickness="4" />
+                    </Arc>
+                </PartDraw>
+                <PartDraw x="0" y="0" width="96" height="96">
+                    <Arc centerX="48" centerY="48" width="88" height="88" startAngle="0" endAngle="360">
+                        <Stroke color="#fff3c262" thickness="5" cap="ROUND" />
+                        <Transform target="endAngle" value="clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1) * 360" />
                     </Arc>
                 </PartDraw>
                 <PartImage x="33" y="14" width="30" height="30">

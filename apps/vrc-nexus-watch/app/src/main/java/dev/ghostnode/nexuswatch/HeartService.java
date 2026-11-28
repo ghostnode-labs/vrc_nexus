@@ -80,6 +80,24 @@ public class HeartService extends Service implements SensorEventListener {
             Notes.handle(this, r);   // 6.5: Meldungen vom PC auch im Hintergrund
             sentAt = System.currentTimeMillis();
         } catch (Exception ex) { error = String.valueOf(ex.getMessage()); }
+        alarm();
+        if (System.currentTimeMillis() - pushAt > 30000) { pushAt = System.currentTimeMillis(); Live.push(this, true); }   // 8.2: Puls-Komplikation/Kachel mitziehen
+    }
+
+    /** 8.2: Puls-Alarm – über der eingestellten Grenze vibrieren und melden (höchstens alle 2 min) */
+    private long alarmAt = 0, pushAt = 0;
+    private void alarm() {
+        int lim = Nexus.prefs(this).getInt("hr_alarm", 0);
+        if (lim <= 0 || bpm < lim || System.currentTimeMillis() - bpmAt > 15000 || System.currentTimeMillis() - alarmAt < 120000) return;
+        alarmAt = System.currentTimeMillis();
+        try { getSystemService(android.os.Vibrator.class).vibrate(android.os.VibrationEffect.createWaveform(new long[]{ 0, 250, 150, 250, 150, 250 }, -1)); } catch (Exception ignored) { }
+        try {
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            nm.createNotificationChannel(new NotificationChannel("hralarm", "Puls-Alarm", NotificationManager.IMPORTANCE_HIGH));
+            PendingIntent open = PendingIntent.getActivity(this, 5, new Intent(this, MainActivity.class).putExtra("screen", "heart"), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            nm.notify(5, new Notification.Builder(this, "hralarm").setSmallIcon(R.drawable.ic_launcher).setContentTitle("♥ Puls " + bpm)
+                .setContentText("Über deiner Grenze (" + lim + ") – kurz durchatmen.").setContentIntent(open).setAutoCancel(true).build());
+        } catch (Exception ignored) { }
     }
 
     @Override public void onDestroy() {

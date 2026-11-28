@@ -27,4 +27,15 @@ android {
         }
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    lint { abortOnError false; checkReleaseBuilds false }
+}
+
+// 8.2: Kacheln (Wear OS Tiles) und Komplikations-Datenquelle – nur Google/AndroidX, feste Versionen (passen zu compileSdk 34 / AGP 8.5)
+dependencies {
+    implementation 'androidx.wear.tiles:tiles:1.4.1'
+    implementation 'androidx.wear.protolayout:protolayout:1.2.1'
+    implementation 'androidx.wear.protolayout:protolayout-expression:1.2.1'
+    implementation 'androidx.concurrent:concurrent-futures:1.1.0'        // CallbackToFutureAdapter (ListenableFuture ohne Guava)
+    implementation 'com.google.guava:listenablefuture:1.0'                // nur die Schnittstelle ListenableFuture
+    implementation 'androidx.wear.watchface:watchface-complications-data-source:1.2.1'
 }

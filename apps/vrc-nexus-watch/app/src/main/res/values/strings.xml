@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Nexus Watch</string>
+    <!-- 8.2: Kacheln und Komplikationen (Namen erscheinen in der Auswahl der Uhr – neutral, ohne 🔞) -->
+    <string name="tile_status">Nexus – Puls &amp; Status</string>
+    <string name="tile_quick">Nexus – Schnellaktionen</string>
+    <string name="tile_toys">Nexus – Fernbedienung</string>
+    <string name="comp_heart">Puls (Nexus)</string>
+    <string name="comp_status">VRChat (Nexus)</string>
+    <string name="comp_toys">Fernbedienung (Nexus)</string>
 </resources>

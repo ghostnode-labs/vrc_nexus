@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 final class Nexus {
     static final int DISC_PORT = 17873, DEF_PORT = 17874;
     private static volatile Network wifi;
+    private static boolean wifiAsked = false;
 
     static SharedPreferences prefs(Context c) { return c.getSharedPreferences("nexus", Context.MODE_PRIVATE); }
     static boolean paired(Context c) { return !prefs(c).getString("token", "").isEmpty(); }
@@ -34,6 +35,8 @@ final class Nexus {
 
     /** Wear OS nimmt sonst gern die Bluetooth-Verbindung übers Handy – für das Heimnetz WLAN anfordern */
     static void wantWifi(Context c) {
+        synchronized (Nexus.class) { if (wifiAsked) return; wifiAsked = true; }   // 8.2: einmal je Prozess (Kacheln/Komplikationen rufen das oft)
+        c = c.getApplicationContext();
         try {
             ConnectivityManager cm = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkRequest req = new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build();
@@ -128,5 +131,8 @@ final class Nexus {
             .putString("pc", r.optString("name", "PC")).putBoolean("lost", false).apply();
         return r;
     }
-    static void unpair(Context c) { prefs(c).edit().clear().apply(); }
+    static void unpair(Context c) {
+        // 8.2: nur Kopplung & Zustand löschen – eigene Einstellungen (Intervall, Diskret, Alarm …) bleiben
+        prefs(c).edit().remove("token").remove("host").remove("port").remove("pc").remove("lost").remove("st_json").remove("st_at").apply();
+    }
 }

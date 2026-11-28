@@ -198,6 +198,20 @@ jobs:
             printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/nexus.keystore"
             echo "NEXUS_KEYSTORE=$RUNNER_TEMP/nexus.keystore" >> "$GITHUB_ENV"
           fi
+      # 8.2: Zifferblatt gegen die offizielle WFF-Spezifikation (XSD, Google) prüfen – Fehler im XML fallen sonst erst auf der Uhr auf
+      - name: WFF-Spezifikation holen
+        uses: actions/checkout@v4
+        with:
+          repository: google/watchface
+          ref: 18d3844de1729f0c5128f59cfa359b0e34b66612
+          path: wff-spec
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Zifferblatt prüfen (WFF 1)
+        run: |
+          python -m pip install --quiet xmlschema==4.3.2
+          python apps/vrc-nexus-watch/watchface/tools/validate_wff.py wff-spec/third_party/wff/specification/documents/1/watchface.xsd
       - name: Zifferblatt bauen
         run: gradle -p apps/vrc-nexus-watch :watchface:assembleRelease --no-daemon
       - name: Umbenennen

@@ -4042,6 +4042,9 @@ test('5.2: VRC Nexus Watch – Suche per UDP, Kopplung mit Code (Fehlversuche), 
     assert.strictEqual(app.nsfw.access().unlocked, false, '5.3: Panik von der Uhr schaltet NSFW ganz aus (wie der Knopf im Client)');
     delete process.env.NEXUS_ACCT_BASE;
     grant18(app);
+    // 8.2: Panik entzieht der Uhr die 18+-Freigabe – erst nach erneutem Übertragen am PC wieder da
+    x = await call('/watch/state', undefined, tok); assert.ok(!x.j.nsfw && /Freigabe/.test(x.j.nsfw_reason), '8.2: nach Panik keine Freigabe: ' + x.j.nsfw_reason);
+    await app.post({ act: 'watch_dev_adult', id: app.watch.cfg().devices[0].id, on: '1' }, {});
     x = await call('/watch/state', undefined, tok); assert.ok(x.j.nsfw && x.j.private, '🔞-Knöpfe bleiben im Privat-Modus (Panik immer erreichbar)');
     await call('/watch/action', { a: 'allclear' }, tok);
     x = await call('/watch/action', { a: 'private', on: true }, tok); assert.ok(x.j.ok && app.nsfw.private);
@@ -4060,6 +4063,100 @@ test('5.2: VRC Nexus Watch – Suche per UDP, Kopplung mit Code (Fehlversuche), 
     await app.post({ act: 'watch_cfg', on: '0' }, {});
     assert.ok(!app.watch.server);
     app.tools.stop(); app.heart && app.heart.stop();
+});
+
+test('8.2: Uhr – 18+-Freigabe beim Koppeln (nur wenn der PC frei ist, weg bei Panik/NSFW aus/Entkoppeln), Spielzeug von der Uhr, Schnelltexte, Makros', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const { cleanQuick, QUICK } = require('../backend/watch');
+    const OWNER = 'usr_' + '7'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const app = new NexusApp({ db: await openDatabase(null), crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-w82-')) } });
+    app.game.osc.stopListen(); app.tools.alert = () => {};
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'Luna' });
+    const chat = []; app.game.oscSend = async (kind, input) => { chat.push([kind, input.text]); return 1; };
+    const PORT = 18900 + Math.floor(Math.random() * 90), B = 'http://127.0.0.1:' + PORT;
+    const call = (p, body, tok) => fetch(B + p, { method: body === undefined ? 'GET' : 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { 'X-Nexus-Watch': tok } : {}), body: body === undefined ? undefined : JSON.stringify(body) }).then(async x => ({ status: x.status, j: await x.json() }));
+    try {
+        await app.post({ act: 'watch_cfg', on: '1', port: String(PORT) }, {});
+        for (let i = 0; i < 50 && !app.watch.server.listening; i++) await U.sleep(10);
+        // PC nicht frei → Uhr bekommt keine Freigabe, auch nicht, wenn der PC später frei wird
+        let w1 = (await call('/watch/pair', { pin: app.watch.pin, name: 'Uhr 1' })).j;
+        assert.strictEqual(w1.adult, false);
+        grant18(app);
+        let x = await call('/watch/state', undefined, w1.token);
+        assert.ok(!x.j.nsfw && x.j.toys === null && x.j.adult === false && /Freigabe fehlt/.test(x.j.nsfw_reason), JSON.stringify(x.j.nsfw_reason));
+        x = await call('/watch/action', { a: 'toy_level', level: 50 }, w1.token); assert.ok(x.status === 400 && /Freigabe/.test(x.j.error), '🔞 ohne Freigabe gesperrt');
+        x = await call('/watch/action', { a: 'toy_fade' }, w1.token); assert.ok(x.status === 400 && /Freigabe/.test(x.j.error), 'Ausklingen nur mit Freigabe');
+        const { PHONE_ACTS } = require('../backend/watch');
+        assert.ok(PHONE_ACTS.has('toys_lab_fade_now') && PHONE_ACTS.has('toys_lab_group_stop'), 'Spielzeug-Labor vom Handy erreichbar');
+        x = await call('/watch/action', { a: 'toys_stop' }, w1.token); assert.strictEqual(x.status, 200, 'Stopp geht immer');
+        x = await call('/watch/action', { a: 'consent', light: 'red' }, w1.token); assert.strictEqual(x.status, 200, 'Ampel Rot geht immer');
+        x = await call('/watch/action', { a: 'consent', light: 'green' }, w1.token); assert.strictEqual(x.status, 400);
+        // PC frei → Kopplung übernimmt die Freigabe
+        const w2 = (await call('/watch/pair', { pin: app.watch.pin, name: 'Uhr 2' })).j;
+        assert.strictEqual(w2.adult, true);
+        x = await call('/watch/state', undefined, w2.token);
+        assert.ok(x.j.nsfw && x.j.adult && x.j.toys && Array.isArray(x.j.toys.patterns) && x.j.toys.patterns.some(p => p.id === 'welle'), 'Musterliste für die Uhr');
+        // Spielzeug von der Uhr
+        const t = app.toys, sent = [];
+        t.ws = { readyState: 1 }; t.req = async m => { sent.push(m); return {}; };
+        t.devices.set(0, { index: 0, name: 'Testgerät', motors: [{ index: 0, type: 'Vibrate', steps: 100 }] });
+        x = await call('/watch/action', { a: 'toy_level', level: 140 }, w2.token); assert.ok(x.j.ok && /100 %/.test(x.j.msg), 'Stärke begrenzt');
+        x = await call('/watch/action', { a: 'toy_level', level: 40 }, w2.token); assert.strictEqual(x.j.state.toys.level, 40);
+        x = await call('/watch/action', { a: 'toy_pattern', id: 'welle' }, w2.token); assert.ok(x.j.ok && x.j.state.toys.pattern && x.j.state.toys.pattern.id === 'welle');
+        x = await call('/watch/action', { a: 'toy_pattern', id: 'gibtsnicht' }, w2.token); assert.ok(x.status === 400 && /Unbekannt/.test(x.j.error));
+        x = await call('/watch/action', { a: 'toy_pattern_stop' }, w2.token); assert.strictEqual(x.j.state.toys.pattern, null);
+        x = await call('/watch/action', { a: 'toy_surprise' }, w2.token); assert.ok(x.j.state.toys.pattern && /Überraschung/.test(x.j.state.toys.pattern.name), 'Muster bleibt geheim');
+        x = await call('/watch/action', { a: 'toys_stop' }, w2.token); assert.strictEqual(x.j.state.toys.pattern, null);
+        // Geräte-Schalter „🔞 ausblenden“ bleibt erhalten
+        const id2 = app.watch.cfg().devices.find(d => d.name === 'Uhr 2').id;
+        await app.post({ act: 'watch_dev_nsfw', id: id2, on: '0' }, {});
+        x = await call('/watch/state', undefined, w2.token); assert.ok(!x.j.nsfw && /ausgeblendet/.test(x.j.nsfw_reason));
+        await app.post({ act: 'watch_dev_nsfw', id: id2, on: '1' }, {});
+        // am PC übertragen / entziehen
+        const id1 = app.watch.cfg().devices.find(d => d.name === 'Uhr 1').id;
+        let r = await app.post({ act: 'watch_dev_adult', id: id1, on: '1' }, {});
+        assert.ok(/übertragen/.test(r.msg) && r.devices.find(d => d.id === id1).adult === true);
+        x = await call('/watch/state', undefined, w1.token); assert.ok(x.j.nsfw);
+        r = await app.post({ act: 'watch_dev_adult', id: id1, on: '0' }, {}); assert.strictEqual(r.devices.find(d => d.id === id1).adult, false);
+        await assert.rejects(app.post({ act: 'watch_dev_adult', id: 'nope', on: '1' }, {}), /nicht gefunden/);
+        // Panik am PC (nicht nur über die Uhr) entzieht allen Uhren die Freigabe
+        await app.post({ act: 'nsfw_panic' }, {});
+        assert.ok(app.watch.cfg().devices.every(d => !d.adult), 'Panik am PC → alle Uhren ohne Freigabe');
+        x = await call('/watch/state', undefined, w2.token); assert.ok(!x.j.nsfw && /Panik/.test(x.j.nsfw_reason), x.j.nsfw_reason);
+        await app.post({ act: 'nsfw_allclear' }, {});
+        await app.post({ act: 'watch_dev_adult', id: id2, on: '1' }, {});
+        // PC nicht mehr frei → Übertragen verweigert, bestehende Freigabe erlischt beim nächsten Abruf
+        grant18(app, false);
+        await assert.rejects(app.post({ act: 'watch_dev_adult', id: id1, on: '1' }, {}), /Erst am PC 18\+ freischalten/);
+        await call('/watch/state', undefined, w2.token);
+        assert.ok(!app.watch.cfg().devices.find(d => d.id === id2).adult, 'PC-Freigabe weg → Uhr-Freigabe weg');
+        grant18(app);
+        x = await call('/watch/state', undefined, w2.token); assert.ok(!x.j.nsfw, 'kommt nicht von selbst zurück');
+        // vor 8.2 gekoppelte Uhr (ohne Feld) übernimmt einmalig, solange der PC frei ist
+        const c = app.watch.cfg(); delete c.devices.find(d => d.id === id1).adult; app.watch.saveCfg({ devices: c.devices });
+        x = await call('/watch/state', undefined, w1.token); assert.ok(x.j.nsfw && app.watch.cfg().devices.find(d => d.id === id1).adult > 0);
+        // Schnelltexte
+        assert.deepStrictEqual(x.j.quick, QUICK);
+        x = await call('/watch/action', { a: 'chat', i: 1 }, w1.token); assert.ok(x.j.ok); assert.deepStrictEqual(chat.pop(), ['chatbox', QUICK[1]]);
+        assert.strictEqual((await call('/watch/action', { a: 'chat', i: 99 }, w1.token)).status, 400);
+        r = await app.post({ act: 'watch_cfg', quick: 'Hi\n\n  Bin da  \n' }, {}); assert.deepStrictEqual(r.quick, ['Hi', 'Bin da']);
+        assert.throws(() => cleanQuick(Array(9).fill('x')), /Höchstens 8/);
+        assert.strictEqual(cleanQuick(''), null, 'leer = Standard');
+        assert.strictEqual(cleanQuick(['a'.repeat(200)])[0].length <= 80, true);
+        // Makros & Presets
+        app.macros.save('Winken', 'wait 1');
+        let ran = ''; app.macros.run = async id => { ran = id; return { steps: 1 }; };
+        x = await call('/watch/action', { a: 'shortcuts' }, w1.token);
+        assert.ok(x.j.ok && x.j.macros.length === 1 && x.j.macros[0].name === 'Winken' && Array.isArray(x.j.presets));
+        x = await call('/watch/action', { a: 'macro', id: x.j.macros[0].id }, w1.token); assert.ok(x.j.ok && /Winken/.test(x.j.msg) && ran);
+        assert.strictEqual((await call('/watch/action', { a: 'macro', id: 'mX' }, w1.token)).status, 400);
+        // Entkoppeln von der Uhr aus: Gerät weg, Schlüssel ungültig
+        x = await call('/watch/action', { a: 'unpair' }, w1.token); assert.ok(x.j.ok);
+        assert.ok(!app.watch.cfg().devices.some(d => d.id === id1));
+        assert.strictEqual((await call('/watch/state', undefined, w1.token)).status, 401);
+    } finally { app.watch.stop(); app.toys && app.toys.stop(); app.tools.stop(); app.heart && app.heart.stop(); delete process.env.NEXUS_OWNER_HASH; }
 });
 
 test('5.2.3: Handy ↔ PC über die Uhr-Kopplung (feste Aktionsliste), Themen & Hintergrund der Uhr, Uhr finden', async () => {
@@ -5407,6 +5504,13 @@ test('8.0.19: Uhren-Installer per ADB – adb laden (nur adb entpackt), koppeln/
         assert.ok(calls.some(c => c.includes('DEBUG_SURFACE') && c.includes('set-watchface') && c.includes('dev.ghostnode.nexuswatch.face')), 'als aktives Zifferblatt gesetzt');
         assert.ok(st.log.some(l => /Zifferblatt/.test(l)), 'Hinweis im Protokoll');
         assert.ok(!fetched.some(u => u.includes('evil')));
+        // 8.2: Kacheln per ADB hinzufügen – nur eigene Kacheln, nur Uhren, 🔞-Kachel nur auf Wunsch
+        st = await w.action('watch_adb_tiles', { serial: '192.168.1.50:41234' });
+        assert.match(st.msg, /2 Kachel/);
+        assert.ok(calls.some(c => c.includes('add-tile') && c.endsWith('dev.ghostnode.nexuswatch/dev.ghostnode.nexuswatch.StatusTile')));
+        assert.ok(!calls.some(c => c.includes('ToyTile')), '🔞-Kachel nicht ungefragt');
+        await assert.rejects(w.action('watch_adb_tiles', { serial: '192.168.1.50:41234', tiles: 'status,evil' }), /Unbekannte Kachel/);
+        await assert.rejects(w.action('watch_adb_tiles', { serial: 'RFAB12' }), /keine Wear-OS-Uhr/);
         installOut = 'Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match]';
         await assert.rejects(w.action('watch_adb_install', { serial: '192.168.1.50:41234' }), /andere[rn]? Signatur/);
         // readZip: Filter + eigene Grenzen, Standard bleibt streng

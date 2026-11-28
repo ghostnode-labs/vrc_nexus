@@ -41,5 +41,42 @@
         <service android:name=".HeartService" android:exported="false" android:foregroundServiceType="health" />
         <receiver android:name=".NoteReceiver" android:exported="false" />
         <service android:name=".UpdateJob" android:exported="false" android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- 8.2: Kacheln (Wear OS Tiles) – nach links/rechts vom Zifferblatt wischen -->
+        <service android:name=".StatusTile" android:exported="true" android:label="@string/tile_status" android:icon="@drawable/ic_nexus"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter><action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" /></intent-filter>
+            <meta-data android:name="androidx.wear.tiles.PREVIEW" android:resource="@drawable/tile_status" />
+        </service>
+        <service android:name=".QuickTile" android:exported="true" android:label="@string/tile_quick" android:icon="@drawable/ic_nexus"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter><action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" /></intent-filter>
+            <meta-data android:name="androidx.wear.tiles.PREVIEW" android:resource="@drawable/tile_quick" />
+        </service>
+        <service android:name=".ToyTile" android:exported="true" android:label="@string/tile_toys" android:icon="@drawable/ic_nexus"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter><action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" /></intent-filter>
+            <meta-data android:name="androidx.wear.tiles.PREVIEW" android:resource="@drawable/tile_toys" />
+        </service>
+
+        <!-- 8.2: Komplikations-Datenquellen – auf jedes Zifferblatt legbar (Werte kommen zusätzlich sofort per Update-Anfrage) -->
+        <service android:name=".HeartComplication" android:exported="true" android:label="@string/comp_heart" android:icon="@drawable/ic_heart"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter><action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" /></intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT,RANGED_VALUE" />
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300" />
+        </service>
+        <service android:name=".StatusComplication" android:exported="true" android:label="@string/comp_status" android:icon="@drawable/ic_nexus"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter><action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" /></intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT,LONG_TEXT" />
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="600" />
+        </service>
+        <service android:name=".ToyComplication" android:exported="true" android:label="@string/comp_toys" android:icon="@drawable/ic_nexus"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter><action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" /></intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT,RANGED_VALUE" />
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300" />
+        </service>
     </application>
 </manifest>
