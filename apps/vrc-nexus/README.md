@@ -27,6 +27,7 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 ## Changelog
 
 ### New in 8.3.3
+- Small fixes and more consistent safety buttons across PC, phone and watch.
 - 🔞 ***
 
 ### New in 8.3.2
