@@ -91,7 +91,7 @@
         let h = '<div class="ns-top"><span class="muted small">🚨 ' + esc(T('Panik-Knopf: oben in der Kopfzeile')) + '</span>'
             + '<button type="button" class="btn ' + (st.private ? 'btn-gold' : '') + '" data-ns="private">🕶 Privat-Modus ' + (st.private ? 'AN' : 'aus') + '</button>'
             + '<span class="muted small">' + (a.owner ? '👑 Besitzer' : '🔓 freigeschaltet' + (a.exp ? ' bis ' + esc(new Date(a.exp * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE')) : '')) + '</span></div>';
-        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['col', '🗂 Sammlung', has('nsfw') && window.NexusNsfwCol], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['safe2', '🛡 ' + T('Grenzen & Sicherheit'), window.NexusNsfw4], ['fantasy', '🎭 ' + T('Fantasien'), window.NexusNsfw4], ['care', '💗 ' + T('Vertrauen & Fürsorge'), window.NexusNsfw5], ['safety', '🛡 ' + T('Sicherheit'), window.NexusNsfw6], ['couple', '💞 ' + T('Paar-Profil'), window.NexusAdult], ['lib', '📚 ' + T('Vorlagen'), window.NexusAdult], ['help', '❓ ' + T('Hilfe'), window.NexusNsfw4], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
+        const tabs = [['main', '🏠 Übersicht'], ['toys', '🎮 Spielzeug', has('toys') && t], ['lust', '🔥 Lust & PCS', has('toys') && t && window.NexusNsfw2], ['col', '🗂 Sammlung', has('nsfw') && window.NexusNsfwCol], ['fun', '🎲 Spielereien'], ['x3', '✨ Extras', has('toys') && t && window.NexusNsfw3], ['lab', '🧪 ' + T('Labor'), has('toys') && t && window.NexusNsfw7], ['net', '🌐 Fernsteuerung', has('toys') && st.tremote], ['safe2', '🛡 ' + T('Grenzen & Sicherheit'), window.NexusNsfw4], ['fantasy', '🎭 ' + T('Fantasien'), window.NexusNsfw4], ['care', '💗 ' + T('Vertrauen & Fürsorge'), window.NexusNsfw5], ['safety', '🛡 ' + T('Sicherheit'), window.NexusNsfw6], ['couple', '💞 ' + T('Paar-Profil'), window.NexusAdult], ['lib', '📚 ' + T('Vorlagen'), window.NexusAdult], ['help', '❓ ' + T('Hilfe'), window.NexusNsfw4], ['phone', '📱 Handy', has('remote') && r]].filter(x => x.length < 3 || x[2]);
         if (!tabs.some(x => x[0] === sub)) sub = 'main';
         h += '<div class="chips ns-sub">' + tabs.map(([k, n]) => '<button type="button" class="chip' + (sub === k ? ' on' : '') + '" data-nsub="' + k + '">' + n + '</button>').join('') + '</div>';
         h += '<div class="nc-grid">';
@@ -103,6 +103,7 @@
         if (['safe2', 'fantasy', 'help'].includes(sub) && window.NexusNsfw4) h += window.NexusNsfw4.html(sub, render);   // 6.7
         if (sub === 'care' && window.NexusNsfw5) h += window.NexusNsfw5.html(sub, render);   // 7.3
         if (sub === 'safety' && window.NexusNsfw6) h += window.NexusNsfw6.html(sub, render);   // 8.2
+        if (sub === 'lab' && has('toys') && t && window.NexusNsfw7) h += window.NexusNsfw7.html(t, render);   // 8.2 Spielzeug-Labor
         if ((sub === 'couple' || sub === 'lib') && window.NexusAdult) { h += '<div class="nw ns-wide" id="nxAdultBox"></div>'; setTimeout(() => window.NexusAdult.render(document.getElementById('nxAdultBox'), sub), 0); }   // 7.3.2
         if (sub === 'main') {
         // Avatar-Paare
@@ -234,6 +235,7 @@
         if (window.NexusNsfw4 && window.NexusNsfw4.onClick(e, render)) return;   // 6.7
         if (window.NexusNsfw5 && window.NexusNsfw5.onClick(e, render)) return;   // 7.3
         if (window.NexusNsfw6 && window.NexusNsfw6.onClick(e, render)) return;   // 8.2
+        if (window.NexusNsfw7 && window.NexusNsfw7.onClick(e, render)) return;   // 8.2 Spielzeug-Labor
         const g = e.target.closest('[data-tab-go]'); if (g) return UI.tab(g.dataset.tabGo);
         if (e.target.closest('[data-od]')) { UI.tab('client'); setTimeout(() => { const c = document.querySelector('#ncSub [data-sub="debug"]'); if (c) c.click(); }, 400); return; }
         const sb = e.target.closest('[data-nsub]'); if (sb) { e.preventDefault(); sub = sb.dataset.nsub; lsSet('sub', sub); return render(); }
@@ -289,6 +291,7 @@
     function onChange(e) {
         if (window.NexusToyLinks && window.NexusToyLinks.onChange(e, render)) return;
         if (window.NexusNsfw2 && window.NexusNsfw2.onChange(e, toysDo)) return;
+        if (window.NexusNsfw7 && window.NexusNsfw7.onChange(e, render)) return;   // 8.2 Spielzeug-Labor
         const tm = e.target.closest('[data-tr]'); if (tm) return trCfg({ [tm.dataset.tr]: tm.value });
         const pe = e.target.closest('[data-pc]');
         if (pe) {

@@ -79,6 +79,7 @@ const yes = v => v === true || v === '1' || v === 1 || v === 'true';
 class Toys {
     constructor(app) {
         this.play3 = new (require('./toyplay').ToyPlay)(app, this);   // NSFW 3.0
+        this.lab = new (require('./toylab').ToyLab)(app, this);   // 8.2: Spielzeug-Labor (Zeitleiste, Mixer, Puls-Deckel, Sanft an & aus, Gruppen, Statistik)
         this.app = app; this.ws = null; this.id = 1; this.wait = new Map(); this.devices = new Map(); this.state = 'aus'; this.error = '';
         this.level = new Map(); this.sentAt = 0; this.pending = null; this.lastParam = 0;
         this.zones = { plugs: {}, sockets: {}, touch: {} }; this.pvals = {}; this.linkSent = new Map(); this.linkLevel = new Map();
@@ -178,6 +179,7 @@ class Toys {
     allPatterns() {
         const p = Object.entries(PATTERNS).map(([id, x]) => ({ id, name: x.name }));
         for (const c of this.cfg().custom) p.push({ id: 'u:' + c.id, name: '✏️ ' + c.name, custom: true });
+        if (this.lab) p.push(...this.lab.patterns());   // 8.2: Zeitleisten & Mixer
         return p;
     }
     /** 8.2: Vorschau eines Musters – 48 Werte (0–100) über 24 s, je Abschnitt der Höchstwert (kurze Spitzen bleiben sichtbar) */
@@ -189,6 +191,7 @@ class Toys {
     }
     patternFn(id) {
         if (PATTERNS[id]) return PATTERNS[id].f;
+        if (/^[tm]:/.test(id)) return this.lab ? this.lab.patternFn(id) : null;   // 8.2
         const c = id.startsWith('u:') ? this.cfg().custom.find(x => x.id === id.slice(2)) : null;
         if (!c) return null;
         return t => { const pos = (t * 1000 / c.step_ms) % c.steps.length, i = Math.floor(pos), f = pos - i; return (c.steps[i] * (1 - f) + c.steps[(i + 1) % c.steps.length] * f) / 100; };
@@ -399,7 +402,7 @@ class Toys {
         let x = this.level.get(d.index) || 0;
         if (!dc.on) return 0;
         if (this.paused && Date.now() < this.paused.until) return 0;   // 8.2: automatische Pause
-        x *= this.consentFactor() * this.edgeFactor(x);
+        x *= this.consentFactor() * this.edgeFactor(x) * (this.lab ? this.lab.factor(d, x) : 1);   // 8.2: Labor kann nur senken
         if (x <= 0.001) return 0;
         x = Math.pow(x, dc.curve);
         return dc.min / 100 + (dc.max - dc.min) / 100 * x;
@@ -465,6 +468,7 @@ class Toys {
         return this.status();
     }
     async stopAll() {
+        if (this.lab) this.lab.halt();   // 8.2: Ausklingen-Timer & Sanftanlauf enden mit jedem Stopp
         this.level.clear(); this.cur.clear(); this.rule = {}; this.linkSent.clear(); this.pat = null; this.motorOv.clear(); this.manual.clear(); this.scene = null;
         if (this.play3) this.play3.stopAll();   // NSFW 3.0: Funscript/Spiel/Wiedergabe/Welt aus
         for (const d of this.devices.values()) { d.sentKey = ''; d.rotKey = ''; }
@@ -827,6 +831,7 @@ class Toys {
     async action(act, input) {
         if (this.app.nsfw) this.app.nsfw.need('toys');
         if (act.startsWith('toys3_')) return await this.play3.action(act, input);
+        if (act.startsWith('toys_lab_')) return await this.lab.action(act, input);   // 8.2: Spielzeug-Labor
         if (act.startsWith('toys_scenes')) { if (!this.scenes) { const { Scenes } = require('./scenes'); this.scenes = new Scenes(this); } return await this.scenes.action(act, input); }   // 6.2: Szenen-Baukasten
         switch (act) {
             case 'toys_status': return this.status();
@@ -898,7 +903,7 @@ class Toys {
         }
         throw new UserError('Unbekannte Aktion.');
     }
-    stop() { this.stopped = true; clearInterval(this.timer); clearInterval(this.linkTimer); clearInterval(this.driveTimer); clearTimeout(this.retryT); this.disconnect(); }
+    stop() { this.stopped = true; if (this.lab) this.lab.stop(); clearInterval(this.timer); clearInterval(this.linkTimer); clearInterval(this.driveTimer); clearTimeout(this.retryT); this.disconnect(); }
 }
 
 module.exports = { Toys, SRC, SRC_DEF, PATTERNS, PCS_ZONES };
