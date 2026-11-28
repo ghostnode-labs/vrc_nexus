@@ -26,6 +26,9 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.5.1
+- **Fixed: expandable sections closed by themselves.** Pages that refresh in the background redrew their collapsible sections and reset them. Now every expandable section on every page (desktop and Android) keeps the state you chose – also after a refresh and after restarting the app.
+
 ### New in 8.5.0 – Layout & Stream Deck Neo
 - **Masonry layout everywhere:** card grids no longer leave large empty gaps under shorter cards – cards now stack up in every column (e.g. Game & OSC, Charts, Recap, Admin). Content and the community feed/profile now use the full width.
 - Stream Deck plugin 1.11: new “Infobar (Neo)” action for the Stream Deck Neo – world, players, heart rate, friends online and notifications (or your own placeholders) in the Neo's info bar. Requires Stream Deck app 7.6 or newer.
