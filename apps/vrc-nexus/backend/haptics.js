@@ -7,6 +7,7 @@
  *    Wichtig: VRCFury schaltet die Haptik-Kontakte nur ein, solange OGB/Enabled = true ist (sonst kommen keine Werte).
  *  - OGB alt (OscGoesBrrr ≤ 1.x, ältere SPS):   OGB/Pen/<id>/…, OGB/Orf/<id>/… mit PenSelf/PenOthers/…(NewRoot|NewTip|Close)
  *  - VRCFury Haptics alt:                         VFH/(Zone/)?<Pen|Orf|Touch|Plug|Socket>/<id>/…
+ *  - TPS (Thry's Penetration System):           TPS_Internal/<Pen|Orf>/<id>/<RootRoot|Depth_In|…> (8.3: Tiefe von anderen)
  *  - PCS (Dismay Custom):                         pcs/output/*, pcs/satisfaction/*, pcs/select/*, pcs/menu/*
  * Werte 0…1 = Nähe bzw. Tiefe.
  */
@@ -21,6 +22,7 @@ function normKey(field, kind) {
     if (kind === 'touch' && (k === 'self' || k === 'others')) k = 'touch' + k;
     return k;
 }
+const TPS_RE = /^TPS_Internal\/(Pen|Orf)\/([^/]+)\/([A-Za-z0-9_]+)$/;
 const SPS_RE = /^(OGB|VFH)\/(?:Zone\/)?(Pen|Orf|Touch|Plug|Socket)\/([^/]+)\/([A-Za-z0-9_]+)$/;
 /** Einen Parameter-Namen deuten → { sys, kind, id, field, key, meta } oder null */
 function parse(name) {
@@ -32,18 +34,21 @@ function parse(name) {
         const field = m[4], lf = field.toLowerCase();
         return { sys, kind, id: m[3], field, key: normKey(field, kind), meta: META.has(lf) || /^lengthmult/.test(lf) };
     }
+    const t = TPS_RE.exec(n);   // 8.3: TPS – RootRoot (Plug) bzw. Depth_In (Socket) = Tiefe von anderen, Rest nur intern
+    if (t) { const kind = KIND[t[1].toLowerCase()], f = t[3]; const depth = (kind === 'plugs' && f === 'RootRoot') || (kind === 'sockets' && f === 'Depth_In');
+        return { sys: 'tps', kind, id: t[2], field: f, key: depth ? 'penothers' : f.toLowerCase(), meta: !depth }; }
     if (/^OGB\/(Enabled|HapticsDisabled|Version\/\d+)$/.test(n)) return { sys: 'sps', marker: n.slice(4) };
     if (/^pcs\//i.test(n)) { const p = n.toLowerCase().split('/'); return { sys: 'pcs', group: p[1] || '', field: p.slice(2).join('/') }; }
     return null;
 }
 /** Ist das ein intimer Parameter (für Datenschutz im Log/Debugger)? */
-const NSFW_RE = /^(OGB|VFH|pcs|SPS|TPS|DPS|Nsfw)\//i;
+const NSFW_RE = /^(OGB|VFH|pcs|SPS|TPS|TPS_Internal|DPS|Nsfw)\//i;
 const isNsfw = name => NSFW_RE.test(String(name || '')) || /^NX\/(Lust|Toy|Consent)$/.test(String(name || ''));
 
 /** Avatar-Check: welche Systeme hat dieser Avatar? names = Liste aller bekannten Parameter-Namen */
 function detect(names, live) {
     const out = { sps: { found: false, version: 0, enabled_param: false, disabled_marker: false, plugs: [], sockets: [], touch: [] },
-        ogb_legacy: { found: false, plugs: [], sockets: [] }, vfh: { found: false, zones: [] },
+        ogb_legacy: { found: false, plugs: [], sockets: [] }, tps: { found: false, plugs: [], sockets: [] }, vfh: { found: false, zones: [] },
         pcs: { found: false, outputs: [], zones: [], lust: false, events: false }, extras: { consent: false, toy: false, lust: false } };
     const add = (arr, v) => { if (!arr.includes(v)) arr.push(v); };
     for (const name of names) {
@@ -61,6 +66,7 @@ function detect(names, live) {
         }
         if (p.sys === 'sps') { out.sps.found = true; add(out.sps[p.kind], p.id); }
         if (p.sys === 'ogb') { out.ogb_legacy.found = true; if (p.kind !== 'touch') add(out.ogb_legacy[p.kind], p.id); }
+        if (p.sys === 'tps') { out.tps.found = true; if (!p.meta) add(out.tps[p.kind], p.id); }
         if (p.sys === 'vfh') { out.vfh.found = true; add(out.vfh.zones, p.kind + ':' + p.id); }
         if (p.sys === 'pcs') {
             out.pcs.found = true;
@@ -75,7 +81,7 @@ function detect(names, live) {
     if (out.sps.disabled_marker) hints.push('⚠ In VRCFury ist „Haptics“ beim Hochladen ausgeschaltet gewesen (OGB/HapticsDisabled) – dann gibt es keine Kontakte für Spielzeug.');
     if (out.ogb_legacy.found) hints.push('ℹ Alte OGB-Namen (Pen/Orf) gefunden – werden weiter unterstützt; ein Update auf aktuelles SPS (VRCFury) wird empfohlen.');
     if (out.pcs.found && !out.pcs.outputs.length) hints.push('⚠ PCS-Menü gefunden, aber keine pcs/output/…-Parameter – die Ausgabe-Parameter müssen in den Expression Parameters stehen.');
-    if (!out.sps.found && !out.ogb_legacy.found && !out.vfh.found && !out.pcs.found) hints.push('Kein SPS/OGB/PCS an diesem Avatar gefunden (oder OSC-Konfiguration noch nicht gelesen).');
+    if (!out.sps.found && !out.ogb_legacy.found && !out.vfh.found && !out.pcs.found && !out.tps.found) hints.push('Kein SPS/OGB/TPS/PCS an diesem Avatar gefunden (oder OSC-Konfiguration noch nicht gelesen).');
     out.hints = hints;
     return out;
 }

@@ -104,6 +104,32 @@
     }
 
     // ---------- Geräte-Details (unter 🎮 Spielzeug) ----------
+    /** 8.3: Feineinstellungen eines Geräts (auch vom neuen Spielzeug-Reiter genutzt) */
+    function devBody(d, c, slim) {
+        const dc = d.cfg, types = [...new Set(d.scalars.map(s => s.type))];
+        return '<div class="n2-dbody" data-devname="' + esc(d.name) + '">'
+            + '<div class="nc-row"><span class="small">' + esc(T('Eigener Name')) + '</span><input type="text" data-dv="alias" value="' + esc(dc.alias) + '" maxlength="40" placeholder="' + esc(d.name) + '" style="flex:1">' + sw('dv_on', dc.on, T('verwenden'), ' data-dv="on"') + '</div>'
+            + '<div class="n2-grid"><label class="small">' + esc(T('Mindeststärke')) + rng('dv_min', dc.min, 0, 90, 1, ' %').replace('data-n2="dv_min"', 'data-dv="min"') + '</label>'
+            + '<label class="small">' + esc(T('Höchststärke')) + rng('dv_max', dc.max, 5, 100, 1, ' %').replace('data-n2="dv_max"', 'data-dv="max"') + '</label>'
+            + '<label class="small">' + esc(T('Kurve')) + ' <span class="muted">(&lt;1 ' + esc(T('früher stark')) + ', &gt;1 ' + esc(T('sanfter Anfang')) + ')</span>' + rng('dv_curve', dc.curve, 0.3, 3, 0.1, '').replace('data-n2="dv_curve"', 'data-dv="curve"') + '</label>'
+            + '<label class="small">' + esc(T('Sanftanlauf')) + rng('dv_smooth', dc.smooth, 0, 3000, 100, ' ms').replace('data-n2="dv_smooth"', 'data-dv="smooth"') + '</label>'
+            + '<label class="small" title="' + esc(T('Wie lange das Gerät braucht, bis es reagiert (Bluetooth, Funk). Schnellere Geräte warten dann auf das langsamste – alle spüren es gleichzeitig.')) + '">⏱ ' + esc(T('Reaktionszeit')) + rng('dv_lag', dc.lag || 0, 0, 1000, 10, ' ms').replace('data-n2="dv_lag"', 'data-dv="lag"') + '</label></div>'
+            + (types.length > 1 || types.some(x => x !== 'Vibrate') ? '<div class="small">' + esc(T('Anteil je Aktor-Art')) + '</div><div class="n2-grid">' + types.map(x => '<label class="small">' + esc(T(TYPE_ICON[x] || x)) + rng('dt', dc.types[x] !== undefined ? dc.types[x] : 100, 0, 100, 5, ' %').replace('data-n2="dt"', 'data-dt="' + esc(x) + '"') + '</label>').join('') + '</div>' : '')
+            + (d.scalars.length > 1 ? '<div class="small">' + esc(T('Motoren einzeln')) + ' <span class="muted">(' + esc(T('leer = folgt der Gesamtstärke')) + ')</span></div>' + d.scalars.map(s => '<div class="ns-dev"><b>#' + (s.index + 1) + ' ' + esc(s.desc || T(TYPE_ICON[s.type] || s.type)) + '</b><input type="range" min="0" max="100" value="' + (s.override === null ? 0 : s.override) + '" data-motor="' + s.index + '" data-dev="' + d.index + '"><span class="small">' + (s.override === null ? 'auto' : s.override + ' %') + '</span>' + (s.override === null ? '' : '<button type="button" class="btn btn-sm" data-n2a="motorauto" data-dev="' + d.index + '" data-motor="' + s.index + '">auto</button>') + '</div>').join('') : '')
+            + (!slim && d.rotate ? '<div class="nc-row small">🔄 ' + esc(T('Drehrichtung')) + ' <select data-dv="rot">' + [['cw', '↻ ' + T('rechts')], ['ccw', '↺ ' + T('links')], ['alt', '⇄ ' + T('wechselnd')]].map(([k, l]) => '<option value="' + k + '"' + (dc.rot === k ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>'
+                + (dc.rot === 'alt' ? ' ' + esc(T('alle')) + ' <input type="number" data-dv="rot_alt" value="' + dc.rot_alt + '" min="1" max="120" style="width:60px"> s' : '') + '</div>' : '')
+            + (!slim && d.linear ? '<div class="n2-grid"><label class="small">↕ ' + esc(T('Hub von')) + rng('l1', dc.lin_min, 0, 95, 1, ' %').replace('data-n2="l1"', 'data-dv="lin_min"') + '</label><label class="small">' + esc(T('bis')) + rng('l2', dc.lin_max, 5, 100, 1, ' %').replace('data-n2="l2"', 'data-dv="lin_max"') + '</label></div><p class="muted small">' + esc(T('Stärke = Hubtempo (langsam 1,6 s … schnell 0,25 s pro Hub).')) + '</p>' : '')
+            + '<p class="muted small">⏱ ' + esc(T('Laufzeit')) + ' ' + Math.floor(d.secs / 60) + ' min ' + (d.secs % 60) + ' s' + (d.gap ? ' · ' + esc(T('Mindestabstand')) + ' ' + d.gap + ' ms' : '') + ' · ' + d.scalars.map(s => s.steps).join('/') + ' ' + esc(T('Stufen')) + (d.sensors.length ? ' · ' + esc(T('Sensoren')) + ': ' + esc(d.sensors.join(', ')) : '') + '</p>'
+            + '</div>';
+    }
+    /** 8.3: Verbindungs-Einstellungen (neu verbinden, Geräte suchen, Knopf, Akku-Warnung) */
+    function connHtml(t) {
+        lastT = t;
+        const c = t.cfg;
+        return '<div class="nc-row">' + sw('reconnect', c.reconnect, T('automatisch neu verbinden')) + sw('auto_scan', c.auto_scan, T('nach dem Verbinden Geräte suchen')) + '</div>'
+            + '<div class="nc-row small">' + esc(T('Knopf am Gerät')) + ' <select data-n2="button_action">' + [['stop', '⏹ alles stoppen'], ['surprise', '🎁 Überraschung'], ['next', '⏭ nächstes Muster'], ['none', '– nichts']].map(([k, l]) => '<option value="' + k + '"' + (c.button_action === k ? ' selected' : '') + '>' + esc(T(l)) + '</option>').join('') + '</select>'
+            + ' · 🪫 ' + esc(T('Warnung ab')) + ' ' + num('battery_warn', c.battery_warn, 0, 50) + ' %</div>';
+    }
     function devicesHtml(t) {
         lastT = t;
         const c = t.cfg;
@@ -121,20 +147,7 @@
                 + '<span class="n2-out">' + bar(d.out) + '<span class="small">' + d.out + ' %</span></span>'
                 + '<button type="button" class="btn btn-sm" data-n2a="tap" data-dev="' + d.index + '" title="' + esc(T('kurz antippen – welches Gerät ist das?')) + '">👆</button><button type="button" class="btn btn-sm" data-n2a="stopdev" data-dev="' + d.index + '">⏹</button>'
                 + '<button type="button" class="btn btn-sm" data-n2a="devopen" data-name="' + esc(d.name) + '">' + (open ? '▴' : '⚙') + '</button></div>'
-                + (open ? '<div class="n2-dbody" data-devname="' + esc(d.name) + '">'
-                    + '<div class="nc-row"><span class="small">' + esc(T('Eigener Name')) + '</span><input type="text" data-dv="alias" value="' + esc(dc.alias) + '" maxlength="40" placeholder="' + esc(d.name) + '" style="flex:1">' + sw('dv_on', dc.on, T('verwenden'), ' data-dv="on"') + '</div>'
-                    + '<div class="n2-grid"><label class="small">' + esc(T('Mindeststärke')) + rng('dv_min', dc.min, 0, 90, 1, ' %').replace('data-n2="dv_min"', 'data-dv="min"') + '</label>'
-                    + '<label class="small">' + esc(T('Höchststärke')) + rng('dv_max', dc.max, 5, 100, 1, ' %').replace('data-n2="dv_max"', 'data-dv="max"') + '</label>'
-                    + '<label class="small">' + esc(T('Kurve')) + ' <span class="muted">(&lt;1 ' + esc(T('früher stark')) + ', &gt;1 ' + esc(T('sanfter Anfang')) + ')</span>' + rng('dv_curve', dc.curve, 0.3, 3, 0.1, '').replace('data-n2="dv_curve"', 'data-dv="curve"') + '</label>'
-                    + '<label class="small">' + esc(T('Sanftanlauf')) + rng('dv_smooth', dc.smooth, 0, 3000, 100, ' ms').replace('data-n2="dv_smooth"', 'data-dv="smooth"') + '</label>'
-                    + '<label class="small" title="' + esc(T('Wie lange das Gerät braucht, bis es reagiert (Bluetooth, Funk). Schnellere Geräte warten dann auf das langsamste – alle spüren es gleichzeitig.')) + '">⏱ ' + esc(T('Reaktionszeit')) + rng('dv_lag', dc.lag || 0, 0, 1000, 10, ' ms').replace('data-n2="dv_lag"', 'data-dv="lag"') + '</label></div>'
-                    + (types.length > 1 || types.some(x => x !== 'Vibrate') ? '<div class="small">' + esc(T('Anteil je Aktor-Art')) + '</div><div class="n2-grid">' + types.map(x => '<label class="small">' + esc(T(TYPE_ICON[x] || x)) + rng('dt', dc.types[x] !== undefined ? dc.types[x] : 100, 0, 100, 5, ' %').replace('data-n2="dt"', 'data-dt="' + esc(x) + '"') + '</label>').join('') + '</div>' : '')
-                    + (d.scalars.length > 1 ? '<div class="small">' + esc(T('Motoren einzeln')) + ' <span class="muted">(' + esc(T('leer = folgt der Gesamtstärke')) + ')</span></div>' + d.scalars.map(s => '<div class="ns-dev"><b>#' + (s.index + 1) + ' ' + esc(s.desc || T(TYPE_ICON[s.type] || s.type)) + '</b><input type="range" min="0" max="100" value="' + (s.override === null ? 0 : s.override) + '" data-motor="' + s.index + '" data-dev="' + d.index + '"><span class="small">' + (s.override === null ? 'auto' : s.override + ' %') + '</span>' + (s.override === null ? '' : '<button type="button" class="btn btn-sm" data-n2a="motorauto" data-dev="' + d.index + '" data-motor="' + s.index + '">auto</button>') + '</div>').join('') : '')
-                    + (d.rotate ? '<div class="nc-row small">🔄 ' + esc(T('Drehrichtung')) + ' <select data-dv="rot">' + [['cw', '↻ ' + T('rechts')], ['ccw', '↺ ' + T('links')], ['alt', '⇄ ' + T('wechselnd')]].map(([k, l]) => '<option value="' + k + '"' + (dc.rot === k ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>'
-                        + (dc.rot === 'alt' ? ' ' + esc(T('alle')) + ' <input type="number" data-dv="rot_alt" value="' + dc.rot_alt + '" min="1" max="120" style="width:60px"> s' : '') + '</div>' : '')
-                    + (d.linear ? '<div class="n2-grid"><label class="small">↕ ' + esc(T('Hub von')) + rng('l1', dc.lin_min, 0, 95, 1, ' %').replace('data-n2="l1"', 'data-dv="lin_min"') + '</label><label class="small">' + esc(T('bis')) + rng('l2', dc.lin_max, 5, 100, 1, ' %').replace('data-n2="l2"', 'data-dv="lin_max"') + '</label></div><p class="muted small">' + esc(T('Stärke = Hubtempo (langsam 1,6 s … schnell 0,25 s pro Hub).')) + '</p>' : '')
-                    + '<p class="muted small">⏱ ' + esc(T('Laufzeit')) + ' ' + Math.floor(d.secs / 60) + ' min ' + (d.secs % 60) + ' s' + (d.gap ? ' · ' + esc(T('Mindestabstand')) + ' ' + d.gap + ' ms' : '') + ' · ' + d.scalars.map(s => s.steps).join('/') + ' ' + esc(T('Stufen')) + (d.sensors.length ? ' · ' + esc(T('Sensoren')) + ': ' + esc(d.sensors.join(', ')) : '') + '</p>'
-                    + '</div>' : '') + '</div>';
+                + (open ? devBody(d, c) : '') + '</div>';
         }).join('') + '<div class="nc-row"><button type="button" class="btn btn-sm" data-n2a="sensors">🔋 ' + esc(T('Akku & Sensoren lesen')) + '</button></div>';
     }
 
@@ -331,5 +344,5 @@
         if (r.closest('.n2-rng')) { const b = r.parentNode.querySelector('b'); if (b) b.textContent = r.value + (b.textContent.replace(/^[\d.]+/, '')); return true; }
         return false;
     }
-    window.NexusNsfw2 = { devicesHtml, lustHtml, funHtml, onClick, onChange, onInput, micSync };
+    window.NexusNsfw2 = { devicesHtml, devBody: (d, t) => { lastT = t; return devBody(d, t.cfg, true); }, connHtml, lustHtml, funHtml, onClick, onChange, onInput, micSync };
 })();

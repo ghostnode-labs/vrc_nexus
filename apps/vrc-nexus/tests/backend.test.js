@@ -5817,3 +5817,128 @@ test('8.2: 🔞 Spielzeug-Labor – Zeitleiste & Mixer als Muster, Puls-Deckel, 
         await assert.rejects(app.post({ act: 'toys_lab_fade', minutes: '5' }, {}), /Nicht freigeschaltet/);
     } finally { t.stop(); app.tools.stop(); delete process.env.NEXUS_OWNER_HASH; }
 });
+
+test('8.3: 🔞 Spielzeug-Quellen 2.0 – Modus/Bereich/Kurve/Glättung/Leerlauf, Bewegung, Stroker folgt der Tiefe, TPS, Vorlagen, Einfach/Experte, Teilen; Stopp/Ampel/Freigabe haben Vorrang', async () => {
+    const TS = require('../backend/toysrc');
+    const H = require('../backend/haptics');
+    const near = (a, b, e = 0.011) => Math.abs(a - b) <= e;
+    // reine Logik
+    const n0 = TS.normLink({});
+    assert.deepStrictEqual(n0, TS.LINK_DEF, 'fehlende Felder = neutral');
+    assert.strictEqual(TS.shape(0.37, n0, true), 0.37, 'neutral: Wert bleibt gleich (alte Verknüpfungen unverändert)');
+    assert.strictEqual(TS.shape(0, n0, true), 0);
+    const nb = TS.normLink({ lo: 20, hi: 80, curve: 2, idle: 10, mode: 'mix', sens: 9, smooth: -5 });
+    assert.ok(nb.sens === 5 && nb.smooth === 0 && nb.mode === 'mix', 'Grenzen geprüft');
+    assert.ok(near(TS.shape(0.5, nb, true), 0.2 + 0.6 * 0.25), 'Bereich + Kurve');
+    assert.strictEqual(TS.shape(0, nb, true), 0.1, 'Leerlauf solange der Avatar sendet');
+    assert.strictEqual(TS.shape(0, nb, false), 0, 'ohne Signal kein Leerlauf');
+    assert.strictEqual(TS.normLink({ lo: 90, hi: 50 }).lo, 45, 'Min unter Max');
+    assert.ok(TS.smoothStep(0, 1, 100, 300) > 0.2 && TS.smoothStep(0, 1, 100, 300) < 0.35, 'Glättung');
+    assert.strictEqual(TS.smoothStep(0, 1, 100, 0), 1, 'ohne Glättung sofort');
+    assert.strictEqual(TS.smoothStep(0.005, 0, 50, 500), 0, 'fast aus → aus');
+    const now = 100000;
+    assert.ok(near(TS.motionLevel({ speed: 1, at: now }, now, 1), 0.5), 'Bewegung: 1 Tiefe/s = 50 %');
+    assert.ok(TS.motionLevel({ speed: 1, at: now - 1500 }, now, 1) < 0.01, 'Bewegung klingt ohne neue Werte ab');
+    assert.strictEqual(TS.pickMode(0.3, 0.8, 'depth'), 0.3); assert.strictEqual(TS.pickMode(0.3, 0.8, 'motion'), 0.8); assert.strictEqual(TS.pickMode(0.3, 0.8, 'mix'), 0.8);
+    assert.deepStrictEqual(TS.strongest([0.2, 0.7, 0.5]), { win: 1, v: 0.7 }); assert.strictEqual(TS.strongest([0, 0]).win, -1);
+    // Stroker-Planer: tief = unten, Dauer passt zum Höchsttempo, Ruhestellung, Mindestabstand
+    const st = { pos: 1, at: 0, activeAt: 0 }, o = { min: 10, max: 90, speed: 2, rest: 100, rest_after: 3000, every: 90 };
+    let p = TS.linPlan(st, 1, 1000, o);
+    assert.ok(near(p.position, 0.1) && p.duration >= Math.round(0.9 / 2 * 1000) - 1, 'volle Tiefe → unten, nicht schneller als 2 Hübe/s: ' + JSON.stringify(p));
+    assert.strictEqual(TS.linPlan(st, 0.5, 1050, o), null, 'Mindestabstand');
+    p = TS.linPlan(st, 0.5, 1200, o); assert.ok(near(p.position, 0.5), 'halbe Tiefe → Mitte des Bereichs');
+    assert.strictEqual(TS.linPlan(st, 0, 2000, o), null, 'kurz nichts → bleibt stehen');
+    p = TS.linPlan(st, 0, 5000, o); assert.ok(near(p.position, 0.9), 'länger nichts → Ruhestellung oben');
+    assert.strictEqual(TS.linPlan({ pos: 0.9, at: 0, activeAt: 0 }, 0, 9000, o), null, 'nie aktiv → keine Bewegung');
+    // TPS & Zonen-Liste
+    assert.deepStrictEqual([H.parse('TPS_Internal/Orf/Anal/Depth_In').sys, H.parse('TPS_Internal/Orf/Anal/Depth_In').kind, H.parse('TPS_Internal/Orf/Anal/Depth_In').key], ['tps', 'sockets', 'penothers']);
+    assert.ok(H.parse('TPS_Internal/Pen/Dick/RootRoot').kind === 'plugs' && H.parse('TPS_Internal/Pen/Dick/Other').meta, 'TPS-Hilfswerte zählen nicht');
+    assert.ok(H.isNsfw('TPS_Internal/Pen/Dick/RootRoot'), 'TPS gilt als intim');
+    assert.ok(H.detect(['TPS_Internal/Orf/Anal/Depth_In']).tps.sockets.includes('Anal'));
+    const sl = TS.sourceList({ plugs: {}, sockets: { Vag: { penothers: { v: 0.5, at: now }, touchself: { v: 0.2, at: now } } }, touch: {} }, ['OGB/Touch/Ears/Others', 'OGB/Plug/Dick/LengthMult1'], now, now - 3000);
+    assert.deepStrictEqual(sl.map(s => [s.id, s.others, s.self, s.live]), [['sockets:Vag', 50, 20, true], ['touch:Ears', 0, 0, false]], 'Zonen aus Live-Werten + Parameter-Liste, ohne Maß-Werte');
+    // Vorlagen & Code
+    for (const id of Object.keys(TS.PRESETS)) { const l = TS.autoLinks(id); assert.ok(l.length >= 2 && l.every(x => x.src && !x.src.pen_self && !x.src.touch_self), id + ': nur fremde Berührungen'); }
+    assert.ok(TS.autoLinks('beruehrung').every(x => !x.src.pen_others), 'nur Berührung: kein Eindringen');
+    assert.deepStrictEqual(TS.importCode(TS.exportCode({ A: [{ type: 'constant', value: 5 }] }, {})).links.A[0].value, 5);
+    assert.strictEqual(TS.importCode('NXTL1.kaputt'), null); assert.strictEqual(TS.importCode('hallo'), null);
+
+    // mit der App (nur Mocks)
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const OWNER = 'usr_' + 'e'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const app = new NexusApp({ db, crypt: { encrypt: s => s, decrypt: s => s }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-83-')) } });
+    app.game.osc.stopListen();
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    grant18(app);
+    const t = app.toys, sent = [];
+    try {
+        t.ws = { readyState: 1, send() {} }; t.req = async m => { sent.push(m); return {}; };
+        t.addDevice({ DeviceIndex: 0, DeviceName: 'Vibi', DeviceMessages: { ScalarCmd: [{ StepCount: 100, ActuatorType: 'Vibrate' }] } });
+        t.addDevice({ DeviceIndex: 1, DeviceName: 'Stroker', DeviceMessages: { LinearCmd: [{ StepCount: 100 }] } });
+        const lastScalar = () => { const l = sent.filter(m => m.ScalarCmd && m.ScalarCmd.DeviceIndex === 0); return l.length ? l[l.length - 1].ScalarCmd.Scalars[0].Scalar : null; };
+        const osc = (n, v) => t.onOsc('/avatar/parameters/' + n, [v]);
+        assert.strictEqual(t.status().devices[0].src_mode, 'off', 'ohne Verknüpfung: aus');
+        // Einfach: folgt meinem Avatar
+        let r = await app.post({ act: 'toys_follow', name: 'Vibi', mode: 'simple', preset: 'normal' }, {});
+        assert.ok(r.cfg.links_on && r.devices[0].src_mode === 'simple' && /folgt deinem Avatar/.test(r.msg), 'Einschalten aktiviert die Avatar-Steuerung');
+        osc('OGB/Socket/Vag/DepthOthers', 0.6); osc('OGB/Socket/Vag/DepthSelf', 1);
+        t.compute(); await U.sleep(20);
+        const info = t.status().link_info.Vibi;
+        assert.ok(info && info.win === 1 && near(info.vals[1] / 100, 0.05 + 0.95 * 0.6, 0.02), 'Sockets gewinnt, eigene Tiefe ignoriert: ' + JSON.stringify(info));
+        assert.ok(near(lastScalar(), info.lv / 100, 0.02), 'Gerät bekommt die stärkste Quelle');
+        assert.ok(t.status().sources.some(s => s.id === 'sockets:Vag' && s.others === 60 && s.self === 100), 'Zone mit Live-Wert');
+        let live = await app.post({ act: 'toys_live' }, {});
+        assert.ok(live.connected && live.devices.length === 2 && live.link_info.Vibi, 'schlanker Live-Stand');
+        // Experte: startet mit der Vorlage, eigene Einstellungen wirken
+        r = await app.post({ act: 'toys_follow', name: 'Vibi', mode: 'expert', preset: 'sanft' }, {});
+        assert.strictEqual(r.cfg.links.Vibi.length, 3, 'Experte startet mit den Quellen der Vorlage');
+        const L = r.cfg.links; L.Vibi = [Object.assign({}, L.Vibi[1], { mode: 'depth', lo: 0, hi: 50, curve: 1, smooth: 0 })];
+        await app.post({ act: 'toys_cfg', links: JSON.stringify(L) }, {});
+        osc('OGB/Socket/Vag/DepthOthers', 0.8); t.compute(); await U.sleep(20);
+        assert.ok(near(lastScalar(), 0.4), 'Bereich 0–50 % bei Tiefe 0,8 = 40 %: ' + lastScalar());
+        // Bewegung statt Tiefe
+        L.Vibi[0].mode = 'motion'; await app.post({ act: 'toys_cfg', links: JSON.stringify(L) }, {});
+        await U.sleep(60); osc('OGB/Socket/Vag/DepthOthers', 0.2); t.compute(); await U.sleep(20);
+        assert.ok(lastScalar() > 0.1, 'schnelle Bewegung → Stärke');
+        // Stroker folgt der Tiefe
+        await app.post({ act: 'toys_dev', name: 'Stroker', data: JSON.stringify({ lin_mode: 'follow', lin_min: 0, lin_max: 100, lin_speed: 3 }) }, {});
+        await app.post({ act: 'toys_follow', name: 'Stroker', mode: 'simple', preset: 'normal' }, {});
+        osc('OGB/Socket/Vag/DepthOthers', 0.75); t.compute();
+        const sd = t.devices.get(1); await t.drive(sd, false);
+        const lin = sent.filter(m => m.LinearCmd && m.LinearCmd.DeviceIndex === 1).pop();
+        assert.ok(lin && near(lin.LinearCmd.Vectors[0].Position, 0.25) && lin.LinearCmd.Vectors[0].Duration >= 90, 'Tiefe 0,75 → Position 0,25 (Buttplug LinearCmd): ' + JSON.stringify(lin));
+        // Ampel rot hat Vorrang
+        await app.post({ act: 'toys_consent', light: 'red' }, {});
+        assert.ok(!t.cfg().links_on && t.linDepth.size === 0, 'Rot stoppt alles und schaltet die Avatar-Steuerung aus');
+        await app.post({ act: 'toys_cfg', links_on: '1' }, {});
+        sd.linOn = true; sd.linSt = null; const n1 = sent.length; t.compute(); await t.drive(sd, false); await U.sleep(10);
+        assert.ok(sent.slice(n1).some(m => m.StopDeviceCmd && m.StopDeviceCmd.DeviceIndex === 1) && !sent.slice(n1).some(m => m.LinearCmd), 'bei Rot fährt der Stroker nicht');
+        await app.post({ act: 'toys_consent', light: 'green' }, {});
+        // Höchststärke deckelt alles
+        await app.post({ act: 'toys_cfg', max: '30', links_on: '1' }, {});
+        osc('OGB/Socket/Vag/DepthOthers', 1); L.Vibi[0] = Object.assign(L.Vibi[0], { mode: 'depth', hi: 100 }); await app.post({ act: 'toys_cfg', links: JSON.stringify(L) }, {});
+        t.compute(); await U.sleep(20);
+        assert.ok(lastScalar() <= 0.3 + 1e-9, 'Höchststärke deckelt: ' + lastScalar());
+        await app.post({ act: 'toys_cfg', max: '100' }, {});
+        // Avatar-Wechsel: nur Zonen vom aktuellen Avatar
+        t.onOsc('/avatar/change', ['avtr_x']);
+        assert.ok(!t.status().sources.some(s => s.id === 'sockets:Vag' && s.live), 'nach Avatar-Wechsel keine alten Live-Zonen');
+        // Teilen als Text
+        const ex = await app.post({ act: 'toys_links_export', name: 'Vibi' }, {});
+        assert.ok(ex.code.startsWith('NXTL1.'));
+        await app.post({ act: 'toys_follow', name: 'Stroker', mode: 'off' }, {});
+        r = await app.post({ act: 'toys_links_import', code: ex.code, name: 'Stroker' }, {});
+        assert.ok(r.cfg.links.Stroker && r.cfg.links.Stroker[0].hi === 100 && r.cfg.links.Vibi, 'auf anderes Gerät übernommen, bestehende bleiben: ' + r.msg);
+        await assert.rejects(app.post({ act: 'toys_links_import', code: 'quatsch' }, {}), /kein Zuordnungs-Code/);
+        // ALLES STOPPEN
+        await app.post({ act: 'toys_stop' }, {});
+        assert.ok(!t.cfg().links_on && !t.linkInfo.size, 'Stopp schaltet die Avatar-Steuerung aus');
+        // ohne Freigabe nichts
+        grant18(app, false);
+        await assert.rejects(app.post({ act: 'toys_live' }, {}), /Nicht freigeschaltet/);
+        await assert.rejects(app.post({ act: 'toys_follow', name: 'Vibi', mode: 'simple' }, {}), /Nicht freigeschaltet/);
+    } finally { t.stop(); app.tools.stop(); delete process.env.NEXUS_OWNER_HASH; }
+});
