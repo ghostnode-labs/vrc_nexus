@@ -4087,6 +4087,9 @@ test('8.2: Uhr – 18+-Freigabe beim Koppeln (nur wenn der PC frei ist, weg bei 
         let x = await call('/watch/state', undefined, w1.token);
         assert.ok(!x.j.nsfw && x.j.toys === null && x.j.adult === false && /Freigabe fehlt/.test(x.j.nsfw_reason), JSON.stringify(x.j.nsfw_reason));
         x = await call('/watch/action', { a: 'toy_level', level: 50 }, w1.token); assert.ok(x.status === 400 && /Freigabe/.test(x.j.error), '🔞 ohne Freigabe gesperrt');
+        x = await call('/watch/action', { a: 'toy_fade' }, w1.token); assert.ok(x.status === 400 && /Freigabe/.test(x.j.error), 'Ausklingen nur mit Freigabe');
+        const { PHONE_ACTS } = require('../backend/watch');
+        assert.ok(PHONE_ACTS.has('toys_lab_fade_now') && PHONE_ACTS.has('toys_lab_group_stop'), 'Spielzeug-Labor vom Handy erreichbar');
         x = await call('/watch/action', { a: 'toys_stop' }, w1.token); assert.strictEqual(x.status, 200, 'Stopp geht immer');
         x = await call('/watch/action', { a: 'consent', light: 'red' }, w1.token); assert.strictEqual(x.status, 200, 'Ampel Rot geht immer');
         x = await call('/watch/action', { a: 'consent', light: 'green' }, w1.token); assert.strictEqual(x.status, 400);

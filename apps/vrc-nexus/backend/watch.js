@@ -33,10 +33,11 @@ const FACES = { classic: 'Klassisch (Puls + Kacheln)', big: 'Große Uhrzeit', an
 /** 5.2.3: was ein gekoppeltes Handy am PC auslösen darf (feste Liste, 🔞-Aktionen prüfen ihre Freigabe selbst) */
 const PHONE_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'nsfw_allclear', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'nsfw_consent', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise',
     'toys_pattern', 'toys_pattern_stop', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop', 'toys3_get', 'toys3_game', 'toys3_hold', 'toys3_game_stop',
-    'comfort_get', 'comfort_sleep', 'preset_list', 'preset_apply', 'client_macros', 'client_macro_run', 'client_osc', 'hr_get']);
+    'comfort_get', 'comfort_sleep', 'preset_list', 'preset_apply', 'client_macros', 'client_macro_run', 'client_osc', 'hr_get',
+    'toys_lab_fade_now', 'toys_lab_group_stop']);   // 8.2: sanft ausklingen, Gerätegruppe stoppen (Spielzeug-Labor)
 /** 8.2: Sicherheits-Aktionen gehen immer – auch wenn 18+ auf dem Gerät ausgeblendet ist */
-const SAFETY_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'toys_stop']);
-const NSFW_WATCH = new Set(['allclear', 'private', 'consent', 'toy_level', 'toy_pattern', 'toy_pattern_stop', 'toy_surprise']);   // Uhr-Aktionen, die 🔞 sind (Panik, Safeword, Stopp gehören nicht dazu)
+const SAFETY_ACTS = new Set(['nsfw_panic', 'nsfw_panic_full', 'nsfwx_safeword', 'toys_stop', 'toys_lab_group_stop']);
+const NSFW_WATCH = new Set(['allclear', 'private', 'consent', 'toy_level', 'toy_pattern', 'toy_pattern_stop', 'toy_surprise', 'toy_fade']);   // Uhr-Aktionen, die 🔞 sind (Panik, Safeword, Stopp gehören nicht dazu)
 /** 8.2: Chatbox-Schnelltexte für die Uhr (am PC änderbar, höchstens 8) */
 const QUICK = ['👋 Hallo!', 'BRB – bin gleich zurück', 'AFK', '🔇 Mikro aus', 'Danke! 💙', '😴 Gute Nacht'];
 const QUICK_MAX = 8, QUICK_LEN = 80;
@@ -339,6 +340,7 @@ class Watch {
             case 'toy_level': { const lv = Math.max(0, Math.min(100, int(b.level))); await post('toys_set', { device: 'all', level: lv / 100 }); r = { msg: '〰 ' + lv + ' %' }; break; }
             case 'toy_pattern': { const x = await post('toys_pattern', { id: str(b.id), strength: Math.max(5, Math.min(100, int(b.strength) || 60)), seconds: 0 }); r = { msg: str(x && x.msg) || '〰 Muster läuft' }; break; }
             case 'toy_pattern_stop': await post('toys_pattern_stop'); r = { msg: 'Muster aus.' }; break;
+            case 'toy_fade': { const x = await post('toys_lab_fade_now', { fade_s: Math.max(5, Math.min(120, int(b.fade_s) || 15)) }); r = { msg: str(x && x.msg) || '🌅 Klingt aus' }; break; }   // 8.2: Spielzeug-Labor (sanft ausklingen)
             case 'toy_surprise': { const x = await post('toys_surprise'); r = { msg: str(x && x.msg) || '🎁' }; break; }
             // 8.2: Chatbox-Schnelltexte, Makros & Avatar-Presets vom Handgelenk
             case 'chat': {

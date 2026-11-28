@@ -18,6 +18,8 @@ import android.provider.Settings;
 import android.text.InputType;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.InputDevice;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -48,6 +50,7 @@ public class MainActivity extends Activity {
     private ScrollView sv;
     private long lastBuzz = 0;
     private static final int[] INTERVALS = { 1, 2, 5, 10 };
+    private static final int[] HR_ALARMS = { 0, 120, 140, 160, 180 };   // 8.2
     private final ExecutorService net = Executors.newSingleThreadExecutor();
     private final Handler ui = new Handler(Looper.getMainLooper());
     private LinearLayout root;
@@ -56,6 +59,14 @@ public class MainActivity extends Activity {
     private String err = "", screen = "main", updMsg = "";
     private long panicArmed = 0;
     private boolean resumed;
+    // 8.2: Spielzeug-Fernbedienung (Drehkrone/Wischen), Schnelltexte, Makros
+    private LevelDial dial;
+    private int localLevel = -1;
+    private long localLevelAt = 0;
+    private JSONObject shortcuts;
+    private boolean shortcutsBusy;
+    private final Runnable levelSend = this::sendLevel;
+    private static final java.util.Set<String> SCREENS = new java.util.HashSet<>(java.util.Arrays.asList("main", "heart", "safe", "comfort", "toys", "chat", "shortcuts"));
     private final Runnable poll = new Runnable() { @Override public void run() { if (resumed && Nexus.paired(MainActivity.this) && !"settings".equals(screen)) refresh(); ui.postDelayed(this, 5000); } };
 
     private SharedPreferences p() { return Nexus.prefs(this); }
@@ -76,6 +87,7 @@ public class MainActivity extends Activity {
         sv.addView(root);
         setContentView(sv);
         applyScreenOn();
+        applyDiscreet();
         try { String lk = p().getString("look", ""); if (!lk.isEmpty()) applyLook(new JSONObject(lk), false); } catch (Exception ignored) { }
         UpdateJob.schedule(this);
         // Puls automatisch starten (Einstellung)
@@ -83,7 +95,28 @@ public class MainActivity extends Activity {
             && checkSelfPermission(Manifest.permission.BODY_SENSORS) == PackageManager.PERMISSION_GRANTED) startForegroundService(new Intent(this, HeartService.class));
         // Updates höchstens alle 12 h von selbst prüfen
         if (p().getBoolean("auto_update", true) && System.currentTimeMillis() - p().getLong("upd_checked", 0) > 12 * 3600 * 1000L) checkUpdate(false);
+        openFrom(getIntent());
         render();
+    }
+    /** 8.2: Kacheln/Komplikationen öffnen die App direkt auf einer Seite */
+    private void openFrom(Intent i) {
+        String sc = i != null ? i.getStringExtra("screen") : null;
+        if (sc != null && SCREENS.contains(sc)) screen = sc;
+    }
+    @Override protected void onNewIntent(Intent i) { super.onNewIntent(i); setIntent(i); openFrom(i); if (root != null) { render(); refresh(); } }
+    /** 8.2: diskreter Modus – 🔞-Seiten nicht im Hintergrund/Always-On stehen lassen, kein Vorschaubild in „Zuletzt verwendet“ */
+    @Override protected void onStop() {
+        super.onStop();
+        if (Live.discreet(this) && ("safe".equals(screen) || "toys".equals(screen))) { screen = "main"; render(); }
+    }
+    private void applyDiscreet() { if (android.os.Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(!Live.discreet(this)); }
+    /** 8.2: Drehkrone – auf der Spielzeug-Seite die Stärke ändern (sonst normal scrollen) */
+    @Override public boolean dispatchGenericMotionEvent(MotionEvent ev) {   // vor der ScrollView abfangen (die scrollt sonst mit der Krone)
+        if (ev.getAction() == MotionEvent.ACTION_SCROLL && ev.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER) && "toys".equals(screen) && dial != null && Live.adult(this)) {
+            float v = -ev.getAxisValue(MotionEvent.AXIS_SCROLL);
+            if (v != 0) { setLevel(curLevel() + (v > 0 ? 2 : -2)); return true; }
+        }
+        return super.dispatchGenericMotionEvent(ev);
     }
     @Override protected void onResume() { super.onResume(); resumed = true; ui.removeCallbacks(poll); ui.post(poll); syncShake(); }
     @Override protected void onPause() { super.onPause(); resumed = false; ui.removeCallbacks(poll); if (shake != null) shake.enable(false); }
@@ -243,6 +276,9 @@ public class MainActivity extends Activity {
             case "heart": renderHeart(); return;
             case "safe": renderSafe(); return;
             case "comfort": renderComfort(); return;
+            case "toys": renderToys(); return;          // 8.2
+            case "chat": renderChat(); return;          // 8.2
+            case "shortcuts": renderShortcuts(); return;   // 8.2
             default: renderHome();
         }
     }
@@ -295,13 +331,22 @@ public class MainActivity extends Activity {
         if (!err.isEmpty()) text("⚠ " + err, 10, GOLD, false);
         JSONObject s = state;
         boolean nsfw = s != null && s.optBoolean("nsfw");
-        LinearLayout r1 = tileRow();
-        tile(r1, "♥", "Puls", HeartService.running ? "sendet" : "aus", HeartService.running ? RED : MUTED, v -> go("heart"));
-        if (nsfw) tile(r1, "🔞", "Notfall", s.optBoolean("private") ? "privat" : "", RED, v -> go("safe"));
-        else tile(r1, "💤", "Komfort", s != null && s.optBoolean("sleeping") ? "schläft" : "", CYAN, v -> go("comfort"));
-        LinearLayout r2 = tileRow();
-        if (nsfw) tile(r2, "💤", "Komfort", s.optBoolean("sleeping") ? "schläft" : "", CYAN, v -> go("comfort"));
-        tile(r2, "⚙", "Einstellungen", "", MUTED, v -> go("settings"));
+        // 8.2: Kacheln als Liste, immer zwei pro Reihe
+        java.util.List<Object[]> ts = new java.util.ArrayList<>();
+        ts.add(new Object[]{ "♥", "Puls", HeartService.running ? "sendet" : "aus", HeartService.running ? RED : MUTED, (View.OnClickListener) v -> go("heart") });
+        if (nsfw) ts.add(new Object[]{ "🔞", "Notfall", s.optBoolean("private") ? "privat" : "", RED, (View.OnClickListener) v -> go("safe") });
+        JSONObject ty = nsfw ? s.optJSONObject("toys") : null;
+        if (ty != null) ts.add(new Object[]{ "〰", "Spielzeug", Math.max(ty.optInt("level"), ty.optInt("out")) + " % " + Live.consentIcon(ty.optString("consent")), CYAN, (View.OnClickListener) v -> go("toys") });
+        ts.add(new Object[]{ "💤", "Komfort", s != null && s.optBoolean("sleeping") ? "schläft" : "", CYAN, (View.OnClickListener) v -> go("comfort") });
+        ts.add(new Object[]{ "💬", "Chatbox", "", CYAN, (View.OnClickListener) v -> go("chat") });
+        ts.add(new Object[]{ "⚡", "Aktionen", "", GOLD, (View.OnClickListener) v -> { shortcuts = null; go("shortcuts"); } });
+        ts.add(new Object[]{ "⚙", "Einstellungen", "", MUTED, (View.OnClickListener) v -> go("settings") });
+        LinearLayout tr = null;
+        for (int i = 0; i < ts.size(); i++) {
+            if (i % 2 == 0) tr = tileRow();
+            Object[] x = ts.get(i);
+            tile(tr, (String) x[0], (String) x[1], (String) x[2], (Integer) x[3], (View.OnClickListener) x[4]);
+        }
         if (s != null && !nsfw && !s.optString("nsfw_reason").isEmpty()) text("🔞 gesperrt: " + s.optString("nsfw_reason"), 9, MUTED, false);
         if (s != null && s.optInt("friends") > 0 && !"friends".equals(face)) text("👥 " + s.optInt("friends") + " Freunde im Spiel", 10, MUTED, false);
         if (menuOpen && "minimal".equals(face)) button("✕", MUTED, v -> { menuOpen = false; render(); });
@@ -346,6 +391,7 @@ public class MainActivity extends Activity {
             chip(r, "🟡", GOLD, v -> act("consent", "light", "yellow"));
             chip(r, "🔴", RED, v -> act("consent", "light", "red"));
             button("⏹ Spielzeug stoppen", CYAN, v -> act("toys_stop", null, null));
+            button("〰 Fernbedienung", MUTED, v -> go("toys"));   // 8.2
         }
         button("← Menü", MUTED, v -> go("main"));
     }
@@ -380,6 +426,12 @@ public class MainActivity extends Activity {
         toggle("Vibration", "vibrate", true, null);
         toggle("Meldungen vom PC", "notes", true, null);   // 6.5
         toggle("Panik doppelt tippen", "panic_confirm", true, null);
+        toggle("🕶 Diskret (Kacheln & Zifferblatt neutral)", "discreet", true, () -> { applyDiscreet(); Live.push(this, true); });   // 8.2
+        int al = p().getInt("hr_alarm", 0);   // 8.2: Puls-Alarm (nur mit Senden vom Uhr-Sensor)
+        button("⚠ Puls-Alarm: " + (al > 0 ? "über " + al : "aus"), al > 0 ? GOLD : MUTED, v -> {
+            int i = 0; while (i < HR_ALARMS.length && HR_ALARMS[i] != al) i++;
+            p().edit().putInt("hr_alarm", HR_ALARMS[(i + 1) % HR_ALARMS.length]).apply(); render();
+        });
         toggle("Updates automatisch suchen", "auto_update", true, null);
 
         text("PC-Adresse", 11, MUTED, false);
@@ -402,7 +454,13 @@ public class MainActivity extends Activity {
         button("🔄 Nach Updates suchen", CYAN, v -> checkUpdate(true));
 
         if (Nexus.paired(this)) button("Entkoppeln", RED, v -> {
-            stopService(new Intent(this, HeartService.class)); Nexus.unpair(this); state = null; screen = "main"; render();
+            // 8.2: zuerst am PC abmelden (damit auch die 18+-Freigabe dort verschwindet), dann lokal löschen – auch wenn der PC nicht erreichbar ist
+            stopService(new Intent(this, HeartService.class));
+            final android.content.Context app = getApplicationContext();
+            net.execute(() -> {
+                try { Nexus.call(app, "/watch/action", Live.body("unpair")); } catch (Exception ignored) { /* PC aus – dort bleibt sie bis zum Entfernen gelistet */ }
+                ui.post(() -> { Nexus.unpair(app); Live.clear(app); state = null; screen = "main"; render(); });
+            });
         });
         button("← Menü", MUTED, v -> go("main"));
     }
@@ -441,8 +499,9 @@ public class MainActivity extends Activity {
                     if (d == null) throw new Exception("PC nicht gefunden – gleiches WLAN? Sonst die Adresse eintragen (steht am PC).");
                     host = d.getString("host"); port = d.optInt("port", Nexus.DEF_PORT);
                 }
-                Nexus.pair(this, host, port, pin);
-                ui.post(() -> { buzz(60); toast("✔ Gekoppelt"); render(); refresh(); });
+                JSONObject pr = Nexus.pair(this, host, port, pin);
+                final boolean adult = pr.optBoolean("adult");
+                ui.post(() -> { buzz(60); toast(adult && !Live.discreet(this) ? "✔ Gekoppelt · 🔞 Freigabe übernommen" : "✔ Gekoppelt"); render(); refresh(); });
             } catch (Exception e) { err = String.valueOf(e.getMessage()); ui.post(this::render); }
         });
     }
@@ -456,7 +515,7 @@ public class MainActivity extends Activity {
             }));
         }
         net.execute(() -> {
-            try { state = Nexus.call(this, "/watch/state", null); err = ""; Notes.handle(this, state); ui.post(this::syncShake); }
+            try { state = Nexus.call(this, "/watch/state", null); err = ""; Live.save(this, state); Notes.handle(this, state); ui.post(this::syncShake); }
             catch (Exception e) { err = String.valueOf(e.getMessage()); }
             ui.post(() -> {
                 if (state != null) {
@@ -470,7 +529,7 @@ public class MainActivity extends Activity {
                         toast("🔔 Hier bin ich!");
                     }
                 }
-                if (!"settings".equals(screen)) render();
+                if (!"settings".equals(screen) && !(dial != null && dial.dragging) && System.currentTimeMillis() - localLevelAt > 1500) render();
             });
         });
     }
@@ -490,7 +549,7 @@ public class MainActivity extends Activity {
                 if ("sleep_alarm".equals(a)) { b.put("a", "sleep"); b.put("on", true); b.put("wake", 480); }
                 else { b.put("a", a); if (key != null) b.put(key, val); }
                 JSONObject r = Nexus.call(this, "/watch/action", b);
-                if (r.has("state")) state = r.getJSONObject("state");
+                if (r.has("state")) { state = r.getJSONObject("state"); Live.save(this, state); }
                 JSONObject lk = state != null ? state.optJSONObject("look") : null;
                 if (lk != null) ui.post(() -> applyLook(lk, true));
                 String m = r.optString("msg"); err = "";
@@ -591,6 +650,127 @@ public class MainActivity extends Activity {
                 ui.post(() -> { toast("🖼 Hintergrund gesetzt"); if (state != null) applyLook(state.optJSONObject("look"), false); gallery = null; go("main"); });
             } catch (Exception e) { err = String.valueOf(e.getMessage()); ui.post(this::render); }
         });
+    }
+
+    // ---------- 8.2: 🔞 Spielzeug-Fernbedienung ----------
+    private int curLevel() {
+        if (localLevel >= 0 && System.currentTimeMillis() - localLevelAt < 3000) return localLevel;
+        JSONObject t = state != null ? state.optJSONObject("toys") : null;
+        return t != null ? t.optInt("level") : 0;
+    }
+    /** Stärke lokal sofort zeigen, gesendet wird gebündelt (alle 250 ms höchstens einmal) */
+    private void setLevel(int lv) {
+        lv = Math.max(0, Math.min(100, lv));
+        if (lv == curLevel() && localLevel >= 0) return;
+        localLevel = lv; localLevelAt = System.currentTimeMillis();
+        if (dial != null) { dial.level = lv; dial.invalidate(); }
+        if (lv % 10 == 0) buzz(12);
+        ui.removeCallbacks(levelSend); ui.postDelayed(levelSend, 250);
+    }
+    private void sendLevel() {
+        final int lv = localLevel;
+        if (lv < 0) return;
+        net.execute(() -> {
+            try { JSONObject r = Live.act(this, Live.body("toy_level", "level", lv)); if (r.has("state")) state = r.getJSONObject("state"); err = ""; }
+            catch (Exception e) { err = String.valueOf(e.getMessage()); ui.post(() -> { buzz(200); render(); }); }
+        });
+    }
+    private void renderToys() {
+        JSONObject s = state, t = s != null && s.optBoolean("nsfw") ? s.optJSONObject("toys") : null;
+        dial = null;
+        text("〰 Fernbedienung", 14, CYAN, true);
+        if (t == null) {
+            text(s != null && !s.optString("nsfw_reason").isEmpty() ? s.optString("nsfw_reason") : "Nicht freigeschaltet.", 10, MUTED, false);
+            button("⏹ STOPP", RED, v -> { buzz(150); act("toys_stop", null, null); });   // Stopp geht immer
+            button("← Menü", MUTED, v -> go("main"));
+            return;
+        }
+        if (!err.isEmpty()) text("⚠ " + err, 10, GOLD, false);
+        String consent = t.optString("consent", "green");
+        dial = new LevelDial(this);
+        dial.level = curLevel(); dial.out = t.optInt("out"); dial.accent = "red".equals(consent) ? RED : "yellow".equals(consent) ? GOLD : CYAN; dial.muted = MUTED;
+        dial.listener = lv -> setLevel(lv);
+        root.addView(dial, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        JSONObject pat = t.optJSONObject("pattern");
+        String sub = t.optInt("devices") == 0 ? "kein Gerät verbunden" : "red".equals(consent) ? "🔴 Pause (Ampel rot)" : t.optBoolean("paused") ? "⏸ Pause" : pat != null ? "〰 " + pat.optString("name") + (pat.optInt("left") > 0 ? " · " + pat.optInt("left") + " s" : "") : "Krone drehen oder wischen";
+        text(sub, 10, MUTED, false);
+        Button stop = button("⏹ STOPP", RED, v -> { buzz(150); localLevel = 0; localLevelAt = System.currentTimeMillis(); ui.removeCallbacks(levelSend); act("toys_stop", null, null); });
+        stop.setMinHeight(dp(58)); stop.setTextSize(18);
+        button("🌅 Ausklingen (15 s)", MUTED, v -> { ui.removeCallbacks(levelSend); localLevel = -1; act("toy_fade", "fade_s", 15); });   // 8.2: Spielzeug-Labor
+        LinearLayout r = row();
+        chip(r, "−10", CYAN, v -> setLevel(curLevel() - 10));
+        chip(r, "+10", CYAN, v -> setLevel(curLevel() + 10));
+        text("Ampel · jetzt " + Live.consentIcon(consent), 10, MUTED, false);
+        LinearLayout a = row();
+        chip(a, "🟢", GREEN, v -> act("consent", "light", "green"));
+        chip(a, "🟡", GOLD, v -> act("consent", "light", "yellow"));
+        chip(a, "🔴", RED, v -> { buzz(150); act("consent", "light", "red"); });
+        if (pat != null) button("⏹ Muster aus", MUTED, v -> act("toy_pattern_stop", null, null));
+        button("🎁 Überraschung", GOLD, v -> act("toy_surprise", null, null));
+        org.json.JSONArray pl = t.optJSONArray("patterns");
+        if (pl != null && pl.length() > 0) {
+            text("Muster", 10, MUTED, false);
+            LinearLayout pr = null;
+            for (int i = 0; i < pl.length(); i++) {
+                JSONObject x = pl.optJSONObject(i); if (x == null) continue;
+                if (i % 2 == 0) pr = row();
+                final String id = x.optString("id");
+                boolean on = pat != null && id.equals(pat.optString("id"));
+                Button pb = new Button(this);
+                pb.setText(x.optString("name")); pb.setAllCaps(false); pb.setTextSize(11); pb.setTextColor(Color.WHITE); pb.setPadding(dp(4), 0, dp(4), 0);
+                GradientDrawable g = new GradientDrawable(); g.setCornerRadius(dp(22)); g.setColor(on ? 0xFF1E3A44 : 0xFF16202B); g.setStroke(dp(on ? 2 : 1), on ? CYAN : MUTED);
+                pb.setBackground(g);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1); lp.leftMargin = dp(2); lp.rightMargin = dp(2);
+                pb.setLayoutParams(lp);
+                pb.setOnClickListener(v -> { buzz(20); act("toy_pattern", "id", id); });
+                pr.addView(pb);
+            }
+        }
+        boolean armed = System.currentTimeMillis() - panicArmed < 3000;
+        button(armed ? "🚨 NOCHMAL = PANIK" : "🚨 Panik", RED, v -> panic());
+        button("← Menü", MUTED, v -> go("main"));
+    }
+
+    // ---------- 8.2: Chatbox-Schnelltexte ----------
+    private void renderChat() {
+        text("💬 Chatbox", 14, CYAN, true);
+        text("Tippen = in die VRChat-Chatbox (Texte am PC unter Geräte änderbar)", 9, MUTED, false);
+        if (!err.isEmpty()) text("⚠ " + err, 10, GOLD, false);
+        org.json.JSONArray q = state != null ? state.optJSONArray("quick") : null;
+        if (q == null || q.length() == 0) text(state == null ? "Lade …" : "Keine Schnelltexte.", 11, MUTED, false);
+        else for (int i = 0; i < q.length(); i++) { final int k = i; button(q.optString(i), MUTED, v -> act("chat", "i", k)); }
+        button("← Menü", MUTED, v -> go("main"));
+    }
+
+    // ---------- 8.2: Makros & Avatar-Presets ----------
+    private void renderShortcuts() {
+        text("⚡ Aktionen", 14, GOLD, true);
+        if (!err.isEmpty()) text("⚠ " + err, 10, GOLD, false);
+        if (shortcuts == null) {
+            text("Lade …", 11, MUTED, false);
+            if (!shortcutsBusy) {
+                shortcutsBusy = true;
+                net.execute(() -> {
+                    try { JSONObject r = Live.act(this, Live.body("shortcuts")); shortcuts = r; err = ""; }
+                    catch (Exception e) { err = String.valueOf(e.getMessage()); shortcuts = new JSONObject(); }
+                    shortcutsBusy = false;
+                    ui.post(() -> { if ("shortcuts".equals(screen)) render(); });
+                });
+            }
+        } else {
+            org.json.JSONArray m = shortcuts.optJSONArray("macros"), ps = shortcuts.optJSONArray("presets");
+            if (m != null && m.length() > 0) {
+                text("Makros", 10, MUTED, false);
+                for (int i = 0; i < m.length(); i++) { JSONObject x = m.optJSONObject(i); if (x == null) continue; final String id = x.optString("id"); button("⚡ " + x.optString("name"), CYAN, v -> act("macro", "id", id)); }
+            }
+            if (ps != null && ps.length() > 0) {
+                text("Avatar-Presets" + (shortcuts.optString("avatar").isEmpty() ? "" : " · " + shortcuts.optString("avatar")), 10, MUTED, false);
+                for (int i = 0; i < ps.length(); i++) { JSONObject x = ps.optJSONObject(i); if (x == null) continue; final String id = x.optString("id"); button("🎭 " + x.optString("name"), MUTED, v -> act("preset", "id", id)); }
+            }
+            if ((m == null || m.length() == 0) && (ps == null || ps.length() == 0)) text("Noch keine Makros oder Presets – am PC anlegen.", 10, MUTED, false);
+            button("🔄 Neu laden", MUTED, v -> { shortcuts = null; render(); });
+        }
+        button("← Menü", MUTED, v -> go("main"));
     }
 
     // ---------- Updater ----------
