@@ -306,7 +306,7 @@ class Nsfw {
         this.need('nsfw');
         switch (act) {
             case 'nsfw_cfg': return Object.assign(this.state(), { cfg: this.saveCfg(input), msg: 'Gespeichert.' });
-            case 'nsfw_panic': return await this.panic();
+            case 'nsfw_panic': return await this.panic();   // interne Panik-Aktionen; alle Panik-KNÖPFE rufen seit 8.3.3 nsfw_panic_full (NSFW aus)
             case 'nsfw_panic_full': return await this.panicFull();
             case 'nsfw_allclear': return await this.allClear();
             case 'nsfw_private': { const want = input.on === undefined ? !this.private : input.on === '1' || input.on === true; if (this.app.nsfwsafe) this.app.nsfwsafe.setPrivate(want); else this.private = want; /* 6.7: Auto-Aus & Neustart */ if (this.private && this.app.tools.rpc) this.app.tools.rpc.setActivity(null); return { ok: true, private: this.private, msg: this.private ? '🕶 Privat-Modus an' : 'Privat-Modus aus' }; }

@@ -63,7 +63,7 @@
         if (dir && !p.buttons[dir]) { if (!prev['s' + dir]) { press(dir); rep['s' + dir] = now + 380; } else if (now > rep['s' + dir]) { press(dir); rep['s' + dir] = now + 110; } prev['s' + dir] = true; }
         for (const k of [12, 13, 14, 15]) if (k !== dir) prev['s' + k] = false;
         // Y (3) 1 s halten = Panik (Sicherheit: auch ohne Maus/Tastatur erreichbar)
-        if (p.buttons[3] && p.buttons[3].pressed) { if (!panicT) panicT = now; else if (now - panicT > 1000 && panicT > 0) { panicT = -1; if (window.NexusUI) NexusUI.api('nsfw_panic').then(r => NexusUI.toast((r && r.msg) || '🚨 Panik')).catch(() => {}); } }
+        if (p.buttons[3] && p.buttons[3].pressed) { if (!panicT) panicT = now; else if (now - panicT > 1000 && panicT > 0) { panicT = -1; if (window.NexusUI) NexusUI.api('nsfw_panic_full').then(r => NexusUI.toast((r && r.msg) || '🚨 Panik')).catch(() => {}); } }
         else panicT = 0;
         raf = requestAnimationFrame(loop);
     }

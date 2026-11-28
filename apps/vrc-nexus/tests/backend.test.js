@@ -2037,6 +2037,13 @@ test('3.0.2: Nexus-Konto – direkt mit der VRChat-ID (ohne Code, Bio bleibt unb
     assert.strictEqual(app.nsfw.access().unlocked, false, 'NSFW bleibt aus, bis man es bewusst einschaltet');
     await post('acct_nsfw', { on: '1' });
     assert.ok(app.nsfw.access().unlocked && app.nsfw.access().features.includes('toys'));
+    // 8.3.3: Panik → NSFW aus; sofort wieder einschalten → sofort freigeschaltet (kein veralteter Zwischenspeicher, 🔞-Reiter kommt zurück)
+    assert.ok(app.nsfw.access().unlocked);
+    await post('acct_nsfw', { on: '0' }); assert.strictEqual(app.nsfw.access().unlocked, false);
+    await post('acct_nsfw', { on: '1' }); assert.strictEqual(app.nsfw.access().unlocked, true, 'direkt nach dem Wiedereinschalten freigeschaltet');
+    app.nsfw.private = true;   // Panik hatte den Privat-Modus an (versteckt den 🔞-Reiter)
+    await post('acct_nsfw', { on: '0' }); assert.strictEqual(app.nsfw.private, true, 'Ausschalten lässt Privat-Modus wie er ist');
+    r = await post('acct_nsfw', { on: '1' }); assert.strictEqual(app.nsfw.private, false, 'Wiedereinschalten beendet den Privat-Modus der Panik'); assert.match(r.msg, /Privat-Modus/);
     // lokal abgelaufene Freigabe sperrt ohne Server
     const o = app.account.load(); o.account.age_until = 1; app.account.store(o);
     assert.strictEqual(app.nsfw.access().unlocked, false);

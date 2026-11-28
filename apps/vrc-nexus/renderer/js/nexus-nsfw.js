@@ -251,8 +251,8 @@
         const a = b.dataset.ns;
         if (a === 'reload') { accErr = ''; box.innerHTML = '<div class="vx-loading">…</div>'; return refreshAccess().then(render); }
         if (b.dataset.tabGo) return UI.tab(b.dataset.tabGo);
-        const simple = { panic: 'nsfw_panic', allclear: 'nsfw_allclear', private: 'nsfw_private', boundaries: 'nsfw_boundaries' };
-        if (simple[a]) return api(simple[a]).then(d => { toast(d.msg); refreshAccess(); }).catch(x => toast(x.message, true));
+        const simple = { panic: 'nsfw_panic_full', allclear: 'nsfw_allclear', private: 'nsfw_private', boundaries: 'nsfw_boundaries' };
+        if (simple[a]) return api(simple[a]).then(d => { toast(d.msg); if (d.nsfw_off) offUi(); else refreshAccess(); }).catch(x => toast(x.message, true));
         if (a === 'avatar') return api('nsfw_avatar', { i: b.dataset.i }).then(d => { toast(d.msg); refreshAccess(); }).catch(x => toast(x.message, true));
         if (a === 'tr_allow') return trCfg({ allow: $v('#trAllow') });
         if (a === 'tr_safe') return api('tremote_safeword').then(d => { st.tremote = d; toast(d.msg); render(); }).catch(x => toast(x.message, true));

@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.3.3",
+  "title": "",
+  "body": "- 🛠 **Fixed: the 18+ tab stayed hidden after switching NSFW back on.** A panic also turns on private mode (which hides the 18+ area); switching NSFW on again now ends that private mode, so the tab is back right away.\n- 🚨 **Panic means the same everywhere:** every panic button (header, 18+ area, hand menu, controller, phone remote, watch) now runs the full panic – panic actions **and NSFW content and tools off**. Toys stop with it. To only stop the toys, use **Stop**."
+ },
+ {
   "version": "8.3.1",
   "title": "Toys tab redesign",
   "body": "- New header: big connection status, Connect / Search devices, STOP EVERYTHING always visible, max intensity, \"off after X s without signal\" and the avatar-control main switch in one row; connection details collapsible.\n- Device cards with live output bar, battery, capabilities (vibration, stroker, rotation …), test pulse, mute and per-device stop.\n- Per device: Off / Follows my avatar (simple, with templates: gentle, balanced, intense, motion, touch only) / Expert.\n- Expert sources: zones picked from the avatar you are wearing (SPS, OGB, TPS, VFH) with live values, mode depth / motion / both, range (dual slider), curve, smoothing, idle level, motion sensitivity, \"ignore own touches\"; the strongest source is marked live (★).\n- Custom source picker in Nexus style (grouped, descriptions, live values, keyboard, search) instead of the native drop-down; dark colour scheme for remaining native selects.\n- Strokers can follow penetration depth with position commands (LinearCmd), top speed, bottom/top limits and rest position; rotation can follow in/out motion.\n- Export / import a device mapping as a text code.\n- TPS (Thry's Penetration System) detected as a source.\n- Safety unchanged: age clearance, STOP / panic / red light take priority and also halt strokers, max intensity caps everything.\n```"

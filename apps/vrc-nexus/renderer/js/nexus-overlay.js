@@ -110,7 +110,7 @@
         const b = e.target.closest('[data-a]');
         if (!b) return;
         const a = b.dataset.a, v = b.dataset.v;
-        if (a === 'hm_panic') { if (Date.now() - armed > 3000) { armed = Date.now(); render(); setTimeout(render, 3100); return; } armed = 0; return run(api('nsfw_panic')); }
+        if (a === 'hm_panic') { if (Date.now() - armed > 3000) { armed = Date.now(); render(); setTimeout(render, 3100); return; } armed = 0; return run(api('nsfw_panic_full')); }
         if (a === 'hm_vc') return run(api('vcmd_run', { id: v }));
         if (a === 'friend') return run(act('friend', { id: b.dataset.id, op: b.dataset.op === 'invite' ? 'invite' : 'join' }));
         if (a === 'send') { if (!text.trim()) return; const t = text; text = ''; render(); return run(act('chatbox', { text: t, sound: '1', translate: cfg.translate ? '1' : '', target: cfg.target || '' }).then(d => Object.assign(d, { msg: '💬 ' + (d.text || t) }))); }

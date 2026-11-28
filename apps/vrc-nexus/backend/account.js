@@ -53,6 +53,7 @@ class Account {
         if (!o) return;
         o.account = account; o.at = Date.now();
         this.store(o);
+        if (this.app.nsfw) this.app.nsfw.accessMemo = null;   // 8.3.3: Freischaltung sofort neu bewerten (sonst blieb der 🔞-Reiter nach dem Wiedereinschalten bis zu 1 s – also beim Neuzeichnen – versteckt)
         this.notifyAccess();
     }
     /** NSFW-Bereich neu bewerten (z. B. Freigabe entzogen → Spielzeuge stoppen) */
@@ -188,7 +189,11 @@ class Account {
                 const on = input.on === '1' || input.on === true;
                 const d = await this.call('nsfw', { on }, o().token);
                 this.save(d.account);
-                return Object.assign(this.status(), { msg: on ? '🔞 NSFW eingeschaltet.' : 'NSFW ausgeschaltet.' });
+                // 8.3.3: Wer NSFW bewusst wieder einschaltet, will den 🔞-Bereich sehen – den Privat-Modus einer vorherigen Panik beenden
+                let extra = '';
+                const n = this.app.nsfw;
+                if (on && n && n.private) { if (this.app.nsfwsafe) this.app.nsfwsafe.setPrivate(false); else n.private = false; if (!n.private) extra = ' Privat-Modus der Panik beendet.'; }
+                return Object.assign(this.status(), { msg: (on ? '🔞 NSFW eingeschaltet.' : 'NSFW ausgeschaltet.') + extra });
             }
             case 'acct_recheck': {
                 const before = this.age().verified;

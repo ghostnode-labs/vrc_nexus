@@ -9,7 +9,7 @@ const os = require('os');
 const crypto = require('crypto');
 const { str, int, UserError } = require('./util');
 
-const ALLOWED = ['nsfw_panic', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise', 'toys_pattern', 'toys_pattern_stop', 'nsfw_consent', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop'];
+const ALLOWED = ['nsfw_panic', 'nsfw_panic_full', 'nsfw_private', 'nsfw_avatar', 'nsfw_boundaries', 'toys_set', 'toys_stop', 'toys_status', 'toys_surprise', 'toys_pattern', 'toys_pattern_stop', 'nsfw_consent', 'toys_consent', 'toys_edge_release', 'toys_climax', 'toys_scene_stop'];
 const DEF = { on: false, port: 17870, token: '' };
 
 class Remote {
@@ -108,7 +108,7 @@ const t=d.toys;if(!drag)$('#toys').innerHTML=!t||!t.connected?'<small>Intiface n
 '<div class="dev"><b>Alle <span id="lv-all"></span></b><input type="range" min="0" max="100" value="0" data-dev="all"></div>'+t.devices.map(x=>'<div class="dev"><b>'+E(x.name)+' <span>'+x.level+' %</span></b><input type="range" min="0" max="100" value="'+x.level+'" data-dev="'+x.index+'"></div>').join('');
 $('#pat').innerHTML=t&&t.connected&&t.devices.length?(t.patterns||[]).map(p=>'<button data-p="'+p.id+'" class="'+(t.pattern&&t.pattern.id===p.id&&!t.pattern.name.includes('🎁')?'on':'')+'">'+E(p.name)+'</button>').join('')+(t.pattern?'<button data-p="">⏸ Muster aus</button>':''):'';
 $('#st').textContent=d.world?'🌐 '+d.world:'verbunden';$('#err').textContent=''}catch(e){$('#err').textContent='⚠ '+e.message}}
-$('#panic').onclick=()=>act('nsfw_panic');$('#priv').onclick=()=>act('nsfw_private');$('#bnd').onclick=()=>act('nsfw_boundaries');$('#stop').onclick=()=>act('toys_stop');$('#surp').onclick=()=>act('toys_surprise');$('#cons').onclick=()=>act('nsfw_consent');
+$('#panic').onclick=()=>act('nsfw_panic_full');$('#priv').onclick=()=>act('nsfw_private');$('#bnd').onclick=()=>act('nsfw_boundaries');$('#stop').onclick=()=>act('toys_stop');$('#surp').onclick=()=>act('toys_surprise');$('#cons').onclick=()=>act('nsfw_consent');
 $('#pat').onclick=e=>{const b=e.target.closest('[data-p]');if(b)act(b.dataset.p?'toys_pattern':'toys_pattern_stop',{id:b.dataset.p,speed:1,strength:60})};
 $('#pairs').onclick=e=>{const b=e.target.closest('[data-i]');if(b)act('nsfw_avatar',{i:b.dataset.i})};
 $('#toys').addEventListener('input',e=>{const r=e.target.closest('[data-dev]');if(!r)return;drag=true;const s=r.previousElementSibling.querySelector('span');if(s)s.textContent=r.value+' %';clearTimeout(timer);timer=setTimeout(()=>fetch('act?t='+encodeURIComponent(T),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({act:'toys_set',device:r.dataset.dev,level:r.value/100})}),60)});

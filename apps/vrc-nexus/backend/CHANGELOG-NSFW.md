@@ -2,6 +2,10 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.3.3
+- 🛠 **Fixed: the 18+ tab stayed hidden after switching NSFW back on.** A panic also turns on private mode (which hides the 18+ area); switching NSFW on again now ends that private mode, so the tab is back right away.
+- 🚨 **Panic means the same everywhere:** every panic button (header, 18+ area, hand menu, controller, phone remote, watch) now runs the full panic – panic actions **and NSFW content and tools off**. Toys stop with it. To only stop the toys, use **Stop**.
+
 ### New in 8.3.1 – Toys tab redesign
 - New header: big connection status, Connect / Search devices, STOP EVERYTHING always visible, max intensity, "off after X s without signal" and the avatar-control main switch in one row; connection details collapsible.
 - Device cards with live output bar, battery, capabilities (vibration, stroker, rotation …), test pulse, mute and per-device stop.
