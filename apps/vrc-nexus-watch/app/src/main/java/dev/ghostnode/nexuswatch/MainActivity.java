@@ -206,7 +206,7 @@ public class MainActivity extends Activity {
         lp.topMargin = dp(6);
         btn.setMinHeight(dp(44));
         btn.setLayoutParams(lp);
-        btn.setOnClickListener(v -> { buzz(20); l.onClick(v); });
+        btn.setOnClickListener(v -> { buzz(20); if (typing()) { if (pinIn != null) pinIn.clearFocus(); if (hostIn != null) hostIn.clearFocus(); } l.onClick(v); });   // Knopf = Eingabe fertig
         root.addView(btn);
         return btn;
     }
@@ -267,7 +267,13 @@ public class MainActivity extends Activity {
     private void toast(String s) { Toast.makeText(this, s, Toast.LENGTH_SHORT).show(); }
 
     // ---------- Anzeige ----------
+    private boolean renderLater;   // 8.3.2: Neuaufbau aufgeschoben, solange im Kopplungs-Feld getippt wird
+    private boolean typing() { return (pinIn != null && pinIn.hasFocus()) || (hostIn != null && hostIn.hasFocus()); }
     private void render() {
+        // Beim Koppeln nicht neu aufbauen, solange eine Eingabe den Fokus hat – sonst schließt sich die Tastatur (z. B. wenn die
+        // automatische Update-Suche oder ein Abruf im Hintergrund fertig wird). Nachgeholt, sobald die Eingabe den Fokus verliert.
+        if (typing()) { renderLater = true; return; }
+        renderLater = false;
         root.removeAllViews();
         if ("settings".equals(screen)) { renderSettings(); return; }
         if ("gallery".equals(screen)) { renderGallery(); return; }
@@ -470,13 +476,19 @@ public class MainActivity extends Activity {
         text("Nexus Watch", 18, GOLD, true);
         text("Mit VRC Nexus koppeln:\nam PC unter Werkzeuge → Nexus Watch die Verbindung erlauben und den Code eingeben.", 11, MUTED, false);
         if (p().getBoolean("lost", false)) text("Die Kopplung wurde am PC entfernt.", 11, GOLD, false);
+        String pinV = pinIn != null ? pinIn.getText().toString() : "", hostV = hostIn != null ? hostIn.getText().toString() : "";   // Eingaben über Neuaufbau behalten
+        android.view.View.OnFocusChangeListener later = (v, has) -> { if (!has) ui.post(() -> { if (renderLater && !typing()) render(); }); };
         pinIn = new EditText(this);
         pinIn.setHint("Code (6 Ziffern)"); pinIn.setInputType(InputType.TYPE_CLASS_NUMBER); pinIn.setGravity(Gravity.CENTER);
         pinIn.setTextColor(Color.WHITE); pinIn.setHintTextColor(MUTED); pinIn.setTextSize(18);
+        pinIn.setText(pinV); pinIn.setOnFocusChangeListener(later);
+        pinIn.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
         root.addView(pinIn);
         hostIn = new EditText(this);
         hostIn.setHint("PC-Adresse (leer = suchen)"); hostIn.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         hostIn.setGravity(Gravity.CENTER); hostIn.setTextColor(Color.WHITE); hostIn.setHintTextColor(MUTED); hostIn.setTextSize(12);
+        hostIn.setText(hostV); hostIn.setOnFocusChangeListener(later);
+        hostIn.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
         root.addView(hostIn);
         if (!err.isEmpty()) text("⚠ " + err, 11, GOLD, false);
         button("🔗 Koppeln", GOLD, v -> pair());
@@ -487,6 +499,8 @@ public class MainActivity extends Activity {
     private void pair() {
         String pin = pinIn.getText().toString().replaceAll("\\D", ""), manual = hostIn.getText().toString().trim();
         if (pin.length() != 6) { toast("Bitte den 6-stelligen Code eingeben."); return; }
+        pinIn.clearFocus(); hostIn.clearFocus();
+        try { ((android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(root.getWindowToken(), 0); } catch (Exception ignored) { }
         err = ""; toast("Suche VRC Nexus …");
         net.execute(() -> {
             try {
@@ -502,7 +516,7 @@ public class MainActivity extends Activity {
                 JSONObject pr = Nexus.pair(this, host, port, pin);
                 final boolean adult = pr.optBoolean("adult");
                 ui.post(() -> { buzz(60); toast(adult && !Live.discreet(this) ? "✔ Gekoppelt · 🔞 Freigabe übernommen" : "✔ Gekoppelt"); render(); refresh(); });
-            } catch (Exception e) { err = String.valueOf(e.getMessage()); ui.post(this::render); }
+            } catch (Exception e) { err = String.valueOf(e.getMessage()); ui.post(() -> { if (pinIn != null) pinIn.clearFocus(); if (hostIn != null) hostIn.clearFocus(); render(); }); }
         });
     }
     private void refresh() {

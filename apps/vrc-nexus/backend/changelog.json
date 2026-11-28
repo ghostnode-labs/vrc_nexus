@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.3.2",
+  "title": "",
+  "body": "- ⌚ **Fixed: pairing on the watch** – the keyboard no longer closes while you type the pairing code or PC address (a background update check or refresh rebuilt the screen). What you typed is kept, and the Done key / the \"Pair\" button closes the keyboard properly."
+ },
+ {
   "version": "8.3.1",
   "title": "",
   "body": "- Native dropdowns now open in the dark theme everywhere.\n- 🔞 ***"

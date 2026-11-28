@@ -26,6 +26,9 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.3.2
+- ⌚ **Fixed: pairing on the watch** – the keyboard no longer closes while you type the pairing code or PC address (a background update check or refresh rebuilt the screen). What you typed is kept, and the Done key / the "Pair" button closes the keyboard properly.
+
 ### New in 8.3.1
 - Native dropdowns now open in the dark theme everywhere.
 - 🔞 ***
