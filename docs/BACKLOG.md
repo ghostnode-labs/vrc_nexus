@@ -6,7 +6,13 @@ Format: `- [ ] **Bereich** – Beschreibung` (Quelle/Datei, falls bekannt)
 
 ## 🐞 Fehler
 
-- _(noch leer)_
+- [ ] **Gruppen-Moderation** (Profil/Moderation → „Gruppen-Moderation“) – Jede Gruppe ist eine große Karte mit allen Knöpfen, die Liste wird sehr lang. Ziel: **aufklappbar (Dropdown/Akkordeon)** – zugeklappt nur Bild, Name, Mitglied seit/Rollen-Kurzinfo; Rollen, + Rolle, Entfernen, Bannen, Bann aufheben, Gruppe öffnen erst nach dem Aufklappen.
+- [ ] **Profil-Fenster eines Nutzers** (z. B. Freund öffnen) – Aufbau neu ordnen:
+  - **Linke Spalte fixiert**, nur der rechte Bereich (Reiter Info, Gemeinsame Freunde, Gruppen …) **scrollt**.
+  - Knöpfe **Nachricht / Anrufen / Community-Profil** aus der Nexus-Community-Zeile **in die linke Spalte** unter die Profilkarte (drei Knöpfe nebeneinander).
+  - Die fünf Werte-Kacheln (Im Spiel 7 Tage, Im Spiel 30 Tage, Sitzungen, Zuletzt gesehen, Freund seit) **untereinander in die linke Spalte** darunter.
+  - „Wann ist X online?“ (Heatmap) bekommt die **linke Hälfte** des Info-Reiters, **„Meine Notiz“** (mit Favorit, Benachrichtigen, Eigene Listen) rückt **rechts daneben nach oben**.
+  - Abschnitt **„Gemeinsam“ (gemeinsame Freunde)** aus dem Info-Reiter **entfernen** – gibt es schon im Reiter „Gemeinsame Freunde“.
 
 ## 💡 Ideen
 
