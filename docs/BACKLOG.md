@@ -16,7 +16,7 @@ Format: `- [ ] **Bereich** – Beschreibung` (Quelle/Datei, falls bekannt)
 
 ## 💡 Ideen
 
-- _(noch leer)_
+- [ ] **Chatbox + Chatbox-Studio zusammenführen** (Werkzeuge → Chatbox) – heute zwei getrennte Karten (links „Chatbox“ mit Textfeld, Emojis, Übersetzen, Senden, Zuletzt; rechts „Chatbox-Studio“ mit Vorschau, Platzhaltern, Vorlagen, Schnelltexten, Geplant, Verlauf). Ziel: **ein gemeinsamer, schönerer Editor** – oben Textfeld mit Live-Vorschau „wie in VRChat“ direkt darunter, Platzhalter/Emojis/Kaomoji als einklappbare Leisten oder Einfüge-Menü am Textfeld, Optionen (Übersetzen, lange Nachrichten aufteilen, Tipp-Anzeige, Ton, Verzögerung) als kompakte Schalterzeile, Senden/Leeren/Als Schnelltext speichern/Planen als eine Aktionsleiste; Schnelltexte, Vorlagen, Geplant und Verlauf als Masonry-Karten darunter. „Zuletzt“ und „Verlauf“ zusammenlegen (doppelt). Volle Breite, Masonry, keine Lücken.
 
 ## ✅ Erledigt
 
