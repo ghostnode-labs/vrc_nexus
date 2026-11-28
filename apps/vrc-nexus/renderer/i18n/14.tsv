@@ -1,0 +1,134 @@
+ALLES STOPPEN	STOP EVERYTHING	TOUT ARRÊTER	すべて停止
+Adresse von Intiface	Intiface address	Adresse d'Intiface	Intifaceのアドレス
+Alles exportieren	Export everything	Tout exporter	すべてエクスポート
+Als Text kopieren und bei dir oder einer anderen Person wieder einfügen – enthält nur Einstellungen.	Copy as text and paste it back on your side or someone else's – contains settings only.	Copier en texte et recoller chez toi ou chez quelqu'un d'autre – ne contient que des réglages.	テキストとしてコピーし、自分や他の人の環境に貼り付けられます（設定のみ）。
+Alte Mutatoren	Old mutators	Anciens mutateurs	旧ミューテーター
+Ampel gelb – Stärke gedämpft.	Traffic light yellow – intensity dampened.	Feu orange – intensité atténuée.	信号が黄 – 強さを抑えています。
+Ampel rot – alles gestoppt, bis du sie unter „Lust & PCS“ wieder auf Grün stellst.	Traffic light red – everything stopped until you set it back to green under “Lust & PCS”.	Feu rouge – tout est arrêté jusqu'à ce que tu le remettes au vert sous « Désir & PCS ».	信号が赤 – 「快感 & PCS」で緑に戻すまで全停止。
+Avatar steuert dieses Gerät nicht (Muster, Regler & Fernsteuerung gehen weiter)	Avatar does not control this device (patterns, sliders & remote still work)	L'avatar ne pilote pas cet appareil (motifs, curseurs et télécommande restent actifs)	アバターはこのデバイスを操作しません（パターン・スライダー・リモートは有効）
+Avatar-Steuerung	Avatar control	Pilotage par l'avatar	アバター制御
+Avatar-Steuerung ist aus	Avatar control is off	Le pilotage par l'avatar est désactivé	アバター制御はオフです
+Berührungs-Zonen (Brust, Po, Ohren …)	Touch zones (chest, butt, ears …)	Zones de contact (poitrine, fesses, oreilles …)	タッチゾーン（胸・お尻・耳 …）
+Bewegungs-Empfindlichkeit	Motion sensitivity	Sensibilité au mouvement	動きの感度
+Code einfügen	Paste code	Coller le code	コードを貼り付け
+Die Quellen dieses Geräts durch die Vorlage ersetzen?	Replace this device's sources with the template?	Remplacer les sources de cet appareil par le modèle ?	このデバイスのソースをテンプレートで置き換えますか？
+Diese Quelle ist gerade die stärkste und bestimmt die Ausgabe.	This source is currently the strongest and sets the output.	Cette source est actuellement la plus forte et détermine la sortie.	このソースが現在最も強く、出力を決めています。
+Eigene Berührungen ignorieren	Ignore own touches	Ignorer ses propres contacts	自分の接触を無視
+Eigener Parameter	Custom parameter	Paramètre personnalisé	カスタムパラメーター
+Einfach: alle Zonen deines Avatars, passende Einstellungen per Vorlage	Simple: all zones of your avatar, matching settings via template	Simple : toutes les zones de ton avatar, réglages adaptés via un modèle	シンプル：アバターの全ゾーン、設定はテンプレートで
+Feineinstellungen	Fine-tuning	Réglages fins	詳細設定
+Folgt automatisch allen Plugs, Sockets und Touch-Zonen deines aktuellen Avatars – nur Berührungen von anderen.	Automatically follows all plugs, sockets and touch zones of your current avatar – only touches from others.	Suit automatiquement tous les plugs, sockets et zones de contact de ton avatar actuel – uniquement les contacts des autres.	現在のアバターの全プラグ・ソケット・タッチゾーンに自動で追従（他の人からの接触のみ）。
+Gespeichert, gerade nicht verbunden:	Saved, currently not connected:	Enregistrés, non connectés pour l'instant :	保存済み・現在未接続：
+Gespeicherte Zuordnung löschen?	Delete saved mapping?	Supprimer l'association enregistrée ?	保存した割り当てを削除しますか？
+Grenzen unten / oben	Limits bottom / top	Limites bas / haut	下限 / 上限
+Herzfrequenz (HypeRate & Co.)	Heart rate (HypeRate & co.)	Fréquence cardiaque (HypeRate & co.)	心拍数（HypeRateなど）
+Hände und Touch-Zonen, kein Eindringen	Hands and touch zones, no penetration	Mains et zones de contact, sans pénétration	手とタッチゾーンのみ、挿入なし
+Höchstens 10 Quellen je Gerät.	At most 10 sources per device.	10 sources maximum par appareil.	1デバイスにつき最大10ソース。
+Höchsttempo	Top speed	Vitesse maximale	最高速度
+Kein SPS/OGB/TPS/PCS an diesem Avatar gefunden (oder OSC-Konfiguration noch nicht gelesen).	No SPS/OGB/TPS/PCS found on this avatar (or OSC configuration not read yet).	Aucun SPS/OGB/TPS/PCS trouvé sur cet avatar (ou configuration OSC pas encore lue).	このアバターにSPS/OGB/TPS/PCSは見つかりません（またはOSC設定が未読込）。
+Körper & Puls	Body & pulse	Corps & pouls	体と心拍
+Lautstärke am Mikrofon	Microphone volume	Volume du micro	マイクの音量
+Leerlauf	Idle	Ralenti	アイドル
+Mehrere Quellen: die stärkste zählt (★).	Several sources: the strongest counts (★).	Plusieurs sources : la plus forte compte (★).	複数ソース：最も強いものが有効（★）。
+Muster, Überraschung & Statistik findest du unter	Patterns, surprise & statistics are under	Motifs, surprise & statistiques se trouvent sous	パターン・サプライズ・統計はこちら：
+Name, Min/Max, Kurve, Motoren, Reaktionszeit	Name, min/max, curve, motors, response time	Nom, min/max, courbe, moteurs, temps de réaction	名前・最小/最大・カーブ・モーター・反応時間
+Noch keine Quelle – unten hinzufügen oder eine Vorlage wählen.	No source yet – add one below or pick a template.	Pas encore de source – ajoute-en une ci-dessous ou choisis un modèle.	まだソースがありません – 下で追加するかテンプレートを選択。
+Noch keine Zonen erkannt. Trage einen Avatar mit SPS (VRCFury), OGB oder TPS, OSC in VRChat an – die Zonen erscheinen dann hier automatisch.	No zones detected yet. Wear an avatar with SPS (VRCFury), OGB or TPS and turn OSC on in VRChat – the zones then appear here automatically.	Aucune zone détectée. Porte un avatar avec SPS (VRCFury), OGB ou TPS et active l'OSC dans VRChat – les zones apparaîtront ici automatiquement.	まだゾーンが検出されていません。SPS（VRCFury）・OGB・TPS付きのアバターを着て、VRChatでOSCをオンにすると自動で表示されます。
+Nur dieses Gerät stoppen	Stop this device only	Arrêter seulement cet appareil	このデバイスのみ停止
+OGB-/SPS-Parameter steuern alle Geräte (Nähe = Stärke)	OGB/SPS parameters control all devices (proximity = intensity)	Les paramètres OGB/SPS pilotent tous les appareils (proximité = intensité)	OGB/SPSパラメーターで全デバイスを操作（近さ＝強さ）
+Parameter fehlt	Parameter missing	Paramètre manquant	パラメーターがありません
+Penetration Contact System (Tiefe, Tempo, Lust)	Penetration Contact System (depth, speed, lust)	Penetration Contact System (profondeur, rythme, désir)	Penetration Contact System（深さ・速さ・快感）
+Penis-Zonen deines Avatars	Penis zones of your avatar	Zones pénis de ton avatar	アバターのペニスゾーン
+Quelle entfernen	Remove source	Retirer la source	ソースを削除
+Quelle hinzufügen	Add source	Ajouter une source	ソースを追加
+Quellen einzeln wählen und fein einstellen	Pick sources individually and fine-tune them	Choisir les sources une par une et les régler finement	ソースを個別に選んで細かく設定
+Richtung wechselt in festem Abstand	Direction changes at a fixed interval	La direction change à intervalle fixe	一定間隔で方向を切り替え
+Ruhestellung	Rest position	Position de repos	待機位置
+Stoppt sofort alle Geräte, Muster, Szenen und schaltet die Avatar-Steuerung aus.	Immediately stops all devices, patterns, scenes and turns avatar control off.	Arrête immédiatement tous les appareils, motifs et scènes et désactive le pilotage par l'avatar.	全デバイス・パターン・シーンを即停止し、アバター制御をオフにします。
+Test: kurzer Puls – welches Gerät ist das?	Test: short pulse – which device is this?	Test : courte impulsion – quel appareil est-ce ?	テスト：短いパルス – どのデバイス？
+Tiefe und Bewegung, gut für den Anfang	Depth and motion, good for starters	Profondeur et mouvement, idéal pour commencer	深さと動き、最初におすすめ
+Vorlage anwenden	Apply template	Appliquer un modèle	テンプレートを適用
+Zonen deines Avatars	Zones of your avatar	Zones de ton avatar	アバターのゾーン
+Zuordnung löschen	Delete mapping	Supprimer l'association	割り当てを削除
+Zuordnung teilen	Share mapping	Partager l'association	割り当てを共有
+Zuordnungs-Code	Mapping code	Code d'association	割り当てコード
+aktuelle Ausgabe	current output	sortie actuelle	現在の出力
+aktuelle Position	current position	position actuelle	現在の位置
+alle Zonen	all zones	toutes les zones	全ゾーン
+als Experte anpassen	customise as expert	personnaliser en mode expert	エキスパートで調整
+auch eigene Berührungen (Self)	own touches too (self)	aussi ses propres contacts (self)	自分の接触も（Self）
+beliebiger Avatar-Parameter (0–1)	any avatar parameter (0–1)	n'importe quel paramètre d'avatar (0–1)	任意のアバターパラメーター（0–1）
+berührt von	touched by	touché par	接触元
+das Stärkere von Tiefe und Bewegung	the stronger of depth and motion	le plus fort entre profondeur et mouvement	深さと動きの強い方
+einschalten	turn on	activer	オンにする
+erkannt	detected	détecté(s)	検出
+früh stark	strong early	fort tôt	早く強く
+für Gerät	for device	pour l'appareil	対象デバイス
+gerade	right now	en ce moment	現在
+gleichbleibende Grundstärke	constant base intensity	intensité de base constante	一定のベース強度
+gleichmäßig	even	régulier	均等
+je tiefer bzw. näher, desto stärker	the deeper or closer, the stronger	plus c'est profond ou proche, plus c'est fort	深い・近いほど強く
+leise und weich, steigt langsam an	quiet and soft, builds up slowly	doux et léger, monte lentement	静かでやわらか、ゆっくり上昇
+live	live	en direct	ライブ
+nichts gewählt = alle	nothing selected = all	rien de choisi = tout	未選択＝すべて
+niemand gewählt	nobody selected	personne de choisi	誰も選択されていません
+noch kein Gerät	no device yet	pas encore d'appareil	デバイスなし
+nur	only	seulement	のみ
+nur Bewegung zählt – je schneller, desto stärker	only motion counts – the faster, the stronger	seul le mouvement compte – plus c'est rapide, plus c'est fort	動きだけが有効 – 速いほど強く
+nur Bewegung zählt – stillhalten = ruhig	only motion counts – holding still = calm	seul le mouvement compte – immobile = calme	動きだけが有効 – 静止＝静か
+ohne	without	sans	除外
+reagiert früh und kräftig	reacts early and strongly	réagit tôt et fort	早く力強く反応
+rein = rechts, raus = links	in = clockwise, out = counter-clockwise	entrée = sens horaire, sortie = sens antihoraire	入る＝右回り、出る＝左回り
+steigt mit der Zeit und Stärke	rises with time and intensity	monte avec le temps et l'intensité	時間と強さで上昇
+von anderen	from others	des autres	他の人から
+von mir selbst	from myself	de moi-même	自分から
+weiter verfügbar	still available	toujours disponible	引き続き利用可
+wie im Code	as in the code	comme dans le code	コードのとおり
+zeigt alle ankommenden Werte	shows all incoming values	affiche toutes les valeurs reçues	受信した全値を表示
+zählt	counts	compte	有効
+Ältere Wege	Older ways	Anciennes méthodes	従来の方法
+Öffnungen deines Avatars	Orifices of your avatar	Orifices de ton avatar	アバターの開口部
+↺ links	↺ counter-clockwise	↺ sens antihoraire	↺ 左回り
+↻ rechts	↻ clockwise	↻ sens horaire	↻ 右回り
+⇄ wechselnd	⇄ alternating	⇄ alterné	⇄ 交互
+⇅ folgt Bewegung	⇅ follows motion	⇅ suit le mouvement	⇅ 動きに追従
+⏩ Stärke = Tempo	⏩ intensity = speed	⏩ intensité = vitesse	⏩ 強さ＝速さ
+⚪ Aus	⚪ Off	⚪ Désactivé	⚪ オフ
+✋ fremde Hände	✋ others' hands	✋ mains des autres	✋ 他人の手
+✋ meine Hände	✋ my hands	✋ mes mains	✋ 自分の手
+✋ nur Berührung	✋ touch only	✋ contact uniquement	✋ 接触のみ
+✨ Beides	✨ Both	✨ Les deux	✨ 両方
+🌊 Bewegung	🌊 Motion	🌊 Mouvement	🌊 動き
+🍆 fremde Plugs	🍆 others' plugs	🍆 plugs des autres	🍆 他人のプラグ
+🍆 meine Plugs	🍆 my plugs	🍆 mes plugs	🍆 自分のプラグ
+🍑 fremde Sockets	🍑 others' sockets	🍑 sockets des autres	🍑 他人のソケット
+🍑 meine Sockets	🍑 my sockets	🍑 mes sockets	🍑 自分のソケット
+🎭 Folgt meinem Avatar	🎭 Follows my avatar	🎭 Suit mon avatar	🎭 アバターに追従
+💗 ausgewogen	💗 balanced	💗 équilibré	💗 バランス
+💙 sanft	💙 gentle	💙 doux	💙 やさしく
+📏 Tiefe	📏 Depth	📏 Profondeur	📏 深さ
+📏 folgt der Tiefe	📏 follows depth	📏 suit la profondeur	📏 深さに追従
+🔥 intensiv	🔥 intense	🔥 intense	🔥 強め
+🛠 Experte	🛠 Expert	🛠 Expert	🛠 エキスパート
+Aus früheren Versionen übernommen und weiter wirksam. Neu besser über Bereich, Kurve und Modus.	Carried over from earlier versions and still active. For new setups better use range, curve and mode.	Repris des versions précédentes et toujours actifs. Pour du neuf, préfère plage, courbe et mode.	以前のバージョンから引き継がれ有効です。新規は範囲・カーブ・モードの使用がおすすめ。
+Deckelt jede Quelle, jedes Muster und jede Fernsteuerung.	Caps every source, pattern and remote control.	Plafonne chaque source, motif et télécommande.	すべてのソース・パターン・リモートの上限です。
+Hauptschalter für alle Avatar-Quellen. ALLES STOPPEN und Panik schalten ihn aus – danach bewusst wieder einschalten.	Main switch for all avatar sources. STOP EVERYTHING and panic turn it off – switch it back on deliberately afterwards.	Interrupteur principal pour toutes les sources de l'avatar. TOUT ARRÊTER et la panique le coupent – à réactiver volontairement ensuite.	全アバターソースのメインスイッチ。すべて停止やパニックでオフになり、その後は意図して再度オンに。
+Intiface Central starten, dort „Start Server“ drücken und oben verbinden.	Start Intiface Central, press “Start Server” there and connect above.	Lance Intiface Central, appuie sur « Start Server » puis connecte-toi ci-dessus.	Intiface Centralを起動し「Start Server」を押して、上で接続してください。
+Intiface aus	Intiface off	Intiface désactivé	Intifaceオフ
+Intiface verbunden	Intiface connected	Intiface connecté	Intiface接続済み
+Keine Geräte – „Geräte suchen“ drücken und das Spielzeug einschalten.	No devices – press “Search devices” and turn the toy on.	Aucun appareil – appuie sur « Chercher des appareils » et allume le jouet.	デバイスなし – 「デバイスを検索」を押して、おもちゃの電源を入れてください。
+Keine weiteren Zonen erkannt – Avatar tragen und berühren lassen.	No further zones detected – wear the avatar and let someone touch it.	Aucune autre zone détectée – porte l'avatar et laisse-le toucher.	他のゾーンは検出されていません – アバターを着て触れてもらってください。
+Kommen so lange keine Avatar-Werte mehr an (VRChat hängt, Avatar gewechselt), wird die Quelle als still gewertet.	If no avatar values arrive for this long (VRChat frozen, avatar changed), the source counts as silent.	Si aucune valeur d'avatar n'arrive pendant ce temps (VRChat figé, avatar changé), la source est considérée comme silencieuse.	この時間アバターの値が届かない場合（VRChatのフリーズ・アバター変更）、ソースは無音扱いになります。
+Leichtes Grundsummen, solange dein Avatar Werte sendet, aber gerade niemand berührt.	Light base hum while your avatar is sending values but nobody is touching.	Léger bourdonnement de base tant que ton avatar envoie des valeurs mais que personne ne touche.	アバターが値を送信中で誰も触れていないときの軽いベース振動。
+Links: reagiert schon bei wenig kräftig. Rechts: fängt sanft an und wird erst spät stark.	Left: strong even with little input. Right: starts gently and only gets strong late.	À gauche : fort même avec peu. À droite : commence doucement et ne devient fort que tard.	左：少しでも強く反応。右：やさしく始まり、後半で強く。
+Läuft Intiface auf diesem PC: ws://127.0.0.1:12345. Auf dem Handy: in Intiface „Listen on all network interfaces“ einschalten und ws://<Handy-IP>:12345 eintragen.	Intiface on this PC: ws://127.0.0.1:12345. On a phone: enable “Listen on all network interfaces” in Intiface and enter ws://<phone IP>:12345.	Intiface sur ce PC : ws://127.0.0.1:12345. Sur un téléphone : active « Listen on all network interfaces » dans Intiface et saisis ws://<IP du téléphone>:12345.	このPCのIntiface：ws://127.0.0.1:12345。スマホの場合：Intifaceで「Listen on all network interfaces」をオンにし、ws://<スマホのIP>:12345 を入力。
+Min = Stärke bei der leisesten Berührung, Max = Stärke bei voller Tiefe bzw. Bewegung.	Min = intensity at the lightest touch, max = intensity at full depth or motion.	Min = intensité au contact le plus léger, max = intensité à pleine profondeur ou plein mouvement.	最小＝最も軽い接触時の強さ、最大＝最大の深さ/動きのときの強さ。
+Ohne Auswahl zählen alle Zonen dieser Art. Klick auf eine Zone: „nur“ → „ohne“ → entfernen.	With nothing selected, all zones of this kind count. Click a zone: “only” → “without” → remove.	Sans sélection, toutes les zones de ce type comptent. Clic sur une zone : « seulement » → « sans » → retirer.	未選択なら同種の全ゾーンが有効。ゾーンをクリック：「のみ」→「除外」→削除。
+So viele volle Hübe pro Sekunde höchstens – schont Gerät und Haut. Höchststärke und Ampel bremsen zusätzlich.	At most this many full strokes per second – easy on device and skin. Max intensity and traffic light slow it down further.	Au maximum ce nombre de courses complètes par seconde – ménage l'appareil et la peau. Intensité max et feu freinent en plus.	1秒あたりの最大ストローク数 – デバイスと肌を守ります。最大強度と信号でさらに減速。
+Stummschalten – Gerät bekommt nichts mehr	Mute – device receives nothing	Couper – l'appareil ne reçoit plus rien	ミュート – デバイスに何も送りません
+Stummschaltung aufheben	Unmute	Réactiver	ミュート解除
+Was du selbst mit deinen Händen oder deinem eigenen Avatar berührst, zählt nicht.	What you touch yourself with your hands or your own avatar does not count.	Ce que tu touches toi-même avec tes mains ou ton propre avatar ne compte pas.	自分の手や自分のアバターで触れたものはカウントしません。
+Weicher Übergang statt Zappeln – je höher, desto ruhiger (aber träger).	Smooth transitions instead of jitter – the higher, the calmer (but slower).	Transition douce au lieu de saccades – plus c'est haut, plus c'est calme (mais lent).	ガタつきの代わりになめらかに – 高いほど穏やか（ただし反応は遅く）。
+Wie schnell die Bewegung sein muss, bis 100 % erreicht sind.	How fast the motion must be to reach 100 %.	Vitesse de mouvement nécessaire pour atteindre 100 %.	100 %に達するのに必要な動きの速さ。
+Wohin der Stroker fährt, wenn eine Weile nichts passiert (0 = unten, 100 = oben).	Where the stroker moves when nothing happens for a while (0 = bottom, 100 = top).	Où va le stroker quand rien ne se passe pendant un moment (0 = bas, 100 = haut).	しばらく何もないときのストローカーの位置（0＝下、100＝上）。
+„Folgt der Tiefe“: der Stroker fährt so tief, wie gerade eingedrungen wird (Positionsbefehle). „Stärke = Tempo“: je stärker, desto schneller pumpt er – gut für Muster.	“Follows depth”: the stroker goes as deep as the current penetration (position commands). “Intensity = speed”: the stronger, the faster it strokes – good for patterns.	« Suit la profondeur » : le stroker descend aussi profond que la pénétration actuelle (commandes de position). « Intensité = vitesse » : plus c'est fort, plus il va vite – idéal pour les motifs.	「深さに追従」：現在の挿入の深さに合わせて動きます（位置コマンド）。「強さ＝速さ」：強いほど速く動きます – パターン向け。

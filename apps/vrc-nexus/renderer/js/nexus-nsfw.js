@@ -80,7 +80,7 @@
         if (!box) return;
         if (!st) { if (accErr) box.innerHTML = '<div class="nc-card"><p class="bad">⚠ ' + esc(accErr) + '</p><button type="button" class="btn btn-sm" data-ns="reload">' + esc(T('Erneut versuchen')) + '</button></div>'; return; }
         if (busy && Date.now() - busyAt > 4000) busy = false;   // 8.1.1: Schieberegler außerhalb losgelassen → nicht mehr ewig blockieren
-        if (busy || (box.contains(document.activeElement) && document.activeElement.matches('input[type=text], textarea, input[type=number], select'))) {
+        if (busy || (window.NexusToys2 && window.NexusToys2.busy()) || (box.contains(document.activeElement) && document.activeElement.matches('input[type=text], textarea, input[type=number], select'))) {
             clearTimeout(later); later = setTimeout(render, 900);   // 8.1.1: nicht verwerfen, sondern gleich nachholen
             return;
         }
@@ -128,7 +128,8 @@
         if (a.owner) h += '<div class="nc-card"><h4>👑 Admin</h4><p class="small">Schlüssel-Generator & Besitzer-Werkzeuge haben jetzt einen eigenen Menüpunkt.</p><button type="button" class="btn btn-sm" data-tab-go="admin">👑 Zum Admin</button></div>';
         }
         // Spielzeug
-        if (sub === 'toys' && has('toys') && t) {
+        if (sub === 'toys' && has('toys') && t && window.NexusToys2) h += window.NexusToys2.html(t, render);   // 8.3: Spielzeug-Reiter neu
+        else if (sub === 'toys' && has('toys') && t) {
             const tc = t.cfg;
             h += sec('🎮 Spielzeug (Intiface / Buttplug.io)', '<p class="small">' + (t.connected ? '✔ ' + esc(t.state) : '⚪ ' + esc(t.state)) + (t.error ? ' <span class="bad">' + esc(t.error) + '</span>' : '') + '</p>'
                 + '<div class="nc-row"><input type="text" id="nsUrl" value="' + esc(tc.url) + '" style="flex:1"><button type="button" class="btn btn-sm ' + (t.connected ? '' : 'btn-gold') + '" data-ns="' + (t.connected ? 'tdisc' : 'tconn') + '">' + (t.connected ? 'Trennen' : '🔌 Verbinden') + '</button><button type="button" class="btn btn-sm" data-ns="tscan"' + (t.connected ? '' : ' disabled') + '>🔎 Geräte suchen</button></div>'
@@ -230,6 +231,7 @@
     const save = data => api('nsfw_cfg', data).then(d => { st = Object.assign(st, d); toast(d.msg); render(); }).catch(x => toast(x.message, true));
     const toysDo = (act, data) => api(act, data).then(d => { if (st) st.toys = d; if (d.msg) toast(d.msg); render(); }).catch(x => toast(x.message, true));
     function onClick(e) {
+        if (window.NexusToys2 && window.NexusToys2.onClick(e, toysDo, render)) return;   // 8.3
         if (window.NexusToyLinks && window.NexusToyLinks.onClick(e, render)) return;
         if (window.NexusNsfw2 && window.NexusNsfw2.onClick(e, toysDo, render)) return;
         if (window.NexusNsfw4 && window.NexusNsfw4.onClick(e, render)) return;   // 6.7
@@ -289,6 +291,7 @@
     }
     const $v = s => { const el = box.querySelector(s); return el ? el.value : ''; };
     function onChange(e) {
+        if (window.NexusToys2 && window.NexusToys2.onChange(e, toysDo, render)) return;   // 8.3
         if (window.NexusToyLinks && window.NexusToyLinks.onChange(e, render)) return;
         if (window.NexusNsfw2 && window.NexusNsfw2.onChange(e, toysDo)) return;
         if (window.NexusNsfw7 && window.NexusNsfw7.onChange(e, render)) return;   // 8.2 Spielzeug-Labor
@@ -310,6 +313,7 @@
     }
     let slideT = null, trT = null;
     function onInput(e) {
+        if (window.NexusToys2 && window.NexusToys2.onInput(e)) return;   // 8.3
         if (window.NexusToyLinks && window.NexusToyLinks.onInput(e)) return;
         if (window.NexusNsfw2 && window.NexusNsfw2.onInput(e, toysDo)) return;
         if (window.NexusNsfw4 && window.NexusNsfw4.onInput(e)) return;   // 6.7

@@ -1,5 +1,10 @@
 [
  {
+  "version": "8.3.1",
+  "title": "",
+  "body": "- Native dropdowns now open in the dark theme everywhere.\n- 🔞 ***"
+ },
+ {
   "version": "8.3.0",
   "title": "Signal encryption, open source",
   "body": "- **Private chat now uses the official Signal library (libsignal)** on desktop: new conversations between two desktop devices are set up with PQXDH (post-quantum, Kyber) and the Signal Double Ratchet from `@signalapp/libsignal-client`. Devices announce which protocols they support; phones and older versions keep using the existing Nexus protocol, existing conversations and history stay readable and keep working.\n- **Signal safety number** in the chat (🔐): compare the libsignal fingerprint for each device pair; the all-devices number stays.\n- **VRC Nexus is now free software under the GNU AGPL v3.0** (`AGPL-3.0-only`). *More → About* links to the source code of the installed version and shows the new **Credits** section."

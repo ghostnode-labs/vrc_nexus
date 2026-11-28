@@ -31,6 +31,7 @@ function patDecrypt(code, pass) {
     } catch (e) { throw new UserError('Falsches Passwort oder beschädigter Code.'); }
 }
 const H = require('./haptics');
+const TS = require('./toysrc');   // 8.3: Quellen-Logik (Modus, Bereich, Glättung, Stroker-Positionen, Vorlagen)
 
 const DEF = { sync_extra: 0, url: 'ws://127.0.0.1:12345', auto: false, max: 100, rules: [], idle_stop: 3, ogb: false, ogb_self: false, ogb_device: 'all', ogb_min: 0.05, links: {}, links_on: false,
     // 4.1
@@ -43,7 +44,10 @@ const DEF = { sync_extra: 0, url: 'ws://127.0.0.1:12345', auto: false, max: 100,
     consent: { param: 'NX/Consent', chat: true, yellow: 50 },
     aftercare: { on: true, after_min: 3, chat: '' },
     autopause: { on: false, max_min: 30, pause_min: 5, hr_on: false, hr_max: 150 } };   // 8.2: automatische Pausen nach Zeit oder Puls
-const DEV_DEF = { alias: '', on: true, min: 0, max: 100, curve: 1, smooth: 0, lag: 0, rot: 'cw', rot_alt: 8, lin_min: 0, lin_max: 100, types: {} };
+const DEV_DEF = { alias: '', on: true, min: 0, max: 100, curve: 1, smooth: 0, lag: 0, rot: 'cw', rot_alt: 8, lin_min: 0, lin_max: 100, types: {},
+    // 8.3: Quellen-Modus ('' = automatisch: Verknüpfungen vorhanden → Experte), Vorlage für „folgt meinem Avatar“, Stroker folgt Tiefe
+    src_mode: '', preset: 'normal', lin_mode: 'tempo', lin_speed: 2, lin_rest: 100 };
+const SRC_MODES = ['', 'off', 'simple', 'expert'];
 const TYPE_DEF = { Vibrate: 100, Oscillate: 100, Rotate: 100, Constrict: 60, Inflate: 60, Position: 100 };
 const LINK_TYPES = ['plugs', 'sockets', 'touch', 'constant', 'param', 'pcs', 'heart', 'voice', 'lust'];
 /** „berührt von“: Schalter → Wert-Namen */
@@ -88,7 +92,8 @@ class Toys {
         this.lust = { v: 0, at: Date.now(), hist: [], ext: false, climaxAt: 0, climaxes: 0, edgeHold: false, releaseUntil: 0 };
         this.voiceLv = 0; this.voiceAt = 0; this.consent = 'green'; this.scene = null; this.session = { start: 0, last: 0, due: false, total: 0 };
         this.server = { name: '', ping: 0, version: 3 }; this.scanning = false; this.retry = 0;
-        this.linkTimer = setInterval(() => this.safeCompute(), 250); if (this.linkTimer.unref) this.linkTimer.unref();
+        this.smoothSt = new Map(); this.linkInfo = new Map(); this.linDepth = new Map(); this.avatarAt = 0;   // 8.3
+        this.linkTimer = setInterval(() => this.safeCompute(), 100); if (this.linkTimer.unref) this.linkTimer.unref();
         this.driveTimer = setInterval(() => this.driveAll(), 50); if (this.driveTimer.unref) this.driveTimer.unref();
         if (app.game && app.game.osc) { app.game.osc.taps = app.game.osc.taps || new Set(); app.game.osc.taps.add((a, v) => this.onOsc(a, v)); }
         this.timer = setInterval(() => this.idle(), 1000); if (this.timer.unref) this.timer.unref();
@@ -123,7 +128,7 @@ class Toys {
                 const list = arr(arrL).map(x => ({ type: LINK_TYPES.includes(x.type) ? x.type : '', include: names(x.include), exclude: names(x.exclude),
                     src: Object.fromEntries(Object.keys(SRC).map(k => [k, x.src && x.src[k] !== undefined ? !!x.src[k] : SRC_DEF[k]])),
                     value: Math.max(0, Math.min(100, int(x.value === undefined ? 100 : x.value))), param: cut(str(x.param).replace(/^\/avatar\/parameters\//, ''), 80),
-                    mut: arr(x.mut).map(m => ({ t: ['scale', 'dead', 'motion'].includes(m.t) ? m.t : '', v: Math.max(0, Math.min(10, Number(m.v) || 0)) })).filter(m => m.t).slice(0, 6) })).filter(x => x.type).slice(0, 10);
+                    mut: arr(x.mut).map(m => ({ t: ['scale', 'dead', 'motion'].includes(m.t) ? m.t : '', v: Math.max(0, Math.min(10, Number(m.v) || 0)) })).filter(m => m.t).slice(0, 6), ...TS.normLink(x) })).filter(x => x.type).slice(0, 10);
                 if (list.length) n.links[cut(str(dev), 80)] = list;
             }
         }
@@ -145,7 +150,12 @@ class Toys {
                 if (x.on !== undefined) o.on = yes(x.on);
                 for (const [k, lo, hi] of [['min', 0, 90], ['max', 5, 100], ['lin_min', 0, 95], ['lin_max', 5, 100], ['smooth', 0, 3000], ['rot_alt', 0, 120], ['lag', 0, 1000]]) if (x[k] !== undefined) o[k] = Math.max(lo, Math.min(hi, int(x[k])));
                 if (x.curve !== undefined) o.curve = Math.max(0.3, Math.min(3, Number(x.curve) || 1));
-                if (x.rot !== undefined) o.rot = ['cw', 'ccw', 'alt'].includes(x.rot) ? x.rot : 'cw';
+                if (x.rot !== undefined) o.rot = ['cw', 'ccw', 'alt', 'move'].includes(x.rot) ? x.rot : 'cw';
+                if (x.src_mode !== undefined) o.src_mode = SRC_MODES.includes(x.src_mode) ? x.src_mode : '';   // 8.3
+                if (x.preset !== undefined) o.preset = TS.PRESETS[x.preset] ? x.preset : 'normal';
+                if (x.lin_mode !== undefined) o.lin_mode = x.lin_mode === 'follow' ? 'follow' : 'tempo';
+                if (x.lin_speed !== undefined) o.lin_speed = Math.max(0.5, Math.min(5, Math.round((Number(x.lin_speed) || 2) * 10) / 10));
+                if (x.lin_rest !== undefined) o.lin_rest = Math.max(0, Math.min(100, int(x.lin_rest)));
                 if (x.types !== undefined) o.types = Object.fromEntries(Object.keys(TYPE_DEF).map(k => [k, Math.max(0, Math.min(100, int((x.types || {})[k] !== undefined ? x.types[k] : (o.types || {})[k] !== undefined ? o.types[k] : TYPE_DEF[k])))]));
                 if (o.min >= o.max) o.min = Math.max(0, o.max - 5);
                 if (o.lin_min >= o.lin_max) o.lin_min = Math.max(0, o.lin_max - 5);
@@ -212,11 +222,13 @@ class Toys {
             session: { running: !!this.session.start, secs: this.session.start ? Math.round((Date.now() - this.session.start) / 1000) : 0, aftercare_due: this.session.due },
             wear: this.app.wear ? this.app.wear.status() : null,   // 8.2
             companion: this.app.companion ? this.app.companion.status() : null,
+            sources: this.sources(), link_info: Object.fromEntries(this.linkInfo), presets: Object.entries(TS.PRESETS).map(([id, p]) => ({ id, name: p.name, desc: p.desc })),   // 8.3
             paused: this.paused && Date.now() < this.paused.until ? { left: Math.round((this.paused.until - Date.now()) / 1000), why: this.paused.why, msg: this.pauseMsg || '' } : null,
             devices: [...this.devices.values()].map(d => this.norm(d)).map(d => { const dc = this.devCfg(d.name); return { index: d.index, name: d.name, alias: dc.alias, label: dc.alias || d.name, on: dc.on, motors: d.motors.length,
                 level: Math.round((this.level.get(d.index) || 0) * 100), out: Math.round((this.cur.get(d.index) || 0) * 100),
                 scalars: d.motors.map(m => ({ index: m.index, type: m.type, steps: m.steps, desc: m.desc, override: this.motorOv.has(d.index + ':' + m.index) ? Math.round(this.motorOv.get(d.index + ':' + m.index) * 100) : null })),
-                rotate: d.rot.length, linear: d.lin.length, sensors: d.sensors.map(s => s.type), battery: d.battery, rssi: d.rssi, pressure: d.pressure, gap: d.gap, secs: Math.round(d.secs), cfg: dc }; }) };
+                rotate: d.rot.length, linear: d.lin.length, sensors: d.sensors.map(s => s.type), battery: d.battery, rssi: d.rssi, pressure: d.pressure, gap: d.gap, secs: Math.round(d.secs), cfg: dc,
+                src_mode: this.srcMode(d.name, c), lin_pos: d.linSt && d.linSt.pos !== undefined ? Math.round(d.linSt.pos * 100) : null }; }) };
     }
 
     // ---------- Verbindung ----------
@@ -426,14 +438,26 @@ class Toys {
         }
         if (d.rot.length) {   // T2/T3
             if (dc.rot === 'alt' && dc.rot_alt && t - d.rotAt > dc.rot_alt * 1000) { d.rotCw = !d.rotCw; d.rotAt = t; }
-            const cw = dc.rot === 'ccw' ? false : dc.rot === 'cw' ? true : d.rotCw;
+            const cw = dc.rot === 'ccw' ? false : dc.rot === 'cw' ? true : dc.rot === 'move' ? (d.moveDir || 1) > 0 : d.rotCw;   // 8.3: Richtung folgt rein/raus
             const rv = Math.round(cur * d.rot[0].steps) / d.rot[0].steps, key = rv + '|' + cw;
             if (key !== d.rotKey || now) { d.rotKey = key; msgs.push({ RotateCmd: { DeviceIndex: d.index, Rotations: d.rot.map(r => ({ Index: r.index, Speed: rv, Clockwise: cw })) } }); }
         }
         const fl = d.lin.length && this.play3.fun ? this.play3.funLinear(t) : null;   // NSFW 3.0: Stroker folgen dem Funscript
-        if (fl) { if (fl.key !== d.funKey && this.consent !== 'red') { d.funKey = fl.key; d.linOn = true; msgs.push({ LinearCmd: { DeviceIndex: d.index, Vectors: d.lin.map(l => ({ Index: l.index, Duration: fl.duration, Position: Math.round(fl.position * 100) / 100 })) } }); } }
+        const cfgAll = d.lin.length && !fl && dc.lin_mode === 'follow' ? this.cfg() : null;
+        const follow = !!(cfgAll && cfgAll.links_on && this.srcMode(d.name, cfgAll) !== 'off');   // sonst wie bisher: Stärke = Hubtempo
+        if (follow) {   // 8.3: Stroker folgt der Tiefe (Position statt Tempo)
+            const f = this.linFactor(d, dc, cfgAll), ld = this.linDepth.get(d.index);
+            const freshMs = Math.max(1, cfgAll.idle_stop || 3) * 1000;
+            if (f <= 0) { if (d.linOn) { d.linOn = false; d.linSt = null; msgs.push({ StopDeviceCmd: { DeviceIndex: d.index } }); } }
+            else {
+                d.linSt = d.linSt || { pos: dc.lin_max / 100, at: 0, activeAt: 0 };
+                const plan = TS.linPlan(d.linSt, ld && t - ld.at < freshMs ? ld.v : 0, t, { min: dc.lin_min, max: dc.lin_max, speed: dc.lin_speed * Math.max(0.15, f), rest: dc.lin_rest, rest_after: freshMs, gap: d.gap });
+                if (plan) { d.linOn = true; msgs.push({ LinearCmd: { DeviceIndex: d.index, Vectors: d.lin.map(l => ({ Index: l.index, Duration: plan.duration, Position: plan.position })) } }); }
+            }
+        }
+        else if (fl) { if (fl.key !== d.funKey && this.consent !== 'red') { d.funKey = fl.key; d.linOn = true; msgs.push({ LinearCmd: { DeviceIndex: d.index, Vectors: d.lin.map(l => ({ Index: l.index, Duration: fl.duration, Position: Math.round(fl.position * 100) / 100 })) } }); } }
         else if (d.lin.length && cur <= 0.02 && d.linOn) { d.linOn = false; msgs.push({ StopDeviceCmd: { DeviceIndex: d.index } }); }
-        if (!fl && d.lin.length && cur > 0.02 && t >= d.linNext) {
+        if (!fl && !follow && d.lin.length && cur > 0.02 && t >= d.linNext) {
             d.linOn = true;   // T4/T5: Stärke → Hubtempo, im eingestellten Bereich
             const dur = Math.round(1600 - 1350 * cur);
             d.linPos = d.linPos > 0.5 ? 0 : 1;
@@ -469,9 +493,10 @@ class Toys {
     }
     async stopAll() {
         if (this.lab) this.lab.halt();   // 8.2: Ausklingen-Timer & Sanftanlauf enden mit jedem Stopp
+        this.linDepth.clear(); this.linkInfo.clear(); this.smoothSt.clear();   // 8.3
         this.level.clear(); this.cur.clear(); this.rule = {}; this.linkSent.clear(); this.pat = null; this.motorOv.clear(); this.manual.clear(); this.scene = null;
         if (this.play3) this.play3.stopAll();   // NSFW 3.0: Funscript/Spiel/Wiedergabe/Welt aus
-        for (const d of this.devices.values()) { d.sentKey = ''; d.rotKey = ''; }
+        for (const d of this.devices.values()) { d.sentKey = ''; d.rotKey = ''; d.linSt = null; d.linOn = false; }
         if (this.cfg().links_on) this.saveCfg({ links_on: false });   // Not-Aus: Verknüpfungen erst wieder von Hand einschalten
         if (this.ws && this.ws.readyState === 1) await this.req({ StopAllDevices: {} }).catch(() => {});
         return this.status();
@@ -487,7 +512,7 @@ class Toys {
 
     // ---------- Avatar-Parameter (OSC) ----------
     onOsc(address, args) {
-        if (address === '/avatar/change' && args && args.length) this.play3.onAvatar(String(args[0]));   // NSFW 3.0: Profil je Avatar
+        if (address === '/avatar/change' && args && args.length) { this.play3.onAvatar(String(args[0])); this.zones = { plugs: {}, sockets: {}, touch: {} }; this.smoothSt.clear(); }   // 8.3: Zonen nur vom aktuellen Avatar   // NSFW 3.0: Profil je Avatar
         const c = this.cfg();
         if (!address.startsWith('/avatar/parameters/')) return;
         const name = address.slice(19), v = args[0];
@@ -561,6 +586,8 @@ class Toys {
         const z = H.parse(name);
         if (z && z.kind && !z.meta) {
             const kind = z.kind, zone = this.zones[kind][z.id] = this.zones[kind][z.id] || {};
+            if (!zone.sys) Object.defineProperty(zone, 'sys', { value: z.sys, enumerable: false, writable: true });   // 8.3: SPS/OGB/TPS/VFH (nicht als Wert zählen)
+            this.avatarAt = t;
             const key = z.key, old = zone[key];
             const speed = old ? Math.abs(x - old.v) / Math.max(0.02, (t - old.at) / 1000) : 0;
             zone[key] = { v: x, at: t, speed: old ? Math.max(speed, old.speed * 0.6) : 0 };
@@ -605,6 +632,60 @@ class Toys {
             }
         }
         return best;
+    }
+    // ---------- 8.3: Quellen 2.0 ----------
+    /** Quellen-Modus eines Geräts: off | simple („folgt meinem Avatar“) | expert (eigene Verknüpfungen) */
+    srcMode(name, c) {
+        c = c || this.cfg();
+        const m = this.devCfg(name).src_mode;
+        if (m) return m;
+        return (c.links[name] || []).length ? 'expert' : 'off';
+    }
+    /** welche Verknüpfungen gelten für dieses Gerät gerade? */
+    deviceLinks(c, d) {
+        const m = this.srcMode(d.name, c);
+        if (m === 'expert') return (c.links[d.name] || []).length ? c.links[d.name] : null;
+        if (m === 'simple') { const p = this.devCfg(d.name).preset; if (!this.autoCache || this.autoCache.p !== p) this.autoCache = { p, l: TS.autoLinks(p) }; return this.autoCache.l; }
+        return null;
+    }
+    /** erkannte Zonen des getragenen Avatars mit Live-Wert */
+    sources() {
+        const osc = this.app.game && this.app.game.osc;
+        const names = osc ? [...Object.keys(osc.known || {}), ...Object.keys(osc.params || {})] : [];
+        return TS.sourceList(this.zones, names, Date.now(), Date.now() - Math.max(1, this.cfg().idle_stop || 3) * 1000);
+    }
+    /** eine Verknüpfung auswerten → { v: Stärke 0…1 (geformt + geglättet), depth: rohe Tiefe 0…1 für Stroker } */
+    linkEval(l, fresh, skey, c) {
+        const n = TS.normLink(l), now = Date.now();
+        let v = 0, depth = 0;
+        if (TS.ZONE_TYPES.includes(l.type)) {
+            const motionMut = l.mut.some(m => m.t === 'motion');
+            for (const [name, zone] of Object.entries(this.zones[l.type] || {})) {
+                if ((l.include.length && !l.include.includes(name)) || l.exclude.includes(name)) continue;
+                for (const [s, keys] of Object.entries(SRC)) {
+                    if (!l.src[s]) continue;
+                    for (const k of keys) {
+                        const e = zone[k];
+                        if (!e || e.at < fresh) continue;
+                        const base = TS.pickMode(e.v, TS.motionLevel(e, now, n.sens), n.mode);
+                        v = Math.max(v, l.mut.length ? this.mutate(base, motionMut ? e.speed * Math.max(0, 1 - (now - e.at) / 600) : 0, l.mut) : base);
+                        if (TS.isDepthKey(k)) depth = Math.max(depth, e.v);
+                    }
+                }
+            }
+        } else v = this.linkValue(l, fresh);
+        const st = this.smoothSt.get(skey);
+        v = TS.smoothStep(st ? st.v : undefined, v, st ? now - st.at : 0, n.smooth);
+        this.smoothSt.set(skey, { v, at: now });
+        const live = TS.ZONE_TYPES.includes(l.type) && now - this.avatarAt < Math.max(1, (c || this.cfg()).idle_stop || 3) * 1000;
+        return { v: TS.shape(v, n, live), raw: v, depth };
+    }
+    /** Darf ein Stroker gerade der Tiefe folgen? (Freigabe, Gerät an, keine Pause, Ampel nicht rot, Höchststärke > 0) → Tempo-Faktor 0…1 */
+    linFactor(d, dc, c) {
+        if (!dc.on || !c.links_on || this.consent === 'red') return 0;
+        if (this.paused && Date.now() < this.paused.until) return 0;
+        if (this.app.nsfw && !this.app.nsfw.access().features.includes('toys')) return 0;
+        return Math.max(0, Math.min(1, (c.max / 100) * this.consentFactor() * (this.lab ? this.lab.factor(d, 1) : 1)));
     }
     /** aktueller Muster-Wert (null = kein Muster); abgelaufen → aus */
     patternLevel() {
@@ -664,12 +745,21 @@ class Toys {
         if (this.app.nsfw && !this.app.nsfw.access().features.includes('toys')) { this.pat = null; return; }
         const pl = this.patternLevel();
         const simple = c.pcs.on || c.heart.on || c.voice.on;
-        if (!c.links_on && pl === null && !simple && !this.sceneLevel() && !this.play3.active()) return;
+        if (!c.links_on && pl === null && !simple && !this.sceneLevel() && !this.play3.active()) { if (this.linkInfo.size) { this.linkInfo.clear(); this.linDepth.clear(); } return; }
         const fresh = Date.now() - Math.max(1, c.idle_stop || 3) * 1000;
         for (const d of this.devices.values()) {
-            const links = c.links_on ? c.links[d.name] : null, byPat = pl !== null && (this.pat.device === 'all' || this.pat.device === String(d.index));
-            let lv = links ? links.reduce((m, l) => Math.max(m, this.linkValue(l, fresh)), 0) : 0;
-            if (links) this.linkLevel.set(d.name, Math.round(lv * 100));
+            const links = c.links_on ? this.deviceLinks(c, d) : null, byPat = pl !== null && (this.pat.device === 'all' || this.pat.device === String(d.index));
+            let lv = 0;
+            if (links) {   // 8.3: jede Quelle einzeln auswerten – die stärkste zählt (und wird angezeigt)
+                const ev = links.map((l, i) => this.linkEval(l, fresh, d.name + '|' + this.srcMode(d.name, c) + '|' + i, c));
+                const best = TS.strongest(ev.map(e => e.v)); lv = best.v;
+                const depth = Math.max(0, ...ev.map(e => e.depth));
+                const ld = this.linDepth.get(d.index);
+                if (ld && Math.abs(depth - ld.v) > 0.02) d.moveDir = depth > ld.v ? 1 : -1;
+                this.linDepth.set(d.index, { v: depth, at: Date.now() });
+                this.linkInfo.set(d.name, { lv: Math.round(lv * 100), win: best.win, vals: ev.map(e => Math.round(e.v * 100)), depth: Math.round(depth * 100) });
+                this.linkLevel.set(d.name, Math.round(lv * 100));
+            } else { this.linkInfo.delete(d.name); this.linDepth.delete(d.index); }
             if (byPat) lv = Math.max(lv, pl);
             if (simple) lv = Math.max(lv, this.simpleSources(d));
             const x3 = this.play3.level(d);   // NSFW 3.0: Funscript, Spiele, Aufnahme, Welt, Musik
@@ -682,6 +772,26 @@ class Toys {
             this.set(String(d.index), lv).catch(() => {});
         }
         if (this.play3.rec && Date.now() - (this.recAt || 0) >= 100) { this.recAt = Date.now(); this.play3.sample(Object.fromEntries([...this.devices.values()].map(d => [d.name, this.linkSent.get(d.index) || 0]))); }
+    }
+    /** 8.3: schlanker Live-Stand für die Anzeige (alle ~0,4 s) */
+    live() {
+        return { connected: !!(this.ws && this.ws.readyState === 1), state: this.state, consent: this.consent, links_on: this.cfg().links_on, sources: this.sources(), link_info: Object.fromEntries(this.linkInfo),
+            paused: !!(this.paused && Date.now() < this.paused.until), scanning: this.scanning,
+            devices: [...this.devices.values()].map(d => ({ index: d.index, name: d.name, out: Math.round((this.cur.get(d.index) || 0) * 100), battery: d.battery === undefined ? null : d.battery, lin_pos: d.linSt && d.linSt.pos !== undefined ? Math.round(d.linSt.pos * 100) : null })) };
+    }
+    /** 8.3: Gerät „folgt meinem Avatar“ (Einfach), Experte oder aus – beim Einschalten wird die Avatar-Steuerung mit aktiviert */
+    setFollow(input) {
+        const name = cut(str(input.name), 80); if (!name) throw new UserError('Gerät fehlt.');
+        const mode = ['off', 'simple', 'expert'].includes(input.mode) ? input.mode : 'off', c = this.cfg();
+        const data = { src_mode: mode };
+        if (input.preset !== undefined) data.preset = TS.PRESETS[input.preset] ? input.preset : 'normal';
+        const out = { dev: { [name]: data } };
+        const preset = data.preset || this.devCfg(name).preset;
+        if (mode === 'expert' && (!(c.links[name] || []).length || input.reset === '1')) out.links = Object.assign({}, c.links, { [name]: TS.autoLinks(preset) });   // Start mit der Vorlage
+        if (mode !== 'off') out.links_on = '1';
+        this.saveCfg(out);
+        this.smoothSt.clear();
+        return Object.assign(this.status(), { msg: mode === 'off' ? '⚪ ' + name + ': Avatar-Steuerung aus' : mode === 'simple' ? '🎭 ' + name + ' folgt deinem Avatar' : '🛠 ' + name + ': Experten-Zuordnung' });
     }
     sceneLevel() { return this.scene && Date.now() < this.scene.until; }
     flush() {
@@ -890,6 +1000,30 @@ class Toys {
             case 'toys_surprise': { const s = this.surprise(); return Object.assign(this.status(), { msg: '🎁 Überraschung! (' + s + ' s)' }); }
             case 'toys_stats_reset': this.stats = { since: Date.now(), active: 0, peak: 0, patterns: 0 }; for (const d of this.devices.values()) d.secs = 0; return Object.assign(this.status(), { msg: 'Statistik zurückgesetzt.' });
             case 'toys_stop': return Object.assign(await this.stopAll(), { msg: '⏹ Alles gestoppt.' });
+            // 8.3: Quellen 2.0
+            case 'toys_live': return this.live();
+            case 'toys_follow': return this.setFollow(input);
+            case 'toys_links_export': {
+                const c = this.cfg(), name = str(input.name);
+                const names = name ? [name] : [...new Set([...Object.keys(c.links), ...Object.keys(c.dev)])];
+                const links = {}, dev = {};
+                for (const n of names) { if (c.links[n]) links[n] = c.links[n]; const dc = c.dev[n]; if (dc) dev[n] = { src_mode: dc.src_mode || '', preset: dc.preset || 'normal', lin_mode: dc.lin_mode || 'tempo', lin_speed: dc.lin_speed || 2, lin_rest: dc.lin_rest === undefined ? 100 : dc.lin_rest, lin_min: dc.lin_min || 0, lin_max: dc.lin_max === undefined ? 100 : dc.lin_max }; }
+                if (!Object.keys(links).length && !Object.keys(dev).length) throw new UserError('Noch nichts zum Teilen – erst eine Zuordnung einrichten.');
+                return { ok: true, code: TS.exportCode(links, dev), msg: '📤 Zuordnung als Text erstellt.' };
+            }
+            case 'toys_links_import': {
+                const o = TS.importCode(input.code);
+                if (!o) throw new UserError('Das ist kein Zuordnungs-Code (beginnt mit NXTL1.).');
+                let links = o.links && typeof o.links === 'object' ? o.links : {}, dev = o.dev && typeof o.dev === 'object' ? o.dev : {};
+                const to = str(input.name).trim();
+                if (to) {   // alles auf ein Gerät übertragen (erstes Gerät im Code)
+                    const first = Object.keys(links)[0] || Object.keys(dev)[0];
+                    links = first && links[first] ? { [to]: links[first] } : {}; dev = first && dev[first] ? { [to]: dev[first] } : {};
+                }
+                const cur = this.cfg();
+                this.saveCfg({ links: Object.assign({}, cur.links, links), dev });
+                return Object.assign(this.status(), { msg: '📥 Zuordnung übernommen (' + (Object.keys(links).length || Object.keys(dev).length) + ' Gerät/e).' });
+            }
             // 4.1
             case 'toys_voice': this.voiceLv = clamp(input.lv); this.voiceAt = Date.now(); return { ok: true };
             case 'toys_consent': { const l = await this.setConsent(str(input.light)); return Object.assign(this.status(), { msg: { green: '🟢 Grün', yellow: '🟡 Gelb – sanfter', red: '🔴 Rot – alles gestoppt' }[l] }); }

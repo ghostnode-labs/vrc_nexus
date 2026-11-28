@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.3.1
+- Native dropdowns now open in the dark theme everywhere.
+- 🔞 ***
+
 ### New in 8.3.0 – Signal encryption, open source
 - **Private chat now uses the official Signal library (libsignal)** on desktop: new conversations between two desktop devices are set up with PQXDH (post-quantum, Kyber) and the Signal Double Ratchet from `@signalapp/libsignal-client`. Devices announce which protocols they support; phones and older versions keep using the existing Nexus protocol, existing conversations and history stay readable and keep working.
 - **Signal safety number** in the chat (🔐): compare the libsignal fingerprint for each device pair; the all-devices number stays.

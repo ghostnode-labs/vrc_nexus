@@ -2,6 +2,18 @@
 
 Shown in the app under “About” only when NSFW is unlocked. README, GitHub release and Discord show “🔞 ***” instead.
 
+### New in 8.3.1 – Toys tab redesign
+- New header: big connection status, Connect / Search devices, STOP EVERYTHING always visible, max intensity, "off after X s without signal" and the avatar-control main switch in one row; connection details collapsible.
+- Device cards with live output bar, battery, capabilities (vibration, stroker, rotation …), test pulse, mute and per-device stop.
+- Per device: Off / Follows my avatar (simple, with templates: gentle, balanced, intense, motion, touch only) / Expert.
+- Expert sources: zones picked from the avatar you are wearing (SPS, OGB, TPS, VFH) with live values, mode depth / motion / both, range (dual slider), curve, smoothing, idle level, motion sensitivity, "ignore own touches"; the strongest source is marked live (★).
+- Custom source picker in Nexus style (grouped, descriptions, live values, keyboard, search) instead of the native drop-down; dark colour scheme for remaining native selects.
+- Strokers can follow penetration depth with position commands (LinearCmd), top speed, bottom/top limits and rest position; rotation can follow in/out motion.
+- Export / import a device mapping as a text code.
+- TPS (Thry's Penetration System) detected as a source.
+- Safety unchanged: age clearance, STOP / panic / red light take priority and also halt strokers, max intensity caps everything.
+```
+
 ### New in 8.2.0
 **⌚ Watch**
 - **18+ clearance bound to pairing:** a watch takes over the PC's 18+ clearance when it is paired – only if the PC itself is unlocked. Any panic (PC button, watch, phone, other PC), switching NSFW off / expired age check on the PC, or unpairing removes it. It can be transferred again (or revoked) per watch under Tools → 📡 Devices (🔐/🔓); the per-device "hide 🔞 on this device" switch stays. Watches paired before 8.2 take it over once while the PC is unlocked.
