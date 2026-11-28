@@ -1,0 +1,43 @@
+Tags vergeben	Assign tags	Attribuer des tags	タグを付与
+Tippe einen Namen aus deiner Freundesliste oder füge eine VRChat-ID bzw. einen Profil-Link ein.	Type a name from your friends list or paste a VRChat ID or profile link.	Tape un nom de ta liste d'amis ou colle un ID VRChat ou un lien de profil.	フレンドリストの名前を入力するか、VRChat IDまたはプロフィールリンクを貼り付けてください。
+Kein Freund gefunden – VRChat-ID (usr_…) oder Profil-Link einfügen.	No friend found – paste a VRChat ID (usr_…) or profile link.	Aucun ami trouvé – colle un ID VRChat (usr_…) ou un lien de profil.	フレンドが見つかりません – VRChat ID（usr_…）またはプロフィールリンクを貼り付けてください。
+Erst unten bei „Freischalt-Schlüssel“ ein Schlüsselpaar erzeugen.	First create a key pair below under “Unlock keys”.	Crée d'abord une paire de clés ci-dessous dans « Clés de déverrouillage ».	まず下の「解除キー」でキーペアを作成してください。
+andere Person	other person	autre personne	別の人
+Freund suchen oder VRChat-ID / Profil-Link	Search friend or VRChat ID / profile link	Chercher un ami ou ID VRChat / lien de profil	フレンド検索またはVRChat ID／プロフィールリンク
+wie bisher	as before	comme avant	これまで通り
+entzogen	revoked	retiré	取り消し済み
+Wird beim Abgleich automatisch zugestellt – die Person muss nichts eintippen.	Delivered automatically on sync – the person doesn't have to type anything.	Livré automatiquement lors de la synchronisation – la personne n'a rien à saisir.	同期時に自動で届きます – 相手は何も入力する必要がありません。
+Moderator-Schlüssel und ältere Schlüssel bitte selbst weitergeben.	Please pass on moderator keys and older keys yourself.	Merci de transmettre toi-même les clés de modérateur et les anciennes clés.	モデレーターキーと古いキーはご自身で渡してください。
+von Hand	manual	à la main	手動
+Person	Person	Personne	人物
+Optische Tags (ohne Rechte)	Cosmetic tags (no permissions)	Tags visuels (sans droits)	見た目のタグ（権限なし）
+Moderator gibt Moderations-Rechte. Dieser Schlüssel wird aus Sicherheitsgründen nicht automatisch zugestellt – bitte selbst weitergeben (wird kopiert).	Moderator grants moderation rights. For security reasons this key is not delivered automatically – please pass it on yourself (it will be copied).	Modérateur donne des droits de modération. Pour des raisons de sécurité, cette clé n'est pas livrée automatiquement – transmets-la toi-même (elle sera copiée).	モデレーターはモデレーション権限を付与します。安全上の理由からこのキーは自動では届きません – ご自身で渡してください（コピーされます）。
+„Besitzerin“ ist kein Tag und nicht vergebbar. Tags ersetzen keine 18+-Freigabe.	“Owner” is not a tag and cannot be assigned. Tags never replace 18+ access.	« Propriétaire » n'est pas un tag et ne peut pas être attribué. Les tags ne remplacent pas l'accès 18+.	「オーナー」はタグではなく付与できません。タグは18+の許可の代わりにはなりません。
+Laufzeit & Notiz	Duration & note	Durée & note	期間とメモ
+Notiz (z. B. Discord-Name)	Note (e.g. Discord name)	Note (p. ex. nom Discord)	メモ（例：Discord名）
+Änderung speichern	Save change	Enregistrer la modification	変更を保存
+Vergeben	Assign	Attribuer	付与
+Neu ausstellen ersetzt den alten Schlüssel (der alte wird gesperrt).	Re-issuing replaces the old key (the old one gets revoked).	Réémettre remplace l'ancienne clé (l'ancienne est bloquée).	再発行すると古いキーは置き換えられます（古いキーは無効化されます）。
+Tags	Tags	Tags	タグ
+läuft ab	expires	expire	有効期限
+Verlängern	Extend	Prolonger	延長
+Entziehen	Revoke	Retirer	取り消す
+Noch keine Tags vergeben.	No tags assigned yet.	Aucun tag attribué pour l'instant.	まだタグは付与されていません。
+Die Person bekommt ihre Tags automatisch über ihr Nexus-Konto (beim Start, alle 6 Stunden oder per Knopf) – nach dem Vergeben gleicht die App mit der Webseite ab.	The person receives their tags automatically via their Nexus account (at start, every 6 hours or via button) – after assigning, the app syncs with the website.	La personne reçoit ses tags automatiquement via son compte Nexus (au démarrage, toutes les 6 heures ou par bouton) – après l'attribution, l'app se synchronise avec le site.	相手はNexusアカウント経由で自動的にタグを受け取ります（起動時、6時間ごと、またはボタンで）– 付与後、アプリはWebサイトと同期します。
+Tags entziehen? Der Schlüssel wird gesperrt – das gilt nach dem Abgleich in jeder App.	Revoke tags? The key gets blocked – after syncing this applies in every app.	Retirer les tags ? La clé sera bloquée – après synchronisation, cela s'applique dans chaque app.	タグを取り消しますか？キーは無効化され、同期後はすべてのアプリで有効になります。
+Tags entzogen.	Tags revoked.	Tags retirés.	タグを取り消しました。
+Erst eine Person wählen.	Choose a person first.	Choisis d'abord une personne.	まず人物を選んでください。
+Mindestens ein Tag wählen.	Choose at least one tag.	Choisis au moins un tag.	少なくとも1つのタグを選んでください。
+Diese Person hat schon Tags – du bearbeitest den bestehenden Eintrag.	This person already has tags – you are editing the existing entry.	Cette personne a déjà des tags – tu modifies l'entrée existante.	この人にはすでにタグがあります – 既存の項目を編集しています。
+Supporter	Supporter	Supporter	サポーター
+Moderator	Moderator	Modérateur	モデレーター
+Creator	Creator	Créateur	クリエイター
+Beta-Tester	Beta tester	Bêta-testeur	ベータテスター
+VIP	VIP	VIP	VIP
+Event-Team	Event team	Équipe événements	イベントチーム
+Künstler:in	Artist	Artiste	アーティスト
+Optische Tags sind Abzeichen – sie geben keine Rechte.	Cosmetic tags are badges – they grant no permissions.	Les tags visuels sont des badges – ils ne donnent aucun droit.	見た目のタグはバッジです – 権限は付与されません。
+Tags abrufen	Fetch tags	Récupérer les tags	タグを取得
+Tags zuletzt abgerufen	Tags last fetched	Tags récupérés pour la dernière fois	タグの最終取得
+Von der Besitzerin vergebene Tags kommen automatisch über dein Nexus-Konto – du musst nichts eintippen.	Tags assigned by the owner arrive automatically via your Nexus account – you don't have to type anything.	Les tags attribués par la propriétaire arrivent automatiquement via ton compte Nexus – tu n'as rien à saisir.	オーナーが付与したタグはNexusアカウント経由で自動的に届きます – 何も入力する必要はありません。
+Von der Besitzerin vergebene Tags (Abzeichen)	Tags assigned by the owner (badges)	Tags attribués par la propriétaire (badges)	オーナーが付与したタグ（バッジ）

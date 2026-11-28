@@ -1,4 +1,4 @@
-/* VRC Nexus – 👑 Admin (nur Besitzer, eigener Menüpunkt): Freischalt-Schlüssel, API-Konsole, Ereignisse simulieren, System & Log, Spielereien. */
+/* VRC Nexus – 👑 Admin (nur Besitzer, eigener Menüpunkt): 🏷 Tags vergeben (8.4), Freischalt-Schlüssel, API-Konsole, Ereignisse simulieren, System & Log, Spielereien. */
 (function () {
     const UI = window.NexusUI;
     if (!UI) return;
@@ -6,6 +6,64 @@
     let box = null, st = null, sys = null, lastToken = '', apiOut = '';
     const loc = () => (window.nxLoc ? nxLoc() : 'de-DE');
     const card = (t, html, cls) => '<div class="nc-card ' + (cls || '') + '"><h4>' + t + '</h4>' + html + '</div>';
+    const T = s => (window.t ? window.t(s) : s);
+    const TG = window.NexusTags;
+
+    // ---------- 🏷 Tags vergeben (8.4) – intern weiter signierte NXK1-Schlüssel (issue/revoke/extend) ----------
+    const tg = { sel: null, chips: new Set(['supporter']), days: '0', note: '', q: '', edit: '' };
+    const UID_RX = /(usr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    function tagHits(q) {
+        q = String(q || '').trim();
+        if (!q) return '<p class="muted small">' + esc(T('Tippe einen Namen aus deiner Freundesliste oder füge eine VRChat-ID bzw. einen Profil-Link ein.')) + '</p>';
+        const m = UID_RX.exec(q) || (/^[0-9a-z]{10}$/i.test(q) ? [q, q] : null);
+        const s = UI.state && UI.state(), fr = s && s.friends ? s.friends : [];
+        const ql = q.toLowerCase();
+        const hits = fr.filter(f => String(f.name || '').toLowerCase().includes(ql) || String(f.id || '').toLowerCase() === ql).slice(0, 8);
+        return (m ? '<button type="button" class="btn btn-sm" data-ad="tagpick" data-uid="' + esc(m[1]) + '" data-name="">🆔 ' + esc(m[1]) + '</button>' : '')
+            + hits.map(f => '<button type="button" class="ad-taghit" data-ad="tagpick" data-uid="' + esc(f.id) + '" data-name="' + esc(f.name) + '" data-img="' + esc(f.image || '') + '">' + UI.img(f.image, 'vx-av', f.name) + '<span>' + esc(f.name) + '</span></button>').join('')
+            + (!m && !hits.length ? '<p class="muted small">' + esc(T('Kein Freund gefunden – VRChat-ID (usr_…) oder Profil-Link einfügen.')) + '</p>' : '');
+    }
+    function expTxt(k) {
+        if (!k.exp) return '∞ ' + esc(T('unbegrenzt'));
+        const left = Math.ceil((k.exp - Date.now() / 1000) / 86400);
+        return esc(new Date(k.exp * 1000).toLocaleDateString(loc())) + (left <= 0 ? ' ⌛' : left <= 14 ? ' ⏳ ' + left + ' T' : '');
+    }
+    function tagsCard() {
+        if (!st) return card('🏷 ' + esc(T('Tags vergeben')), '<div class="vx-loading">…</div>', 'ad-wide');
+        if (!TG) return '';
+        if (!st.owner_key) return card('🏷 ' + esc(T('Tags vergeben')), '<p class="muted small">' + esc(T('Erst unten bei „Freischalt-Schlüssel“ ein Schlüsselpaar erzeugen.')) + '</p>', 'ad-wide');
+        const sel = tg.sel;
+        const person = sel ? '<div class="nc-row ad-tagsel">' + (sel.img ? UI.img(sel.img, 'vx-av', sel.name) : '<span class="vx-av">👤</span>') + '<div><b>' + esc(sel.name || '–') + '</b><br><code class="small">' + esc(sel.uid) + '</code></div>'
+                + (tg.edit ? '' : '<button type="button" class="btn btn-sm" data-ad="tagunpick">✕ ' + esc(T('andere Person')) + '</button>') + '</div>'
+            : '<input type="text" id="adTagQ" placeholder="' + esc(T('Freund suchen oder VRChat-ID / Profil-Link')) + '" value="' + esc(tg.q) + '" autocomplete="off"><div class="ad-taghits" id="adTagHits">' + tagHits(tg.q) + '</div>';
+        const chipBtn = k => { const m = TG.META[k], on = tg.chips.has(k); return '<button type="button" class="vx-pill nx-tag ad-tagchip' + (on ? ' on' : '') + '" style="--pc:' + m[2] + '" data-ad="tagchip" data-k="' + k + '" aria-pressed="' + on + '">' + (on ? '✔ ' : '') + m[0] + ' ' + esc(T(m[1])) + '</button>'; };
+        const roles = TG.ISSUABLE.filter(k => TG.META[k][3] === 'role'), looks = TG.ISSUABLE.filter(k => TG.META[k][3] === 'look');
+        const ed = tg.edit ? (st.issued || []).find(x => x.id === tg.edit) : null;
+        const left = ed && ed.exp ? Math.max(1, Math.ceil((ed.exp - Date.now() / 1000) / 86400)) : 0;
+        const dayOpts = [['0', T('unbegrenzt')], ['30', '30 ' + T('Tage')], ['90', '90 ' + T('Tage')], ['365', '365 ' + T('Tage')]].concat(left && ![30, 90, 365].includes(left) ? [[String(left), T('wie bisher') + ' (' + left + ' ' + T('Tage') + ')']] : []);
+        const items = (st.issued || []).filter(k => !k.replaced_by);
+        const status = k => k.revoked ? '<span class="vx-pill" style="--pc:#ff5c5c">⛔ ' + esc(T('entzogen')) + '</span>' : k.exp && k.exp < Date.now() / 1000 ? '<span class="vx-pill" style="--pc:#9aa0a6">⌛ ' + esc(T('abgelaufen')) + '</span>'
+            : k.deliver && k.has_tok ? '<span class="vx-pill" style="--pc:#51e57e" title="' + esc(T('Wird beim Abgleich automatisch zugestellt – die Person muss nichts eintippen.')) + '">📨 ' + esc(T('automatisch')) + '</span>'
+            : '<span class="vx-pill" style="--pc:#f3c262" title="' + esc(T('Moderator-Schlüssel und ältere Schlüssel bitte selbst weitergeben.')) + '">✋ ' + esc(T('von Hand')) + '</span>';
+        return card('🏷 ' + esc(T('Tags vergeben')), '<form class="ad-tagform" id="adTags">'
+            + '<div class="ad-tagstep"><b>1 · ' + esc(T('Person')) + '</b>' + person + '</div>'
+            + '<div class="ad-tagstep"><b>2 · ' + esc(T('Rollen')) + '</b><div class="ad-tagchips">' + roles.map(chipBtn).join('') + '</div>'
+            + '<b>' + esc(T('Optische Tags (ohne Rechte)')) + '</b><div class="ad-tagchips">' + looks.map(chipBtn).join('') + '</div>'
+            + (tg.chips.has('mod') ? '<p class="nx-hint small">🛡 ' + esc(T('Moderator gibt Moderations-Rechte. Dieser Schlüssel wird aus Sicherheitsgründen nicht automatisch zugestellt – bitte selbst weitergeben (wird kopiert).')) + '</p>' : '')
+            + '<p class="muted small">' + esc(T('„Besitzerin“ ist kein Tag und nicht vergebbar. Tags ersetzen keine 18+-Freigabe.')) + '</p></div>'
+            + '<div class="ad-tagstep"><b>3 · ' + esc(T('Laufzeit & Notiz')) + '</b><div class="nc-row"><select name="days">' + dayOpts.map(o => '<option value="' + o[0] + '"' + (o[0] === tg.days ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>'
+            + '<input name="note" placeholder="' + esc(T('Notiz (z. B. Discord-Name)')) + '" value="' + esc(tg.note) + '" maxlength="80" style="flex:1"></div></div>'
+            + '<div class="nc-row"><button class="btn btn-gold"' + (sel && tg.chips.size ? '' : ' disabled') + '>' + (tg.edit ? '💾 ' + esc(T('Änderung speichern')) : '🏷 ' + esc(T('Vergeben'))) + '</button>'
+            + (tg.edit ? '<button type="button" class="btn btn-sm" data-ad="tagcancel">' + esc(T('Abbrechen')) + '</button><span class="muted small">' + esc(T('Neu ausstellen ersetzt den alten Schlüssel (der alte wird gesperrt).')) + '</span>' : '') + '</div></form>'
+            + '<table class="nx-list ad-tagtab"><thead><tr><th>' + esc(T('Person')) + '</th><th>' + esc(T('Tags')) + '</th><th>' + esc(T('läuft ab')) + '</th><th>' + esc(T('Status')) + '</th><th></th></tr></thead><tbody>'
+            + (items.length ? items.map(k => '<tr class="' + (k.revoked ? 'ns-rev' : '') + '"><td><b>' + esc(k.name || '–') + '</b><br><code class="small">' + esc(k.uid) + '</code>' + (k.note ? '<br><small class="muted">' + esc(k.note) + '</small>' : '') + '</td>'
+                + '<td>' + TG.chips(k.f) + '</td><td class="small">' + expTxt(k) + '</td><td>' + status(k) + '</td><td class="nc-row" style="margin:0;flex-wrap:nowrap">'
+                + (k.revoked ? '' : '<button type="button" class="btn btn-sm" data-ad="tagedit" data-id="' + esc(k.id) + '" title="' + esc(T('Bearbeiten')) + '">✎</button>'
+                    + '<select class="ad-tagext" data-adext="' + esc(k.id) + '" aria-label="' + esc(T('Verlängern')) + '"><option value="">⏩ ' + esc(T('Verlängern')) + '</option><option value="30">+30 ' + esc(T('Tage')) + '</option><option value="90">+90 ' + esc(T('Tage')) + '</option><option value="365">+365 ' + esc(T('Tage')) + '</option></select>'
+                    + '<button type="button" class="btn btn-sm btn-danger" data-ad="tagrevoke" data-id="' + esc(k.id) + '">' + esc(T('Entziehen')) + '</button>') + '</td></tr>').join('')
+                : '<tr><td colspan="5" class="muted small">' + esc(T('Noch keine Tags vergeben.')) + '</td></tr>') + '</tbody></table>'
+            + '<p class="muted small">' + esc(T('Die Person bekommt ihre Tags automatisch über ihr Nexus-Konto (beim Start, alle 6 Stunden oder per Knopf) – nach dem Vergeben gleicht die App mit der Webseite ab.')) + '</p>', 'ad-wide');
+    }
 
     function keysCard() {
         if (!st) return card('🔑 Freischalt-Schlüssel', '<div class="vx-loading">…</div>', 'ad-wide');
@@ -25,7 +83,7 @@
         if (!box) return;
         if (box.contains(document.activeElement) && document.activeElement.matches('input, textarea')) return;
         const s = sys;
-        box.innerHTML = '<div class="nc-grid">' + keysCard()
+        box.innerHTML = '<div class="nc-grid">' + tagsCard() + keysCard()
             + (window.NexusWarn ? card('⚠ Warnliste (GhostNode)', '<div id="adWarn"></div>', 'ad-wide') : '')
             + card('🧪 Ereignis simulieren', '<p class="muted small">Testet Benachrichtigungen, Automatik und Warnungen, ohne dass jemand wirklich kommt.</p><div class="nc-row"><input type="text" id="adSimName" placeholder="Name" value="Testspieler" style="flex:1"></div>'
                 + '<div class="nc-row"><button type="button" class="btn btn-sm" data-ad="sim" data-k="player_join">👋 Spieler kommt</button><button type="button" class="btn btn-sm" data-ad="sim" data-k="player_leave">🚪 Spieler geht</button><button type="button" class="btn btn-sm" data-ad="sim" data-k="video">📺 Video startet</button></div>')
@@ -75,6 +133,29 @@
         const b = e.target.closest('[data-ad]');
         if (!b) return;
         const a = b.dataset.ad;
+        if (a === 'tagchip') { const k = b.dataset.k; if (tg.chips.has(k)) tg.chips.delete(k); else tg.chips.add(k); return render(); }
+        if (a === 'tagpick') {
+            tg.sel = { uid: b.dataset.uid, name: b.dataset.name || '', img: b.dataset.img || '' }; tg.q = '';
+            // hat die Person schon aktive Tags? → bearbeiten statt einen zweiten Schlüssel auszustellen (je Person gilt in der App genau einer)
+            const cur = (st.issued || []).find(k => !k.revoked && !k.replaced_by && (!k.exp || k.exp > Date.now() / 1000) && String(k.uid).toLowerCase() === tg.sel.uid.toLowerCase());
+            if (cur) {
+                const left = cur.exp ? Math.max(1, Math.ceil((cur.exp - Date.now() / 1000) / 86400)) : 0;
+                Object.assign(tg, { chips: new Set((cur.f || []).filter(x => TG && TG.ISSUABLE.includes(x))), note: cur.note || '', days: String(left), edit: cur.id });
+                tg.sel.name = tg.sel.name || cur.name || '';
+                toast(T('Diese Person hat schon Tags – du bearbeitest den bestehenden Eintrag.'));
+            }
+            return render();
+        }
+        if (a === 'tagunpick') { tg.sel = null; return render(); }
+        if (a === 'tagcancel') { Object.assign(tg, { sel: null, edit: '', note: '', days: '0', chips: new Set(['supporter']) }); return render(); }
+        if (a === 'tagedit') {
+            const k = (st.issued || []).find(x => x.id === b.dataset.id);
+            if (!k) return;
+            const left = k.exp ? Math.max(1, Math.ceil((k.exp - Date.now() / 1000) / 86400)) : 0;
+            Object.assign(tg, { sel: { uid: k.uid, name: k.name || '', img: '' }, chips: new Set((k.f || []).filter(x => TG && TG.ISSUABLE.includes(x))), note: k.note || '', days: String(left), edit: k.id });
+            render(); const f = box.querySelector('#adTags'); if (f && f.scrollIntoView) f.scrollIntoView({ block: 'nearest' }); return;
+        }
+        if (a === 'tagrevoke') { if (!confirm(T('Tags entziehen? Der Schlüssel wird gesperrt – das gilt nach dem Abgleich in jeder App.'))) return; return api('nsfw_admin_revoke', { id: b.dataset.id, on: '1' }).then(d => { st.issued = d.items; toast(T('Tags entzogen.')); render(); }).catch(x => toast(x.message, true)); }
         if (a === 'keypair') { if (!confirm('Schlüsselpaar erzeugen? Den öffentlichen Schlüssel danach an Claude geben.')) return; return api('nsfw_admin_keypair').then(d => { st = d; toast(d.msg); render(); }).catch(x => toast(x.message, true)); }
         if (a === 'extend') return api('nsfw_admin_extend', { id: b.dataset.id, days: 90 }).then(d => { lastToken = d.token; st.issued = d.items; toast(d.msg); render(); UI.copy(d.token); }).catch(x => toast(x.message, true));
         if (a === 'licsync') return api('lic_sync').then(d => { toast(d.msg); st.lic_synced = d.at; render(); }).catch(x => toast(x.message, true));
@@ -89,6 +170,22 @@
         if (a === 'apicopy') return UI.copy(apiOut);
     }
     function onSubmit(e) {
+        if (e.target.id === 'adTags') {
+            e.preventDefault();
+            const f = e.target;
+            if (!tg.sel) return toast(T('Erst eine Person wählen.'), true);
+            if (!tg.chips.size) return toast(T('Mindestens ein Tag wählen.'), true);
+            tg.days = f.days.value; tg.note = f.note.value;
+            const edit = tg.edit;
+            api('nsfw_admin_issue', { uid: tg.sel.uid, name: tg.sel.name, days: tg.days, note: tg.note, features: [...tg.chips].join(','), replace: edit })
+                .then(d => {
+                    st.issued = d.items; toast(d.msg);
+                    if (!d.deliver) { lastToken = d.token; UI.copy(d.token); }
+                    Object.assign(tg, { sel: null, edit: '', note: '', days: '0', chips: new Set(['supporter']) });
+                    if (document.activeElement) document.activeElement.blur(); render();
+                }).catch(x => toast(x.message, true));
+            return;
+        }
         if (e.target.id === 'adIssue') {
             e.preventDefault();
             const f = e.target, feats = ['supporter', 'mod', 'creator', 'beta'].filter(k => f['f_' + k] && f['f_' + k].checked);
@@ -103,11 +200,18 @@
                 .catch(x => { out.textContent = '⚠ ' + x.message; });
         }
     }
-    function onChange(e) { if (e.target.id === 'adDebug') api('admin_debug', { on: e.target.checked ? '1' : '0' }).then(d => { sys = d; toast(d.debug ? 'Fehler-Log an' : 'Fehler-Log aus'); }); }
+    function onInput(e) {
+        if (e.target.id === 'adTagQ') { tg.q = e.target.value; const h = box.querySelector('#adTagHits'); if (h) h.innerHTML = tagHits(tg.q); }
+        if (e.target.form && e.target.form.id === 'adTags' && e.target.name === 'note') tg.note = e.target.value;
+    }
+    function onChange(e) {
+        if (e.target.form && e.target.form.id === 'adTags' && e.target.name === 'days') tg.days = e.target.value;
+        if (e.target.dataset && e.target.dataset.adext && e.target.value) { const id = e.target.dataset.adext, days = e.target.value; return api('nsfw_admin_extend', { id, days }).then(d => { st.issued = d.items; toast(d.msg); if (d.entry && !d.entry.deliver) { lastToken = d.token; UI.copy(d.token); } render(); }).catch(x => toast(x.message, true)); }
+        if (e.target.id === 'adDebug') api('admin_debug', { on: e.target.checked ? '1' : '0' }).then(d => { sys = d; toast(d.debug ? 'Fehler-Log an' : 'Fehler-Log aus'); }); }
     function open() {
         box = document.getElementById('adminBox');
         if (!box) return;
-        if (!box.dataset.bound) { box.dataset.bound = '1'; box.addEventListener('click', onClick); box.addEventListener('submit', onSubmit); box.addEventListener('change', onChange); }
+        if (!box.dataset.bound) { box.dataset.bound = '1'; box.addEventListener('click', onClick); box.addEventListener('submit', onSubmit); box.addEventListener('change', onChange); box.addEventListener('input', onInput); }
         load();
     }
     window.NexusAdmin = { open };

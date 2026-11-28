@@ -773,17 +773,28 @@
         if (!box) return;
         if (!d) return api('lic_get').then(licCard).catch(() => { box.innerHTML = ''; });
         const l = d.license;
-        if (!l || !l.has) { box.innerHTML = ''; return; }
+        if (!l || !l.has) {   // 8.4: noch kein Schlüssel – vergebene Tags kommen trotzdem automatisch, hier auch per Knopf
+            if (!l) { box.innerHTML = ''; return; }
+            box.innerHTML = '<div class="nx-row"><button type="button" class="btn btn-sm" id="licFetch">🏷 ' + esc(T('Tags abrufen')) + '</button><span class="nx-hint">' + esc(T('Von der Besitzerin vergebene Tags kommen automatisch über dein Nexus-Konto – du musst nichts eintippen.')) + (l.auto && l.auto.err ? ' ⚠ ' + esc(l.auto.err) : '') + '</span></div>';
+            const bf = $('#licFetch');
+            if (bf) bf.onclick = () => { bf.disabled = true; api('lic_fetch').then(x => { toast(x.msg); licCard({ license: x.license }); if (window.NexusNsfw) window.NexusNsfw.refresh(); }).catch(x => { toast(x.message, true); bf.disabled = false; }); };
+            return;
+        }
         const ST = { ok: ['✔', T('gültig'), 'ok'], expiring: ['⏳', T('läuft bald ab'), 'warn'], expired: ['⌛', T('abgelaufen'), 'bad'], revoked: ['⛔', T('gesperrt'), 'bad'], invalid: ['⚠', T('ungültig'), 'bad'] }[l.status] || ['', l.status, ''];
         const dt = ts => ts ? new Date(ts * 1000).toLocaleDateString(window.nxLoc ? nxLoc() : 'de-DE') : '';
         box.innerHTML = '<div class="lic-card lic-' + ST[2] + '"><div class="lic-head"><b>🔑 ' + esc(T('Deine Lizenz')) + '</b><span class="lic-st">' + ST[0] + ' ' + esc(ST[1]) + '</span></div>'
-            + '<div class="lic-roles">' + (l.role_names || []).map(n => '<span class="vx-pill">' + esc(n) + '</span>').join('') + (l.owner ? '<span class="vx-pill" style="--pc:#f3c262">👑 ' + esc(T('Besitzerin')) + '</span>' : '') + '</div>'
+            + '<div class="lic-roles">' + (window.NexusTags ? (l.owner ? window.NexusTags.chips(['owner'].concat(l.roles || [])) : window.NexusTags.chips(l.tags && l.tags.length ? l.tags : l.roles))
+                : (l.role_names || []).map(n => '<span class="vx-pill">' + esc(n) + '</span>').join('') + (l.owner ? '<span class="vx-pill" style="--pc:#f3c262">👑 ' + esc(T('Besitzerin')) + '</span>' : '')) + '</div>'
+            + (!l.owner && (l.tags || []).some(k => window.NexusTags && window.NexusTags.META[k] && window.NexusTags.META[k][3] === 'look') ? '<p class="nx-hint">' + esc(T('Optische Tags sind Abzeichen – sie geben keine Rechte.')) + '</p>' : '')
             + (l.owner ? '' : '<dl class="lic-facts">' + (l.exp ? '<dt>' + esc(T('Gültig bis')) + '</dt><dd>' + esc(dt(l.exp)) + (l.days_left !== null && l.status !== 'expired' ? ' · ' + esc(T('noch')) + ' ' + l.days_left + ' ' + esc(T('Tage')) : '') + '</dd>' : '<dt>' + esc(T('Gültig bis')) + '</dt><dd>∞ ' + esc(T('unbegrenzt')) + '</dd>')
                 + (l.iat ? '<dt>' + esc(T('Ausgestellt')) + '</dt><dd>' + esc(dt(l.iat)) + '</dd>' : '') + (l.note ? '<dt>' + esc(T('Notiz')) + '</dt><dd>' + esc(l.note) + '</dd>' : '')
                 + '<dt>' + esc(T('Schlüssel-ID')) + '</dt><dd><code>' + esc(l.id || '–') + '</code></dd>'
                 + '<dt>' + esc(T('Online geprüft')) + '</dt><dd>' + (l.online && l.online.at ? (l.online.valid ? '✔ ' : '⚠ ') + esc(new Date(l.online.at).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE')) + (l.online.reason ? ' – ' + esc(l.online.reason) : '') : esc(T('noch nie'))) + '</dd></dl>')
             + (l.reason ? '<p class="nx-hint">⚠ ' + esc(l.reason) + '</p>' : '')
-            + (l.owner ? '' : '<div class="nx-row"><button type="button" class="btn btn-sm" id="licCheck">🌐 ' + esc(T('Online prüfen')) + '</button>' + (l.status === 'expiring' || l.status === 'expired' ? '<span class="nx-hint">' + esc(T('Zum Verlängern bei der Besitzerin melden – du bekommst einen neuen Schlüssel.')) + '</span>' : '') + '</div>') + '</div>';
+            + (l.owner ? '' : '<div class="nx-row"><button type="button" class="btn btn-sm" id="licCheck">🌐 ' + esc(T('Online prüfen')) + '</button><button type="button" class="btn btn-sm" id="licFetch">🏷 ' + esc(T('Tags abrufen')) + '</button>'
+                + (l.auto && l.auto.err ? '<span class="nx-hint">⚠ ' + esc(l.auto.err) + '</span>' : l.auto && l.auto.at ? '<span class="nx-hint">' + esc(T('Tags zuletzt abgerufen')) + ' ' + esc(new Date(l.auto.at).toLocaleString(window.nxLoc ? nxLoc() : 'de-DE')) + '</span>' : '') + (l.status === 'expiring' || l.status === 'expired' ? '<span class="nx-hint">' + esc(T('Zum Verlängern bei der Besitzerin melden – du bekommst einen neuen Schlüssel.')) + '</span>' : '') + '</div>') + '</div>';
+        const bf = $('#licFetch');
+        if (bf) bf.onclick = () => { bf.disabled = true; api('lic_fetch').then(x => { toast(x.msg); licCard({ license: x.license }); if (window.NexusNsfw) window.NexusNsfw.refresh(); }).catch(x => { toast(x.message, true); bf.disabled = false; }); };
         const b = $('#licCheck');
         if (b) b.onclick = () => { b.disabled = true; api('lic_check').then(x => { toast(x.msg, !(x.online && x.online.valid)); licCard({ license: x.license }); }).catch(x => { toast(x.message, true); b.disabled = false; }); };
     }

@@ -711,6 +711,124 @@ test('5.6: Lizenzen 2.0 – Sperrliste der Webseite gilt überall, eigene Lizenz
     } finally { delete process.env.NEXUS_LIC_BASE; delete process.env.NEXUS_OWNER_HASH; srv.close(); }
 });
 
+test('8.4: Tags vergeben – signierte Schlüssel, Zustellung per Abgleich + a=mine, Entziehen, optische Tags ohne Rechte, Besitzer nicht vergebbar (nur Mocks)', async () => {
+    const http = require('http');
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const id = c => 'usr_' + c.repeat(8) + '-1111-2222-3333-444444444444';
+    const OWNER = id('a'), FRIEND = id('b'), OTHER = id('c'), MODP = id('d');
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    // Mock der Webseite: speichert beim Abgleich die mitgeschickten Schlüssel, „mine“ gibt nur die des Kontos zum Token heraus
+    const site = { revoked: [], rows: {}, syncs: 0, mineCalls: 0, accounts: { tokF: FRIEND, tokO: OTHER, tokM: MODP } };
+    const srv = http.createServer((req, res) => {
+        let b = ''; req.on('data', d => b += d); req.on('end', () => {
+            const j = b ? JSON.parse(b) : {}, a = new URL(req.url, 'http://x').searchParams.get('a');
+            res.setHeader('Content-Type', 'application/json');
+            if (a === 'revoked') return res.end(JSON.stringify({ ids: site.revoked.concat(Object.values(site.rows).filter(r => r.revoked).map(r => r.id)) }));
+            if (a === 'sync') { site.syncs++; for (const e of j.entries) site.rows[e.id] = { id: e.id, uid: e.uid, f: e.f, revoked: e.revoked, token: e.token || '' }; return res.end(JSON.stringify({ count: j.entries.length, revoked: site.revoked })); }
+            if (a === 'mine') {
+                site.mineCalls++;
+                const uid = site.accounts[j.token];
+                if (!uid) { res.statusCode = 401; return res.end(JSON.stringify({ error: 'Nicht angemeldet.' })); }
+                return res.end(JSON.stringify({ keys: Object.values(site.rows).filter(r => r.uid === uid && !r.revoked && r.token).map(r => ({ id: r.id, token: r.token })).concat(site.extra || []) }));
+            }
+            res.statusCode = 400; res.end('{}');
+        });
+    });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r));
+    process.env.NEXUS_LIC_BASE = 'http://127.0.0.1:' + srv.address().port;
+    const alerts = [];
+    const mk = async (uid, tok) => {
+        const db = await openDatabase(null);
+        const app = new NexusApp({ db, crypt: { encrypt: s => 'E:' + s, decrypt: s => String(s).replace(/^E:/, '') }, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-840-')) } });
+        app.game.osc.stopListen();
+        app.vrc.account = () => ({ vrc_id: uid, me: {} });
+        app.tools.alert = (t, b) => alerts.push(b);
+        if (tok) app.account.current = () => ({ token: tok, account: { vrc_id: uid } });
+        return app;
+    };
+    try {
+        const own = await mk(OWNER), fr = await mk(FRIEND, 'tokF'), other = await mk(OTHER, 'tokO'), modp = await mk(MODP, 'tokM');
+        const kp = await own.post({ act: 'nsfw_admin_keypair' }, {});
+        for (const a of [fr, other, modp]) a.nsfw.trusted.push(kp.pub);
+        // Besitzer/Besitzerin ist kein vergebbares Tag, auch nicht für das Besitzer-Konto selbst
+        for (const bad of ['owner', 'supporter,besitzerin', 'Besitzer', 'admin']) await assert.rejects(own.post({ act: 'nsfw_admin_issue', uid: FRIEND, features: bad }, {}), /kein vergebbares Tag/);
+        await assert.rejects(own.post({ act: 'nsfw_admin_issue', uid: OWNER, features: 'vip' }, {}), /Besitzer-Konto/);
+        await assert.rejects(fr.post({ act: 'nsfw_admin_issue', uid: OTHER, features: 'vip' }, {}), /Nur für den Besitzer/);
+        // Vergeben: Rolle + optische Tags → signierter NXK1-Schlüssel, unbekannte Tags fallen weg
+        const iss = await own.post({ act: 'nsfw_admin_issue', uid: FRIEND, name: 'Foxy', days: '30', note: 'Discord foxy', features: 'creator,vip,partner,quatsch' }, {});
+        assert.match(iss.token, /^NXK1\./); assert.deepStrictEqual(iss.entry.f, ['creator', 'vip', 'partner']); assert.ok(iss.deliver, 'ohne Moderator: automatisch zustellbar');
+        assert.ok(!fr.nsfw.check(iss.token, FRIEND).error, 'Signatur gültig'); assert.match(fr.nsfw.check(iss.token, OTHER).error, /anderen VRChat-Konto/);
+        assert.ok(!JSON.stringify((await own.post({ act: 'nsfw_state' }, {})).issued).includes(iss.token), 'Oberfläche bekommt die Schlüssel selbst nicht');
+        // Moderator: signiert, aber nie automatisch zugestellt (Nexus-Konten ohne VRChat-Nachweis)
+        const issM = await own.post({ act: 'nsfw_admin_issue', uid: MODP, name: 'Moddy', days: '0', features: 'mod,event' }, {});
+        assert.strictEqual(issM.deliver, false); assert.match(issM.msg, /selbst weitergeben/);
+        // Abgleich schickt die Schlüssel mit (außer Moderator), privater Schlüssel nie
+        await own.post({ act: 'lic_sync' }, {});
+        assert.strictEqual(site.rows[iss.entry.id].token, iss.token, 'Sync enthält den signierten Schlüssel');
+        assert.strictEqual(site.rows[issM.entry.id].token, '', 'Moderator-Schlüssel geht nicht zur Zustellung raus');
+        // Empfänger holt per „mine“ – ohne etwas einzutippen
+        assert.strictEqual((await fr.post({ act: 'nsfw_state' }, {})).access.key, false);
+        let r = await fr.post({ act: 'lic_fetch' }, {});
+        assert.match(r.msg, /Neue Tags erhalten: Creator, VIP, Partner/);
+        assert.ok(alerts.some(a => /Neue Tags erhalten/.test(a)), 'Hinweis');
+        let l = r.license;
+        assert.deepStrictEqual(l.tags, ['creator', 'vip', 'partner']); assert.deepStrictEqual(l.roles, ['creator'], 'Rechte-Rollen nur aus ROLES');
+        let acc = (await fr.post({ act: 'nsfw_state' }, {})).access;
+        assert.ok(acc.key); assert.deepStrictEqual(acc.roles, ['creator']); assert.deepStrictEqual(acc.tags, ['creator', 'vip', 'partner']);
+        assert.strictEqual(acc.mod, false, 'optische Tags geben keine Moderator-Rechte'); assert.strictEqual(acc.unlocked, false, 'Tags ersetzen keine 18+-Freigabe');
+        assert.strictEqual(fr.comm.auth().key, '', 'kein Moderator-Schlüssel an die Community');
+        r = await fr.post({ act: 'lic_fetch' }, {});
+        assert.match(r.msg, /Keine neuen Tags/, 'zweiter Abruf ändert nichts');
+        // andere Person bekommt nichts (auch wenn der Server versehentlich einen fremden Schlüssel schicken würde)
+        site.extra = [{ id: iss.entry.id, token: iss.token }];
+        r = await other.post({ act: 'lic_fetch' }, {});
+        assert.strictEqual((await other.post({ act: 'nsfw_state' }, {})).access.key, false, 'fremder Schlüssel wird nicht übernommen');
+        site.extra = [];
+        // Moderator-Person bekommt über „mine“ nichts, Eintippen bleibt möglich und gibt die Rechte wie bisher
+        await modp.post({ act: 'lic_fetch' }, {});
+        assert.strictEqual((await modp.post({ act: 'nsfw_state' }, {})).access.mod, false);
+        await modp.post({ act: 'nsfw_unlock', token: issM.token }, {});
+        acc = (await modp.post({ act: 'nsfw_state' }, {})).access;
+        assert.ok(acc.mod); assert.deepStrictEqual(acc.tags, ['mod', 'event']);
+        await own.post({ act: 'nsfw_admin_issue', uid: MODP, features: 'vip' }, {}); await own.post({ act: 'lic_sync' }, {});
+        r = await modp.post({ act: 'lic_fetch' }, {});
+        assert.ok((await modp.post({ act: 'nsfw_state' }, {})).access.mod, 'zugestellter Schlüssel ohne „mod“ ersetzt den Moderator-Schlüssel nicht'); assert.match(r.msg, /Moderator-Schlüssel bleibt aktiv/);
+        // Bearbeiten: neu ausstellen ersetzt den alten Schlüssel (alter gesperrt), Empfänger bekommt den neuen
+        const ed = await own.post({ act: 'nsfw_admin_issue', uid: FRIEND, days: '90', features: 'creator,artist', replace: iss.entry.id }, {});
+        assert.ok(own.nsfw.issued().find(x => x.id === iss.entry.id).revoked, 'alter Schlüssel gesperrt');
+        assert.strictEqual(ed.entry.name, 'Foxy', 'Name bleibt');
+        await assert.rejects(own.post({ act: 'nsfw_admin_issue', uid: OTHER, features: 'vip', replace: ed.entry.id }, {}), /bleibt die Person gleich/);
+        await own.post({ act: 'lic_sync' }, {});
+        await fr.post({ act: 'lic_refresh' }, {});   // Start/6-h-Abgleich: Sperrliste + eigene Tags
+        l = (await fr.post({ act: 'lic_get' }, {})).license;
+        assert.strictEqual(l.id, ed.entry.id); assert.deepStrictEqual(l.tags, ['creator', 'artist']);
+        // Verlängern: gleiche ID, neuer Schlüssel wird mitgeschickt
+        const ex = await own.post({ act: 'nsfw_admin_extend', id: ed.entry.id, days: 365 }, {});
+        await own.post({ act: 'lic_sync' }, {});
+        assert.strictEqual(site.rows[ed.entry.id].token, ex.token);
+        await fr.post({ act: 'lic_fetch' }, {});
+        assert.ok((await fr.post({ act: 'lic_get' }, {})).license.days_left > 400, 'verlängerter Schlüssel übernommen');
+        // Entziehen wirkt (Sperre über die Webseite)
+        await own.post({ act: 'nsfw_admin_revoke', id: ed.entry.id, on: '1' }, {});
+        await own.post({ act: 'lic_sync' }, {});
+        assert.strictEqual(site.rows[ed.entry.id].token, '', 'gesperrter Schlüssel wird nicht mehr zugestellt');
+        await fr.post({ act: 'lic_refresh' }, {});
+        acc = (await fr.post({ act: 'nsfw_state' }, {})).access;
+        assert.strictEqual(acc.key, false); assert.deepStrictEqual(acc.tags, [], 'Tags weg');
+        assert.strictEqual((await fr.post({ act: 'lic_get' }, {})).license.status, 'revoked');
+        // ungültiges Konto-Token → Fehler, nichts übernommen
+        const bad = await mk(FRIEND, 'falsch'); bad.nsfw.trusted.push(kp.pub);
+        await assert.rejects(bad.post({ act: 'lic_fetch' }, {}), /Nicht angemeldet/);
+        // Besitzerin: Owner-Lock unverändert, holt nichts ab
+        const mineBefore = site.mineCalls;
+        const ol = (await own.post({ act: 'lic_get' }, {})).license;
+        assert.ok(ol.owner); assert.deepStrictEqual(ol.tags, ['owner']);
+        await own.post({ act: 'lic_fetch' }, {});
+        assert.strictEqual(site.mineCalls, mineBefore, 'Besitzer-App fragt „mine“ nicht');
+    } finally { delete process.env.NEXUS_LIC_BASE; delete process.env.NEXUS_OWNER_HASH; srv.close(); }
+});
+
 test('1.8: Chatbox-Module (Status, Zeit, Wetter, Rechner, Netzwerk, Twitch, Puls, VR/Desktop)', async () => {
     const http = require('http');
     // Nachbildungen: Open-Meteo (Wetter + Orte), decapi.me (Twitch), Pulsoid

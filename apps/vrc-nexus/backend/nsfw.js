@@ -23,6 +23,13 @@ const TRUSTED = [
 const FEATURES = { nsfw: 'NSFW-Werkzeuge', toys: 'Spielzeug-Steuerung (Intiface)', remote: 'Handy-Fernbedienung' };
 /** Rollen, die ein NXK1-Schlüssel vergeben kann (keine Altersfreigabe!) */
 const ROLES = { supporter: 'Supporter', mod: 'Moderator', creator: 'Creator', beta: 'Beta-Tester' };   // 5.6: Creator und Beta dazu
+/** 8.4: rein optische Tags (Abzeichen) – geben KEINE Rechte und keine Altersfreigabe; Rechte gibt es nur über ROLES (z. B. „mod“).
+ *  „Besitzer/Besitzerin“ ist bewusst KEIN Tag: das bleibt allein der Owner-Lock (OWNER_HASH). */
+const TAGS = { vip: 'VIP', partner: 'Partner', event: 'Event-Team', artist: 'Künstler:in' };
+const ALL_TAGS = Object.assign({}, ROLES, TAGS);
+const NOT_ISSUABLE = /^(owner|besitzer|besitzerin|admin|root)$/i;
+/** Tags (Rollen + optische Tags) aus einem Schlüssel-Inhalt, nur bekannte */
+const tagsOf = p => [...new Set(arr(p && p.f).map(str).filter(f => ALL_TAGS[f]))];
 const b64u = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = s => Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 const hashId = id => crypto.createHash('sha256').update(str(id)).digest('hex');
@@ -93,31 +100,32 @@ class Nsfw {
     roles() {
         const uid = this.myId();
         if (!uid) return { key: false, roles: [], reason: '' };
-        if (this.isOwner(uid)) return { key: true, roles: Object.keys(ROLES), exp: 0 };
+        if (this.isOwner(uid)) return { key: true, roles: Object.keys(ROLES), tags: ['owner'], exp: 0 };
         const t = this.myToken();
-        if (!t) return { key: false, roles: [], reason: '' };
+        if (!t) return { key: false, roles: [], tags: [], reason: '' };
         const r = this.check(t, uid);
-        if (r.error) return { key: false, roles: [], reason: r.error };
-        return { key: true, roles: arr(r.payload.f).filter(f => ROLES[f]), exp: int(r.payload.exp), note: str(r.payload.n) };
+        if (r.error) return { key: false, roles: [], tags: [], reason: r.error };
+        // Rechte NUR aus ROLES (optische Tags zählen hier nie mit)
+        return { key: true, roles: arr(r.payload.f).filter(f => ROLES[f]), tags: tagsOf(r.payload), exp: int(r.payload.exp), note: str(r.payload.n) };
     }
     /** Was ist für das eingeloggte Konto freigeschaltet? NSFW nur mit Verified 18+ + Schalter (account.js) */
     /** 5.1.1: wird bei jeder OSC-Nachricht und 4×/s von der Spielzeug-Schleife gefragt → 1 s zwischenspeichern
      *  (sonst jedes Mal entschlüsseln, Schlüsseldateien lesen und die Signatur prüfen) */
     access() {
         const uid = this.myId(), m = this.accessMemo;
-        if (m && m.uid === uid && Date.now() - m.at < 1000) return Object.assign({}, m.v, { features: m.v.features.slice(), roles: m.v.roles.slice() });
+        if (m && m.uid === uid && Date.now() - m.at < 1000) return Object.assign({}, m.v, { features: m.v.features.slice(), roles: m.v.roles.slice(), tags: m.v.tags.slice() });
         const v = this.accessNow();
         this.accessMemo = { uid, at: Date.now(), v };
-        return Object.assign({}, v, { features: v.features.slice(), roles: v.roles.slice() });
+        return Object.assign({}, v, { features: v.features.slice(), roles: v.roles.slice(), tags: v.tags.slice() });
     }
     accessNow() {
         const uid = this.myId();
-        if (!uid) return { owner: false, unlocked: false, features: [], roles: [], reason: 'Nicht bei VRChat angemeldet.' };
+        if (!uid) return { owner: false, unlocked: false, features: [], roles: [], tags: [], reason: 'Nicht bei VRChat angemeldet.' };
         const owner = this.isOwner(uid), k = this.roles();
         const age = this.app.account ? this.app.account.age() : { connected: false, verified: false, nsfw_on: false, age_until: 0 };
         const unlocked = age.verified && age.nsfw_on;
         const reason = unlocked ? '' : !age.connected ? 'Nexus-Konto nicht verbunden.' : !age.verified ? 'Kein gültiger „Verified 18+“-Status (VRChat-Altersverifizierung 18+ abschließen, dann „18+ neu prüfen“).' : 'NSFW ist ausgeschaltet.';
-        return { owner, unlocked, features: unlocked ? Object.keys(FEATURES) : [], roles: k.roles, key: k.key, mod: k.roles.includes('mod'), supporter: k.roles.includes('supporter'),
+        return { owner, unlocked, features: unlocked ? Object.keys(FEATURES) : [], roles: k.roles, tags: (k.tags || []).slice(), key: k.key, mod: k.roles.includes('mod'), supporter: k.roles.includes('supporter'),
             verified18: age.verified, nsfw_on: age.nsfw_on, connected: age.connected, exp: age.age_until, reason, key_reason: k.reason || '' };
     }
     /** Schlüssel für Online-Dienste (Warnliste): eigener Freischalt-Schlüssel – die Besitzerin unterschreibt sich einen kurzlebigen selbst */
@@ -139,22 +147,42 @@ class Nsfw {
     permLog() { try { return JSON.parse(this.app.db.setting('nsfw_permlog', '[]')) || []; } catch (e) { return []; } }
     logPerm(what, detail) { const l = this.permLog(); l.unshift({ at: now(), what: cut(str(what), 60), detail: cut(str(detail), 200) }); this.app.db.setSetting('nsfw_permlog', JSON.stringify(l.slice(0, 300))); }
     issued() { try { return JSON.parse(this.app.db.setting('nsfw_issued', '[]')) || []; } catch (e) { return []; } }
+    /** 8.4: Liste für die Oberfläche – ohne die (verschlüsselt gemerkten) Schlüssel selbst */
+    issuedPublic() { return this.issued().map(e => { const o = Object.assign({}, e); delete o.tok; o.has_tok = !!e.tok; o.deliver = this.deliverable(e); return o; }); }
+    /** 8.4: automatisch zustellbar? Moderator-Schlüssel NIE (Nexus-Konten sind ohne VRChat-Nachweis – die Rechte-Rolle bleibt Handarbeit) */
+    deliverable(e) { return !!e && !e.revoked && !arr(e.f).includes('mod'); }
+    /** 8.4: gespeicherten Schlüssel eines Eintrags (nur Besitzerin, für den Abgleich) */
+    issuedToken(e) { try { return e && e.tok ? str(this.crypt.decrypt(e.tok)) : ''; } catch (x) { return ''; } }
     async issue(input) {
         if (!this.isOwner()) throw new UserError('Nur für den Besitzer.');
         const uid = str(input.uid).trim().replace(/^.*\/(usr_[0-9a-f-]{36}).*$/i, '$1');
         if (!/^(?:usr_[0-9a-f-]{36}|[0-9a-z]{10})$/i.test(uid)) throw new UserError('Bitte eine VRChat-User-ID (usr_…) oder einen Profil-Link angeben.');
-        let name = cut(str(input.name).trim(), 60);
+        const raw = arr(String(input.features || 'supporter').split(',')).map(x => x.trim()).filter(Boolean);
+        if (raw.some(x => NOT_ISSUABLE.test(x))) throw new UserError('„Besitzer/Besitzerin“ ist kein vergebbares Tag – das bleibt fest an das Besitzer-Konto gebunden.');
+        if (this.isOwner(uid)) throw new UserError('Das Besitzer-Konto braucht keine Tags.');
+        const f = [...new Set(raw.filter(x => ALL_TAGS[x]))];
+        if (!f.length) throw new UserError('Mindestens eine Rolle wählen (Supporter, Moderator, Creator oder Beta-Tester) oder ein Tag.');
+        const l = this.issued();
+        const old = input.replace ? l.find(x => x.id === str(input.replace)) : null;
+        if (input.replace && !old) throw new UserError('Alter Eintrag nicht gefunden.');
+        if (old && old.uid.toLowerCase() !== uid.toLowerCase()) throw new UserError('Beim Bearbeiten bleibt die Person gleich.');
+        let name = cut(str(input.name).trim(), 60) || (old ? old.name : '');
         if (!name) { try { const u = await this.app.tools.call('GET', '/users/' + encodeURIComponent(uid)); name = str(u && u.displayName); } catch (e) { /* ohne Namen */ } }
         const days = int(input.days);
-        const f = arr(String(input.features || 'supporter').split(',')).map(x => x.trim()).filter(x => ROLES[x]);
-        if (!f.length) throw new UserError('Mindestens eine Rolle wählen (Supporter, Moderator, Creator oder Beta-Tester).');
         const payload = { v: 1, id: crypto.randomBytes(6).toString('hex'), uid, f, iat: now(), exp: days > 0 ? now() + days * 86400 : 0, n: cut(str(input.note), 80) };
         const token = this.sign(payload);
-        const l = this.issued(); l.unshift({ id: payload.id, uid, name, f: payload.f, iat: payload.iat, exp: payload.exp, note: payload.n, revoked: false });
-        this.logPerm('Schlüssel erzeugt', (name || uid) + ' · ' + f.join(', '));
+        l.unshift({ id: payload.id, uid, name, f: payload.f, iat: payload.iat, exp: payload.exp, note: payload.n, revoked: false, tok: this.crypt.encrypt(token) });
+        if (old) {   // 8.4: Bearbeiten = neu ausstellen, der alte Schlüssel wird gesperrt (Sperre gilt über die Webseite überall)
+            old.revoked = true; old.replaced_by = payload.id;
+            const r = new Set(this.revokedLocal()); r.add(old.id);
+            this.app.db.setSetting('nsfw_revoked', JSON.stringify([...r]));
+            this.accessMemo = null;
+        }
+        this.logPerm(old ? 'Tags geändert' : 'Schlüssel erzeugt', (name || uid) + ' · ' + f.join(', ') + (old ? ' (ersetzt ' + old.id + ')' : ''));
         this.app.db.setSetting('nsfw_issued', JSON.stringify(l.slice(0, 500)));
-        if (this.app.license) this.app.license.autoSync();   // 5.6: bei der Webseite eintragen
-        return { token, entry: l[0], msg: 'Schlüssel für ' + (name || uid) + ' erzeugt.' };
+        if (this.app.license) this.app.license.autoSync();   // 5.6: bei der Webseite eintragen (8.4: inkl. Schlüssel zur Zustellung)
+        const entry = this.issuedPublic()[0];
+        return { token, entry, deliver: entry.deliver, msg: (old ? 'Tags für ' : 'Schlüssel für ') + (name || uid) + (old ? ' geändert.' : ' erzeugt.') + (entry.deliver ? ' Wird beim nächsten Abgleich automatisch zugestellt.' : ' Moderator-Schlüssel bitte selbst weitergeben (kopiert).') };
     }
     revoke(id, on) {
         if (!this.isOwner()) throw new UserError('Nur für den Besitzer.');
@@ -167,7 +195,7 @@ class Nsfw {
         this.app.db.setSetting('nsfw_revoked', JSON.stringify([...r]));
         this.accessMemo = null;
         if (this.app.license) this.app.license.autoSync();   // 5.6: Sperre gilt dann überall
-        return { items: l };
+        return { items: this.issuedPublic() };
     }
     /** 5.6: Schlüssel verlängern – gleiche ID (Sperren gelten weiter), neues Ablaufdatum, neuer Schlüssel zum Weitergeben */
     extend(id, days) {
@@ -179,11 +207,12 @@ class Nsfw {
         const base = e.exp && e.exp > now() ? e.exp : now();
         const exp = d > 0 ? base + d * 86400 : 0;
         const token = this.sign({ v: 1, id: e.id, uid: e.uid, f: e.f, iat: now(), exp, n: cut(str(e.note), 80) });
-        e.exp = exp; e.ext = (e.ext || 0) + 1;
+        e.exp = exp; e.ext = (e.ext || 0) + 1; e.tok = this.crypt.encrypt(token);   // 8.4: neuer Schlüssel wird beim Abgleich zugestellt
         this.app.db.setSetting('nsfw_issued', JSON.stringify(l));
         this.logPerm('Schlüssel verlängert', (e.name || e.uid) + ' · ' + (exp ? new Date(exp * 1000).toISOString().slice(0, 10) : 'unbegrenzt'));
         if (this.app.license) this.app.license.autoSync();
-        return { token, entry: e, items: l, msg: 'Verlängert – neuen Schlüssel an ' + (e.name || e.uid) + ' schicken (der alte gilt bis zu seinem Datum weiter).' };
+        const items = this.issuedPublic();
+        return { token, entry: items.find(x => x.id === e.id), items, msg: this.deliverable(e) ? 'Verlängert – der neue Schlüssel wird ' + (e.name || e.uid) + ' beim nächsten Abgleich automatisch zugestellt.' : 'Verlängert – neuen Schlüssel an ' + (e.name || e.uid) + ' schicken (der alte gilt bis zu seinem Datum weiter).' };
     }
 
     // ---------- Werkzeuge ----------
@@ -269,8 +298,8 @@ class Nsfw {
 
     state() {
         const a = this.access(), c = this.cfg();
-        const out = { access: a, private: this.private, features: FEATURES, roles: ROLES, priv_hide: this.app.nsfwsafe ? !!this.app.nsfwsafe.cfg().private2.hide_ui : false };
-        if (a.owner) { const k = this.ownerKey(); Object.assign(out, { owner_key: k ? k.pub : '', key_known: !!(k && TRUSTED.includes(k.pub)), issued: this.issued(), permlog: this.permLog().slice(0, 50), lic_synced: int(this.app.db.setting('lic_synced', '0')) }); }
+        const out = { access: a, private: this.private, features: FEATURES, roles: ROLES, tags: TAGS, priv_hide: this.app.nsfwsafe ? !!this.app.nsfwsafe.cfg().private2.hide_ui : false };
+        if (a.owner) { const k = this.ownerKey(); Object.assign(out, { owner_key: k ? k.pub : '', key_known: !!(k && TRUSTED.includes(k.pub)), issued: this.issuedPublic(), permlog: this.permLog().slice(0, 50), lic_synced: int(this.app.db.setting('lic_synced', '0')) }); }
         if (!a.unlocked) return out;
         Object.assign(out, { cfg: c, current_avatar: str(this.acc() && this.acc().me && this.acc().me.currentAvatar), toys: this.app.toys ? this.app.toys.status() : null, tremote: this.app.toyremote ? this.app.toyremote.status() : null, remote: this.app.remote ? this.app.remote.status() : null });
         return out;
@@ -289,7 +318,7 @@ class Nsfw {
                 const enc = this.crypt.encrypt(t);
                 this.app.db.setSetting('nsfw_token', enc);
                 require('./profiles').setSharedKey(this.app.tools && this.app.tools.userData, enc);   // 3.4.1: gilt auch in den anderen Konten dieser App
-                return Object.assign(this.state(), { msg: '🔑 Schlüssel gespeichert: ' + (arr(r.payload.f).filter(f => ROLES[f]).map(f => ROLES[f]).join(', ') || 'keine Rolle') + '.' });
+                return Object.assign(this.state(), { msg: '🔑 Schlüssel gespeichert: ' + (tagsOf(r.payload).map(f => ALL_TAGS[f]).join(', ') || 'keine Rolle') + '.' });
             }
         }
         // ab hier nur freigeschaltet
@@ -297,7 +326,7 @@ class Nsfw {
             if (!this.isOwner()) throw new UserError('Nur für den Besitzer.');
             switch (act) {
                 case 'nsfw_admin_keypair': { const pub = this.makeOwnerKey(); return Object.assign(this.state(), { pub, msg: 'Schlüsselpaar erzeugt.' }); }
-                case 'nsfw_admin_issue': return Object.assign(await this.issue(input), { items: this.issued() });
+                case 'nsfw_admin_issue': return Object.assign(await this.issue(input), { items: this.issuedPublic() });
                 case 'nsfw_admin_revoke': return this.revoke(input.id, input.on !== '0');
                 case 'nsfw_admin_extend': return this.extend(input.id, input.days);
                 case 'nsfw_admin_check': { const r = this.check(input.token, str(input.uid)); return r.error ? { ok: false, msg: r.error } : { ok: true, msg: '✔ gültig für ' + r.payload.uid, payload: r.payload }; }
@@ -331,4 +360,4 @@ class Nsfw {
     }
 }
 
-module.exports = { Nsfw, OWNER_HASH, TRUSTED, FEATURES, ROLES, hashId };
+module.exports = { Nsfw, OWNER_HASH, TRUSTED, FEATURES, ROLES, TAGS, ALL_TAGS, tagsOf, hashId };

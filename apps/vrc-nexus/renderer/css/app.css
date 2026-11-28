@@ -1676,3 +1676,18 @@ select option, select optgroup { background-color: rgb(var(--bg-rgb)); color: va
 .t2-mval { width: 70px; flex: none; display: flex; }
 .t2-mempty { padding: 8px; }
 .t2-orphan .nc-x { margin-left: 2px; }
+/* 8.4: 🏷 Tags vergeben (Admin) & Tag-Abzeichen */
+.ad-tagform { display: grid; gap: 10px; margin: 6px 0 12px; }
+.ad-tagstep { display: grid; gap: 6px; }
+.ad-tagform input#adTagQ { width: 100%; }
+.ad-taghits { display: flex; flex-wrap: wrap; gap: 6px; }
+.ad-taghit { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 18px; border: 1px solid var(--border, rgba(255,255,255,.15)); background: transparent; color: inherit; cursor: pointer; }
+.ad-taghit:hover, .ad-taghit:focus-visible { border-color: var(--accent, #38d5e6); }
+.ad-taghit .vx-av, .ad-tagsel .vx-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: inline-flex; align-items: center; justify-content: center; }
+.ad-tagsel { align-items: center; gap: 10px; }
+.ad-tagchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ad-tagchip { cursor: pointer; opacity: .55; border-style: dashed; font: inherit; font-size: .8rem; padding: 3px 10px; border-radius: 14px; }
+.ad-tagchip.on { opacity: 1; border-style: solid; font-weight: 600; }
+.ad-tagtab td { vertical-align: top; } .ad-tagtab tr.ns-rev td { opacity: .5; } .ad-tagtab tr.ns-rev td:last-child { opacity: 1; }
+.ad-tagext { max-width: 130px; }
+.nx-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; } .nx-tags:empty { display: none; }
