@@ -6219,3 +6219,181 @@ test('8.3: 🔞 Spielzeug-Quellen 2.0 – Modus/Bereich/Kurve/Glättung/Leerlauf
         await assert.rejects(app.post({ act: 'toys_follow', name: 'Vibi', mode: 'simple' }, {}), /Nicht freigeschaltet/);
     } finally { t.stop(); app.tools.stop(); delete process.env.NEXUS_OWNER_HASH; }
 });
+
+test('🔞 Stream Deck (zweites Plugin, nur Webseite): gleicher Schlüssel, Recht + 18+ nötig, Panik/Stopp/Safeword/Rot immer, falscher Schlüssel 401, Plugin gegen nachgebaute Stream-Deck-App, Neo-Infoleiste, nicht im Release', async () => {
+    const { NexusApp } = require('../backend/app');
+    const { hashId } = require('../backend/nsfw');
+    const { WebSocketServer } = require('ws');
+    const { spawn } = require('child_process');
+    const OWNER = 'usr_' + 'e'.repeat(8) + '-1111-2222-3333-444444444444';
+    process.env.NEXUS_OWNER_HASH = hashId(OWNER);
+    const db = await openDatabase(null);
+    const enc = { encrypt: s => 'ENC:' + Buffer.from(s).toString('base64'), decrypt: s => Buffer.from(String(s).replace(/^ENC:/, ''), 'base64').toString() };
+    const app = new NexusApp({ db, crypt: enc, noTimers: true, host: { userData: fs.mkdtempSync(path.join(os.tmpdir(), 'nx-sda-')) } });
+    app.game.osc.stopListen(); app.tools.alert = () => {}; app.game.osc.chatbox = async () => {}; app.game.osc.sendParam = async () => {};
+    app.vrc.account = () => ({ vrc_id: OWNER, me: {}, display_name: 'X' });
+    app.account.action = async () => { throw new Error('offline (Test)'); };   // Panik: NSFW wird dann lokal aus gemerkt
+    const PORT = 17996;
+    app.settings.save({ 'int.api': true, 'int.api_port': PORT });
+    app.tools.api.apply();
+    await U.sleep(100);
+    const tok = app.settings.get('int.api_token'), t = app.toys, sent = [];
+    const call = async (method, p, body, key = tok) => { const r = await fetch('http://127.0.0.1:' + PORT + '/api/' + p, { method, headers: { 'X-Nexus-Token': key, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined }); return { code: r.status, d: await r.json().catch(() => ({})) }; };
+    const adult = (o, x, key) => call('POST', 'adult', Object.assign({ op: o }, x || {}), key);
+    let child = null, wss = null;
+    try {
+        // falscher Schlüssel → 401, auch für Panik
+        assert.strictEqual((await call('GET', 'adult/state', null, 'falsch')).code, 401);
+        assert.strictEqual((await adult('panic', {}, 'falsch')).code, 401, 'falscher Schlüssel: auch Panik abgelehnt');
+        // ohne Recht und ohne 18+: gesperrt, keine 🔞-Daten
+        let r = await call('GET', 'adult/state');
+        assert.ok(r.code === 200 && r.d.locked && r.d.why === 'right' && r.d.level === undefined && r.d.patterns === undefined, 'gesperrt ohne Freigabe, ohne Daten: ' + JSON.stringify(r.d));
+        await assert.rejects(app.post({ act: 'sdadult_set', on: '1' }, {}), /Nicht freigeschaltet/, 'Recht lässt sich nur mit 18+ einschalten');
+        assert.strictEqual(app.sdadult.ui().visible, false, 'Schalter in der App ohne 18+ unsichtbar');
+        for (const [o, x] of [['level', { level: 50 }], ['level_step', { step: 10 }], ['pattern', { id: 'welle' }], ['surprise'], ['private'], ['follow'], ['scene'], ['fade'], ['consent', { light: 'green' }], ['consent', { light: 'next' }]]) {
+            r = await adult(o, x);
+            assert.ok(r.code === 403 && r.d.locked, o + ' gesperrt: ' + JSON.stringify(r));
+        }
+        // Sicherheits-Aktionen gehen immer
+        for (const [o, x] of [['stop'], ['safeword'], ['consent', { light: 'red' }], ['panic']]) { r = await adult(o, x); assert.ok(r.code === 200 && r.d.ok, o + ' geht immer: ' + JSON.stringify(r)); }
+        assert.strictEqual(t.consent, 'red', 'Ampel-Rot auch gesperrt');
+        // /api/action und Mehrfach-Aktionen erreichen die 🔞-Aktionen nie
+        r = await call('POST', 'action', { action: 'multi', steps: [{ action: 'level', level: 50 }] });
+        assert.ok(r.code === 400 && /Unbekannte Aktion/.test(r.d.error), 'Mehrfach-Aktion kennt keine 🔞-Aktion');
+        // 18+ freigeschaltet, Recht noch aus → weiter gesperrt
+        grant18(app);
+        r = await call('GET', 'adult/state');
+        assert.ok(r.d.locked && r.d.why === 'right', 'ohne bewusst erlaubtes Recht gesperrt');
+        assert.strictEqual(app.sdadult.ui().visible, true);
+        r = await app.post({ act: 'sdadult_set', on: '1' }, {});
+        assert.ok(r.on && /erlaubt/.test(r.msg));
+        assert.ok((await app.post({ act: 'tools_settings' }, {})).status.sd_adult.on, 'Werkzeuge → Stream Deck zeigt den Schalter');
+        // App-Schlüssel ohne Stufe „alles“ → gesperrt
+        const k = app.ctools.createApp('Bot', 'avatar').key;
+        r = await call('GET', 'adult/state', null, k);
+        assert.ok(r.d.locked && r.d.why === 'scope', 'App-Schlüssel „Avatar“ reicht nicht');
+        assert.strictEqual((await adult('level', { level: 20 }, k)).code, 403);
+        assert.strictEqual((await adult('stop', {}, k)).code, 200, 'Stopp auch mit kleinem App-Schlüssel');
+        // Geräte (Mock)
+        t.ws = { readyState: 1, send() {} }; t.req = async m => { sent.push(m); return {}; };
+        t.addDevice({ DeviceIndex: 0, DeviceName: 'Lush', DeviceMessageTimingGap: 0, DeviceMessages: { ScalarCmd: [{ StepCount: 20, ActuatorType: 'Vibrate' }] } });
+        await U.sleep(30);
+        r = await call('GET', 'adult/state');
+        assert.ok(!r.d.locked && r.d.devices === 1 && r.d.patterns.some(p => p.id === 'welle') && r.d.consent === 'red', 'freigegeben: ' + JSON.stringify(r.d).slice(0, 200));
+        await adult('consent', { light: 'green' });
+        assert.strictEqual(t.consent, 'green');
+        r = await adult('level', { level: 40 });
+        assert.ok(r.code === 200 && t.status().devices[0].level === 40, 'Stärke setzen: ' + JSON.stringify(r));
+        await adult('level_step', { step: 15 });
+        assert.strictEqual(t.status().devices[0].level, 55, 'Stärke +15');
+        await adult('level_step', { step: -80 });
+        assert.strictEqual(t.status().devices[0].level, 0, 'nicht unter 0');
+        // Labor-Muster erscheinen in der Liste und lassen sich starten
+        await app.post({ act: 'toys_lab_cfg', timelines: JSON.stringify([{ id: 'ramp', name: 'Rampe', points: [[0, 0], [10, 100], [20, 0]] }]) }, {});
+        assert.ok((await call('GET', 'adult/state')).d.patterns.some(p => p.id === 't:ramp'), 'Labor-Muster in der Auswahl');
+        r = await adult('pattern', { id: 't:ramp', strength: 70, toggle: '1' });
+        assert.ok(r.d.running && t.pat && t.pat.id === 't:ramp', 'Muster läuft');
+        r = await adult('pattern', { id: 't:ramp', toggle: '1' });
+        assert.ok(!r.d.running && !t.pat, 'nochmal drücken stoppt');
+        await adult('surprise'); assert.ok(t.pat && t.pat.surprise, 'Überraschung');
+        r = await adult('private'); assert.ok(r.d.value && app.nsfw.private, 'Privat-Modus an');
+        r = await adult('private', { on: '0' }); assert.ok(!r.d.value && !app.nsfw.private, 'Privat-Modus aus');
+        r = await adult('follow'); assert.ok(r.d.value && t.status().devices[0].src_mode === 'simple', 'folgt meinem Avatar');
+        assert.ok((await call('GET', 'adult/state')).d.follow);
+        r = await adult('follow'); assert.ok(!r.d.value && t.status().devices[0].src_mode === 'off', 'Avatar-Steuerung aus');
+        r = await adult('scene', { name: 'Test', minutes: 5 }); assert.ok(t.scene && t.scene.name === 'Test', 'Szene startet');
+        assert.strictEqual((await call('GET', 'adult/state')).d.scene.name, 'Test');
+        await adult('scene_stop'); assert.ok(!t.scene, 'Szene beendet');
+        r = await adult('fade', { seconds: 20 }); assert.ok(t.lab.fade && /20 s/.test(r.d.msg), 'Ausklingen');
+        await adult('consent', { light: 'next' }); assert.strictEqual(t.consent, 'yellow', 'Ampel weiter: Gelb');
+        assert.strictEqual((await adult('quatsch')).code, 400);
+
+        // ---------- Plugin gegen nachgebaute Stream-Deck-App ----------
+        wss = new WebSocketServer({ port: 0, host: '127.0.0.1' });
+        await new Promise(ok => wss.on('listening', ok));
+        const got = []; let sock = null;
+        wss.on('connection', s => { sock = s; s.on('message', m => got.push(JSON.parse(m))); });
+        const PLUGIN = path.join(__dirname, '..', 'streamdeck-adult', 'de.ghostnode.vrcnexus.adult.sdPlugin', 'bin', 'plugin.js');
+        child = spawn(process.execPath, [PLUGIN, '-port', String(wss.address().port), '-pluginUUID', 'UU', '-registerEvent', 'registerPlugin', '-info', '{}'], { stdio: 'ignore' });
+        const wait = async (fn, ms = 6000) => { const s0 = Date.now(); while (Date.now() - s0 < ms) { const x = got.find(fn); if (x) return x; await U.sleep(40); } throw new Error('Zeitüberschreitung'); };
+        const tx = o => sock.send(JSON.stringify(o));
+        const P = 'de.ghostnode.vrcnexus.adult.';
+        await wait(m => m.event === 'getGlobalSettings');
+        tx({ event: 'didReceiveGlobalSettings', payload: { settings: { port: PORT, token: tok } } });
+        const keys = { level: ['cL', { mode: 'set', value: 25 }], meter: ['cM', { show: 'level' }], consent: ['cC', {}], panic: ['cP', {}] };
+        for (const [kk, [ctx, se]] of Object.entries(keys)) tx({ event: 'willAppear', action: P + kk, context: ctx, payload: { settings: se, controller: 'Keypad' } });
+        tx({ event: 'willAppear', action: P + 'infobar', context: 'cN', payload: { settings: {}, controller: 'Neo' } });
+        tx({ event: 'willAppear', action: P + 'dial', context: 'cD', payload: { settings: {}, controller: 'Encoder' } });
+        const lay = await wait(m => m.event === 'setFeedbackLayout' && m.context === 'cN');
+        assert.strictEqual(lay.payload.layout, 'layouts/infobar.json', 'Neo: eigenes Layout für die Infoleiste');
+        await wait(m => m.event === 'setTitle' && m.context === 'cL' && /25 %/.test(m.payload.title));
+        await wait(m => m.event === 'setImage' && m.context === 'cC' && m.payload.image.startsWith('data:image/svg+xml;base64,'));
+        let n = got.length;
+        tx({ event: 'keyDown', action: P + 'level', context: 'cL', payload: { settings: keys.level[1] } });
+        assert.strictEqual((await wait(m => got.indexOf(m) >= n && m.context === 'cL' && ['showOk', 'showAlert'].includes(m.event))).event, 'showOk');
+        assert.strictEqual(t.status().devices[0].level, 25, 'Taste setzt die Stärke');
+        await wait(m => m.event === 'setTitle' && m.context === 'cM' && /Stärke\n\d+ %/.test(m.payload.title));
+        const fb = await wait(m => m.event === 'setFeedback' && m.context === 'cN' && /^Stärke \d+ %/.test(m.payload.line1));
+        assert.ok(fb.payload.lvl && typeof fb.payload.lvl.value === 'number' && /^data:image\/svg\+xml/.test(fb.payload.light), 'Infoleiste: Balken + Ampel-Punkt');
+        await wait(m => m.event === 'setFeedback' && m.context === 'cD' && /%$/.test(m.payload.value));
+        n = got.length;
+        tx({ event: 'dialRotate', action: P + 'dial', context: 'cD', payload: { settings: { step: 5 }, ticks: 2, controller: 'Encoder' } });
+        for (let i = 0; i < 50 && t.status().devices[0].level !== 35; i++) await U.sleep(40);
+        assert.strictEqual(t.status().devices[0].level, 35, 'Regler: 2 Rasten × 5 %');
+        // diskret: neutrale Wörter
+        tx({ event: 'didReceiveGlobalSettings', payload: { settings: { port: PORT, token: tok, discreet: true } } });
+        await wait(m => m.event === 'setFeedback' && m.context === 'cN' && /^Stufe /.test(m.payload.line1));
+        await wait(m => m.event === 'setTitle' && m.context === 'cM' && /^Stufe\n/.test(m.payload.title));
+        // Recht entziehen → Tasten zeigen „gesperrt“, Panik bleibt
+        tx({ event: 'didReceiveGlobalSettings', payload: { settings: { port: PORT, token: tok } } });
+        await app.post({ act: 'sdadult_set', on: '0' }, {});
+        await wait(m => m.event === 'setTitle' && m.context === 'cL' && /gesperrt/.test(m.payload.title));
+        await wait(m => m.event === 'setFeedback' && m.context === 'cN' && /gesperrt/.test(m.payload.line2));
+        n = got.length;
+        tx({ event: 'keyDown', action: P + 'level', context: 'cL', payload: { settings: keys.level[1] } });
+        assert.strictEqual((await wait(m => got.indexOf(m) >= n && m.context === 'cL' && ['showOk', 'showAlert'].includes(m.event))).event, 'showAlert', 'gesperrt: Taste lehnt ab');
+        await app.post({ act: 'sdadult_set', on: '1' }, {});
+        n = got.length;
+        tx({ event: 'keyDown', action: P + 'panic', context: 'cP', payload: { settings: {} } });
+        assert.strictEqual((await wait(m => got.indexOf(m) >= n && m.context === 'cP' && ['showOk', 'showAlert'].includes(m.event))).event, 'showOk', 'Panik-Taste');
+        assert.ok(!app.nsfw.access().unlocked && !t.status().devices[0].level, 'Panik: Spielzeug aus und 18+ aus');
+        r = await call('GET', 'adult/state');
+        assert.ok(r.d.locked && r.d.why === 'nsfw', 'nach der Panik gesperrt (18+ aus)');
+
+        // ---------- Paket: gültiges .streamDeckPlugin, Bilder in allen Größen, nicht im Release ----------
+        const { readZip } = require('../backend/nxp');
+        const { pack, DIR } = require('../streamdeck-adult/tools/sync-web.js');
+        const pk = pack(), zip = readZip(pk.buf, { limits: { files: 500, packed: 20 * 1048576, total: 50 * 1048576, file: 10 * 1048576 } });
+        const names = Object.keys(zip);
+        assert.ok(names.length > 20 && names.every(x => x.startsWith(DIR + '/')), 'ZIP mit genau einem *.sdPlugin-Ordner');
+        const man = JSON.parse(zip[DIR + '/manifest.json']);
+        const png = rel => { const b = zip[DIR + '/' + rel + '.png']; assert.ok(b, 'Bild fehlt: ' + rel); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
+        assert.ok(man.UUID === 'de.ghostnode.vrcnexus.adult' && man.Software.MinimumVersion === '7.6' && zip[DIR + '/' + man.CodePath] && zip[DIR + '/' + man.PropertyInspectorPath]);
+        assert.deepStrictEqual(png(man.Icon), [256, 256]); assert.deepStrictEqual(png(man.Icon + '@2x'), [512, 512]);
+        assert.deepStrictEqual(png(man.CategoryIcon), [28, 28]); assert.deepStrictEqual(png(man.CategoryIcon + '@2x'), [56, 56]);
+        for (const a of man.Actions) {
+            assert.ok(a.UUID.startsWith(man.UUID + '.'), a.UUID);
+            assert.deepStrictEqual(png(a.Icon), [20, 20]); assert.deepStrictEqual(png(a.Icon + '@2x'), [40, 40]);
+            for (const s of a.States) { assert.deepStrictEqual(png(s.Image), [72, 72]); assert.deepStrictEqual(png(s.Image + '@2x'), [144, 144]); }
+            assert.ok(a.Controllers.length && a.Controllers.every(c => ['Keypad', 'Encoder', 'Neo'].includes(c)));
+        }
+        for (const pl of [path.join(__dirname, '..', 'streamdeck-adult', DIR), path.join(__dirname, '..', 'streamdeck', 'de.ghostnode.vrcnexus.sdPlugin')]) {   // beide Infoleisten-Layouts: 232 × 50, keine Überlappung
+            const L = JSON.parse(fs.readFileSync(path.join(pl, 'layouts', 'infobar.json'), 'utf8'));
+            assert.strictEqual(L.controller, 'Neo');
+            for (const it of L.items) { const [x, y, w, h] = it.rect; assert.ok(x >= 0 && y >= 0 && x + w <= 232 && y + h <= 50, it.key + ' passt in 232 × 50'); }
+            for (const a of L.items) for (const b of L.items) if (a !== b && (a.zOrder || 0) === (b.zOrder || 0)) assert.ok(a.rect[0] + a.rect[2] <= b.rect[0] || b.rect[0] + b.rect[2] <= a.rect[0] || a.rect[1] + a.rect[3] <= b.rect[1] || b.rect[1] + b.rect[3] <= a.rect[1], a.key + '/' + b.key + ' überlappen');
+        }
+        const m1 = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'streamdeck', 'de.ghostnode.vrcnexus.sdPlugin', 'manifest.json'), 'utf8'));
+        assert.ok(m1.Software.MinimumVersion === '7.6' && m1.Actions.some(a => a.UUID === 'de.ghostnode.vrcnexus.infobar' && a.Controllers.join() === 'Neo'), 'Plugin 1: Neo-Infoleiste (braucht Stream Deck 7.6)');
+        const ib = require('../streamdeck/de.ghostnode.vrcnexus.sdPlugin/bin/plugin.js').infobarLines;
+        assert.deepStrictEqual(ib({}, { game: { running: true, world: 'Testwelt', players: 7 }, heart: { on: true, active: true, bpm: 72 }, friends: { in_game: 3, online: 5 }, notifs: 2, warn: { present: 0 } }), ['Testwelt · 7 Spieler', '♥ 72 · 3 im Spiel · 🔔 2']);
+        assert.deepStrictEqual(ib({ mode: 'custom', line1: 'A {x}', line2: '{y}' }, { vars: { x: '1' } }), ['A 1', '–']);
+        // nicht im Release: weder electron-builder noch Workflow noch Android nehmen den Ordner mit
+        const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+        assert.ok(!JSON.stringify(pj.build).includes('streamdeck-adult') && !pj.build.files.some(f => /streamdeck/.test(f)), 'electron-builder ohne 🔞-Plugin');
+        for (const f of fs.readdirSync(path.join(__dirname, '..', '..', '..', '.github', 'workflows'))) assert.ok(!/streamdeck-adult|adult\.sdPlugin|Nexus-18/.test(fs.readFileSync(path.join(__dirname, '..', '..', '..', '.github', 'workflows', f), 'utf8')), 'Workflow ' + f + ' ohne 🔞-Plugin');
+    } finally {
+        if (child) child.kill(); if (wss) wss.close();
+        app.tools.api.stop(); t.stop(); app.tools.stop(); delete process.env.NEXUS_OWNER_HASH;
+    }
+});

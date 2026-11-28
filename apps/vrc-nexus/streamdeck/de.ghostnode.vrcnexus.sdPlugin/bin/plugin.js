@@ -112,6 +112,7 @@ function render(ctx) {
     const c = contexts.get(ctx);
     if (!c) return;
     const s = c.settings || {}, st = lastState, kind = c.action.slice(PREFIX.length);
+    if (kind === 'infobar') return infobar(ctx, s, st);
     if (!st) { if (['friends', 'players', 'heart', 'warn'].includes(kind)) setTitle(ctx, '–'); return; }
     switch (kind) {
         case 'friends': {
@@ -212,6 +213,28 @@ function render(ctx) {
             break;
         }
     }
+}
+// ---------- 1.11: Infoleiste des Stream Deck Neo (232 × 50 px, nur Anzeige – Layout layouts/infobar.json) ----------
+/** Zeilen für die Infoleiste: Standard = Welt/Spieler + Puls/Freunde/Benachrichtigungen, sonst eigene Platzhalter (Zeile 1 / Zeile 2) */
+function infobarLines(s, st) {
+    if (!st) return ['VRC Nexus', lastError ? lastError.slice(0, 60) : 'verbindet …'];
+    if (s.mode === 'custom') return [fillVars(s.line1 || '{welt}', st.vars).split('\n')[0], fillVars(s.line2 || '{zeit}', st.vars).split('\n')[0]];
+    const g = st.game || {}, h = st.heart, f = st.friends || {};
+    const l1 = g.running ? (g.world || 'VRChat') + (g.world ? ' · ' + g.players + ' Spieler' : '') : 'VRChat aus';
+    const parts = [];
+    if (h && h.on && h.active && h.bpm) parts.push('♥ ' + h.bpm);
+    parts.push(f.in_game + ' im Spiel' + (s.show === 'both' ? ' / ' + f.online + ' on' : ''));
+    if (st.notifs) parts.push('🔔 ' + st.notifs);
+    if (st.warn && st.warn.present) parts.push('⚠ ' + st.warn.present);
+    return [l1, parts.join(' · ')];
+}
+function infobar(ctx, s, st) {
+    const c = contexts.get(ctx);
+    if (!c || c.controller !== 'Neo') return;
+    const [l1, l2] = infobarLines(s, st), key = l1 + '|' + l2 + '|' + (st && st.warn && st.warn.present ? 1 : 0);
+    if (c.fb === key) return;                 // nur bei Änderung senden
+    c.fb = key;
+    send('setFeedback', ctx, { line1: l1, line2: { value: l2, color: st && st.warn && st.warn.present ? '#ff7070' : '#9fd8e0' } });
 }
 // ---------- Avatar-Vorschaubild als Tastensymbol ----------
 const avPics = new Map();
@@ -430,9 +453,12 @@ function onMessage(raw) {
     const { event, context, action, payload } = m;
     const settings = (payload && payload.settings) || {};
     switch (event) {
-        case 'willAppear': contexts.set(context, { action, settings }); render(context); if (contexts.size === 1) schedule(); break;
+        case 'willAppear':
+            contexts.set(context, { action, settings, controller: (payload && payload.controller) || 'Keypad' });
+            if (payload && payload.controller === 'Neo') send('setFeedbackLayout', context, { layout: 'layouts/infobar.json' });   // 1.11: Neo-Infoleiste
+            render(context); if (contexts.size === 1) schedule(); break;
         case 'willDisappear': contexts.delete(context); if (!contexts.size) clearInterval(pollTimer); break;
-        case 'didReceiveSettings': if (contexts.has(context)) { contexts.get(context).settings = settings; contexts.get(context).img = ''; render(context); } break;
+        case 'didReceiveSettings': if (contexts.has(context)) { contexts.get(context).settings = settings; contexts.get(context).img = ''; contexts.get(context).fb = ''; render(context); } break;
         case 'didReceiveGlobalSettings': globals = Object.assign({ port: 17865, token: '' }, settings); poll(); break;
         case 'keyDown':
             if (action === PREFIX + 'friend') { friendDown(context, settings); break; }
@@ -465,4 +491,4 @@ function connect() {
 }
 
 if (require.main === module) connect();
-module.exports = { MiniWs, onMessage, keyDown, render, dialRotate, friendSvg, wrapKey, fillVars, _test: { pics, holds, contexts, setGlobals: g => { globals = g; }, get state() { return lastState; }, poll } };
+module.exports = { MiniWs, onMessage, keyDown, render, dialRotate, friendSvg, wrapKey, fillVars, infobarLines, _test: { pics, holds, contexts, setGlobals: g => { globals = g; }, get state() { return lastState; }, poll } };

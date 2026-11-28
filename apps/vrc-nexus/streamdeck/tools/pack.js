@@ -21,29 +21,38 @@ function files(dir, base = '') {
     });
 }
 
-const entries = files(path.join(ROOT, DIR)).map(rel => ({ name: DIR + '/' + rel, data: fs.readFileSync(path.join(ROOT, DIR, rel)) }));
-const parts = [], central = [];
-let offset = 0;
-const DOS_TIME = 0, DOS_DATE = (2026 - 1980) << 9 | 1 << 5 | 1;     // feste Zeit → gleiche Datei bei gleichem Inhalt
-for (const e of entries) {
-    const name = Buffer.from(e.name, 'utf8'), comp = zlib.deflateRawSync(e.data, { level: 9 }), crc = crc32(e.data);
-    const local = Buffer.alloc(30);
-    local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x0800, 6); local.writeUInt16LE(8, 8);
-    local.writeUInt16LE(DOS_TIME, 10); local.writeUInt16LE(DOS_DATE, 12); local.writeUInt32LE(crc, 14); local.writeUInt32LE(comp.length, 18); local.writeUInt32LE(e.data.length, 22);
-    local.writeUInt16LE(name.length, 26); local.writeUInt16LE(0, 28);
-    parts.push(local, name, comp);
-    const c = Buffer.alloc(46);
-    c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(8, 10);
-    c.writeUInt16LE(DOS_TIME, 12); c.writeUInt16LE(DOS_DATE, 14); c.writeUInt32LE(crc, 16); c.writeUInt32LE(comp.length, 20); c.writeUInt32LE(e.data.length, 24);
-    c.writeUInt16LE(name.length, 28); c.writeUInt32LE(offset, 42);
-    central.push(c, name);
-    offset += 30 + name.length + comp.length;
+/** Ordner (relativ zu base) → ZIP-Puffer; Einträge „<dir>/…“, feste Zeit → gleiche Datei bei gleichem Inhalt.
+ *  Auch für das 🔞-Plugin der Webseite (streamdeck-adult/tools/sync-web.js) – dort nicht im Release. */
+function zipDir(base, dir) {
+    const entries = files(path.join(base, dir)).map(rel => ({ name: dir + '/' + rel, data: fs.readFileSync(path.join(base, dir, rel)) }));
+    const parts = [], central = [];
+    let offset = 0;
+    const DOS_TIME = 0, DOS_DATE = (2026 - 1980) << 9 | 1 << 5 | 1;
+    for (const e of entries) {
+        const name = Buffer.from(e.name, 'utf8'), comp = zlib.deflateRawSync(e.data, { level: 9 }), crc = crc32(e.data);
+        const local = Buffer.alloc(30);
+        local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x0800, 6); local.writeUInt16LE(8, 8);
+        local.writeUInt16LE(DOS_TIME, 10); local.writeUInt16LE(DOS_DATE, 12); local.writeUInt32LE(crc, 14); local.writeUInt32LE(comp.length, 18); local.writeUInt32LE(e.data.length, 22);
+        local.writeUInt16LE(name.length, 26); local.writeUInt16LE(0, 28);
+        parts.push(local, name, comp);
+        const c = Buffer.alloc(46);
+        c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(8, 10);
+        c.writeUInt16LE(DOS_TIME, 12); c.writeUInt16LE(DOS_DATE, 14); c.writeUInt32LE(crc, 16); c.writeUInt32LE(comp.length, 20); c.writeUInt32LE(e.data.length, 24);
+        c.writeUInt16LE(name.length, 28); c.writeUInt32LE(offset, 42);
+        central.push(c, name);
+        offset += 30 + name.length + comp.length;
+    }
+    const cd = Buffer.concat(central);
+    const end = Buffer.alloc(22);
+    end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(offset, 16);
+    return { buf: Buffer.concat([...parts, cd, end]), count: entries.length };
 }
-const cd = Buffer.concat(central);
-const end = Buffer.alloc(22);
-end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(offset, 16);
-fs.writeFileSync(OUT, Buffer.concat([...parts, cd, end]));
+module.exports = { zipDir, crc32 };
+if (require.main !== module) return;
+
+const { buf, count } = zipDir(ROOT, DIR);
+fs.writeFileSync(OUT, buf);
 // Version des mitgelieferten Plugins für die App (Update-Hinweis im Plugin)
 const ver = JSON.parse(fs.readFileSync(path.join(ROOT, DIR, 'manifest.json'), 'utf8')).Version;
 fs.writeFileSync(path.join(ROOT, '..', 'backend', 'streamdeck-version.json'), JSON.stringify({ version: ver }) + '\n');
-console.log('✔ ' + path.relative(process.cwd(), OUT) + ' (' + entries.length + ' Dateien, ' + Math.round(fs.statSync(OUT).size / 1024) + ' KB)');
+console.log('✔ ' + path.relative(process.cwd(), OUT) + ' (' + count + ' Dateien, ' + Math.round(fs.statSync(OUT).size / 1024) + ' KB)');

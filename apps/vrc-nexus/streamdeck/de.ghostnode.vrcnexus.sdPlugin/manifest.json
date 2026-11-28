@@ -2,9 +2,9 @@
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "UUID": "de.ghostnode.vrcnexus",
   "Name": "VRC Nexus",
-  "Version": "1.10.0.0",
+  "Version": "1.11.0.0",
   "Author": "GHOST NODE",
-  "Description": "Steuert VRChat über die VRC-Nexus-App: Status, Chatbox, Avatar-Parameter, Eingaben, Rotator, Makros, Kamera, Avatar wechseln, Freunde beitreten/einladen, Benachrichtigungen, SteamVR-Overlay, Spracheingabe, Drehregler.",
+  "Description": "Steuert VRChat über die VRC-Nexus-App: Status, Chatbox, Avatar-Parameter, Eingaben, Rotator, Makros, Kamera, Avatar wechseln, Freunde beitreten/einladen, Benachrichtigungen, SteamVR-Overlay, Spracheingabe, Drehregler, Infoleiste (Stream Deck Neo).",
   "Category": "VRC Nexus",
   "CategoryIcon": "imgs/plugin_category",
   "Icon": "imgs/plugin",
@@ -16,7 +16,7 @@
   "PropertyInspectorPath": "ui/pi.html",
   "SDKVersion": 2,
   "Software": {
-    "MinimumVersion": "6.5"
+    "MinimumVersion": "7.6"
   },
   "OS": [
     {
@@ -680,6 +680,20 @@
       "UUID": "de.ghostnode.vrcnexus.worldkey",
       "Controllers": [
         "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.infobar",
+      "Name": "Infoleiste (Neo)",
+      "Tooltip": "Stream Deck Neo: zeigt Welt, Spieler, Puls, Freunde online und Benachrichtigungen in der Infoleiste – oder eigene Platzhalter",
+      "Icon": "imgs/infobar_icon",
+      "States": [
+        {
+          "Image": "imgs/infobar_key"
+        }
+      ],
+      "Controllers": [
+        "Neo"
       ]
     }
   ]

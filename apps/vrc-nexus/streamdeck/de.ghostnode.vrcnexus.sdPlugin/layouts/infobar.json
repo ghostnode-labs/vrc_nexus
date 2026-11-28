@@ -1,0 +1,10 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
+  "id": "de.ghostnode.vrcnexus.infobar",
+  "controller": "Neo",
+  "items": [
+    { "key": "icon", "type": "pixmap", "rect": [4, 9, 32, 32], "value": "imgs/infobar_icon@2x.png" },
+    { "key": "line1", "type": "text", "rect": [42, 4, 186, 22], "value": "VRC Nexus", "alignment": "left", "color": "#ffffff", "font": { "size": 16, "weight": 600 }, "text-overflow": "ellipsis" },
+    { "key": "line2", "type": "text", "rect": [42, 27, 186, 19], "value": "", "alignment": "left", "color": "#9fd8e0", "font": { "size": 13, "weight": 400 }, "text-overflow": "ellipsis" }
+  ]
+}

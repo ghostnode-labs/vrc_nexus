@@ -141,6 +141,14 @@
 </div>
 <div id="sec-info" hidden><div class="hint" style="margin-left:0" id="infoText"></div></div>
 
+<div id="sec-infobar" hidden>
+    <div class="row"><label>Anzeige</label><select data-s="mode"><option value="auto">Welt, Spieler, Puls, Freunde</option><option value="custom">Eigene Platzhalter</option></select></div>
+    <div class="row" data-show="mode=auto"><label>Freunde</label><select data-s="show"><option value="in_game">nur im Spiel</option><option value="both">im Spiel / online</option></select></div>
+    <div class="row" data-show="mode=custom"><label>Zeile 1</label><input type="text" data-s="line1" placeholder="{welt}"></div>
+    <div class="row" data-show="mode=custom"><label>Zeile 2</label><input type="text" data-s="line2" placeholder="♥ {puls} · {zeit}"></div>
+    <div class="hint">Nur Stream Deck Neo (Stream-Deck-App ab 7.6): Die Infoleiste zeigt nur an. Die beiden Touch-Punkte daneben blättern die Seiten um – Plugins können sie (noch) nicht belegen.</div>
+</div>
+
 <details id="conn">
     <summary>🔌 Verbindung zu VRC Nexus (gilt für alle Tasten)</summary>
     <div class="row"><label>Port</label><input type="number" id="gPort" min="1024" max="65535" value="17865"></div>

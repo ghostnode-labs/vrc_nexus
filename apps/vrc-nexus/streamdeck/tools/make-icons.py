@@ -165,6 +165,11 @@ def draw(name, d, n, on=False):
     elif name == 'auto':
         d.ellipse(P((14, 14), (86, 86)), outline=col, width=w)
         d.polygon(P((56, 12), (30, 54), (50, 54), (42, 88), (72, 42), (52, 42), (62, 12)), fill=GOLD if not on else CYAN)
+    elif name == 'infobar':  # 1.11: Stream Deck Neo – breite Leiste mit zwei Zeilen
+        d.rounded_rectangle(P((8, 30), (92, 70)), radius=8 * s, outline=col, width=w)
+        d.ellipse(P((16, 40), (36, 60)), fill=GOLD)
+        d.line(P((44, 44), (82, 44)), fill=col, width=max(2, w - 2))
+        d.line(P((44, 57), (70, 57)), fill=WHITE, width=max(2, w - 3))
     elif name == 'plugin':
         d.polygon(P((50, 8), (88, 30), (88, 70), (50, 92), (12, 70), (12, 30)), outline=CYAN, width=w)
         d.line(P((34, 66), (34, 34), (66, 66), (66, 34)), fill=GOLD, width=w + 2)
@@ -178,7 +183,7 @@ def save(name, size, key, on=False, suffix=''):
 
 os.makedirs(OUT, exist_ok=True)
 for name in ('status', 'chatbox', 'param', 'input', 'rotator', 'friends', 'players', 'launch', 'rejoin', 'open', 'camera', 'macro', 'avatar', 'friend', 'notifs', 'overlay', 'speech', 'dial',
-             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance', 'heart', 'sleep', 'avpreset', 'warn', 'watchfind', 'auto', 'multi', 'worldkey'):
+             'media', 'quicktext', 'scene', 'record', 'chatmods', 'tts', 'info', 'instance', 'heart', 'sleep', 'avpreset', 'warn', 'watchfind', 'auto', 'multi', 'worldkey', 'infobar'):
     save(name, 20, False, suffix='_icon')
     save(name, 40, False, suffix='_icon@2x')
     save(name, 72, True, suffix='_key')

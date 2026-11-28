@@ -66,6 +66,7 @@ class NexusApp {
         this.obs = opts.mobile ? null : new (require('./obs').Obs)(this, opts.crypt);   // 5.0: OBS-Anbindung
         this.auto = new Automation(this);
         this.ctools = new (require('./clienttools').ClientTools)(this);   // 6.3: App-Schlüssel, Tastenkürzel, Sicherung, Leistung
+        this.sdadult = new (require('./sdadult').SdAdult)(this);   // 🔞 Stream Deck (zweites Plugin, nur über die Webseite)
         this.home = new Home(this);
         this.speech = opts.mobile ? null : new Speech(this, opts.crypt);
         this.insights = new Insights(this);
@@ -282,6 +283,7 @@ class NexusApp {
             if (act === 'media_ctl') { if (!this.media) throw new UserError('Nur in der Windows-App.'); return this.media.control(str(input.cmd), str(input.id)); }
             if (act.startsWith('auto_')) return await this.auto.action(act, input);
             if (act.startsWith('ctools_')) return await this.ctools.action(act, input);
+            if (act.startsWith('sdadult_')) return await this.sdadult.action(act, input);
             if (act === 'hud_state') return this.hudState();
             if (act.startsWith('lic_')) return await this.license.action(act, input);
             if (act.startsWith('nsfw_')) return await this.nsfw.action(act, input);
@@ -499,7 +501,7 @@ class NexusApp {
         const needAcc = () => { if (!this.vrc.account()) throw new VrcAuthError('Kein VRChat-Konto verbunden.'); };
         switch (act) {
             case 'tools_overview': return await t.overview();
-            case 'tools_settings': return { schema: s.schema(), settings: s.all(), status: { api: t.api.status(), rpc: s.get('int.rpc') ? t.rpc.status() : 'aus' }, tr: this.tr.status() };
+            case 'tools_settings': return { schema: s.schema(), settings: s.all(), status: { api: t.api.status(), rpc: s.get('int.rpc') ? t.rpc.status() : 'aus', sd_adult: this.sdadult.ui() }, tr: this.tr.status() };
             case 'tools_settings_save': { let data = {}; try { data = JSON.parse(str(input.data) || '{}'); } catch (e) { throw new UserError('Ungültige Daten.'); } return Object.assign(s.save(data), { msg: 'Gespeichert.' }); }
             case 'tools_settings_reset': return { settings: s.reset(), msg: 'Alle Einstellungen zurückgesetzt.' };
             case 'tools_streamdeck_install': {

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
+  "id": "de.ghostnode.vrcnexus.adult.infobar",
+  "controller": "Neo",
+  "items": [
+    { "key": "icon", "type": "pixmap", "rect": [4, 9, 32, 32], "value": "imgs/infobar_icon@2x.png" },
+    { "key": "line1", "type": "text", "rect": [42, 2, 152, 22], "value": "VRC Nexus", "alignment": "left", "color": "#ffffff", "font": { "size": 15, "weight": 600 }, "text-overflow": "ellipsis" },
+    { "key": "light", "type": "pixmap", "rect": [198, 3, 30, 20], "value": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDMwIDIwIi8+" },
+    { "key": "lvl", "type": "bar", "rect": [42, 26, 186, 8], "value": 0, "range": { "min": 0, "max": 100 }, "subtype": 4, "bar_fill_c": "#ff5c9e", "bar_bg_c": "#2a2033", "border_w": 0 },
+    { "key": "line2", "type": "text", "rect": [42, 35, 186, 15], "value": "", "alignment": "left", "color": "#c9b6d6", "font": { "size": 12, "weight": 400 }, "text-overflow": "ellipsis" }
+  ]
+}

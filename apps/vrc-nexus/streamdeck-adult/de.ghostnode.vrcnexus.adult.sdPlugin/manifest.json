@@ -1,0 +1,284 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "UUID": "de.ghostnode.vrcnexus.adult",
+  "Name": "VRC Nexus 🔞",
+  "Version": "1.0.0.0",
+  "Author": "GHOST NODE",
+  "Description": "18+-Tasten für VRC Nexus (nur mit Verified 18+ und Freigabe in der App): Panik, Stopp, Safeword, Ampel, Stärke, Muster, Szenen, Avatar-Steuerung, Live-Anzeige. Gleicher Zugangsschlüssel wie das Plugin „VRC Nexus“.",
+  "Category": "VRC Nexus 🔞",
+  "CategoryIcon": "imgs/plugin_category",
+  "Icon": "imgs/plugin",
+  "CodePath": "bin/plugin.js",
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "disabled"
+  },
+  "PropertyInspectorPath": "ui/pi.html",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "7.6"
+  },
+  "URL": "https://ghostnode-labs.dev",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.panic",
+      "Name": "Panik",
+      "Tooltip": "Notaus: Spielzeug stopp, 18+ in VRC Nexus ganz aus – geht immer",
+      "Icon": "imgs/panic_icon",
+      "States": [
+        {
+          "Image": "imgs/panic_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.stop",
+      "Name": "Spielzeug stopp",
+      "Tooltip": "Stoppt sofort alle Geräte, Muster und Szenen – geht immer",
+      "Icon": "imgs/stop_icon",
+      "States": [
+        {
+          "Image": "imgs/stop_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.safeword",
+      "Name": "Safeword",
+      "Tooltip": "Löst das Safeword wie in VRC Nexus eingestellt aus – geht immer",
+      "Icon": "imgs/safeword_icon",
+      "States": [
+        {
+          "Image": "imgs/safeword_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.consent",
+      "Name": "Ampel",
+      "Tooltip": "Consent-Ampel grün/gelb/rot umschalten oder fest setzen; die Taste zeigt die aktuelle Farbe (Rot geht immer)",
+      "Icon": "imgs/consent_icon",
+      "States": [
+        {
+          "Image": "imgs/consent_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 11
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.level",
+      "Name": "Stärke",
+      "Tooltip": "Stärke setzen oder in Schritten ändern; zeigt die aktuelle Stärke",
+      "Icon": "imgs/level_icon",
+      "States": [
+        {
+          "Image": "imgs/level_key",
+          "TitleAlignment": "middle",
+          "FontSize": 12
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.dial",
+      "Name": "Stärke-Regler",
+      "Tooltip": "Stream Deck +: drehen = Stärke, drücken = Stopp",
+      "Icon": "imgs/dial_icon",
+      "States": [
+        {
+          "Image": "imgs/dial_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Stärke ändern",
+          "Push": "Stopp",
+          "Touch": "Stopp"
+        }
+      }
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.pattern",
+      "Name": "Muster",
+      "Tooltip": "Startet ein Muster aus VRC Nexus (auch Labor-Muster); nochmal drücken stoppt es, wenn gewählt",
+      "Icon": "imgs/pattern_icon",
+      "States": [
+        {
+          "Image": "imgs/pattern_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        },
+        {
+          "Image": "imgs/pattern_key_on",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.surprise",
+      "Name": "Überraschung",
+      "Tooltip": "Zufälliges Muster für kurze Zeit",
+      "Icon": "imgs/surprise_icon",
+      "States": [
+        {
+          "Image": "imgs/surprise_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.private",
+      "Name": "Privat-Modus",
+      "Tooltip": "Privat-Modus an/aus",
+      "Icon": "imgs/private_icon",
+      "States": [
+        {
+          "Image": "imgs/private_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        },
+        {
+          "Image": "imgs/private_key_on",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.follow",
+      "Name": "Avatar-Steuerung",
+      "Tooltip": "Geräte folgen deinem Avatar – an/aus",
+      "Icon": "imgs/follow_icon",
+      "States": [
+        {
+          "Image": "imgs/follow_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        },
+        {
+          "Image": "imgs/follow_key_on",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.scene",
+      "Name": "Szene",
+      "Tooltip": "Gespeicherte oder einfache Szene starten bzw. beenden",
+      "Icon": "imgs/scene_icon",
+      "States": [
+        {
+          "Image": "imgs/scene_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        },
+        {
+          "Image": "imgs/scene_key_on",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.fade",
+      "Name": "Ausklingen",
+      "Tooltip": "Lässt alles sanft ausklingen",
+      "Icon": "imgs/fade_icon",
+      "States": [
+        {
+          "Image": "imgs/fade_key",
+          "TitleAlignment": "bottom",
+          "FontSize": 10
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.meter",
+      "Name": "Live-Anzeige",
+      "Tooltip": "Zeigt Lust-Meter oder aktuelle Stärke live auf der Taste",
+      "Icon": "imgs/meter_icon",
+      "States": [
+        {
+          "Image": "imgs/meter_key",
+          "TitleAlignment": "middle",
+          "FontSize": 12
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ]
+    },
+    {
+      "UUID": "de.ghostnode.vrcnexus.adult.infobar",
+      "Name": "Infoleiste (Neo)",
+      "Tooltip": "Stream Deck Neo: Stärke, Ampel und Lust-Meter in der Infoleiste (diskret wählbar)",
+      "Icon": "imgs/infobar_icon",
+      "States": [
+        {
+          "Image": "imgs/infobar_key"
+        }
+      ],
+      "Controllers": [
+        "Neo"
+      ]
+    }
+  ]
+}

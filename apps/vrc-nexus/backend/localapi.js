@@ -49,6 +49,19 @@ class LocalApi {
         const who = this.tools.app && this.tools.app.ctools ? this.tools.app.ctools.resolve(token) : (() => { const want = Buffer.from(str(this.tools.settings.get('int.api_token'))), got = Buffer.from(token); return want.length && got.length === want.length && crypto.timingSafeEqual(got, want) ? { scope: 'all' } : null; })();
         if (!who) return this.send(res, 401, { error: 'Falscher Zugangsschlüssel.' });   // 6.3: Hauptschlüssel oder App-Schlüssel mit Rechte-Stufe
         if (url.pathname.startsWith('/api/') && !this.tools.settings.get('int.api')) return this.send(res, 403, { error: 'Die Stream-Deck-Schnittstelle ist aus (Einstellungen → Integrationen).' });
+        // 🔞 Stream Deck (zweites Plugin): gleicher Schlüssel, eigene Freigabe-Prüfung (sdadult.js) – nie über /api/action oder Mehrfach-Aktionen
+        if (url.pathname === '/api/adult/state' || url.pathname === '/api/adult') {
+            const sd = this.tools.app && this.tools.app.sdadult;
+            if (!sd) return this.send(res, 404, { error: 'Unbekannt.' });
+            if (req.method === 'GET' && url.pathname === '/api/adult/state') return this.send(res, 200, sd.state(who));
+            if (req.method !== 'POST' || url.pathname !== '/api/adult') return this.send(res, 405, { error: 'Nicht erlaubt.' });
+            let body = '';
+            for await (const c of req) { body += c; if (body.length > 4000) throw new UserError('Zu groß.'); }
+            let data = {};
+            try { data = JSON.parse(body || '{}'); } catch (e) { throw new UserError('Ungültiges JSON.'); }
+            try { return this.send(res, 200, await sd.run(str(data.op), data, who)); }
+            catch (e) { if (e && e.locked) return this.send(res, 403, { error: e.message, locked: true }); throw e; }
+        }
         if (req.method === 'GET' && url.pathname === '/api/state') return this.send(res, 200, this.tools.apiState());
         if (req.method === 'GET' && url.pathname === '/api/world_image') return this.send(res, 200, await this.tools.worldImage(url.searchParams.get('id')));
         if (req.method === 'GET' && url.pathname === '/api/avatar_image') return this.send(res, 200, await this.tools.avatarImage(url.searchParams.get('id')));
