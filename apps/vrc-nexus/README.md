@@ -26,6 +26,10 @@ Versions are **Major.Minor.Patch** (e.g. `5.4.1`): **Major** for a new generatio
 
 ## Changelog
 
+### New in 8.5.2 – VIP board for VRChat worlds
+- 🌟 **GhostNode VIP board (Unity package):** `GhostNode-VIP-Board.unitypackage` is now attached to every release. It adds an UdonSharp board that loads VIP / Ko-fi supporter lists from a GitHub Gist (trusted by VRChat) or the GhostNode website, pages through names, highlights players in the instance, fires events for VIPs and can hand the names to a door/keypad system. *Tools → GhostNode → VIP-Tafel erstellen* builds the neon board and saves it as a prefab. Requires Unity 2022.3.22f1 with the VRChat Worlds SDK (VCC).
+- The lists are managed on the GhostNode website (Admin → VIP lists), with an optional Ko-fi webhook and an automatic Gist mirror.
+
 ### New in 8.5.1
 - **Fixed: expandable sections closed by themselves.** Pages that refresh in the background redrew their collapsible sections and reset them. Now every expandable section on every page (desktop and Android) keeps the state you chose – also after a refresh and after restarting the app.
 
